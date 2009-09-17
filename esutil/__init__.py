@@ -1,2 +1,2 @@
 from esutil import xmltools
-from esutil import os
+from esutil import ostools
