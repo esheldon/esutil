@@ -1,3 +1,0 @@
-setupOptional("python")
-envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib/python%s/site-packages)
-envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib64/python%s/site-packages)
