@@ -14,6 +14,7 @@ def ptime(seconds, fobj=None, format='%s\n'):
         tm2=time.time()
         ptime(tm2-tm1)
 
+        5 min 23.210000 sec
     """
     from sys import stdout
 
