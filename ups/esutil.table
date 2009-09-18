@@ -1,0 +1,5 @@
+# This will be overwritten on setup to include paths determined from the
+# python version.  This is useful to have existing though so that dependencies
+# can be checked *before* installation
+setupOptional("python")
+
