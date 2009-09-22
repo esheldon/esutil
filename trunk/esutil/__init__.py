@@ -1,6 +1,13 @@
 # we don't import oracle_util by default as it probably will fail for 
 # most people
 
+
+# version info
+# You need to run 'svn propset svn:keywords HeadURL' on the file and commit
+# before this works.
+#
+# Don't edit these svn properties by hand
+
 _property_headurl='$HeadURL$'
 
 def get_esutil_version():
@@ -30,7 +37,7 @@ def get_esutil_version():
     return tag
 
 
-
+version=get_esutil_version()
 from esutil import xmltools
 from esutil import ostools
 from esutil import misc
