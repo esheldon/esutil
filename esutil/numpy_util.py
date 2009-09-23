@@ -1,4 +1,7 @@
 import numpy as numpy
+import sys
+from sys import stdout, stderr
+import copy
 
 def dict2array(d, sort=False, keys=None):
     """
@@ -128,7 +131,6 @@ def combine_arrlist(arrlist, keep=False):
     By default the elements are deleted as they are added to the big array.
     Turn this off with keep=True
     """
-    import numpy
     if not isinstance(arrlist,list):
         raise RuntimeError('Input must be a list of arrays')
 
@@ -243,7 +245,6 @@ def add_fields(arr, add_dtype_or_descr, defaults=[]):
     set of default values
     """
     # the descr is a list of tuples
-    import copy
     old_descr = arr.dtype.descr
     add_dtype = numpy.dtype(add_dtype_or_descr)
     add_descr = add_dtype.descr
@@ -293,70 +294,128 @@ def compare_arrays(arr1, arr2, verbose=False):
                     raise ValueError('field name %s not found in array 1' % n2)
             
         if verbose:
-            sys.stdout.write("    testing field: '%s'\n" % n2)
-            sys.stdout.write('        shape...........')
+            stdout.write("    testing field: '%s'\n" % n2)
+            stdout.write('        shape...........')
         if arr2[n2].shape != arr1[n1].shape:
             nfail += 1
             if verbose:
-                sys.stdout.write('shapes differ\n')
+                stdout.write('shapes differ\n')
         else:
             if verbose:
-                sys.stdout.write('OK\n')
-                sys.stdout.write('        elements........')
+                stdout.write('OK\n')
+                stdout.write('        elements........')
             w,=numpy.where(arr1[n1].ravel() != arr2[n2].ravel())
             if w.size > 0:
                 nfail += 1
                 if verbose:
-                    sys.stdout.write('\n        '+\
+                    stdout.write('\n        '+\
                         '%s elements in field %s differ\n' % (w.size,n2))
             else:
                 if verbose:
-                    sys.stdout.write('OK\n')
+                    stdout.write('OK\n')
 
     if nfail == 0:
         if verbose:
-            sys.stdout.write('All tests passed\n')
+            stdout.write('All tests passed\n')
         return True
     else:
         if verbose:
-            sys.stdout.write('%d differences found\n' % nfail)
+            stdout.write('%d differences found\n' % nfail)
         return False
 
 
-def bigendian(array):
-    machine_little_endian = numpy.little_endian
+def is_big_endian(array):
+    """
+    Return True if array is big endian.  Note strings are neither big
+    or little endian
+    """
+
+    if numpy.little_endian:
+        machine_big=False
+    else:
+        machine_big=True
 
     byteorder = array.dtype.base.byteorder
-    return (byteorder == '>') \
-            or (machine_little_endian and byteorder== '=')
+    return (byteorder == '>') or (machine_big and byteorder == '=')
+
+def is_little_endian(array):
+    """
+    Return True if array is little endian. Note strings are neither big
+    or little endian
+    """
+
+    if numpy.little_endian:
+        machine_little=True
+    else:
+        machine_little=False
+
+    byteorder = array.dtype.base.byteorder
+    return (byteorder == '<') or (machine_little and byteorder == '=')
 
 
 
-
-def to_bigendian(array, inplace=False, keep_dtype=False):
+def to_big_endian(array, inplace=False, keep_dtype=False):
     """
     Convert an array to big endian byte order, updating the dtype
     to reflect this.  Send keep_dtype=True to prevent the dtype
-    from being updated.
+    from being updated.  If inplace=False, a copy is always returned.
+    If inplace=True a reference to the input array is returned.
     """
 
     doswap=False
     if array.dtype.names is None:
-        if not bigendian(array):
+        if not is_big_endian(array):
             doswap=True
     else:
         # assume all are same byte order: we only need to find one with
         # little endian
         for fname in array.dtype.names:
-            if not bigendian(array[fname]):
+            if not is_big_endian(array[fname]):
                 doswap=True
                 break
 
-    outdata = array
     if doswap:
         outdata = byteswap(outdata, inplace, keep_dtype=keep_dtype)
+    else:
+        if inplace:
+            outdata=array
+        else:
+            outdata=array.copy()
 
     return outdata
+
+def to_little_endian(array, inplace=False, keep_dtype=False):
+    """
+    Convert an array to little endian byte order, updating the dtype
+    to reflect this.  Send keep_dtype=True to prevent the dtype
+    from being updated. If inplace=False, a copy is always returned.
+    If inplace=True a reference to the input array is returned.
+    """
+
+    doswap=False
+    if array.dtype.names is None:
+        if not is_little_endian(array):
+            doswap=True
+    else:
+        # assume all are same byte order: we only need to find one with
+        # little endian
+        for fname in array.dtype.names:
+            if not is_little_endian(array[fname]):
+                doswap=True
+                break
+
+    if doswap:
+        outdata = byteswap(outdata, inplace, keep_dtype=keep_dtype)
+    else:
+        if inplace:
+            outdata=array
+        else:
+            outdata=array.copy()
+
+
+    return outdata
+
+
 
 def byteswap(array, inplace=False, keep_dtype=False):
     """
