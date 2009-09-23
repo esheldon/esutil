@@ -37,6 +37,7 @@ def version():
     return tag
 
 
+from esutil import numpy_util
 from esutil import xmltools
 from esutil import ostools
 from esutil import misc
