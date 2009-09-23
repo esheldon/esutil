@@ -10,7 +10,7 @@
 
 _property_headurl='$HeadURL$'
 
-def get_esutil_version():
+def version():
     import os
     from sys import stderr
 
@@ -37,7 +37,6 @@ def get_esutil_version():
     return tag
 
 
-version=get_esutil_version()
 from esutil import xmltools
 from esutil import ostools
 from esutil import misc
