@@ -11,7 +11,6 @@
 _property_headurl='$HeadURL$'
 
 def version():
-    import os
     from sys import stderr
 
     thisname='/esutil/__init__.py'
@@ -33,12 +32,13 @@ def version():
 
     urlfront = url.replace(thisname, '')
 
-    tag = os.path.basename(urlfront)
+    tag=urlfront.split('/')[-1]
     return tag
 
 
-from esutil import numpy_util
-from esutil import xmltools
-from esutil import ostools
-from esutil import misc
+import xmltools
+import ostools
+import misc
+import numpy_util
+
 
