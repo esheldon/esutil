@@ -1,3 +1,6 @@
+import subprocess
+from sys import stdout, stderr
+
 def ptime(seconds, fobj=None, format='%s\n'):
     """
     ptime(seconds, fobj=None, format='%s\n')
@@ -16,7 +19,6 @@ def ptime(seconds, fobj=None, format='%s\n'):
 
         5 min 23.210000 sec
     """
-    from sys import stdout
 
     min, sec = divmod(seconds, 60.0)
     hr, min = divmod(min, 60.0)
@@ -39,5 +41,74 @@ def ptime(seconds, fobj=None, format='%s\n'):
     else:
         fobj.write(format % tstr)
 
+
+def exec_process(command, timeout=None, 
+                 stdout_file=subprocess.PIPE, 
+                 stderr_file=subprocess.PIPE, 
+                 shell=True,
+                 verbose=False):
+    """
+    exit_status, stdout_returned, stderr_returned = \
+       execute_command(command, 
+                        timeout=None, 
+                        stdout=subprocess.PIPE, 
+                        stderr=subprocess.PIPE, 
+                        verbose=False)
+
+    Execute the command with a timeout in seconds
+    """
+
+    # the user can send file names, PIPE, or a file object
+    if isinstance(stdout_file, str):
+        stdout_fileobj = open(stdout_file, 'w')
+    else:
+        stdout_fileobj=stdout_file
+
+    if isinstance(stderr_file, str):
+        stderr_fileobj = open(stderr_file, 'w')
+    else:
+        stderr_fileobj = stderr_file
+
+
+    # if a list was entered, convert to a string.  Also print the command
+    # if requested
+    if verbose:
+        stdout.write('Executing command: \n')
+    if isinstance(command, list):
+        cmd = ' '.join(command)
+        if verbose:
+            stdout.write(command[0] + '    \\\n')
+            for c in command[1:]:
+                stdout.write('    '+c+'    \\\n')
+        #print 'actual cmd:',cmd
+    else:
+        cmd=command
+        if verbose:
+            stdout.write('%s\n' % cmd)
+
+
+
+    stdout.flush()
+    stderr.flush()
+    pobj = subprocess.Popen(cmd, 
+                            stdout=stdout_fileobj, 
+                            stderr=stderr_fileobj, 
+                            shell=shell)
+
+    if timeout is not None:
+        exit_status, stdout_ret, stderr_ret = _poll_subprocess(pobj, timeout)
+    else:
+        # this just waits for the process to end
+        stdout_ret, stderr_ret = pobj.communicate()
+        # this is not set until we call pobj.communicate()
+        exit_status = pobj.returncode
+
+    # If they were opened files, close them
+    if isinstance(stdout_fileobj, file):
+        stdout_fileobj.close()
+    if isinstance(stderr_fileobj, file):
+        stderr_fileobj.close()
+
+    return exit_status, stdout_ret, stderr_ret
 
 
