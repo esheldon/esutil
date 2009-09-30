@@ -291,9 +291,11 @@ class Connection:
                 dictlist=False,
                 lower=lower_default):
         """
-        Does job of executing the query, converting to a numpy array if 
-        appropriate, and returns the result.  If cursor=True then the
-        cursor object is returned instead of a numpy array.
+
+        Does job of executing the query, converting to a numpy array or list of
+        dictionaries if appropriate, and returns the result.  If cursor=True
+        then the cursor object is returned instead of a numpy array.
+
         """
 
         if f4_digits is None:
