@@ -422,7 +422,7 @@ def byteswap(array, inplace=False, keep_dtype=False):
     byteswap an array, updating the dtype to reflect this
 
     If you *don't* want the dtype changed, simply use the
-    built-int array method.  E.g.  array.byteswap()
+    built-in array method.  E.g.  array.byteswap()
     """
 
     outdata = array.byteswap(inplace)

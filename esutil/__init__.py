@@ -1,7 +1,3 @@
-# we don't import oracle_util by default as it probably will fail for 
-# most people
-
-
 # version info
 # You need to run 'svn propset svn:keywords HeadURL' on the file and commit
 # before this works.
@@ -39,6 +35,16 @@ def version():
 import xmltools
 import ostools
 import misc
-import numpy_util
+import json_util
 
+# quietly ignore errors loading numpy, which not everyone may have installed
+try:
+    import numpy_util
+except:
+    pass
 
+# quietly ignore errors loading oracle_util
+try:
+    import oracle_util
+except:
+    pass
