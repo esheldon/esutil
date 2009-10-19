@@ -1,3 +1,22 @@
+"""
+
+Some convenience functions for working with json files.  
+
+    read(file):  
+        
+        Read from the file name or opened file object. If the faster cjson is
+        available, an attempt to use it is made.  If this fails (cjson is known
+        to fail in certain corner cases) ordinary json is tried.  
+
+    write(obj, file, pretty=True):
+
+        Write the object to a fson file.  The "file" input can be either a file
+        name or opened file object.  Ordinary json is the default since it
+        supports human readable writing.  Sending pretty=False to the write
+        program will force use of cjson if it is available.
+
+
+"""
 import json
 
 have_cjson=False
@@ -9,33 +28,57 @@ except:
 
 def read(fname):
     """
-    Read data from a json file.  If the faster cjson is available it is used,
-    else json is imported.
+    obj = json_util.read(file):  
+
+    Read from the file name or opened file object. If the faster cjson is
+    available, an attempt to use it is made.  If this fails (cjson is known
+    to fail in certain corner cases) ordinary json is tried.  
     """
-    fobj=open(fname)
+
+    input_fileobj=False
+    if isinstance(fname, file):
+        input_fileobj=True
+        fobj=fname
+    else:
+        fobj=open(fname)
+
     if have_cjson:
-        data = cjson.decode(fobj.read())
+        try:
+            data = cjson.decode(fobj.read())
+        except: 
+            # fall back to using json
+            fobj.seek(0)
+            data = json.load(fobj)
     else:
         data = json.load(fobj)
 
-    fobj.close()
+    if not input_fileobj:
+        fobj.close()
     return data
 
 def write(obj, fname, pretty=True):
     """
-    Write the object to a json file.  
-    
-    By default the ordinary json is used since it supports pretty printing.
-    If pretty=False and the faster cjson is available, it is used for printing.
+    json_util.write(obj, fname, pretty=True)
 
+    Write the object to a fson file.  The "file" input can be either a file
+    name or opened file object.  Ordinary json is the default since it
+    supports human readable writing.  Sending pretty=False to the write
+    program will force use of cjson if it is available.
     """
 
-    fobj=open(fname,'w')
+    input_fileobj=False
+    if isinstance(fname,file):
+        input_fileobj=True
+        fobj=fname
+    else:
+        fobj=open(fname,'w')
     
     if not pretty and have_cjson:
         jstring = cjson.encode(obj)
         fobj.write(jstring)
     else:
         json.dump(obj, fobj, indent=1, separators=(',', ':'))
-    fobj.close()
+
+    if not input_fileobj:
+        fobj.close()
 
