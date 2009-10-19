@@ -6,6 +6,8 @@
 
 _property_headurl='$HeadURL$'
 
+import sys
+
 def version():
     from sys import stderr
 
@@ -31,13 +33,23 @@ def version():
     tag=urlfront.split('/')[-1]
     return tag
 
+def get_python_version(numerical=False):
+    if numerical:
+        v=sys.version_info[0:3]
+        pyvers=v[0] + 0.1*v[1] + 0.01*v[2]
+    else:
+        pyvers='v%s.%s.%s' % sys.version_info[0:3]
+    return pyvers
 
+
+# imports are the ony things that will have to be converted for py3k
+# other than extension modules
 import xmltools
 import ostools
 import misc
 import json_util
 
-# quietly ignore errors loading numpy, which not everyone may have installed
+# quietly ignore errors loading numpy, which not everyone may have
 try:
     import numpy_util
 except:
@@ -48,3 +60,4 @@ try:
     import oracle_util
 except:
     pass
+

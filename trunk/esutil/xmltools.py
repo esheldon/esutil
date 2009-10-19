@@ -47,7 +47,7 @@ class XmlDictObject(dict):
         self.__setitem__(item, value)
     
     def __str__(self):
-        if self.has_key('_text'):
+        if '_text' in self:
             return self.__getitem__('_text')
         else:
             return ''
@@ -59,7 +59,7 @@ class XmlDictObject(dict):
         """
 
         if isinstance(x, dict):
-            return XmlDictObject((k, XmlDictObject.Wrap(v)) for (k, v) in x.iteritems())
+            return XmlDictObject((k, XmlDictObject.Wrap(v)) for (k, v) in list(x.items()))
         elif isinstance(x, list):
             return [XmlDictObject.Wrap(v) for v in x]
         else:
@@ -68,7 +68,7 @@ class XmlDictObject(dict):
     @staticmethod
     def _UnWrap(x):
         if isinstance(x, dict):
-            return dict((k, XmlDictObject._UnWrap(v)) for (k, v) in x.iteritems())
+            return dict((k, XmlDictObject._UnWrap(v)) for (k, v) in list(x.items()) )
         elif isinstance(x, list):
             return [XmlDictObject._UnWrap(v) for v in x]
         else:
@@ -104,15 +104,15 @@ def xml2dict(root, dictclass=XmlDictObject, seproot=False, noroot=False):
     if type(root) == type(''):
         root = ElementTree.parse(root).getroot()
     elif not isinstance(root, ElementTree.Element):
-        raise TypeError, 'Expected ElementTree.Element or file path string'
+        raise TypeError('Expected ElementTree.Element or file path string')
 
     xmldict = dictclass({root.tag: _xml2dict_recurse(root, dictclass)})
 
+    keys = list( xmldict.keys() )
+    roottag = keys[0]
     if seproot:
-        roottag = xmldict.keys()[0]
         return xmldict[roottag], roottag
     elif noroot:
-        roottag = xmldict.keys()[0]
         return xmldict[roottag]
     else:
         return xmldict
@@ -120,14 +120,14 @@ def xml2dict(root, dictclass=XmlDictObject, seproot=False, noroot=False):
 def _xml2dict_recurse(node, dictclass):
     nodedict = dictclass()
     
-    if len(node.items()) > 0:
+    if len(list(node.items())) > 0:
         # if we have attributes, set them
-        nodedict.update(dict(node.items()))
+        nodedict.update(dict( list(node.items()) ))
     
     for child in node:
         # recursively add the element's children
         newitem = _xml2dict_recurse(child, dictclass)
-        if nodedict.has_key(child.tag):
+        if child.tag in nodedict:
             # found duplicate tag, force a list
             if type(nodedict[child.tag]) is type([]):
                 # append to existing list
@@ -172,7 +172,8 @@ def dict2xml(xmldict, filename_or_obj=None, roottag=None):
     """
 
     if roottag is None:
-        roottag = xmldict.keys()[0]
+        keys = list( xmldict.keys() )
+        roottag = keys[0]
         root = ElementTree.Element(roottag)
         _dict2xml_recurse(root, xmldict[roottag])
     else:
@@ -216,7 +217,7 @@ def _dict2xml_recurse(parent, dictitem):
     assert type(dictitem) is not type([])
 
     if isinstance(dictitem, dict):
-        for (tag, child) in dictitem.iteritems():
+        for (tag, child) in list(dictitem.items() ):
             if str(tag) == '_text':
                 parent.text = str(child)
             elif type(child) is type([]):
