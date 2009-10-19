@@ -31,7 +31,7 @@ def path_join(*paths):
             tpath=os.sep.join( path )
             plist.append( tpath )
         else:
-            raise ValueError,'paths must be strings or sequences of strings'
+            raise ValueError('paths must be strings or sequences of strings')
 
     # We now have a list of strings.
     path = os.sep.join( plist )
@@ -47,7 +47,7 @@ def getenv_check(name):
     """
     val=os.getenv(name)
     if val is None:
-        raise RuntimeError,"Environment variable '%s' is not set" % name
+        raise RuntimeError("Environment variable '%s' is not set" % name)
     return val
 
 

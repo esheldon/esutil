@@ -24,7 +24,7 @@ def dict2array(d, sort=False, keys=None):
         if sort:
             keys=sorted(d)
         else:
-            keys=d.keys()
+            keys=list(d.keys())
 
     for key in keys:
         # check key existence in case a set of keys was sent
@@ -585,7 +585,7 @@ def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=False):
             raise ValueError("No data in specified min/max range\n")
         s = s[w]
 
-    nbin = long( (dmax-dmin)/bsize ) + 1
+    nbin = numpy.int64( (dmax-dmin)/bsize ) + 1
     revsize = s.size + nbin+1
 
     if rev:
@@ -610,7 +610,7 @@ def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=False):
 
         val = data[data_index]
 
-        binnum = long( (val-dmin)/bsize )
+        binnum = numpy.int64( (val-dmin)/bsize )
         #print 'binnum:',binnum,' binnum old:',binnum_old, 'val:',val
         if binnum >= 0 and binnum < nbin:
         #if binnum >= 0:
