@@ -49,16 +49,6 @@ import ostools
 import misc
 import json_util
 import stat
-
-# quietly ignore errors loading numpy, which not everyone may have
-try:
-    import numpy_util
-except:
-    pass
-
-# quietly ignore errors loading oracle_util
-try:
-    import oracle_util
-except:
-    pass
+import numpy_util
+import oracle_util
 

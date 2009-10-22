@@ -14,7 +14,7 @@ except:
 
 
 
-def _weave_rev_hist(data, s, binsize, hist, rev):
+def _weave_dohist(data, s, binsize, hist, rev, dorev=False):
     """
     Weave version of histogram with reverse_indices
     """
@@ -31,12 +31,14 @@ def _weave_rev_hist(data, s, binsize, hist, rev):
         int64_t data_index = s(i);
 
 
-        rev(offset) = data_index;
+        if (dorev) {
+            rev(offset) = data_index;
+        }
 
         int64_t binnum = (int64_t) ( (data(data_index)-data(imin))/binsize);
 
         if (binnum >= 0 && binnum < nbin) {
-            if (binnum > binnum_old) {
+            if (dorev && (binnum > binnum_old) ) {
                 int64_t tbin = binnum_old + 1;
                 while (tbin <= binnum) {
                     rev(tbin) = offset;
@@ -50,15 +52,61 @@ def _weave_rev_hist(data, s, binsize, hist, rev):
 
     int64_t tbin = binnum_old + 1;
     while (tbin <= nbin) {
-        rev(tbin) = rev.size();
+        if (dorev) {
+            rev(tbin) = rev.size();
+        }
         tbin++;
     }
 
     """
 
-    scipy.weave.inline(code, ['data','s','binsize','hist','rev'],
+    scipy.weave.inline(code, ['data','s','binsize','hist','rev','dorev'],
                        type_converters = weave.converters.blitz)
     return
+
+
+def _dohist(data, s, binsize, hist, revind, dorev=False):
+
+    nbin=hist.size
+    offset = nbin+1
+    i=0
+    binnum_old = -1
+    while i < s.size:
+        data_index = s[i]
+        if dorev:
+            revind[offset] = data_index
+
+        val = data[data_index]
+
+        binnum = numpy.int64( (val-dmin)/bsize )
+        #print 'binnum:',binnum,' binnum old:',binnum_old, 'val:',val
+        if binnum >= 0 and binnum < nbin:
+        #if binnum >= 0:
+            if binnum > binnum_old:
+                tbin = binnum_old + 1
+                while tbin <= binnum:
+                    if dorev:
+                        revind[tbin] = offset
+                        #print '\t\trevind[%d] = %d' % (tbin,offset)
+                    tbin += 1
+
+            hist[binnum] += 1
+            binnum_old = binnum
+        #print 'rev:',revind[binnum]
+
+        i += 1
+        offset += 1
+
+    if dorev:
+        #pass
+        # Fill in the last ones
+        tbin = binnum_old + 1
+        while tbin <= nbin:
+            revind[tbin] = revsize
+            tbin += 1
+        #revind[nbin] = revsize
+
+
 
 
 def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
@@ -108,50 +156,13 @@ def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
     # edges at the beginning of reverse indices
 
     if use_weave:
-        _weave_rev_hist(data, s, bsize, hist, revind)
+        _weave_dohist(data, s, bsize, hist, revind, dorev=rev)
         return hist, revind
+    else:
+        _dohist(data, s, bsize, hist, revind, dorev=rev)
 
-    offset = nbin+1
-    i=0
-    binnum_old = -1
-    while i < s.size:
-        data_index = s[i]
-        if rev:
-            revind[offset] = data_index
-
-        val = data[data_index]
-
-        binnum = numpy.int64( (val-dmin)/bsize )
-        #print 'binnum:',binnum,' binnum old:',binnum_old, 'val:',val
-        if binnum >= 0 and binnum < nbin:
-        #if binnum >= 0:
-            if binnum > binnum_old:
-                tbin = binnum_old + 1
-                while tbin <= binnum:
-                    if rev:
-                        revind[tbin] = offset
-                        #print '\t\trevind[%d] = %d' % (tbin,offset)
-                    tbin += 1
-
-            hist[binnum] += 1
-            binnum_old = binnum
-        #print 'rev:',revind[binnum]
-
-        i += 1
-        offset += 1
-
-    if rev:
-        #pass
-        # Fill in the last ones
-        tbin = binnum_old + 1
-        while tbin <= nbin:
-            revind[tbin] = revsize
-            tbin += 1
-        #revind[nbin] = revsize
-
-    if rev:
+    if dorev:
         return hist, revind
     else:
         return hist
-
 
