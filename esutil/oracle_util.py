@@ -1,11 +1,17 @@
 
 import sys, os
-import cx_Oracle as cxo
+
+try:
+    import cx_Oracle as cxo
+    have_oracle=True
+except:
+    have_oracle=False
 
 try:
     import numpy
+    have_numpy=True
 except:
-    sys.stdout.write('Could not import numpy....continuing\n')
+    have_numpy=False
 
 lower_default=True
 
