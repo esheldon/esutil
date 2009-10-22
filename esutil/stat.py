@@ -231,8 +231,138 @@ def histogram2d(x, y,
     if rev:
         hist, revind=hist
         hist = hist.reshape(nx,ny)
-        return hist, rev
+        return hist, revind
     else:
         hist = hist.reshape(nx,ny)
         return hist
+
+
+def wmom(arrin, weightsin, inputmean=None, calcerr=False, sdev=False):
+    """
+    NAME:
+      wmom()
+      
+    PURPOSE:
+      Calculate the weighted mean, error, and optionally standard deviation
+      of an input array.
+
+    CALLING SEQUENCE:
+     wmean,werr = wmom(arr, weights, inputmean=None, calcerr=False, sdev=False)
+    
+    INPUTS:
+      arr: A numpy array or a sequence that can be converted.
+      weights: A set of weights for each elements in array.
+    OPTIONAL INPUTS:
+      inputmean: An input mean value, around which them mean is calculated.
+      calcerr=False: Calculate the weighted error.  By default the error
+        is calculated as 1/sqrt( weights.sum() ).  In this case it is
+        calculated as sqrt( (w**2 * (arr-mean)**2).sum() )/weights.sum()
+      sdev=False: If True, also return the weighted standard deviation 
+        as a third element in the tuple.
+
+    OUTPUTS:
+      wmean, werr: A tuple of the weighted mean and error. If sdev=True the
+         tuple will also contain sdev: wmean,werr,wsdev
+
+    REVISION HISTORY:
+      Converted from IDL: 2006-10-23. Erin Sheldon, NYU
+
+   """
+    from numpy import float64
+    
+    # no copy made if they are already arrays
+    arr = numpy.array(arrin, ndmin=1, copy=False)
+    weights = numpy.array(weightsin, ndmin=1, copy=False)
+    
+    # Weights is forced to be type double. All resulting calculations
+    # will also be double
+    if weights.dtype != float64:
+        weights = numpy.array(weights, dtype=float64)
+  
+    wtot = weights.sum()
+        
+    # user has input a mean value
+    if inputmean is None:
+        wmean = ( weights*arr ).sum()/wtot
+    else:
+        wmean=float(inputmean)
+
+    # how should error be calculated?
+    if calcerr:
+        werr2 = ( weights**2 * (arr-wmean)**2 ).sum()
+        werr = numpy.sqrt( werr2 )/wtot
+    else:
+        werr = 1.0/numpy.sqrt(wtot)
+
+    # should output include the weighted standard deviation?
+    if sdev:
+        wvar = ( weights*(arr-wmean)**2 ).sum()/wtot
+        wsdev = numpy.sqrt(wvar)
+        return wmean,werr,wsdev
+    else:
+        return wmean,werr
+
+
+
+
+def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
+    """
+    NAME:
+      sigma_clip()
+      
+    PURPOSE:
+      Calculate the mean/stdev of an array with sigma clipping. Iterate
+      niter times, removing elements that are outside nsig, and recalculating
+      mean/stdev.
+
+    CALLING SEQUENCE:
+      mean,stdev = sigma_clip(arr, niter=4, nsig=4, extra={})
+    
+    INPUTS:
+      arr: A numpy array or a sequence that can be converted.
+
+    OPTIONAL INPUTS:
+      niter: number of iterations, defaults to 4
+      nsig: number of sigma, defaults to 4
+
+    OUTPUTS:
+      mean,stdev: A tuple containing mean and standard deviation.
+    OPTIONAL OUTPUTS
+      extra={}: Dictionary containing the array of used indices in
+         extra['index']
+
+    REVISION HISTORY:
+      Converted from IDL: 2006-10-23. Erin Sheldon, NYU
+
+   """
+    arr = numpy.array(arrin, ndmin=1, copy=False)
+
+    index = numpy.arange( arr.size )
+
+    for i in numpy.arange(niter):
+        m = arr[index].mean()
+        s = arr[index].std()
+
+        if verbose:
+            sys.stdout.write('iter %s\tnuse: %s\tmean %s\tstdev %s\n' % \
+                (i+1, index.size,m,s))
+
+        clip = nsig*s
+
+        w, = numpy.where( (numpy.abs(arr[index]) - m) < clip )
+
+        if w.size == 0:
+            sys.stderr.write("nsig too small. Everything clipped on iteration %d" % i+1)
+            return m,s
+
+
+        index = index[w]
+
+    # Calculate final stats
+    amean = arr[index].mean()
+    asig = arr[index].std()
+
+    extra['index'] = index
+    return amean, asig
+     
 
