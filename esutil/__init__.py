@@ -48,6 +48,7 @@ import xmltools
 import ostools
 import misc
 import json_util
+import stat
 
 # quietly ignore errors loading numpy, which not everyone may have
 try:

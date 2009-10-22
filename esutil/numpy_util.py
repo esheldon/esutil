@@ -1,7 +1,12 @@
-import numpy as numpy
 import sys
 from sys import stdout, stderr
 import copy
+
+try:
+    import numpy
+    have_numpy=True
+except:
+    have_numpy=False
 
 def dict2array(d, sort=False, keys=None):
     """
@@ -557,7 +562,7 @@ def _weave_rev_hist(data, s, binsize, hist, rev):
     return
 
 
-def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=False):
+def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
     """
     Similar to IDL histogram.
     """
