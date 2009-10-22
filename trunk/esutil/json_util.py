@@ -19,12 +19,11 @@ Some convenience functions for working with json files.
 """
 import json
 
-have_cjson=False
 try:
     import cjson
     have_cjson=True
 except:
-    pass
+    have_cjson=False
 
 def read(fname):
     """

@@ -55,7 +55,7 @@ def exec_process(command, timeout=None,
                         stderr=subprocess.PIPE, 
                         verbose=False)
 
-    Execute the command with a timeout in seconds
+    Execute the command with a possible timeout in seconds
     """
 
     # the user can send file names, PIPE, or a file object
@@ -111,4 +111,33 @@ def exec_process(command, timeout=None,
 
     return exit_status, stdout_ret, stderr_ret
 
+def dict_select(input_dict, keep=[], remove=[]):
+    """
+    newdict = dict_select(input_dict, keep=all, remove=[])
+
+    Select a subset of keys from the input dict.
+
+        keep=[]: A list of keys to keep. If the input
+            is None or [] all keys are returned that are not in the
+            remove list.  Default [].
+        remove=[]: A list of keys to ignore.  Defaults to [].
+
+    """
+
+    outdict={}
+
+    if keep is None:
+        keep = []
+    if remove is None:
+        remove = []
+
+    if len(keep) == 0:
+        # wrap in list() for py3k in which keys() does not return a list.
+        keep = list( input_dict.keys() )
+
+    for key in keep:
+        if key in input_dict and key not in remove:
+            outdict[key] = input_dict[key]
+
+    return outdict
 
