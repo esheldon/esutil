@@ -1,7 +1,8 @@
 import esutil
 
-def test_histogram(nrand=None, fixed=False, use_weave=False, display=True):
+def test_histogram(nrand=None, fixed=False, use_weave=True, display=True):
 
+    import numpy
     min=None
     max=None
     if fixed:
@@ -25,8 +26,8 @@ def test_histogram(nrand=None, fixed=False, use_weave=False, display=True):
         binsize=0.05
 
 
-    hist,rev = esutil.histogram(data, binsize=binsize, min=min, max=max,
-                                rev=True,use_weave=use_weave)
+    hist,rev = esutil.stat.histogram(data, binsize=binsize, min=min, max=max,
+                                     rev=True,use_weave=use_weave)
 
     if display:
         print hist
