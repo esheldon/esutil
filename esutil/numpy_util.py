@@ -436,6 +436,38 @@ def byteswap(array, inplace=False, keep_dtype=False):
 
     return outdata
       
+def unique(arr, values=False):
+    """
+    un = unique(arr, values=False)
+
+    return indices of unique elements of a numpy array, or the 
+    unique values if values=True.  This is not order preserving.
+
+    """
+    n = arr.size
+    keep = numpy.zeros(n, dtype='i8')
+
+    s = arr.argsort()
+
+    val = arr[0]
+    i=1
+    nkeep = 0
+    while i < n:
+        ind = s[i]
+        if arr[ind] != val:
+            val = arr[ind]
+            nkeep += 1
+            keep[nkeep] = ind
+        i += 1
+
+    keep = keep[0:nkeep+1]
+    if values:
+        return arr[keep]
+    else:
+        return keep
+
+
+
 
 def match(arr1, arr2):
     """
