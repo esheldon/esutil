@@ -17,7 +17,12 @@ Some convenience functions for working with json files.
 
 
 """
-import json
+
+try:
+    import json
+    have_json=True
+except:
+    have_json=False
 
 try:
     import cjson
@@ -33,6 +38,9 @@ def read(fname):
     available, an attempt to use it is made.  If this fails (cjson is known
     to fail in certain corner cases) ordinary json is tried.  
     """
+
+    if not have_json and not have_cjson:
+        raise ImportError("Neither cjson or json could be imported")
 
     input_fileobj=False
     if isinstance(fname, file):
@@ -64,6 +72,9 @@ def write(obj, fname, pretty=True):
     supports human readable writing.  Sending pretty=False to the write
     program will force use of cjson if it is available.
     """
+
+    if not have_json and not have_cjson:
+        raise ImportError("Neither cjson or json could be imported")
 
     input_fileobj=False
     if isinstance(fname,file):

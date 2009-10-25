@@ -100,6 +100,10 @@ def xml2dict(root, dictclass=XmlDictObject, seproot=False, noroot=False):
     is returned.  The name of the roottag is lost in this case.
     """
 
+    if not have_element_tree:
+        raise ImportError("Neither cElementTree or ElementTree could "
+                          "be imported")
+
     # If a string is passed in, try to open it as a file
     if type(root) == type(''):
         root = ElementTree.parse(root).getroot()
@@ -170,6 +174,10 @@ def dict2xml(xmldict, filename_or_obj=None, roottag=None):
     If roottag is sent, the root will be created with that name and the
     input dictionary will be placed under that tag.
     """
+
+    if not have_element_tree:
+        raise ImportError("Neither cElementTree or ElementTree could "
+                          "be imported")
 
     if roottag is None:
         keys = list( xmldict.keys() )

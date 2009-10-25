@@ -51,5 +51,7 @@ import json_util
 import stat
 import numpy_util
 import oracle_util
+import sfile
+import io
 
 import test

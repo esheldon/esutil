@@ -51,3 +51,13 @@ def getenv_check(name):
     return val
 
 
+def expand_filename(filename):
+    """
+    expand all user info such as ~userid and environment
+    variables such as $SOMEVAR.
+    """
+    fname = os.path.expanduser(filename)
+    fname = os.path.expandvars(fname)
+    return fname
+
+
