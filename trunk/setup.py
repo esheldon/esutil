@@ -1,6 +1,12 @@
 import sys,os
-from distutils.core import setup
+import time
+from sys import stdout,stderr
 
+from distutils.core import setup,Extension
+
+
+
+# create the ups table
 pyvers='%s.%s' % sys.version_info[0:2]
 d1='lib/python%s/site-packages' % pyvers
 d2='lib64/python%s/site-packages' % pyvers
@@ -21,8 +27,33 @@ envPrepend(PYTHONPATH,${PRODUCT_DIR}/%s)
 tablefile.write(tab)
 tablefile.close()
 
+
+
+# can we build recfile?
+packages = ['esutil']
+try:
+    import numpy
+    include_dirs=numpy.get_include()
+    ext_modules = [Extension('esutil.recfile._records', 
+                               sources=['esutil/recfile/records.cpp',
+                                        'esutil/recfile/records_wrap.cpp'])]
+    packages.append('esutil.recfile')
+
+except:
+    stdout.write('Numpy not found:  Not building recfile\n')
+    time.sleep(5)
+
+    ext_modules=[]
+    include_dirs=[]
+
+
+
+
 # data_files copies the ups/esutil.table into prefix/ups
 setup(name='esutil',
-      description='Erin Sheldons Utilities',
-      packages=['esutil'],
-      data_files=[('ups',['ups/esutil.table'])])
+      description='Erin Sheldons Python Utilities',
+      url='http://code.google.com/p/esutil/',
+      packages=packages,
+      data_files=[('ups',['ups/esutil.table'])],
+      ext_modules=ext_modules,
+      include_dirs=include_dirs)
