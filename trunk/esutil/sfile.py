@@ -33,7 +33,8 @@ def write(array, outfile, delim=None, append=False, header=None):
         array: A numpy array.
         outfile: A string or file pointer for the output file.
     Optional Inputs:
-        delim: Delimiter between fields.  Default is None for binary.
+        delim: Delimiter between fields.  Default is None for binary.  For
+            ascii can be any string, e.g. ',', ' ', or a tab character.
         append=False: Append to the file. Default is False. If set to True,
             then what happens is situation dependent:
                 1) if the input is a file object then it is assumed there is 
@@ -56,24 +57,11 @@ def write(array, outfile, delim=None, append=False, header=None):
 
         sfile.write(arr2, 'test.pya', append=True)
 
-    The file format:
-      First line:
-          NROWS = --------------number
-      where the number is formatted as %20d.  This is large enough to hold
-      a 64-bit number
-
-      The header must also contain:
-          DTYPE = array data type description in list of tuples form. For
-              example DTYPE = [('field1', 'f8'), ('f2','2i4')]
-      Case doesn't matter in keyword names. There can be other header 
-      keyword-value pairs, e.g.
-          x = 3
-          y = 'hello world'
-      Last two lines of header:
-          END
-          blank line
-      Then the entire array is written as a single chunk of data.
-
+    File Format:
+        The file format is an ascii header followed by data in binary or rows
+        of ascii.  The data columns must be fixed length in order to map onto
+        numpy arrays.  See the documentation for read_header() for details
+        about the header format.
 
     Modification History:
         Created: 2007-05-25, Erin Sheldon, NYU
@@ -93,8 +81,8 @@ def write(array, outfile, delim=None, append=False, header=None):
     # Write the header
     nrows = array.size
     descr = array.dtype.descr
-    _WriteHeader(fobj, nrows, descr, delim=delim, append=doappend, 
-                 header=header)
+    _write_header(fobj, nrows, descr, delim=delim, append=doappend, 
+                  header=header)
 
     if (delim is not None) and (have_recfile is not True):
         sys.stdout.write("delim='"+delim+"'\n")
@@ -208,28 +196,19 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
         arr2, hdr = sfile.read('test.pya', 
                                rows=[3,4], fields=['ra', 'dec'], header=True)
 
-    The file format:
-      First line:
-          NROWS = --------------number
-      where the number is formatted as %20d.  This is large enough to hold
-      a 64-bit number
+    File Format:
+        The file format is an ascii header followed by data in binary or rows
+        of ascii.  The data columns must be fixed length in order to map onto
+        numpy arrays.  See the documentation for read_header() for details
+        about the header format.
 
-      The header must also contain:
-          DTYPE = array data type description in list of tuples form. For
-              example DTYPE = [('field1', 'f8'), ('f2','2i4')]
-      Case doesn't matter in keyword names. There can be other header 
-      keyword-value pairs, e.g.
-          x = 3
-          y = 'hello world'
-      Last two lines of header:
-          END
-          blank line
-      Then the entire array is written as a single chunk of data.
 
     Modification History:
         Created: 2007-05-25, Erin Sheldon, NYU
         Allow continuation characters "\\" to continue header keywords
         onto the next line.  2009-05-05
+
+        Switched over to new header format.  2009-10-38, Erin Sheldon, BNL.
     """
 
     if not have_numpy:
@@ -371,8 +350,7 @@ def read_header_old(infile):
       Last two lines of header:
           END
           blank line
-      Then the entire array is written as a single chunk of data
-      or rows of ascii.
+          data
 
     Modification History:
         Created: 2007-05-25, Erin Sheldon, NYU
@@ -439,7 +417,8 @@ def read_header(infile):
 
     Examples:
         import sfile
-        hdr=sfile.read_header('test.pya')
+        hdr=sfile.read_header('test.rec')
+
 
     The file format:
       First line:
@@ -447,27 +426,69 @@ def read_header(infile):
       where the number is formatted as %20d.  This is large enough to hold
       a 64-bit number
 
-      The header must also contain:
-          DTYPE = array data type description in list of tuples form. For
-              example DTYPE = [('field1', 'f8'), ('f2','2i4')]
-      Case doesn't matter in keyword names. There can be other header 
-      keyword-value pairs, e.g.
-          x = 3
-          y = 'hello world'
-      For lines other than the first and last, continuation marks \\ 
-      can be used.  e.g
-          dtype = [('x','f4'), \\
-                   ('y','i8')]
-      Last two lines of header:
+
+      Last two lines of the header region must be:
           END
           blank line
-      Then the entire array is written as a single chunk of data
-      or rows of ascii.
+
+      
+      In between the NROWS and END lines is the header data.  This is a 
+      string that must eval() to a dictionary.  It must
+      contain the following entry:
+
+          _DTYPE = array data type description in list of tuples form. For
+              example [('field1', 'f8'), ('f2','2i4')]
+
+      case does not matter.
+
+      If the data are ascii then delimiter must be given in the keyword
+          _DELIM.  This can be for example ',', ' ', or a tab character.
+      Again, case does not matter.  
+
+      The rest of the keywords are open and any variable can be used
+      as long as it can be eval()d.
+
+      An example header:
+        NROWS =                   10
+        {'_DELIM': ',',
+         '_DTYPE': [('x', 'f4'),
+                    ('y', 'f4'),
+                    ('ra', 'f8'),
+                    ('dec', 'f8'),
+                    ('exposurename', 'S20'),
+                    ('ccd', 'i1'),
+                    ('size_flags', 'i4'),
+                    ('magi', 'f4'),
+                    ('sigma0', 'f4'),
+                    ('star_flag', 'i4'),
+                    ('shear_flags', 'i4'),
+                    ('shapelet_sigma', 'f4'),
+                    ('shear1', 'f4'),
+                    ('shear2', 'f4'),
+                    ('shear_cov00', 'f4'),
+                    ('shear_cov01', 'f4'),
+                    ('shear_cov11', 'f4')],
+         'listvar': [1, 2, 3],
+         'subd': {'subd1': 'subfield', 'sublist': [8.5, 6.6]},
+         'svar': 'hello',
+         'test1': 35}
+        END
+
+        -- data begins --
 
     Modification History:
         Created: 2007-05-25, Erin Sheldon, NYU
         Allow continuation characters "\\" to continue header keywords
-        onto the next line.  2009-05-05
+            onto the next line.  2009-05-05
+
+        Switched header to be simply a dictionary representation.
+            NROWS = %20d
+            { a dictionary representation }
+            END
+            blank line
+        This is much more powerful and simple.  Anything that can be eval()d
+        can be in the header, including numpy arrays.  
+                    2009-10-28. Erin Sheldon, BNL
     """
 
     if not have_numpy:
@@ -512,7 +533,7 @@ def read_header(infile):
     return hdr
 
 
-def _WriteHeader(fobj, nrows, descr, delim=None, header=None, append=False):
+def _write_header(fobj, nrows, descr, delim=None, header=None, append=False):
     import pprint
     from copy import copy
 
