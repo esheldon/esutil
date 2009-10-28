@@ -410,7 +410,7 @@ def to_little_endian(array, inplace=False, keep_dtype=False):
                 break
 
     if doswap:
-        outdata = byteswap(outdata, inplace, keep_dtype=keep_dtype)
+        outdata = byteswap(array, inplace, keep_dtype=keep_dtype)
     else:
         if inplace:
             outdata=array

@@ -54,4 +54,9 @@ import oracle_util
 import sfile
 import io
 
+try:
+    import recfile
+except:
+    pass
+
 import test

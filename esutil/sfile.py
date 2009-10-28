@@ -11,12 +11,21 @@ except:
     have_numpy=False
 
 try:
-    import recfile
-    have_recfile=True
+    try:
+        # look for local install of recfile first
+        from esutil import recfile
+        have_recfile=True
+        #sys.stdout.write("got as from esutil import recfile\n")
+    except:
+        # might be installed elsewhere
+        import recfile
+        have_recfile=True
+        #sys.stdout.write("got as import recfile\n")
 except:
     have_recfile=False
     #sys.stdout.write('recfile could not be imported.  Only simple access '+\
     #                 'supported\n')
+
 
 def write(array, outfile, delim=None, append=False, header=None):
     """
@@ -430,6 +439,7 @@ def read_header(infile):
       Last two lines of the header region must be:
           END
           blank line
+      case does not matter.
 
       
       In between the NROWS and END lines is the header data.  This is a 
