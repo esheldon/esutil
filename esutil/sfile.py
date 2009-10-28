@@ -3,6 +3,9 @@ import os
 
 try:
     import numpy
+    # importing array will allow array types in the header to be properly
+    # eval()uated.  Not sure if this works for all dtypes.
+    from numpy import array
     have_numpy=True
 except:
     have_numpy=False
@@ -15,7 +18,7 @@ except:
     #sys.stdout.write('recfile could not be imported.  Only simple access '+\
     #                 'supported\n')
 
-def write(array, outfile, delim=None, append=False, header={}):
+def write(array, outfile, delim=None, append=False, header=None):
     """
     sfile.write()
 
@@ -238,7 +241,7 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
     # Get the header
     hdr=read_header(fobj)
 
-    delim = _MatchKey(hdr,'delim')
+    delim = _MatchKey(hdr,'_delim')
 
     if delim is not None:
         if not have_recfile:
@@ -330,9 +333,7 @@ def extract_fields(arr, keepnames):
     return new_arr
 
 
-
-
-def read_header(infile):
+def read_header_old(infile):
     """
     sfile..read_header()
 
@@ -411,7 +412,8 @@ def read_header(infile):
     # read one more line, which should be blank
     line = fobj.readline()
     if line.strip() != '':
-        raise RuntimeError('Header should end END and then a blank line')
+        raise RuntimeError("Header should end with END on it's own line "
+                           "followed by a blank line")
 
     # close file if was opened locally
     if f_isstring:
@@ -420,13 +422,110 @@ def read_header(infile):
     return hdr
 
 
-def _WriteHeader(fobj, nrows, descr, delim=None, header={}, append=False):
+
+def read_header(infile):
+    """
+    sfile..read_header()
+
+    Read the header from a simple self-describing file format with an 
+    ascii header.  See the write() function for information
+    about reading this file format, and read() for reading.
+
+    Calling Sequence:
+        sfile.read_header(infile)
+
+    Inputs:
+        infile: A string or file pointer for the input file.
+
+    Examples:
+        import sfile
+        hdr=sfile.read_header('test.pya')
+
+    The file format:
+      First line:
+          NROWS = --------------number
+      where the number is formatted as %20d.  This is large enough to hold
+      a 64-bit number
+
+      The header must also contain:
+          DTYPE = array data type description in list of tuples form. For
+              example DTYPE = [('field1', 'f8'), ('f2','2i4')]
+      Case doesn't matter in keyword names. There can be other header 
+      keyword-value pairs, e.g.
+          x = 3
+          y = 'hello world'
+      For lines other than the first and last, continuation marks \\ 
+      can be used.  e.g
+          dtype = [('x','f4'), \\
+                   ('y','i8')]
+      Last two lines of header:
+          END
+          blank line
+      Then the entire array is written as a single chunk of data
+      or rows of ascii.
+
+    Modification History:
+        Created: 2007-05-25, Erin Sheldon, NYU
+        Allow continuation characters "\\" to continue header keywords
+        onto the next line.  2009-05-05
+    """
+
+    if not have_numpy:
+        raise ImportError("numpy could not be imported")
+
+    # Get the file object
+    fobj,f_isstring,junk = _GetFobj(infile,'read')
+
+    line = fobj.readline().strip()
+    lsplit = line.split('=')
+    if len(lsplit) != 2:
+        raise ValueError("First line of header must be NROWS = %20d")
+    fname=lsplit[0].strip()
+    if fname.upper() != 'NROWS':
+        raise ValueError("First line of header must be NROWS = %20d")
+
+    nrows = eval(lsplit[1])
+
+
+    # Read through the header until we hit "END"
+    lines = []
+    line=fobj.readline().strip()
+    while line.upper() != 'END':
+        lines.append(line)
+        line=fobj.readline().strip()
+
+    # read one more line, which should be blank
+    line = fobj.readline()
+    if line.strip() != '':
+        raise RuntimeError("Header should end with END on it's own line "
+                           "followed by a blank line")
+
+    hdrstring = ' '.join(lines)
+    hdr = eval(hdrstring)
+
+    hdr['_NROWS'] = nrows
+
+    # close file if was opened locally
+    if f_isstring:
+        fobj.close()
+
+    return hdr
+
+
+def _WriteHeader(fobj, nrows, descr, delim=None, header=None, append=False):
+    import pprint
+    from copy import copy
+
     if append:
         # Just update the nrows and move to the end
         _UpdateNrows(fobj, nrows)
         fobj.seek(0,2) # Seek to end of file
     else:
         # Write a full new header
+        if header is None:
+            head={}
+        else:
+            head=copy(header)
 
         if delim is not None:
             # Text file
@@ -436,6 +535,18 @@ def _WriteHeader(fobj, nrows, descr, delim=None, header={}, append=False):
         fobj.seek(0)
 
         _WriteNrows(fobj, nrows)
+
+        head['_DTYPE'] = descr
+        if delim is not None:
+            head['_DELIM'] = delim
+
+
+        s=pprint.pformat(head)
+        fobj.write(s)
+        fobj.write('\n')
+
+        crap="""
+
         if delim is not None:
             _WriteDelim(fobj, delim)
         _WriteDescr(fobj, descr)
@@ -451,6 +562,7 @@ def _WriteHeader(fobj, nrows, descr, delim=None, header={}, append=False):
                 k=k.lower()
                 if k not in ['dtype','nrows','delim']:
                     fobj.write(k+' = '+str(v)+'\n')
+        """
 
         fobj.write('END\n')
         fobj.write('\n')
@@ -507,7 +619,7 @@ def _GetNrows(header):
     if not isinstance(header,dict):
         raise RuntimeError('header must be a dict')
 
-    nrows = _MatchKey(header,'nrows')
+    nrows = _MatchKey(header,'_nrows')
     if nrows is not None:
         return int(nrows)
     else:
@@ -517,7 +629,7 @@ def _GetDtype(header):
     if not isinstance(header,dict):
         raise RuntimeError('header must be a dict')
 
-    dtype = _MatchKey(header,'dtype')
+    dtype = _MatchKey(header,'_dtype')
     if dtype is not None:
         return dtype
     else:
