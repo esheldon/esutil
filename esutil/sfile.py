@@ -433,7 +433,8 @@ def read_header(infile):
       First line:
           NROWS = --------------number
       where the number is formatted as %20d.  This is large enough to hold
-      a 64-bit number
+      a 64-bit number.  This exact formatting is required so NROWS can
+      be updated *in place* when appending rows to the file.
 
 
       Last two lines of the header region must be:
