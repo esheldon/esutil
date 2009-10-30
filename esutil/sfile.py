@@ -571,10 +571,17 @@ def _write_header(fobj, nrows, descr, delim=None, header=None, append=False):
         if delim is not None:
             head['_DELIM'] = delim
 
+        # remove _NROWS which make be there from a previous header read
+        if '_NROWS' in head: del head['_NROWS']
+        if '_nrows' in head: del head['_nrows']
 
-        s=pprint.pformat(head)
-        fobj.write(s)
-        fobj.write('\n')
+
+        #s=pprint.pformat(head)
+        #fobj.write(s)
+        #fobj.write('\n')
+        # As long as the dict contains types that can be represented as constants,
+        # this pretty printing can be eval()d.
+        pprint.pprint(head, stream=fobj)
 
         crap="""
 
