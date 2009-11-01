@@ -43,12 +43,15 @@ license="""
 
 
 """
-import numpy
-from numpy import where, sin, cos, arccos, arcsin, arctan2, sqrt
-import es_util as eu
 
+try:
+    import numpy
+    from numpy import where, sin, cos, arccos, arcsin, arctan2, sqrt
+    have_numpy=True
+except:
+    have_numpy=False
 
-PI=numpy.pi
+PI=3.1415926535897931
 D2R = PI/180.0
 R2D = 1.0/D2R
 
@@ -77,7 +80,7 @@ _sdsspar['doc'] = """
 """
 
 
-def euler(ai_in, bi_in, select, b1950=False, dtype=numpy.float64):
+def euler(ai_in, bi_in, select, b1950=False, dtype='f8'):
     """
     NAME:
         euler
@@ -86,7 +89,7 @@ def euler(ai_in, bi_in, select, b1950=False, dtype=numpy.float64):
 
     CALLING SEQUENCE:
         long_out, lat_out = 
-            euler(long_in, lat_in, type, b1950=False, dtype=numpy.float64)
+            euler(long_in, lat_in, type, b1950=False, dtype='f8')
 
     INPUTS:
        long_in - Input Longitude in DEGREES, scalar or vector.  
@@ -195,21 +198,21 @@ def euler(ai_in, bi_in, select, b1950=False, dtype=numpy.float64):
 #
 # Some clearer shortcut functions which call Euler
 #
-def eq2gal(ra, dec, b1950=False, dtype=numpy.float64):
+def eq2gal(ra, dec, b1950=False, dtype='f8'):
     """
     NAME
         eq2gal
     PURPOSE
         Convert from equatorial to galactic coordinates in units of degrees.
     CALLING SEQUENCE
-        l,b = eq2gal(ra, dec, b1950=False, dtype=numpy.float64)
+        l,b = eq2gal(ra, dec, b1950=False, dtype='f8')
     INPUTS
         ra, dec: Equatorial coordinates.  May be Numpy arrays, sequences, or
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
         b1950:  If True, use b1950 coordiates.  By default j200 are used.
-        dtype:  The datatype of the output arrays.  Default is float64
+        dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         l, b:  Galactic longitude and latitude.  The returned value is always
             a Numpy array with the specified dtype
@@ -219,21 +222,21 @@ def eq2gal(ra, dec, b1950=False, dtype=numpy.float64):
     return euler(ra, dec, 1, b1950=b1950, dtype=dtype)
 
 
-def gal2eq(l, b, b1950=False, dtype=numpy.float64):
+def gal2eq(l, b, b1950=False, dtype='f8'):
     """
     NAME
         gal2eq
     PURPOSE
         Convert from galactice to equatorial coordinates in units of degrees.
     CALLING SEQUENCE
-        ra,dec = gal2eq(l, b, b1950=False, dtype=numpy.float64)
+        ra,dec = gal2eq(l, b, b1950=False, dtype='f8')
     INPUTS
         l, b: Galactic coordinates.  May be Numpy arrays, sequences, or
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
         b1950:  If True, use b1950 coordiates.  By default j200 are used.
-        dtype:  The datatype of the output arrays.  Default is float64
+        dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         ra, dec:  Equatorial longitude and latitude.  The returned value is 
             always a Numpy array with the specified dtype
@@ -243,21 +246,21 @@ def gal2eq(l, b, b1950=False, dtype=numpy.float64):
 
     return euler(l, b, 2, b1950=b1950, dtype=dtype)
 
-def eq2ec(ra, dec, b1950=False, dtype=numpy.float64):
+def eq2ec(ra, dec, b1950=False, dtype='f8'):
     """
     NAME
         eq2ec
     PURPOSE
         Convert from equatorial to ecliptic coordinates in units of degrees.
     CALLING SEQUENCE
-        lam,beta = eq2ec(ra, dec, b1950=False, dtype=numpy.float64)
+        lam,beta = eq2ec(ra, dec, b1950=False, dtype='f8')
     INPUTS
         ra, dec: Equatorial coordinates.  May be Numpy arrays, sequences, or
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
         b1950:  If True, use b1950 coordiates.  By default j200 are used.
-        dtype:  The datatype of the output arrays.  Default is float64
+        dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         lam, beta:  Ecliptic longitude and latitude.  The returned value is 
             always a Numpy array with the specified dtype
@@ -267,21 +270,21 @@ def eq2ec(ra, dec, b1950=False, dtype=numpy.float64):
 
     return euler(ra, dec, 3, b1950=b1950, dtype=dtype)
 
-def ec2eq(lam, beta, b1950=False, dtype=numpy.float64):
+def ec2eq(lam, beta, b1950=False, dtype='f8'):
     """
     NAME
         ec2eq
     PURPOSE
         Convert from ecliptic to equatorial coordinates in units of degrees.
     CALLING SEQUENCE
-        ra,dec = eq2gal(lam, beta, b1950=False, dtype=numpy.float64)
+        ra,dec = eq2gal(lam, beta, b1950=False, dtype='f8')
     INPUTS
         lam,beta: Ecliptic coordinates.  May be Numpy arrays, sequences, or
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
         b1950:  If True, use b1950 coordiates.  By default j200 are used.
-        dtype:  The datatype of the output arrays.  Default is float64
+        dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         ra,dec:  Equatorial longitude and latitude.  The returned value is 
             always a Numpy array with the specified dtype
@@ -291,21 +294,21 @@ def ec2eq(lam, beta, b1950=False, dtype=numpy.float64):
 
     return euler(lam, beta, 4, b1950=b1950, dtype=dtype)
 
-def ec2gal(lam, beta, b1950=False, dtype=numpy.float64):
+def ec2gal(lam, beta, b1950=False, dtype='f8'):
     """
     NAME
         ec2gal
     PURPOSE
         Convert from ecliptic to galactic coordinates in units of degrees.
     CALLING SEQUENCE
-        l,b = eq2gal(lam, beta, b1950=False, dtype=numpy.float64)
+        l,b = eq2gal(lam, beta, b1950=False, dtype='f8')
     INPUTS
         lam, beta: Ecliptic coordinates.  May be Numpy arrays, sequences, or
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
         b1950:  If True, use b1950 coordiates.  By default j200 are used.
-        dtype:  The datatype of the output arrays.  Default is float64
+        dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         l, b:  Galactic longitude and latitude.  The returned value is always
             a Numpy array with the specified dtype
@@ -315,21 +318,21 @@ def ec2gal(lam, beta, b1950=False, dtype=numpy.float64):
 
     return euler(lam, beta, 5, b1950=b1950, dtype=dtype)
 
-def gal2ec(l, b, b1950=False, dtype=numpy.float64):
+def gal2ec(l, b, b1950=False, dtype='f8'):
     """
     NAME
         gal2ec
     PURPOSE
         Convert from Galactic to Ecliptic coordinates in units of degrees.
     CALLING SEQUENCE
-        lam,beta = eq2gal(l, b, b1950=False, dtype=numpy.float64)
+        lam,beta = eq2gal(l, b, b1950=False, dtype='f8')
     INPUTS
         l, b: Galactic coordinates.  May be Numpy arrays, sequences, or
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
         b1950:  If True, use b1950 coordiates.  By default j200 are used.
-        dtype:  The datatype of the output arrays.  Default is float64
+        dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         lam,beta:  Ecliptic longitude and latitude.  The returned value is 
             always a Numpy array with the specified dtype
@@ -359,7 +362,7 @@ def _xyz2thetaphi(x,y,z):
 
     return theta, phi
 
-def eq2xyz(ra, dec, dtype=numpy.float64):
+def eq2xyz(ra, dec, dtype='f8'):
     """
     This is same as stomp
     """
@@ -443,7 +446,7 @@ def atbound2(theta, phi):
         phi[w] = 0.0
            
 
-def eq2sdss(ra_in, dec_in, dtype=numpy.float64):
+def eq2sdss(ra_in, dec_in, dtype='f8'):
     """
     NAME:
       eq2sdss
@@ -458,15 +461,15 @@ def eq2sdss(ra_in, dec_in, dtype=numpy.float64):
 
     CALLING SEQUENCE:
       import astro_util as au
-      (clambda, ceta) = au.eq2sdss(ra, dec, dtype=float64)
+      (clambda, ceta) = au.eq2sdss(ra, dec, dtype='f8')
 
     INPUTS: 
       ra: Equatorial latitude in degrees. 
       dec: Equatorial longitude in degrees. 
     OPTIONAL INPUTS:
-        dtype: The data type of output.  Default is float64. See 
+        dtype: The data type of output.  Default is 'f8'. See 
         numpy.typeDict for a list of possible types.
-        dtype: The data type of output.  Default is numpy.float64.
+        dtype: The data type of output.  Default is 'f8'.
 
     OUTPUTS: 
       clambda: Corrected Survey longitude (actually lattitude) in degrees
@@ -523,7 +526,7 @@ def eq2sdss(ra_in, dec_in, dtype=numpy.float64):
     
     return (clambda, ceta)
 
-def sdss2eq(clambda_in, ceta_in, dtype=numpy.float64):
+def sdss2eq(clambda_in, ceta_in, dtype='f8'):
     """
     NAME:
       sdss2eq
@@ -533,13 +536,13 @@ def sdss2eq(clambda_in, ceta_in, dtype=numpy.float64):
 
     CALLING SEQUENCE:
       import astro_util as au
-      (ra, dec) = au.sdss2eq(clambda, ceta, dtype=float64)
+      (ra, dec) = au.sdss2eq(clambda, ceta, dtype='f8')
 
     INPUTS: 
       clambda: Corrected Survey longitude (actually lattitude) in degrees
       ceta: Corrected Survey latitude (actually logitude) in degrees
     OPTIONAL INPUTS:
-        dtype: The data type of output.  Default is float64. See 
+        dtype: The data type of output.  Default is 'f8'. See 
         numpy.typeDict for a list of possible types.
 
     OUTPUTS: 
@@ -577,7 +580,7 @@ def sdss2eq(clambda_in, ceta_in, dtype=numpy.float64):
     return (ra,dec)
 
 
-def _eq2survey(ra_in, dec_in, dtype=numpy.float64):
+def _eq2survey(ra_in, dec_in, dtype='f8'):
     """
     NAME:
       _eq2survey
@@ -588,13 +591,13 @@ def _eq2survey(ra_in, dec_in, dtype=numpy.float64):
 
     CALLING SEQUENCE:
       import astro_util as au
-      (lambda, eta) = au._eq2survey(ra, dec, dtype=float64)
+      (lambda, eta) = au._eq2survey(ra, dec, dtype='f8')
 
     INPUTS: 
       ra: Equatorial latitude in degrees. 
       dec: Equatorial longitude in degrees. 
     OPTIONAL INPUTS:
-        dtype: The data type of output.  Default is float64. See 
+        dtype: The data type of output.  Default is 'f8'. See 
         numpy.typeDict for a list of possible types.
 
     OUTPUTS: 
@@ -663,7 +666,7 @@ def _eq2survey(ra_in, dec_in, dtype=numpy.float64):
     return (lam, eta)
 
 
-def _survey2eq(ra, dec, dtype=numpy.float64):
+def _survey2eq(ra, dec, dtype='f8'):
     """
     NAME:
       _survey2eq
@@ -673,13 +676,13 @@ def _survey2eq(ra, dec, dtype=numpy.float64):
 
     CALLING SEQUENCE:
       import astro_util as au
-      (ra, dec) = au._survey2eq(lam, eta, dtype=float64)
+      (ra, dec) = au._survey2eq(lam, eta, dtype='f8')
 
     INPUTS: 
       lambda: Survey longitude (actually lattitude) in degrees
       eta:    Survey latitude (actually logitude) in degrees
     OPTIONAL INPUTS:
-        dtype: The data type of output.  Default is float64. See 
+        dtype: The data type of output.  Default is 'f8'. See 
         numpy.typeDict for a list of possible types.
       
     OUTPUTS: 
