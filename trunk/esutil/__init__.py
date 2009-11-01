@@ -54,6 +54,8 @@ import oracle_util
 import sfile
 import io
 import wcsutil
+import cosmology
+import astro_util
 
 try:
     import recfile
