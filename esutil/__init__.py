@@ -53,6 +53,7 @@ import numpy_util
 import oracle_util
 import sfile
 import io
+import wcsutil
 
 try:
     import recfile
