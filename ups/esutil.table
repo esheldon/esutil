@@ -5,5 +5,5 @@
 # there are no required dependencies, so this is somewhat moot.
 
 setupOptional("python")
-envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib/python2.6/site-packages)
-envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib64/python2.6/site-packages)
+envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib/python2.5/site-packages)
+envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib64/python2.5/site-packages)

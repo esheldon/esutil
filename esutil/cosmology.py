@@ -2,7 +2,7 @@
     NAME:
         cosmology
     PURPOSE:
-        A set of modules for calculating distances in an expanding universe.
+        A set of tools for calculating distances in an expanding universe.
         These routines are completely general for any specified omega_m,
         omega_k, and cosmological constant omega_l.  This code follows the
         conventions of Hogg astro-ph/9905116.
