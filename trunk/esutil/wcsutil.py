@@ -127,6 +127,8 @@ class WCS:
         import pyfits
         hdr=pyfits.getheader(fname)
         wcs = wcsutil.WCS(hdr)
+        # x,y are scalars or numpy arrays.  The returned ra,dec are always
+        # numpy arrays.
         ra,dec = wcs.image2sky(x,y)
 
         # the inverse.  When there is a distortion model prosent, by default 
