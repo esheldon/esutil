@@ -622,7 +622,6 @@ def to_little_endian(array, inplace=False, keep_dtype=False):
 
     REVISION HISTORY:
         Created 2009, Erin Sheldon, NYU.
-
     """
 
     doswap=False
