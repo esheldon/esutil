@@ -1,3 +1,83 @@
+"""
+Utilities for using and manipulating numerical python arrays (NumPy).
+
+    arrscl(arr, minval, maxval, arrmin=None, arrmax=None)
+        Rescale the range of an array to be between minval and maxval.
+
+    make_xy_grid(npoints, xrange, yrange)
+        Create a grid of x-y points, returning x and y as numpy arrays.
+
+    combine_arrlist(list_of_arrays, keep=False)
+        Combine the list of arrays into one big array.  Arrays must all have
+        the same datatype.
+
+    copy_fields(array1, array2)
+        Copy common fields from one numpy array to another.  The name 
+        matching is case senitive.
+
+    extract_fields(array, names)
+        Extract a set of fields from a numpy array.  A new array is returned
+        with the requested fields and data copied in.  The name matching 
+        is case sensitive.
+
+    remove_fields(array, names)
+        Remove a set of fields from the array.  A new array is returned
+        with the leftover fields and data copied in.  The name matching 
+        is case sensitive.
+
+    add_fields(arr, dtype_or_descr, defaults=None)
+        Create a new array with fields from the input array and new
+        fields as indicated by the input numpy type descriptor.
+        The data are copied from the original array.
+
+    copy_fields_by_name(arr, names, values)
+        Copy values into a numpy array by field name.
+
+    compare_arrays(array1, array2, ignore_missing=True, verbose=False)
+        Compare the values field-by-field in two sets of numpy arrays or
+        recarrays.  Return true if the data match.
+
+
+    is_big_endian(array)
+        Return True if array is big endian.  Note strings are neither big
+        or little endian.  The input must be a simple numpy array, not
+        an array with fields.
+
+    is_little_endian(array)
+        Return True if array is little endian. Note strings are neither big
+        or little endian.  The input must be a simple numpy array, not
+        an array with fields.
+
+
+    to_big_endian(array, inplace=False, keep_dtype=False)
+        Convert an array to big endian byte order, updating the dtype to
+        reflect this.  The array can have fields. 
+    to_little_endian(array, inplace=False, keep_dtype=False)
+        Convert an array to little endian byte order, updating the dtype to
+        reflect this.  The array can have fields.  
+
+    byteswap(array, inplace=False, keep_dtype=False)
+        Chance the byte order of an array, updating the dtype to reflect this.
+        The array can have fields.   This is a wrapper for the .byteswap()
+        method which does not update the dtype to reflect the new byte
+        ordering.
+
+    unique(arr, values=False)
+        Return indices of unique elements of a numpy array, or optionally
+        the unique values.  This is not order preserving.  This is currently
+        implemented in a slow fashion, should be updated.
+
+    match(arr1, arr2)
+        match two numpy arrays.  Return the indices of the matches or [-1] if
+        no matches are found.  This means arr1[ind1] == arr2[ind2] is true for
+        all corresponding pairs. Arrays must contain only unique elements
+
+
+    dict2array(dict, sort=False, keys=None)
+        Convert a dictionary to a numpy array.  Works for simple typs such as
+        strings, integers, floating.
+
+""" 
 import sys
 from sys import stdout, stderr
 import copy
@@ -7,52 +87,6 @@ try:
     have_numpy=True
 except:
     have_numpy=False
-
-def dict2array(d, sort=False, keys=None):
-    """
-
-    Convert a dictionary to an array with fields (recarray, structured array).
-    This works for simple types e.g.  strings, integers, floating points.
-
-    You can send the keys= keyword to provide a sequence of keys to copy.
-    This can be used to order the fields (standard dictionary keys are
-    unordered) or copy only a subset of keys.
-
-    You can also send sort=True to sort the keys.
-
-    In python >= 3.1 you can used ordered dictionaries.
-
-    """
-    desc=[]
-
-    if keys is None:
-        if sort:
-            keys=sorted(d)
-        else:
-            keys=list(d.keys())
-
-    for key in keys:
-        # check key existence in case a set of keys was sent
-        if key not in d:
-            raise KeyError("Requested key %s not in dictionary" % key)
-
-        if isinstance(d[key], int):
-            dt=int
-        elif isinstance(d[key], float):
-            dt=float
-        elif isinstance(d[key], str):
-            dt='S%s' % len(d[key])
-        else:
-            raise ValueError("Only support int, float, string currently")
-
-        desc.append( (key, dt) )
-
-    a=numpy.zeros(1, dtype=desc)
-
-    for key in keys:
-        a[key] = d[key]
-
-    return a
 
 def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
     """
@@ -114,7 +148,20 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
     return output
 
 def make_xy_grid(n, xrang, yrang):
-    # Create a grid on input ranges
+    """
+    NAME:
+        make_xy_grid()
+
+    CALLING SEQUENCE:
+        x,y = make_xy_grid(npoints, xrange, yrange)
+
+    PURPOSE
+        Create a grid of x-y points, returning x and y as numpy arrays.
+
+    REVISION HISTORY:
+        Created: mid 2009, Erin Sheldon, BNL
+    """
+
     rng = numpy.arange(n, dtype='f8')
     ones = numpy.ones(n, dtype='f8')
 
@@ -130,11 +177,22 @@ def make_xy_grid(n, xrang, yrang):
 
 def combine_arrlist(arrlist, keep=False):
     """
-    Combined the list of arrays into one big array.  The arrays must all
-    be the same data type.
+    NAME:
+        combine_arrlist
 
-    By default the elements are deleted as they are added to the big array.
-    Turn this off with keep=True
+    CALLING SEQUENCE:
+        arr = combine_arrlist(list_of_arrays, keep=False)
+
+    PURPOSE:
+        Combined the list of arrays into one big array.  The arrays must all
+        be the same data type.
+
+    KEYWORDS:
+        keep:  By default the elements are deleted as they are added to the 
+            big array.  Turn this off with keep=True
+
+    REVISION HISTORY:
+        Inspired by combine_ptrlist from SDSSIDL.  2007.  Erin Sheldon, BNL 
     """
     if not isinstance(arrlist,list):
         raise RuntimeError('Input must be a list of arrays')
@@ -174,20 +232,45 @@ def combine_arrlist(arrlist, keep=False):
 
 def copy_fields(arr1, arr2):
     """
-    Copy common fields from one numpy array or recarray to another.
+    NAME:
+        copy_fields
+
+    CALLING SEQUENCE:
+        copy_fields(array1, array2)
+
+    PURPOSE:
+        Copy common fields from one numpy array to another.  The name 
+        matching is case senitive.
+
+    REVISION HISTORY:
+        Inspired by struct_assign in IDL.  2007 Erin Sheldon, BNL.
+
     """
     if arr1.size != arr2.size:
         raise ValueError('arr1 and arr2 must be the same size')
 
     names1=arr1.dtype.names
     names2=arr2.dtype.names
+
     for name in names1:
         if name in names2:
             arr2[name] = arr1[name]
 
 def extract_fields(arr, keepnames):
     """
-    Extract a set of fields from a numpy array or recarray.
+    NAME:
+        extract_fields
+
+    CALLING SEQUENCE:
+        newarr = extract_fields(arr, names)
+
+    PURPOSE:
+        Extract a set of fields from a numpy array.  A new array is returned
+        with the requested fields and data copied in.  The name matching 
+        is case sensitive.
+
+    REVISION HISTORY:
+        Created 2007, Erin Sheldon, NYU.
     """
     if type(keepnames) != list and type(keepnames) != numpy.ndarray:
         keepnames=[keepnames]
@@ -209,7 +292,19 @@ def extract_fields(arr, keepnames):
 
 def remove_fields(arr, rmnames):
     """
-    Remove a set of fields from a numpy array or recarray
+    NAME:
+        remove_fields
+
+    CALLING SEQUENCE:
+        newarr = remove_fields(arr, names)
+
+    PURPOSE:
+        Remove a set of fields from the array.  A new array is returned
+        with the leftover fields and data copied in.  The name matching 
+        is case sensitive.
+
+    REVISION HISTORY:
+        Created 2007, Erin Sheldon, NYU.
     """
     if type(rmnames) != list:
         rmnames=[rmnames]
@@ -228,26 +323,28 @@ def remove_fields(arr, rmnames):
     copy_fields(arr, new_arr)
     return new_arr
 
-def copy_fields_by_name(arr, names, vals):
+def add_fields(arr, add_dtype_or_descr, defaults=None):
     """
-    Copy values into an array with fields, or recarray, by name.
-    """
-    if type(names) != list and type(names) != numpy.ndarray:
-        names=[names]
-    if type(vals) != list and type(vals) != numpy.ndarray:
-        vals=[vals]
-    if len(names) != len(vals):
-        raise ValueError('Length of names and values must be the same')
+    NAME:
+        add_fields
 
-    arrnames = list(arr.dtype.names)
-    for name,val in zip(names,vals):
-        if name in arrnames:
-            arr[name] = val
+    CALLING SEQUENCE:
+        newarr = add_fields(arr, dtype_or_descr, defaults=None)
 
-def add_fields(arr, add_dtype_or_descr, defaults=[]):
-    """
-    Add new fields to a numpy array or recarray, with an optional
-    set of default values
+    PURPOSE:
+        Create a new array with fields from the input array and new
+        fields as indicated by the input numpy dtype or descr object.
+        Return a new array with the data copied from the original array.
+
+    KEYWORDS:
+        defaults:  By default the new fields are zeroed.  Send this keyword
+            to add default values to the fields.  Must be the same length
+            as the input type descriptor.
+
+    REVISION HISTORY:
+        Created 2007, Erin Sheldon, NYU.
+
+
     """
     # the descr is a list of tuples
     old_descr = arr.dtype.descr
@@ -271,53 +368,142 @@ def add_fields(arr, add_dtype_or_descr, defaults=[]):
     copy_fields(arr, new_arr)
     
     # See if the user has indicated default values for the new fields
-    if type(defaults) != list:
-        defaults=[defaults]
-    ldef=len(defaults)
-    if ldef > 0:
-        if ldef != len(add_descr):
+    if defaults is not None:
+        if type(defaults) != list:
+            defaults=[defaults]
+        if len(defaults) != len(add_descr):
             raise ValueError('defaults must be same length as new dtype')
         copy_fields_by_name(new_arr, list(add_dtype.names), defaults)
 
     return new_arr
 
-
-def compare_arrays(arr1, arr2, verbose=False):
+def copy_fields_by_name(arr, names, vals):
     """
-    Compare the values field-by-field in two sets of numpy arrays or
-    recarrays.
+    NAME:
+        copy_fields_by_name
+
+    CALLING SEQUENCE:
+        copy_fields_by_name(arr, names, values)
+
+    PURPOSE:
+        Copy values into a numpy array by field name.
+
+    INPUTS:
+        names:  Field names to be copied, scalar or sequence.
+        values: The values to be copied into each field.  These values
+            can be in a sequence of the same length as names.   They
+            must either be scalars or their shape must match the underlying
+            structure of the field.
+
+    EXAMPLES:
+        names=['x','flux', 'source']
+        values=[x_array, flux_array, name_scalar]
+        copy_fields_by_name(arr, names, values)
+
+    REVISION HISTORY:
+        Created 2007, Erin Sheldon, NYU.
+
+    """
+    if type(names) != list and type(names) != numpy.ndarray:
+        names=[names]
+    if type(vals) != list and type(vals) != numpy.ndarray:
+        vals=[vals]
+    if len(names) != len(vals):
+        raise ValueError('Length of names and values must be the same')
+
+    arrnames = list(arr.dtype.names)
+    for name,val in zip(names,vals):
+        if name in arrnames:
+            arr[name] = val
+
+
+def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):
+    """
+    NAME:
+        compare_arrays
+
+    CALLING SEQUENCE:
+        boolval=compare_arrays(array1, array2, ignore_missing=True,
+                               verbose=False)
+
+    PURPOSE:
+        Compare the values field-by-field in two sets of numpy arrays or
+        recarrays.  Return true if the data match.
+
+    INPUTS:
+        array1, array2: Two arrays with fields.
+
+    KEYWORDS:
+        ignore_missing: Default True.  Ignore fields not found in both
+            arrays.
+        verbose:  By default the program is silent.  set verbose=True to
+            print info about each field.
+
+    OUTPUTS:
+        True if the matching criteria are met, False if not.
+
+    REVISION HISTORY:
+        Created 2007, Erin Sheldon, NYU.
+        Added ignore_missing keyword.  2009-11-02, Erin Sheldon, BNL
+
     """
 
     nfail = 0
-    for n2 in arr2.dtype.names:
-        n1 = n2
-        if n1 not in arr1.dtype.names:
-            n1 = n1.lower()
-            if n1 not in arr1.dtype.names:
-                n1 = n1.upper()
-                if n1 not in arr1.dtype.names:
-                    raise ValueError('field name %s not found in array 1' % n2)
-            
+
+    # If requested, check the arrays have exactly the same names.
+    if not ignore_missing:
+        # make sure the name lists match
         if verbose:
-            stdout.write("    testing field: '%s'\n" % n2)
-            stdout.write('        shape...........')
-        if arr2[n2].shape != arr1[n1].shape:
-            nfail += 1
-            if verbose:
-                stdout.write('shapes differ\n')
-        else:
-            if verbose:
-                stdout.write('OK\n')
-                stdout.write('        elements........')
-            w,=numpy.where(arr1[n1].ravel() != arr2[n2].ravel())
-            if w.size > 0:
+            stdout.write("    Matching names........")
+
+        for n in arr1.dtype.names:
+            if n not in arr2.dtype.names:
                 nfail += 1
                 if verbose:
-                    stdout.write('\n        '+\
-                        '%s elements in field %s differ\n' % (w.size,n2))
+                    stdout.write("\n        Field '%s' found only in "
+                                 "array1" % n)
+        for n in arr2.dtype.names:
+            if n not in arr1.dtype.names:
+                nfail += 1
+                if verbose:
+                    stdout.write("\n        Field '%s' found only in "
+                                 "array2" % n)
+
+        if verbose:
+            if nfail == 0:
+                stdout.write("OK")
+            stdout.write("\n")
+
+    else:
+        if verbose:
+            stdout.write("    Not checking that all fields names match\n")
+
+
+    # Compare the data for matchine names
+    for n in arr1.dtype.names:
+        if n in arr2.dtype.names:
+            # the field was found, let's see if the data match
+            if verbose:
+                stdout.write("    testing field: '%s'\n" % n)
+                stdout.write('        shape...........')
+            if arr2[n].shape != arr1[n].shape:
+                nfail += 1
+                if verbose:
+                    stdout.write('shapes differ\n')
             else:
                 if verbose:
                     stdout.write('OK\n')
+                    stdout.write('        elements........')
+                w,=numpy.where(arr1[n].ravel() != arr2[n].ravel())
+                if w.size > 0:
+                    nfail += 1
+                    if verbose:
+                        stdout.write('\n        '+\
+                            "%s elements in field '%s' differ\n" % (w.size,n))
+                else:
+                    if verbose:
+                        stdout.write('OK\n')
+
 
     if nfail == 0:
         if verbose:
@@ -332,7 +518,12 @@ def compare_arrays(arr1, arr2, verbose=False):
 def is_big_endian(array):
     """
     Return True if array is big endian.  Note strings are neither big
-    or little endian
+    or little endian.  The input must be a simple numpy array, not
+    an array with fields.
+
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
     """
 
     if numpy.little_endian:
@@ -346,7 +537,11 @@ def is_big_endian(array):
 def is_little_endian(array):
     """
     Return True if array is little endian. Note strings are neither big
-    or little endian
+    or little endian.  The input must be a simple numpy array, not
+    an array with fields.
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
     """
 
     if numpy.little_endian:
@@ -361,10 +556,26 @@ def is_little_endian(array):
 
 def to_big_endian(array, inplace=False, keep_dtype=False):
     """
-    Convert an array to big endian byte order, updating the dtype
-    to reflect this.  Send keep_dtype=True to prevent the dtype
-    from being updated.  If inplace=False, a copy is always returned.
-    If inplace=True a reference to the input array is returned.
+    NAME:
+        to_big_endian
+
+    CALLING SEQUENCE:
+        res=to_big_endian(array, inplace=False, keep_dtype=False)
+
+    PURPOSE:
+        Convert an array to big endian byte order, updating the dtype to
+        reflect this.  The array can have fields.  
+    
+    KEYWORDS:
+        inplace:  Default False.  If True the data are byteswapped 
+            in place and a reference to the original array is returned.  
+            If False a copy is always retured, even if no data were
+            swapped.
+        keep_dtype: Default False.  Setting to True prevents the dtype from
+            being updated to reflect the new byte order.
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
     """
 
     doswap=False
@@ -391,10 +602,27 @@ def to_big_endian(array, inplace=False, keep_dtype=False):
 
 def to_little_endian(array, inplace=False, keep_dtype=False):
     """
-    Convert an array to little endian byte order, updating the dtype
-    to reflect this.  Send keep_dtype=True to prevent the dtype
-    from being updated. If inplace=False, a copy is always returned.
-    If inplace=True a reference to the input array is returned.
+    NAME:
+        to_little_endian
+
+    CALLING SEQUENCE:
+        res=to_little_endian(array, inplace=False, keep_dtype=False)
+
+    PURPOSE:
+        Convert an array to big endian byte order, updating the dtype to
+        reflect this.  The array can have fields. 
+    
+    KEYWORDS:
+        inplace:  Default False.  If True the data are byteswapped 
+            in place and a reference to the original array is returned.  
+            If False a copy is always retured, even if no data were
+            swapped.
+        keep_dtype: Default False.  Setting to True prevents the dtype from
+            being updated to reflect the new byte order.
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
+
     """
 
     doswap=False
@@ -424,10 +652,28 @@ def to_little_endian(array, inplace=False, keep_dtype=False):
 
 def byteswap(array, inplace=False, keep_dtype=False):
     """
-    byteswap an array, updating the dtype to reflect this
+    NAME:
+        byteswap
 
-    If you *don't* want the dtype changed, simply use the
-    built-in array method.  E.g.  array.byteswap()
+    CALLING SEQUENCE:
+        res=byteswap(array, inplace=False, keep_dtype=False)
+
+    PURPOSE:
+        Chance the byte order of an array, updating the dtype to reflect this.
+        The array can have fields.   This is a wrapper for the .byteswap()
+        method which does not update the dtype to reflect the new byte
+        ordering.
+
+    KEYWORDS:
+        inplace:  Default False.  If True the data are byteswapped 
+            in place and a reference to the original array is returned.  
+            If False a copy is always retured, even if no data were
+            swapped.
+        keep_dtype: Default False.  Setting to True prevents the dtype from
+            being updated to reflect the new byte order.
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
     """
 
     outdata = array.byteswap(inplace)
@@ -438,11 +684,23 @@ def byteswap(array, inplace=False, keep_dtype=False):
       
 def unique(arr, values=False):
     """
-    un = unique(arr, values=False)
+    NAME:
+        unique
+    
+    CALLING SEQUENCE:
+        un = unique(arr, values=False)
 
-    return indices of unique elements of a numpy array, or the 
-    unique values if values=True.  This is not order preserving.
+    PURPOSE:
+        Return indices of unique elements of a numpy array, or optionally
+        the unique values.  This is not order preserving. This is currently
+        implemented in a slow fashion, should be updated.
 
+    KEYWORDS:
+        values:  Default False.  If True, return the unique values as
+            opposed to just the indices which is the default.
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
     """
     n = arr.size
     keep = numpy.zeros(n, dtype='i8')
@@ -471,13 +729,26 @@ def unique(arr, values=False):
 
 def match(arr1, arr2):
     """
-    ind1,ind2 = match(arr1, arr2)
-    match two numpy arrays.  Return the indices of the matches or [-1] if no
-    matches are found.  This means
-        arr1[ind1] == arr2[ind2]
-    is true for all corresponding pairs
+    NAME:
+        match
 
-    Arrays must contain only unique elements
+    CALLING SEQUENCE:
+        ind1,ind2 = match(arr1, arr2)
+
+    PURPOSE:
+        match two numpy arrays.  Return the indices of the matches or [-1] if
+        no matches are found.  This means arr1[ind1] == arr2[ind2] is true for
+        all corresponding pairs. Arrays must contain only unique elements
+
+    METHOD:
+        This is the "sort" method as borrowed from the Goddard idl astronomy
+        library routine match.pro
+    TODO:
+        Implement the histogram method, which is faster but uses more
+        memory.
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
     """
     dtype = 'i8'
     n1 = len(arr1)
@@ -546,5 +817,62 @@ def match(arr1, arr2):
     sub2 = ind[ numpy.where( vec != 0 ) ]
     return sub1, sub2
 
+
+def dict2array(d, sort=False, keys=None):
+    """
+    NAME:
+      dict2array()
+
+    CALLING SEQUENCE:
+      arr = dict2array(dict, sort=False, keys=None)
+
+    PURPOSE:
+      Convert a dictionary to an array with fields (recarray, structured
+      array).  This works for simple types e.g.  strings, integers, floating
+      points.
+
+    KEYWORDS:
+        keys: provide a sequence of keys to copy.  This can be used to order
+            the fields (standard dictionary keys are unordered) or copy only a
+            subset of keys. 
+        sort: Sort the keys.  
+
+    COMMENTS:
+        In python >= 3.1 dictionaries can be ordered.
+
+    REVISION HISTORY:
+        late 2009 created.  Erin Sheldon, BNL
+
+    """
+    desc=[]
+
+    if keys is None:
+        if sort:
+            keys=sorted(d)
+        else:
+            keys=list(d.keys())
+
+    for key in keys:
+        # check key existence in case a set of keys was sent
+        if key not in d:
+            raise KeyError("Requested key %s not in dictionary" % key)
+
+        if isinstance(d[key], int):
+            dt=int
+        elif isinstance(d[key], float):
+            dt=float
+        elif isinstance(d[key], str):
+            dt='S%s' % len(d[key])
+        else:
+            raise ValueError("Only support int, float, string currently")
+
+        desc.append( (key, dt) )
+
+    a=numpy.zeros(1, dtype=desc)
+
+    for key in keys:
+        a[key] = d[key]
+
+    return a
 
 
