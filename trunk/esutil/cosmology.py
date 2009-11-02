@@ -29,11 +29,13 @@
 
     REQUIREMENTS:
         NumPy
-        SciPy for integrations
+        SciPy for integrations implemented using weave
     REVISION HISTORY:
         Copied from IDL routines.  2006-11-07, Erin Sheldon, NYU
         Converted to using faster Gauss-Legendre integration 
             2007-05-17, Erin Sheldon, NYU
+        Cleaned up imports so the module can be imported without
+        numpy/scipy even though nothing will work.  2009-11-01. E.S.S. BNL
 
 
 """
@@ -74,7 +76,7 @@ except:
     have_numpy=False
 
 try:
-    import scipy.integrate
+    from scipy import weave
     have_scipy=True
 except:
     have_scipy=False
@@ -113,6 +115,8 @@ def Ezinv_integral_old(z1, z2, omega_m, omega_l, omega_k):
     CALLING SEQUENCE:
         ezint = Ezinv_integral(z1, z2, omega_m, omega_l, omega_k)
     """
+    # just import here since we don't use this old version any more
+    import scipy.integrate
     (val, err) = scipy.integrate.quad(Ez_inverse, z1, z2, 
                                       args=(omega_m,omega_l,omega_k))
     return numpy.abs(val)
@@ -401,6 +405,8 @@ def Vold(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
             0.05% to redshift 1.
     """
 
+    # just import here since we don't use this old version any more
+    import scipy.integrate
     (v,err) = scipy.integrate.quad(dV, zmin, zmax, 
                                    args=(omega_m,omega_l,omega_k,h,flat,npts))
     return v

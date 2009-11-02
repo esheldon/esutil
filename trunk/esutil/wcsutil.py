@@ -1,3 +1,36 @@
+"""
+Module:
+    wcsutil
+
+Contains the class WCS to perform world coordinate system transformations.
+See documentation for the WCS class for more information.
+
+Examples:
+    # Use a fits header as initialization to a WCS class and convert
+    # image (x,y) to equatorial longitude,latitude (ra,dec)
+    import wcsutil
+    import pyfits
+    hdr=pyfits.getheader(fname)
+    wcs = wcsutil.WCS(hdr)
+
+    # convert x,y to ra,dec. x,y can be scalars or numpy arrays.  
+    # The returned ra,dec are always numpy arrays.
+    ra,dec = wcs.image2sky(x,y)
+
+    # the inverse.  When there is a distortion model prosent, by default 
+    # it finds the root of polynomial, which is most accurate way to do 
+    # the inversion.  Send find=False to attempt to use an inverse 
+    # polynomial.
+    x,y = wcs.sky2image(ra,dec)
+
+
+Modification History:
+    Early 2009, created. Erin Sheldon, NYU
+
+    Now included in esutil.  Cleaned up imports so the module can be imported
+    without numpy/scipy even though nothing will work.  2009-11-01. E.S.S. BNL
+
+"""
 
 license="""
   Copyright (C) 2009  Erin Sheldon
