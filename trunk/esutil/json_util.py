@@ -5,18 +5,18 @@ Some convenience functions for working with json files.
 
 Functions:
 
-    read(file):  
+    json_util.read(file):  
         
         Read from the file name or opened file object. If the faster cjson is
         available, an attempt to use it is made.  If this fails (cjson is known
         to fail in certain corner cases) ordinary json is tried.  
 
-    write(obj, file, pretty=True):
+    json_util.write(obj, file, pretty=True):
 
-        Write the object to a fson file.  The "file" input can be either a file
+        Write the object to a json file.  The "file" input can be either a file
         name or opened file object.  Ordinary json is the default since it
         supports human readable writing.  Sending pretty=False to the write
-        program will force use of cjson if it is available.
+        program will force use of the faster cjson if it is available.
 
 
 """
