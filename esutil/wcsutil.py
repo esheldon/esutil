@@ -15,12 +15,13 @@ Examples:
 
     # convert x,y to ra,dec. x,y can be scalars or numpy arrays.  
     # The returned ra,dec are always numpy arrays.
+
     ra,dec = wcs.image2sky(x,y)
 
-    # the inverse.  When there is a distortion model prosent, by default 
-    # it finds the root of polynomial, which is most accurate way to do 
-    # the inversion.  Send find=False to attempt to use an inverse 
-    # polynomial.
+    # the inverse.  When there is a distortion model prosent, by default it
+    # finds the root of the forward transform, which is most accurate way to do
+    # the inversion.  Send find=False to attempt to use an inverse polynomial.
+
     x,y = wcs.sky2image(ra,dec)
 
 
@@ -165,10 +166,11 @@ class WCS:
         # The returned ra,dec are always numpy arrays.
         ra,dec = wcs.image2sky(x,y)
 
-        # the inverse.  When there is a distortion model prosent, by default 
-        # it finds the root of polynomial, which is most accurate way to do 
-        # the inversion.  Send find=False to attempt to use an inverse 
-        # polynomial.
+        # the inverse.  When there is a distortion model prosent, by default
+        # it finds the root of the forward transform, which is most accurate
+        # way to do the inversion.  Send find=False to attempt to use an
+        # inverse polynomial.
+
         x,y = wcs.sky2image(ra,dec)
 
     """
@@ -199,7 +201,8 @@ class WCS:
 
     def image2sky(self, xin, yin, distort=True):
         """
-        Usage:  image2sky(x,y, distort=True)
+        Usage:
+            lon,lat = image2sky(x,y, distort=True)
 
         Purpose:
             Convert between image (x,y) and sky coordinates (lon,lat) which
@@ -244,10 +247,11 @@ class WCS:
 
     def sky2image(self, lonin, latin, distort=True, find=True):
         """
-        Usage:  sky2image(longitude, latitude, distort=True, find=True)
+        Usage:
+            x,y=sky2image(longitude, latitude, distort=True, find=True)
 
         Purpose:
-            Convert between sky (lon,lat) and image coordinates (x,y).:w
+            Convert between sky (lon,lat) and image coordinates (x,y)
 
         Inputs:
             longitude,latitude:  Probably ra,dec. Can be arrays. 
@@ -482,7 +486,10 @@ class WCS:
         This is the simplest way to do the inverse of the (x,y)->(lon,lat)
         transformation when there are distortions.  Simply find the x,y 
         that give the input lon,lat from the actual distortion function.  
+
+        Uses scipy.optimize.fsolve to find the roots of the transformation
         """
+
         import scipy.optimize
         lon = numpy.array(lonin, ndmin=1, dtype='f8')
         lat = numpy.array(latin, ndmin=1, dtype='f8')

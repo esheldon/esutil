@@ -1,6 +1,9 @@
 """
 
 Some convenience functions for working with json files.  
+    http://en.wikipedia.org/wiki/JSON
+
+Functions:
 
     read(file):  
         

@@ -10,18 +10,48 @@
             A generic routine for transforming between Galactic, Celestial,
             and ecliptic coords.  The following wrapper routines are also
             supplied for convenience:
-        eq2gal
+
+        l,b = eq2gal(ra, dec, b1950=False, dtype='f8')
+            Convert equatorial to glactic coordinates.
+
+        # The following use the same interface:
         gal2eq
+            Convert galactic to equatorial coordinates.
         eq2ec
+            Convert equatorial to ecliptic coordinates.
         ec2eq
+            Convert ecliptic to equatorial coordinates.
         ec2gal
+            Convert ecliptic to galactic coordinates.
         gal2ec
+            Convert galactic to ecliptic coordinates.
+
+        # These SDSS specific functions do not use euler
+        eq2sdss
+            Convert between equatorial and corrected SDSS survey coords.
+        sdss2eq
+            Convert between corrected SDSS survey and equatorial coords.
 
         eq2xyz: Convert equatorial to x,y,z on the sphere according to
             the following transform:
                     x = sin(pi/2-dec)*cos(ra)
                     y = sin(pi/2-dec)*sin(ra)
                     z = cos(pi/2-dec)
+
+
+        shiftra
+            shift right ascension.  By default wrap the coordinate to
+            -180,180 such that if ra > 180, ra->ra-360.
+
+        radec2aitoff
+            Convert ra,dec to aitoff coordinates.
+
+        dec_parse(decstring)
+            parse a colon separated string representing declination ito
+            degrees.
+        ra_parse(decstring)
+            parse a colon separated string representing right ascension ito
+            degrees.
 
 """
 license="""
@@ -51,7 +81,8 @@ try:
 except:
     have_numpy=False
 
-PI=3.1415926535897931
+import math
+PI=math.pi
 D2R = PI/180.0
 R2D = 1.0/D2R
 
@@ -211,7 +242,7 @@ def eq2gal(ra, dec, b1950=False, dtype='f8'):
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
-        b1950:  If True, use b1950 coordiates.  By default j200 are used.
+        b1950:  If True, use b1950 coordiates.  By default j2000 are used.
         dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         l, b:  Galactic longitude and latitude.  The returned value is always
@@ -235,7 +266,7 @@ def gal2eq(l, b, b1950=False, dtype='f8'):
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
-        b1950:  If True, use b1950 coordiates.  By default j200 are used.
+        b1950:  If True, use b1950 coordiates.  By default j2000 are used.
         dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         ra, dec:  Equatorial longitude and latitude.  The returned value is 
@@ -259,7 +290,7 @@ def eq2ec(ra, dec, b1950=False, dtype='f8'):
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
-        b1950:  If True, use b1950 coordiates.  By default j200 are used.
+        b1950:  If True, use b1950 coordiates.  By default j2000 are used.
         dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         lam, beta:  Ecliptic longitude and latitude.  The returned value is 
@@ -283,7 +314,7 @@ def ec2eq(lam, beta, b1950=False, dtype='f8'):
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
-        b1950:  If True, use b1950 coordiates.  By default j200 are used.
+        b1950:  If True, use b1950 coordiates.  By default j2000 are used.
         dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         ra,dec:  Equatorial longitude and latitude.  The returned value is 
@@ -307,7 +338,7 @@ def ec2gal(lam, beta, b1950=False, dtype='f8'):
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
-        b1950:  If True, use b1950 coordiates.  By default j200 are used.
+        b1950:  If True, use b1950 coordiates.  By default j2000 are used.
         dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         l, b:  Galactic longitude and latitude.  The returned value is always
@@ -331,7 +362,7 @@ def gal2ec(l, b, b1950=False, dtype='f8'):
             scalars as long as they are all the same length.  They must be
             convertible to a Numpy array with the specified datatype.
     KEYWORDS
-        b1950:  If True, use b1950 coordiates.  By default j200 are used.
+        b1950:  If True, use b1950 coordiates.  By default j2000 are used.
         dtype:  The datatype of the output arrays.  Default is f8
     OUTPUTS
         lam,beta:  Ecliptic longitude and latitude.  The returned value is 
@@ -696,7 +727,13 @@ def _survey2eq(ra, dec, dtype='f8'):
     return csurvey2eq(ra,dec, dtype=dtype)
 
 
-def DecParse(decstring):
+def dec_parse(decstring):
+    """
+    dec = dec_parse(decstring)
+
+    parse a colon separated string representing declination ito
+    degrees.
+    """
     dec = 0.0
 
     ds = decstring.split(':')
@@ -712,7 +749,13 @@ def DecParse(decstring):
         dec += sec/3600.0
     return dec
 
-def RaParse(rastring, hours=True):
+def ra_parse(rastring, hours=True):
+    """
+    ra = ra_parse(decstring)
+
+    parse a colon separated string representing right ascension ito
+    degrees.
+    """
     ra = 0.0
 
     rs = rastring.split(':')
@@ -731,13 +774,16 @@ def RaParse(rastring, hours=True):
     return ra
 
 
-def FitsHeaderAsDict(fname, ext=0):
-    import pyfits
-    hdr=pyfits.getheader(fname, ext=ext)
+def fitsheader2dict(hdr, ext=0):
+    """
+    Convert a fits header object into a dict.  A dict provides more expected
+    interface to the data but cannot be written back to a fits file without
+    transformation.
+    """
 
     hdict={}
-    for name,val in hdr.items():
-        hdict[name.lower()] = val
+    for key in hdr:
+        hdict[key.lower()] = hdr[key]
 
     return hdict
 
