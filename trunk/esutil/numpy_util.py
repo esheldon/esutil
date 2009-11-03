@@ -93,11 +93,11 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
     NAME:
       arrscl()
 
-    PURPOSE:
-      Rescale the range of an array.
-
     CALLING SEQUENCE:
       newarr = arrscl(arr, minval, maxval, arrmin=None, arrmax=None)
+
+    PURPOSE:
+      Rescale the range of an array to be between minval and maxval.
     
     INPUTS:
       arr: An array
@@ -109,6 +109,7 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
         default it is taken from the input array.
       arrmax=None: An number to use for the max range of the input array. By
         default it is taken from the input array.
+
       * arrmin,arrmax are useful if you know the array is a sample of a
         particular range, for example of they are random numbers drawn
         from [0,1] you would send arrmin=0., arrmax=1.
