@@ -554,6 +554,65 @@ def is_little_endian(array):
     return (byteorder == '<') or (machine_little and byteorder == '=')
 
 
+def to_native(array, inplace=False, keep_dtype=False):
+    """
+    NAME:
+        to_native
+
+    CALLING SEQUENCE:
+        res=to_native(array, inplace=False, keep_dtype=False)
+
+    PURPOSE:
+        Convert an array to native byte order, updating the dtype to
+        reflect this.  The array can have fields.  
+    
+    KEYWORDS:
+        inplace:  Default False.  If True the data are byteswapped 
+            in place and a reference to the original array is returned.  
+            If False a copy is always retured, even if no data were
+            swapped.
+        keep_dtype: Default False.  Setting to True prevents the dtype from
+            being updated to reflect the new byte order.
+
+    REVISION HISTORY:
+        Created 2009, Erin Sheldon, NYU.
+    """
+
+
+    if numpy.little_endian:
+        machine_little=True
+    else:
+        machine_little=False
+
+    data_little=False
+    if array.dtype.names is None:
+        data_little = is_little_endian(array)
+    else:
+        # assume all are same byte order: we only need to find one with
+        # little endian
+        for fname in array.dtype.names:
+            if is_little_endian(array[fname]):
+                data_little=True
+                break
+
+    if ( (machine_little and not data_little) 
+            or (not machine_little and data_little) ):
+        doswap=True
+    else:
+        doswap=False
+
+    if doswap:
+        outdata = byteswap(array, inplace, keep_dtype=keep_dtype)
+    else:
+        if inplace:
+            outdata=array
+        else:
+            outdata=array.copy()
+
+    return outdata
+
+
+
 
 def to_big_endian(array, inplace=False, keep_dtype=False):
     """
@@ -592,7 +651,7 @@ def to_big_endian(array, inplace=False, keep_dtype=False):
                 break
 
     if doswap:
-        outdata = byteswap(outdata, inplace, keep_dtype=keep_dtype)
+        outdata = byteswap(array, inplace, keep_dtype=keep_dtype)
     else:
         if inplace:
             outdata=array
