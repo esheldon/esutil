@@ -105,6 +105,31 @@ def dict_ensurelist(data):
         raise ValueError(errormess)
     return data
 
+def add_index(dbfile, tablename, columns, verbose=False):
+
+    if not isinstance(columns,(list,tuple)):
+        columns = [columns]
+
+    dbpath=esutil.ostools.expand_path(dbfile)
+    conn = sqlite.connect(dbpath, isolation_level=None)
+    curs=conn.cursor()
+
+    index_name = '_'.join(columns) + '_index'
+    column_list = ','.join(columns)
+
+    query="""
+    create index if not exists %s on %s (%s)
+    \n""" % (index_name, tablename, column_list)
+
+    if verbose:
+        stdout.write("Adding index: \n")
+        stdout.write(query)
+
+    curs.execute(query)
+
+    conn.close()
+
+
 def dict2table(data, dbfile, tablename, 
                keys=None, types=None,
                indices=None, 
@@ -189,3 +214,7 @@ def dict2table(data, dbfile, tablename,
         if verbose:
             stdout.write("Cleaning up temporary file %s\n" % csvtmp)
         os.remove(csvtmp)
+
+    if indices is not None:
+        for index in indices:
+            add_index(dbpath, tablename, index, verbose=verbose)
