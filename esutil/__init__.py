@@ -56,6 +56,7 @@ import io
 import wcsutil
 import cosmology
 import astro_util
+import plotting
 
 try:
     import recfile
