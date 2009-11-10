@@ -21,6 +21,7 @@ tab="""
 # there are no required dependencies, so this is somewhat moot.
 
 setupOptional("python")
+setupOptional("cjson")
 envPrepend(PYTHONPATH,${PRODUCT_DIR}/%s)
 envPrepend(PYTHONPATH,${PRODUCT_DIR}/%s)
 """ % (d1,d2)
