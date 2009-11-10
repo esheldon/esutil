@@ -167,7 +167,6 @@ def dict2table(data, dbfile, tablename,
 
     # open. This will create if new or open for updating if exists.
     conn = sqlite.connect(dbpath, isolation_level=None)
-    #conn.row_factory = sqlite.Row
 
     curs=conn.cursor()
 
