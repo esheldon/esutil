@@ -6,9 +6,9 @@ def path_join(*paths):
     path=path_join(any number of paths)
 
     Join path elements using the system path separator.  Any number of inputs
-    can be given.  These must be strings or sequences of strings.  This is
-    similar to the os.path.join function but can join any number of path
-    elements and supports sequences.
+    can be given.  These must be strings or sequences.  This is similar to the
+    os.path.join function but can join any number of path elements and supports
+    sequences.
 
     Examples:
         # Join three path elements
@@ -21,15 +21,20 @@ def path_join(*paths):
         # Join a path element with a list of path elements
         p=path_join('/tmp', ['test','file.txt']) # gives /tmp/test/file.txt
         p=path_join(['/tmp','test'], 'file.txt') # gives /tmp/test/file.txt
+
+        # nested sequences.  Gives /tmp/test1/test2/file.txt
+        p=path_join(['/tmp',['test1','test2']], 'file.txt') 
     """
 
     plist=[]
     for path in paths:
-        if isinstance(path, str):
+        # for py3k unicode will disappear
+        if isinstance(path, str) or isinstance(path, unicode):
             plist.append(path)
         elif isinstance(path, list) or isinstance(path, tuple):
-            tpath=os.sep.join( path )
-            plist.append( tpath )
+            for p in path:
+                tpath = path_join(p)
+                plist.append( tpath )
         else:
             raise ValueError('paths must be strings or sequences of strings')
 
@@ -51,7 +56,7 @@ def getenv_check(name):
     return val
 
 
-def expand_filename(filename):
+def expand_path(filename):
     """
     expand all user info such as ~userid and environment
     variables such as $SOMEVAR.
@@ -60,4 +65,6 @@ def expand_filename(filename):
     fname = os.path.expandvars(fname)
     return fname
 
+# synonym
+expand_filename=expand_path
 
