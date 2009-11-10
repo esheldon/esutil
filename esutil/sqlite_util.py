@@ -1,10 +1,15 @@
+import os
+import tempfile
+import shutil
+from sys import stdout
+
+import esutil
+
 try:
     import sqlite3 as sqlite
     have_sqlite=True
 except:
     have_sqlite=False
-
-
 
 
 # dict sqlite tools
@@ -26,23 +31,27 @@ def py2sqlite(data):
     elif isinstance(data, (str,unicode)):
         return 'text'
     else:
-        message="Error: python data must be one of the following types:\n"
-                "    integer\n"
-                "    float\n"
-                "    string\n"
-                "    None\n"
+        message="""
+        Error: python data must be one of the following types:
+            integer
+            float
+            string
+            None"""
         raise ValueError(message)
 
-def dict2coldefs(data, types=None):
+def dict2coldefs(data, types=None, keys=None):
     """
     Create a table definition based on the entries in the input dict
 
     Get the types from the dict unless types= is sent
     """
 
+    if keys is None:
+        keys = list( data.keys() )
+
     coldefs=[]
     i=0
-    for key in data:
+    for key in keys:
         if types is not None:
             typedef = types[i]
             i += 1
@@ -54,32 +63,129 @@ def dict2coldefs(data, types=None):
 
     return coldefs
 
-def dict2tabledef(data, tablename, types=None):
-    coldefs = dict2coldefs(data, types=types)
+def dict2tabledef(data, tablename, types=None, keys=None):
+    coldefs = dict2coldefs(data, types=types, keys=keys)
 
-    tabledef = "create table %s (" + ",".join(coldefs)+")" % tablename
+    coldefs = ",\n            ".join(coldefs)
+    tabledef = """
+        create table %s (
+            %s
+        )
+    \n""" % (tablename, coldefs)
 
     return tabledef
 
-def dict2table(data, dbfile, tablename, indices=None, types=None):
+
+def dict2csv(data, filename, keys=None):
+    """
+    Write a sequence of dictionaries to a csv file
+    """
+
+    data = dict_ensurelist(data)
+
+    if keys is None:
+        keys = list(data[0].keys())
+
+    import csv
+    fobj=open(filename,'w')
+
+    writer = csv.DictWriter(fobj, keys)
+    writer.writerows(data)
+
+    fobj.close()
+
+def dict_ensurelist(data):
+    errormess="Input data must be dict or sequence of dicts"
+    if isinstance(data, list) or isinstance(data, tuple):
+        if not isinstance(data[0], dict):
+            raise ValueError(errormess)
+    elif isinstance(data, dict):
+        data = [data]
+    else:
+        raise ValueError(errormess)
+    return data
+
+def dict2table(data, dbfile, tablename, 
+               keys=None, types=None,
+               indices=None, 
+               tmpdir='.', clobber=True, 
+               cleanup=True,
+               verbose=False):
     """
 
     Convert a dict or list of dicts to an sqlite table, creating the table if
     needed.  If the table exists, the data are appended.
 
-    Note appending is not yet supported.
-
     """
-
     
+    # ensure we have a list of dicts
+    data = dict_ensurelist(data)
+
+    # check paths
     dbpath=os.path.expanduser(dbfile)
     dbpath=os.path.expandvars(dbpath)
-    
+
+    if verbose:
+        stdout.write("database file: %s\n" % dbfile)
+
+    existing_table=False
     if os.path.exists(dbpath):
-        os.remove(dbpath)
+        if clobber:
+            if verbose:
+                stdout.write("Removing existing database file: %s\n" % dbpath)
+            os.remove(dbpath)
+        else:
+            # it exists and we'll keep it
+            if verbose:
+                stdout.write("Using existing database file: %s\n" % dbpath)
+            existing_table = True
 
-    conn = sqlite.connect(dbpath)
-    conn.row_factory = sqlite.Row
+    # open. This will create if new or open for updating if exists.
+    conn = sqlite.connect(dbpath, isolation_level=None)
+    #conn.row_factory = sqlite.Row
 
-    tabledef = dict2tabledef(data, types=types)
-    conn.execute(tabledef)
+    curs=conn.cursor()
+
+    # see if the table exists
+    if existing_table:
+        curs.execute("select name from sqlite_master where type='table' and name = '%s'" % tablename)
+        res = curs.fetchall()
+        if len(res) == 0:
+            # this will be a new table in an existing database
+            existing_table=False
+
+    if not existing_table:
+        # Get the table definition
+        tabledef = dict2tabledef(data[0], tablename, types=types, keys=keys)
+        if verbose:
+            stdout.write("Creating table '%s'\n" % tablename)
+            stdout.write(tabledef)
+
+        curs.execute(tabledef)
+    else:
+        if verbose:
+            stdout.write("Appending to existing table '%s'\n" % tablename)
+
+    conn.close()
+
+    # write data to a temporary csv file and then import
+    csvtmp = tempfile.mktemp(dir=tmpdir, prefix=tablename+'-', suffix='.csv')
+
+    if verbose:
+        stdout.write("Writing to temporary file: %s\n" % csvtmp)
+
+    dict2csv(data, csvtmp, keys=keys)
+
+    #  Now execute the import statement
+    if verbose:
+        stdout.write("Importing data\n")
+    comm="""
+        sqlite3 -separator ',' %s ".import %s %s" 
+    """ % (dbpath, csvtmp, tablename)
+
+    esutil.misc.exec_process(comm, verbose=verbose)
+
+    if cleanup:
+        if verbose:
+            stdout.write("Cleaning up temporary file %s\n" % csvtmp)
+        os.remove(csvtmp)

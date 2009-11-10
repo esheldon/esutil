@@ -57,6 +57,7 @@ import wcsutil
 import cosmology
 import astro_util
 import plotting
+import sqlite_util
 
 try:
     import recfile
