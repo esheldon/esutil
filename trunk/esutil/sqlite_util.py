@@ -11,7 +11,6 @@ try:
 except:
     have_sqlite=False
 
-
 # dict sqlite tools
 def py2sqlite(data):
     """
@@ -105,7 +104,7 @@ def dict_ensurelist(data):
         raise ValueError(errormess)
     return data
 
-def add_index(dbfile, tablename, columns, verbose=False):
+def add_index(dbfile_or_conn, tablename, columns, verbose=False):
 
     if not isinstance(columns,(list,tuple)):
         columns = [columns]
@@ -153,7 +152,7 @@ def dict2table(data, dbfile, tablename,
     if verbose:
         stdout.write("database file: %s\n" % dbfile)
 
-    existing_table=False
+    existing_db=False
     if os.path.exists(dbpath):
         if clobber:
             if verbose:
@@ -163,7 +162,7 @@ def dict2table(data, dbfile, tablename,
             # it exists and we'll keep it
             if verbose:
                 stdout.write("Using existing database file: %s\n" % dbpath)
-            existing_table = True
+            existing_db = True
 
     # open. This will create if new or open for updating if exists.
     conn = sqlite.connect(dbpath, isolation_level=None)
@@ -171,12 +170,13 @@ def dict2table(data, dbfile, tablename,
     curs=conn.cursor()
 
     # see if the table exists
-    if existing_table:
+    existing_table=False
+    if existing_db:
         curs.execute("select name from sqlite_master where type='table' and name = '%s'" % tablename)
         res = curs.fetchall()
-        if len(res) == 0:
+        if len(res) != 0:
             # this will be a new table in an existing database
-            existing_table=False
+            existing_table=True
 
     if not existing_table:
         # Get the table definition
@@ -192,6 +192,8 @@ def dict2table(data, dbfile, tablename,
 
     conn.close()
 
+
+
     # write data to a temporary csv file and then import
     csvtmp = tempfile.mktemp(dir=tmpdir, prefix=tablename+'-', suffix='.csv')
 
@@ -199,6 +201,8 @@ def dict2table(data, dbfile, tablename,
         stdout.write("Writing to temporary file: %s\n" % csvtmp)
 
     dict2csv(data, csvtmp, keys=keys)
+
+
 
     #  Now execute the import statement
     if verbose:
@@ -209,11 +213,18 @@ def dict2table(data, dbfile, tablename,
 
     esutil.misc.exec_process(comm, verbose=verbose)
 
+
+
     if cleanup:
         if verbose:
             stdout.write("Cleaning up temporary file %s\n" % csvtmp)
         os.remove(csvtmp)
 
+
+
     if indices is not None:
         for index in indices:
             add_index(dbpath, tablename, index, verbose=verbose)
+
+def table2array(dbfile, tablename):
+    pass
