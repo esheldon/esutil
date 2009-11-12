@@ -54,7 +54,8 @@ def set_minor_ticks(ax, xloc=None, yloc=None):
     ax.yaxis.set_minor_locator(ml(yloc))
 
 
-def whiskers(plt, xin, yin, uin, vin, scale=1.0, color='black'):
+def whiskers(plt, xin, yin, uin, vin, 
+             scale=1.0, color='black', linewidth=0.5, **plotting_keywords):
     """
 
     Draw lines centered a the input x,y positions, with length 
@@ -62,10 +63,9 @@ def whiskers(plt, xin, yin, uin, vin, scale=1.0, color='black'):
     and angle 
         arctan(v,u)
 
-    plt should be an axes instance or possibly pyplot or pylab. e.g.
-        from matplotlib import pyplot
-        or 
-        import pylab
+    plt could be an axes instance
+        ax = pyplot.subplot(1,2,1)
+    or could it self be pyplot or pylab
 
     """
 
@@ -84,7 +84,7 @@ def whiskers(plt, xin, yin, uin, vin, scale=1.0, color='black'):
         xvals = x[i] + numpy.array([ -u[i]/2.0, u[i]/2.0], dtype='f4')*scale
         yvals = y[i] + numpy.array([ -v[i]/2.0, v[i]/2.0], dtype='f4')*scale
 
-        plt.plot(xvals, yvals, color=color) 
+        plt.plot(xvals, yvals, color=color, linewidth=linewidth, **plotting_keywords) 
 
 
 def polar2whisker(e1, e2, angle=False):
