@@ -42,6 +42,40 @@ def tabledef2dtype(table_info, size=None):
 
     return dtype
 
+_np2col={}
+_np2col['i1'] = 'int8'
+
+def numpy2coltype(type_description):
+    """
+    Convert a numpy data type name to an appropriate column type in sqlite.
+    Note sqlite doesn't actualy use this information; it will store any
+    value into any column.  This is to facilitate reading the data back
+    into numpy arrays.
+
+    The mapping:
+        numpy                       column declaration
+        ----------------------------------------------------------
+        i1                          int8
+        i2                          int16
+        i4                          int32
+        i8                          int64
+
+        f4                          float32
+        f8                          float64
+
+        SN                          char(N)
+    """
+
+    tname = type_description.strip.lower()
+
+    if tname[0] == 'S':
+        try:
+            lenstr = int( tname[1:] )
+        except:
+            raise ValueError("Could not extract length from %s" % tname)
+
+    if tname not in ['i1','i2','i4','i8','f4','f8']
+
 def coltype2numpy(typename, size=None):
     """
 
