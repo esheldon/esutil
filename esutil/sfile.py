@@ -27,7 +27,8 @@ except:
     #                 'supported\n')
 
 
-def write(array, outfile, delim=None, append=False, header=None):
+def write(array, outfile, header=None, delim=None, 
+          padnull=False, ignorenull=False, append=False):
     """
     sfile.write()
 
@@ -36,14 +37,33 @@ def write(array, outfile, delim=None, append=False, header=None):
     about reading this file format.
 
     Calling Sequence:
-        sfile.write(array, outfile, delim=None, append=False, header=)
+        sfile.write(array, outfile, delim=None, padnull=False, append=False, header=)
 
     Inputs:
         array: A numpy array.
         outfile: A string or file pointer for the output file.
+
     Optional Inputs:
-        delim: Delimiter between fields.  Default is None for binary.  For
+        header=: A dictionary containing keyword-value pairs to be added to
+            the header.
+
+        delim=None: Delimiter between fields.  Default is None for binary.  For
             ascii can be any string, e.g. ',', ' ', or a tab character.
+
+        padnull=False:  
+            When writing ascii, replace Null characters with spaces.  This is
+            useful when writing files to be read in by programs that do not
+            recognize null characters, e.g. sqlite databases.  But note, if
+            read back in these fields will not compare equal with the original
+            data!
+
+        ignorenull=False:  
+            When writing ascii, ignore Null characters.  This is useful when
+            writing files to be read in by programs that do not recognize null
+            characters, e.g. sqlite databases.  But note you will not be
+            able to read the data back in with sfile.read() becuase the fields
+            are no longer the correct length!
+
         append=False: Append to the file. Default is False. If set to True,
             then what happens is situation dependent:
                 1) if the input is a file object then it is assumed there is 
@@ -56,8 +76,6 @@ def write(array, outfile, delim=None, append=False, header=None):
                 3) if the input is a string and the file does *not* exist,
                     then the file is opened with mode "w" and the request
                     to append is ignored.
-        header=: A dictionary containing keyword-value pairs to be added to
-            the header.
 
     Examples:
         import sfile
@@ -101,7 +119,8 @@ def write(array, outfile, delim=None, append=False, header=None):
         # let recfile deal with delimiter writing
         r = recfile.Open(fobj, mode='u', delim=delim, dtype=array.dtype)
         #r.Write(array)
-        r.Write(array.view(numpy.ndarray))
+        r.Write(array.view(numpy.ndarray), 
+                padnull=padnull, ignorenull=ignorenull)
     else:
         # Write data out as a binary chunk
         array.tofile(fobj)
@@ -546,7 +565,7 @@ def read_header(infile):
 
 def _write_header(fobj, nrows, descr, delim=None, header=None, append=False):
     import pprint
-    from copy import copy
+    from copy import deepcopy
 
     if append:
         # Just update the nrows and move to the end
@@ -557,7 +576,7 @@ def _write_header(fobj, nrows, descr, delim=None, header=None, append=False):
         if header is None:
             head={}
         else:
-            head=copy(header)
+            head=deepcopy(header)
 
         if delim is not None:
             # Text file
@@ -571,6 +590,12 @@ def _write_header(fobj, nrows, descr, delim=None, header=None, append=False):
         head['_DTYPE'] = descr
         if delim is not None:
             head['_DELIM'] = delim
+        else:
+            # don't write delim unless it is required
+            if '_delim' in head:
+                del head['_delim']
+            if '_DELIM' in head:
+                del head['_DELIM']
 
         # remove _NROWS which make be there from a previous header read
         if '_NROWS' in head: del head['_NROWS']

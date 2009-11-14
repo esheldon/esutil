@@ -136,13 +136,27 @@ Modification history:
 #ifdef SWIG
 %feature("docstring",
 		"
-		Write(numpy_array)
+		Write(numpy_array, pad=False)
 
 		A class method for the Records class.  Writes the input numpy array
 		to the opened file.
 
 		Inputs:
 		    array: A NumPy array with fields defined for the records.
+		Keywords:
+			padnull=False:  
+				Convert NULL characters to spaces when writing.  Note when
+				read back in these will not compare equal with the original
+				data!  This is useful when writing files to be read in by
+				programs that do not recognize null characters, e.g. sqlite
+				databases.
+
+			ignorenull=False:
+				Ignore NULL characters entirely when writing strings to ascii
+				files. This is useful when writing files to be read in by
+				programs that do not recognize null characters, e.g. sqlite
+				databases.
+
 		Examples:
 		    import numpy
 		    import records
@@ -150,7 +164,10 @@ Modification history:
 		    r.Write(my_array)
 		");
 #endif
-		PyObject* Write(PyObject* obj) throw (const char *);
+		PyObject* Write(
+				PyObject* obj, 
+				bool padnull=false,
+				bool ignorenull=false) throw (const char *);
 
 #ifdef SWIG
 %feature("docstring",
@@ -318,7 +335,8 @@ Modification history:
 		bool mReadWholeRowBinary;                              //---
 
 
-
+		bool mPadNull;
+		bool mIgnoreNull;
 
 
         // Info about each row of file
