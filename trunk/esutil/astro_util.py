@@ -107,7 +107,7 @@ _sdsspar['doc'] = """
         Erin Sheldon, NYU, 2006-03-11
     Force data type and allow selection of dtype through keyword.
         Erin Sheldon, NYU, 2007-05-23
-        
+
 """
 
 

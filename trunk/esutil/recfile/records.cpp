@@ -533,7 +533,10 @@ void Records::CreateOutputArray()
 	mData = mReturnObject->data;
 }
 
-PyObject* Records::Write(PyObject* obj) throw (const char* )
+PyObject* Records::Write(
+		PyObject* obj, 
+		bool padnull,
+		bool ignorenull) throw (const char* )
 {
 	if (mFptr == NULL) {
 		throw "File is not open";
@@ -545,12 +548,17 @@ PyObject* Records::Write(PyObject* obj) throw (const char* )
 	PyObject* ret=Py_None;
 	Py_INCREF(Py_None);
 
+
 	if (!PyArray_Check(obj)) {
 		throw "Input must be a NumPy array object";
 	}
 	mNrows = PyArray_Size(obj);
 
 	PyArray_Descr* descr = PyArray_DESCR(obj);
+
+	// Null characters in strings are converted to spaces
+	mPadNull = padnull;
+	mIgnoreNull = ignorenull;
 
 	CopyFieldInfo(
 			descr,
@@ -639,6 +647,16 @@ void Records::WriteStringAsAscii(long long fnum)
 	long long slen = mSizes[fnum]/mNel[fnum];
 	for (long long i=0; i<slen; i++) {
 		char c=buffer[0];
+		if (c == '\0') {
+			if (mIgnoreNull) {
+				// we assume the user cares about nothing beyond the null
+				// this will break out of writing this the rest of this field.
+				break;
+			}
+			if ( mPadNull ) {
+				c=' ';
+			}
+		}
 		int res = fputc( (int) c, mFptr);
 		if (res == EOF) {
 			throw "Error occured writing string field";
