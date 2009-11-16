@@ -15,16 +15,13 @@ try:
         # look for local install of recfile first
         from esutil import recfile
         have_recfile=True
-        #sys.stdout.write("got as from esutil import recfile\n")
     except:
         # might be installed elsewhere
         import recfile
         have_recfile=True
-        #sys.stdout.write("got as import recfile\n")
 except:
+    # ascii reading/writing not supported
     have_recfile=False
-    #sys.stdout.write('recfile could not be imported.  Only simple access '+\
-    #                 'supported\n')
 
 
 def write(array, outfile, header=None, delim=None, 
@@ -80,9 +77,9 @@ def write(array, outfile, header=None, delim=None,
     Examples:
         import sfile
         hdr={'date': '2007-05-12','age': 33} 
-        sfile.write(arr, 'test.pya', header=hdr)
+        sfile.write(arr, 'test.rec', header=hdr)
 
-        sfile.write(arr2, 'test.pya', append=True)
+        sfile.write(arr2, 'test.rec', append=True)
 
     File Format:
         The file format is an ascii header followed by data in binary or rows
@@ -178,14 +175,57 @@ def _get_fields2read(fields, dt):
 
     return f,l
 
+
+def open_memmap(infile, header=False, mode='r+'):
+    """
+
+    Be careful not to resize the data, because the header will currently
+    *not* be updated.
+
+    """
+
+    if not have_numpy:
+        raise ImportError("numpy could not be imported")
+
+    if not have_recfile:
+        norecfile=True
+
+    # Get the file object
+    fobj = open(infile, mode)
+    #fobj,f_isstring,junk = _GetFobj(infile,mode)
+
+    # Get the header
+    hdr=read_header(fobj)
+
+    delim = _MatchKey(hdr,'_delim')
+    if delim is not None:
+        raise ValueError("You can not memmap an ascii file")
+
+    # read the header
+    # number of rows
+    nrows = _GetNrows(hdr)
+
+    # The dtype
+    dtype = _GetDtype(hdr)
+    
+    
+    mmap = numpy.memmap(fobj, dtype=dtype, shape=(nrows,), 
+                        mode=mode, offset=fobj.tell())
+
+    if header:
+        return mmap, hdr
+    else:
+        return mmap
+
+
 def read(infile, rows=None, fields=None, columns=None, norecfile=False,
-         header=False, view=None):
+         header=False, view=None, memmap=False):
     """
     sfile.read()
 
-    Read a numpy array from a simple self-describing file format with an 
-    ascii header.  See the write() function for information
-    about reading this file format.
+    Read a numpy array from a simple self-describing file format with an ascii
+    header.  See the write() function for information about this file format.
+    For ascii files the recfile package is used for reading and writing.
 
     Calling Sequence:
         arr = sfile.read(infile, rows=None, columns=None, norecfile=False, 
@@ -200,15 +240,15 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
             from the file.  Default is all.
         fields=:  Same as sending columns=.
         norecfile=False:  
-            Don't use recfile to get subsets of the data.  Normally the package
-            recfile is used (if available ) to read subsets of the columns and
-            rows.  This saves memory.  It also can be faster, especially when
-            only a subset of rows is returned.  But this can be slower when
-            reading many rows and only a few columns due to all the extra file
-            seeks.  If you have enough memory you can send norecfile=True,
-            which will read all the data into memory and then extract subsets.
-            Note, if you are only reading a small number of rows this is
-            probably *not* faster!
+            Don't use recfile to get subsets of binary data files.  Normally
+            the package recfile is used (if available ) to read subsets of the
+            columns and rows.  This saves memory.  It also can be faster,
+            especially when only a subset of rows is returned.  But this can
+            be slower when reading many rows and only a few columns due to all
+            the extra file seeks.  If you have enough memory you can send
+            norecfile=True, which will read all the data into memory and then
+            extract subsets.  Note, if you are only reading a small number of
+            rows this is probably *not* faster!
 
             Note if recfile is not found on your system this is the default
             action.
@@ -219,9 +259,9 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
 
     Examples:
         import sfile
-        arr=sfile.read('test.pya')
+        arr=sfile.read('test.rec')
 
-        arr2, hdr = sfile.read('test.pya', 
+        arr2, hdr = sfile.read('test.rec', 
                                rows=[3,4], fields=['ra', 'dec'], header=True)
 
     File Format:
@@ -241,6 +281,9 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
 
     if not have_numpy:
         raise ImportError("numpy could not be imported")
+
+    if not have_recfile:
+        norecfile=True
 
     # Get the file object
     fobj,f_isstring,junk = _GetFobj(infile,'read')
@@ -274,24 +317,58 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
         # Its binary and all, just use fromfile
         result = numpy.fromfile(fobj,dtype=dt)
     else:
-        if (have_recfile and not norecfile) or (delim is not None):
-            dtype=numpy.dtype(dt)
-            if delim is None:
-                send_delim = ""
+        if delim is None and (memmap or norecfile):
+            mmap = numpy.memmap(fobj, dtype=dt, shape=(nrows,), 
+                                mode='r', offset=fobj.tell())
+
+            if (nf == 0) and (nr != 0):
+                # all columns, but a subset of rows, is requested this is
+                # about a factor of two slower than recfile on the big files I
+                # tested, so I don't see the point of using memmap at all.
+                result = numpy.empty(nr, dtype=dt)
+                result[:] = mmap[ rows2read ]
+            elif (nf != 0) and (nr == 0):
+                
+                # all rows but a subset of columns requested.  Because 
+                # memmap must first read all the rows then extract columns
+                # using memmap is basically a bad idea.
+
+                new_dt = [tdt for tdt in dt if tdt[0] in fields2read]
+                result = numpy.empty( nrows, dtype=new_dt )
+                for name in fields2read:
+                    result[name][:] = mmap[name][:]
             else:
-                send_delim = delim
-            robj = recfile.Open(fobj, nrows=nrows, mode='r', dtype=dtype,
-                                delim=send_delim)
-            result = robj.Read(rows=rows2read, fields=fields2read)
+
+                # a subset of both rows and columns is requested.  memmap
+                # reads the rows first then extracts columns, so could be a
+                # bad idea for big file
+
+                new_dt = [tdt for tdt in dt if tdt[0] in fields2read]
+                result = numpy.empty( nr, dtype=new_dt )
+                for name in fields2read:
+                    result[name][:] = mmap[name][rows2read]
+
         else:
-            # The data are binary but we are to extract subsamples
-            # after reading all the data.  This is either because we don't
-            # have recfile or it was explicitly requested not to use recfile
-            result = numpy.fromfile(fobj,dtype=dt)
-            if rows2read is not None and len(rows2read) < nrows:
-                result = result[rows2read]
-            if fields2read is not None and len(fields2read) < len(dt):
-                result = extract_fields(result, fields2read)
+            if (not norecfile) or (delim is not None):
+                dtype=numpy.dtype(dt)
+                if delim is None:
+                    send_delim = ""
+                else:
+                    send_delim = delim
+                robj = recfile.Open(fobj, nrows=nrows, mode='r', dtype=dtype,
+                                    delim=send_delim)
+                result = robj.Read(rows=rows2read, fields=fields2read)
+            else:
+
+                # The data are binary but we are to extract subsamples after
+                # reading all the data.  This is either because we don't have
+                # recfile or it was explicitly requested not to use recfile
+
+                result = numpy.fromfile(fobj,dtype=dt)
+                if rows2read is not None and len(rows2read) < nrows:
+                    result = result[rows2read]
+                if fields2read is not None and len(fields2read) < len(dt):
+                    result = extract_fields(result, fields2read)
 
 
 
@@ -338,95 +415,6 @@ def extract_fields(arr, keepnames):
     new_arr = numpy.zeros(shape,dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
-
-
-def read_header_old(infile):
-    """
-    sfile..read_header()
-
-    Read the header from a simple self-describing file format with an 
-    ascii header.  See the write() function for information
-    about reading this file format, and read() for reading.
-
-    Calling Sequence:
-        sfile.read_header(infile)
-
-    Inputs:
-        infile: A string or file pointer for the input file.
-
-    Examples:
-        import sfile
-        hdr=sfile.read_header('test.pya')
-
-    The file format:
-      First line:
-          NROWS = --------------number
-      where the number is formatted as %20d.  This is large enough to hold
-      a 64-bit number
-
-      The header must also contain:
-          DTYPE = array data type description in list of tuples form. For
-              example DTYPE = [('field1', 'f8'), ('f2','2i4')]
-      Case doesn't matter in keyword names. There can be other header 
-      keyword-value pairs, e.g.
-          x = 3
-          y = 'hello world'
-      For lines other than the first and last, continuation marks \\ 
-      can be used.  e.g
-          dtype = [('x','f4'), \\
-                   ('y','i8')]
-      Last two lines of header:
-          END
-          blank line
-          data
-
-    Modification History:
-        Created: 2007-05-25, Erin Sheldon, NYU
-        Allow continuation characters "\\" to continue header keywords
-        onto the next line.  2009-05-05
-    """
-
-    if not have_numpy:
-        raise ImportError("numpy could not be imported")
-
-    # Get the file object
-    fobj,f_isstring,junk = _GetFobj(infile,'read')
-
-    # Read through the header until we hit "END"
-    lineold=None
-    hdr={}
-    line=fobj.readline().strip()
-    while line.upper() != 'END':
-
-        if lineold is not None:
-            line=lineold+line
-            lineold=None
-
-        # see if this line is a continuation line
-        if line[-1] == '\\':
-            lineold=line[0:len(line)-1]
-        else:
-            ls = line.split('=')
-            if len(ls) < 2:
-                sys.stdout.write('Skipping malformed header line: %s\n' % line)
-            else:
-                key=ls[0].strip().lower()
-                command="hdr['"+key+"'] = "+"=".join(ls[1:])
-                exec(command)
-        line=fobj.readline().strip()
-
-    # read one more line, which should be blank
-    line = fobj.readline()
-    if line.strip() != '':
-        raise RuntimeError("Header should end with END on it's own line "
-                           "followed by a blank line")
-
-    # close file if was opened locally
-    if f_isstring:
-        fobj.close()
-
-    return hdr
-
 
 
 def read_header(infile):
@@ -704,7 +692,7 @@ def _GetFobj(fileobj_input, major_mode, append=False):
     doappend=False
 
     fileobj= fileobj_input
-    if isinstance(fileobj,str):
+    if isinstance(fileobj,(str,unicode)):
 
         # expand shortcut variables
         fileobj = os.path.expanduser(fileobj)
