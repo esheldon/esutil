@@ -39,6 +39,9 @@ class Sfile(dict):
         For the input being a file name string, we by default open the file
         read only.
 
+        I don't like that some of the metadata I'm using is in the hdr and
+        other is attributes
+
         """
         self.open(fobj, mode=mode, delim=delim, verbose=verbose)
 
@@ -73,14 +76,26 @@ class Sfile(dict):
                     stdout.write("\tReading header\n")
                 self.hdr = self.read_header()
                 self.delim = _match_key(self.hdr, '_delim')
-                self.size = _match_key(self.hdr, '_size')
+                self.size = _match_key(self.hdr, '_size', require=True)
+                self.dtype = _match_key(self.hdr, '_dtype', require=True)
+                # will be None unless no fields
+                self.shape = self.get_shape()
             else:
                 # get delim from the keyword.  This will be used for writing
                 # later
                 self.delim=delim
-                self.size = 0
         else:
             raise ValueError("Only support filename inputs for now")
+
+    def get_memmap(self):
+        if self.delim is not None:
+            raise ValueError("Cannot memory map ascii files")
+        if not self.has_fields() and self.shape is not None:
+            shape = self.shape
+        else:
+            shape = (self.size,)
+        return numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
+                            mode='r', offset=self.fobj.tell())
 
     def close(self):
         """
@@ -89,6 +104,8 @@ class Sfile(dict):
         self.hdr=None
         self.delim=None
         self.size=0
+        self.dtype=None
+        self.shape=None
         if hasattr(self, 'fobj'):
             if self.fobj is not None:
                 if isinstance(self.fobj, file):
@@ -150,70 +167,126 @@ class Sfile(dict):
         Read the data into memory.
         """
         
-        dtype=self._get_dtype()
-        if not self._descr_has_fields(dtype):
+        if not self._descr_has_fields(self.dtype):
             result = self._read_simple()
         else:
             result = self._read_structured(rows=rows, 
                                            fields=fields, columns=columns)
         if header:
-            return resule, self.hdr
+            return result, self.hdr
         else:
             return result
+
+    def has_fields(self):
+        if self._descr_has_fields(self.dtype):
+            return True
+        else:
+            return False
+    def get_shape(self):
+        if self.has_fields():
+            return None
+        shape = _match_key(self.hdr, '_shape')
+        if shape is None:
+            return None
+        ashape = numpy.array(shape,ndmin=1)
+        if ashape.prod() == self.size:
+            return shape
+        else:
+            return None
 
     def _read_structured(self, rows=None, fields=None, columns=None):
         if self.verbose:
             stdout.write("\tReading as a structured array\n")
-        dtype=self._get_dtype()
 
-        if fields is None:
-            # let columns be a synonym for fields
-            if columns is not None:
-                fields=columns
 
-        rows2read, nr =_get_rows2read(rows)
-        fields2read, nf =_get_fields2read(fields, dtype)
+        rows2read = self._get_rows2read(rows)
+        fields2read = self._get_fields2read(fields, columns=columns)
 
-        if (nf == 0) & (nr == 0) & (self.delim is None):
+        if fields2read is None and rows2read is None and self.delim is None:
             # Its binary and all, just use fromfile
-            result = numpy.fromfile(self.fobj,dtype=dtype)
+            result = numpy.fromfile(self.fobj,dtype=self.dtype)
+        else:
+            if have_recfile:
+                result = self._recfile_read(rows=rows2read, fields=fields2read)
+            else:
+                raise ValueError("Implement _memmap_read")
+                result = self._memmap_read(rows=rows2read, fields=fields2read)
 
         return result
+
+    def _recfile_read(self, rows=None, fields=None):
+        if self.delim is None:
+            delim=""
+        else:
+            delim=self.delim
+        dtype=numpy.dtype(self.dtype)
+        robj = recfile.Open(self.fobj, nrows=self.size, mode='r', 
+                            dtype=dtype, delim=delim)
+        return robj.Read(rows=rows, fields=fields)
+
 
     def _read_simple(self):
         if self.verbose:
             stdout.write("\tReading as a simple array\n")
-        dtype=self._get_dtype()
+        # delim can't be None, so case it
         if self.delim is None:
-            result = numpy.fromfile(self.fobj, dtype=dtype, count=self.size)
+            result = numpy.fromfile(self.fobj, dtype=self.dtype, 
+                                    count=self.size)
         else:
-            result = numpy.fromfile(self.fobj, dtype=dtype, count=self.size, 
-                                    sep=self.delim)
-        try:
-            # See if shape is in the header
-            shape = _match_key(self.hdr, '_shape')
-            # Only use it if the lengths match
-            ashape = numpy.array(shape)
-            if ashape.prod() == result.size:
-                if self.verbose:
-                    stdout.write("\tReshaping array to "
-                                 "%s\n" % pprint.pformat(shape))
-                result = result.reshape(shape)
-            else:
-                if self.verbose:
-                    stdout.write("_shape number of elements does not match "
-                                 "array size: not reshaping\n")
-        except:
-            pass
-        
-        return result
+            result = numpy.fromfile(self.fobj, dtype=self.dtype, 
+                                    count=self.size, sep=self.delim)
+        return self._try_reshape(result) 
 
-    def _get_dtype(self):
-        dtype = _match_key(self.hdr,'_dtype')
-        if dtype is not None:
-            return dtype
+    def _try_reshape(self, data):
+        shape = _match_key(self.hdr, '_shape')
+        if shape is None:
+            return data
+
+        # Only use it if the lengths match
+        try:
+            ashape = numpy.array(shape, ndmin=1)
+        except:
+            return data
+        if ashape.prod() == data.size:
+            if self.verbose:
+                stdout.write("\tReshaping array to "
+                             "%s\n" % pprint.pformat(shape))
+            return data.reshape(shape)
         else:
-            raise RuntimeError('Header must contain the DTYPE keyword')
+            if self.verbose:
+                stdout.write("_shape number of elements does not match "
+                             "array size: not reshaping\n")
+            return data
+
+    def _get_rows2read(self, rows):
+        if rows is None:
+            return None
+        else:
+            return numpy.array(rows,ndmin=1,copy=False)
+
+    def _get_fields2read(self, fields, columns=None):
+        if fields is None:
+            fields=columns
+
+        if fields is None:
+            return None
+        elif isinstance(fields, (list,numpy.ndarray)):
+            f=fields
+        elif isinstance(fields,str):
+            f=[fields]
+        else:
+            raise ValueError('fields must be list,string or array')
+
+        if not isinstance(f[0],str):
+            # this is probably a list of column numbers, convert to strings
+            allnames = [d[0] for d in self.dtype]
+            f = [allnames[i] for i in f]
+
+        return f
+
+
+
+
 
     def _descr_has_fields(self, descr):
         if isinstance(descr, str):
@@ -334,15 +407,12 @@ class Sfile(dict):
         if not isinstance(header,dict):
             raise RuntimeError('header must be a dict')
 
-        try:
-            size = _match_key(header,'_size')
-        except:
-            try:
-                size = _match_key(header,'_nrows')
-            except:
+        size = _match_key(header,'_size')
+        if size is None:
+            size = _match_key(header,'_nrows')
+            if size is None:
                 raise RuntimeError("Header must contain the size in first "
                                    "row as 'SIZE = %20d'")
-
         return long(size)
 
 
@@ -657,7 +727,6 @@ def _get_fields2read(fields, dt):
             # this is probably a list of column numbers, convert to strings
             allnames = [d[0] for d in dt]
             f = [allnames[i] for i in f]
-
 
     return f,l
 
@@ -1136,9 +1205,10 @@ def _UpdateNrows(fobj, nrows_add):
     nrows_new = nrows_current + nrows_add
     _WriteNrows(fobj, nrows_new)
 
-def _match_key(d,key):
+def _match_key(d, key, require=False):
     """
-    Match the key in a case-insensitive way and return the value.
+    Match the key in a case-insensitive way and return the value. Return None
+    if not found or raise an error if require=True
     """
     if not isinstance(d,dict):
         raise RuntimeError('Input object must be a dict')
@@ -1149,7 +1219,10 @@ def _match_key(d,key):
         ind = keyslow.index(keylow)
         return d[keys[ind]]
     else:
-        return None
+        if not require:
+            return None
+        else:
+            raise RuntimeError("Could not find required key: '%s'" % key)
         
 
 def _GetNrows(header):
