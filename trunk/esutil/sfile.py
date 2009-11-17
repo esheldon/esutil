@@ -1,3 +1,4 @@
+# vim: set filetype=python :
 import sys
 from sys import stdout,stderr
 import os
@@ -34,7 +35,13 @@ def Open(fobj, mode='r', delim=None, verbose=False, memmap=False):
     else:
         return sf
 
-def read_file_field(fobj, dtype, field, num):
+def read_file_field(fobj, descr, field, count):
+    """
+    Read a field from binary file of fixed length records.
+    """
+
+    import scipy.weave
+    dtype = numpy.dtype(descr)
     recsize = dtype.itemsize
     outdtype=dtype.fields[field][0]
     fsize = outdtype.itemsize
@@ -42,18 +49,62 @@ def read_file_field(fobj, dtype, field, num):
 
     seek_size = recsize-fsize
 
-    output = numpy.empty(num, dtype=outdtype)
-    print output
-    return None
+    # will reform to correct dtype later
+    output = numpy.empty(count*fsize, dtype='i1')
 
-    # position at the field
-    fobj.seek(field_offset, 1)
-    for i in range(num):
-        output[i] = fobj.read(fsize)
-        if i < (size-1):
-            fobj.seek(seek_size, os.SEEK_CUR)
+    current_pos = fobj.tell()
+    filename = fobj.name
 
-    return output
+    # assume we are at the beginning of a record
+    offset = current_pos + field_offset
+
+    code="""
+    /* Input paramters:
+        filename
+        offset
+        count
+        recsize
+        fsize
+        output
+    */
+    int64_t row_index=0, index=0, i=0;
+    char c;
+    FILE* fp;
+    
+    fp=fopen(filename.c_str(), "r");
+
+    if (offset > 0) {
+        fseek(fp, offset, SEEK_CUR);
+    }
+
+    // begin reading bytes
+    for (row_index=0; row_index<count; row_index++) {
+        // Read fsize bytes.  If we can get at the memory we can make this
+        // an fread
+        for (i=0; i<fsize; i++) {
+            c=getc(fp);
+            output(index) = c;
+            index++;
+        }
+        // skip to the beginning of the next entry
+        fseek(fp, (recsize-fsize), SEEK_CUR);
+    }
+    """
+
+    code="""
+
+    printf("offset = %d", offset);
+    printf("done")
+
+    """
+
+
+    #variables = ['filename','offset','count','recsize','fsize','output']
+    variables = ['offset']
+    scipy.weave.inline(code, variables,
+                       type_converters = scipy.weave.converters.blitz)
+
+    return output.view( outdtype )
 
 
 class Sfile(dict):
@@ -235,21 +286,21 @@ class Sfile(dict):
             if have_recfile:
                 result = self._recfile_read(rows=rows2read, fields=fields2read)
             else:
-                raise ValueError("Implement _memmap_read")
                 result = self._memmap_read(rows=rows2read, fields=fields2read)
 
         return result
 
     def _recfile_read(self, rows=None, fields=None):
-        if self.delim is None:
+        delim=self.delim
+        if delim is None:
             delim=""
-        else:
-            delim=self.delim
         dtype=numpy.dtype(self.dtype)
         robj = recfile.Open(self.fobj, nrows=self.size, mode='r', 
                             dtype=dtype, delim=delim)
         return robj.Read(rows=rows, fields=fields)
 
+    def _memmap_read(self,rows=None, fields=None):
+        raise RuntimeError("Not Yet Implemented")
 
     def _read_simple(self):
         if self.verbose:
