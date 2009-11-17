@@ -27,8 +27,34 @@ except:
     have_recfile=False
 
 
-def Open(fobj, mode='r', delim=None, verbose=False):
-    return Sfile(fobj, mode=mode, delim=delim, verbose=verbose)
+def Open(fobj, mode='r', delim=None, verbose=False, memmap=False):
+    sf = Sfile(fobj, mode=mode, delim=delim, verbose=verbose)
+    if memmap and delim is None:
+        return sf.get_memmap()
+    else:
+        return sf
+
+def read_file_field(fobj, dtype, field, num):
+    recsize = dtype.itemsize
+    outdtype=dtype.fields[field][0]
+    fsize = outdtype.itemsize
+    field_offset = dtype.fields[field][1]
+
+    seek_size = recsize-fsize
+
+    output = numpy.empty(num, dtype=outdtype)
+    print output
+    return None
+
+    # position at the field
+    fobj.seek(field_offset, 1)
+    for i in range(num):
+        output[i] = fobj.read(fsize)
+        if i < (size-1):
+            fobj.seek(seek_size, os.SEEK_CUR)
+
+    return output
+
 
 class Sfile(dict):
     def __init__(self, fobj=None, mode='r', delim=None, verbose=False):
