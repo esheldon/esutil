@@ -35,77 +35,6 @@ def Open(fobj, mode='r', delim=None, verbose=False, memmap=False):
     else:
         return sf
 
-def read_file_field(fobj, descr, field, count):
-    """
-    Read a field from binary file of fixed length records.
-    """
-
-    import scipy.weave
-    dtype = numpy.dtype(descr)
-    recsize = dtype.itemsize
-    outdtype=dtype.fields[field][0]
-    fsize = outdtype.itemsize
-    field_offset = dtype.fields[field][1]
-
-    seek_size = recsize-fsize
-
-    # will reform to correct dtype later
-    output = numpy.empty(count*fsize, dtype='i1')
-
-    current_pos = fobj.tell()
-    filename = fobj.name
-
-    # assume we are at the beginning of a record
-    offset = current_pos + field_offset
-
-    code="""
-    /* Input paramters:
-        filename
-        offset
-        count
-        recsize
-        fsize
-        output
-    */
-    int64_t row_index=0, index=0, i=0;
-    char c;
-    FILE* fp;
-    
-    fp=fopen(filename.c_str(), "r");
-
-    if (offset > 0) {
-        fseek(fp, offset, SEEK_CUR);
-    }
-
-    // begin reading bytes
-    for (row_index=0; row_index<count; row_index++) {
-        // Read fsize bytes.  If we can get at the memory we can make this
-        // an fread
-        for (i=0; i<fsize; i++) {
-            c=getc(fp);
-            output(index) = c;
-            index++;
-        }
-        // skip to the beginning of the next entry
-        fseek(fp, (recsize-fsize), SEEK_CUR);
-    }
-    """
-
-    code="""
-
-    printf("offset = %d", offset);
-    printf("done")
-
-    """
-
-
-    #variables = ['filename','offset','count','recsize','fsize','output']
-    variables = ['offset']
-    scipy.weave.inline(code, variables,
-                       type_converters = scipy.weave.converters.blitz)
-
-    return output.view( outdtype )
-
 
 class Sfile(dict):
     def __init__(self, fobj=None, mode='r', delim=None, verbose=False):
@@ -338,8 +267,11 @@ class Sfile(dict):
     def _get_rows2read(self, rows):
         if rows is None:
             return None
-        else:
-            return numpy.array(rows,ndmin=1,copy=False)
+        rows2read = numpy.array(rows,ndmin=1,copy=False)
+        if rows2read is not None and self.verbose:
+            stdout.write("\t\tReading %s rows\n" % len(rows2read))
+
+        return rows2read
 
     def _get_fields2read(self, fields, columns=None):
         if fields is None:
@@ -358,6 +290,10 @@ class Sfile(dict):
             # this is probably a list of column numbers, convert to strings
             allnames = [d[0] for d in self.dtype]
             f = [allnames[i] for i in f]
+
+        if self.verbose:
+            _out = (len(f), pprint.pformat(f))
+            stdout.write("\t\tReading %s fields: %s\n" % _out)
 
         return f
 
@@ -1373,3 +1309,216 @@ def test():
     read(tmpfile)
 
     tmpfile.close()
+
+def read_file_field(fobj, descr, field, count):
+    """
+    Read a field from binary file of fixed length records.
+    """
+
+    import scipy.weave
+    dtype = numpy.dtype(descr)
+    recsize = dtype.itemsize
+    outdtype=dtype.fields[field][0]
+    fsize = outdtype.itemsize
+    field_offset = dtype.fields[field][1]
+
+    seek_size = recsize-fsize
+
+    # will reform to correct dtype later
+    output = numpy.empty(count*fsize, dtype='i1')
+
+    starting_pos = fobj.tell()
+    filename = fobj.name
+
+    # assume we are at the beginning of a record
+    offset = starting_pos + field_offset
+
+    code="""
+    int64_t row_index=0;
+    char* ptr;
+    FILE* fp;
+
+    ptr = (char *) output_array->data;
+
+    fp=fopen(filename.c_str(), "r");
+
+    printf("offset = %d\\n", offset);
+
+    if (offset > 0) {
+        fseek(fp, offset, SEEK_CUR);
+    }
+
+    // begin reading bytes
+    for (row_index=0; row_index<count; row_index++) {
+        fread(ptr, fsize, 1, fp);
+
+        // skip to the beginning of the next entry
+        fseek(fp, (recsize-fsize), SEEK_CUR);
+
+        // next
+        ptr += fsize;
+    }
+
+
+    fclose(fp);
+    """
+
+
+    variables = ['filename','offset','count','recsize','fsize','output']
+    #variables = ['filename','offset']
+    scipy.weave.inline(code, variables,
+                       type_converters = scipy.weave.converters.blitz)
+
+    fobj.seek(starting_pos)
+    return output.view( outdtype )
+
+
+def _match_fields(descr, fields):
+    """
+
+    For the fields that match the dtype, return arrays containing the sizes of
+    each field and the offsets into the record
+
+    """
+
+    dtype = numpy.dtype(descr)
+    allnames = dtype.names
+
+    ntot = len(descr)
+
+    field_offsets = []
+    field_descr = []
+    field_sizes = []
+
+    # loop this way to preserve order
+    i=0
+    for name in allnames:
+        if name in fields:
+            fsize = dtype.fields[name][0].itemsize
+            offset = dtype.fields[name][1]
+
+            field_descr.append( descr[i] )
+            field_offsets.append(offset)
+            field_sizes.append(fsize)
+        i += 1
+
+    if len(field_offsets) == 0:
+        raise ValueError("No field matched!")
+    field_offsets=numpy.array(field_offsets, dtype='i8')
+    field_sizes=numpy.array(field_sizes, dtype='i8')
+    return field_descr, field_offsets, field_sizes
+
+def recread(fobj, descr_or_dtype, fields, count, stripname=False):
+    """
+    Read a subset of fields from binary file of fixed length records.
+    """
+
+    import scipy.weave
+
+    if isinstance(fields,(str,unicode)):
+        fields=[fields]
+    dtype = numpy.dtype(descr_or_dtype)
+
+    field_descr, field_offsets, field_sizes = _match_fields(dtype.descr,fields)
+
+
+    starting_pos = fobj.tell()
+    filename = fobj.name
+
+
+    if len(field_descr) == len(dtype.names):
+        # all fields requested.  This is easy!
+        output = numpy.fromfile(fobj, count=count, dtype=field_descr)
+
+    else:
+
+        recsize = dtype.itemsize
+
+        # view as a char array and later re-view as a recarray
+        field_dtype = numpy.dtype( field_descr )
+
+        output = numpy.empty(count*field_dtype.itemsize, dtype='i1')
+
+        # assume we are at the beginning of a record
+        file_offset = starting_pos
+
+        code="""
+        int64_t row_index=0, field_index=0;
+        int64_t offset=0, last_offset=0, last_fsize=0;
+        int64_t seek_distance=0;
+        int64_t fsize=0;
+        int64_t nfields=0;
+
+        char* ptr;
+        FILE* fp;
+
+        ptr = (char *) output_array->data;
+
+        fp=fopen(filename.c_str(), "r");
+
+
+        if (file_offset > 0) {
+            fseek(fp, file_offset, SEEK_CUR);
+        }
+
+        // begin reading bytes
+        // Loop over rows
+        nfields = field_offsets.size();
+        for (row_index=0; row_index<count; row_index++) {
+
+            last_offset = 0;
+            last_fsize = 0;
+
+            for (field_index=0; field_index<nfields; field_index++) {
+
+                // How far to we move before we read this data?
+                offset  = field_offsets(field_index);
+                seek_distance = offset-(last_offset + last_fsize);
+
+                if (seek_distance > 0) {
+                    fseek(fp, seek_distance, SEEK_CUR);
+                }
+
+                // Read the data
+                fsize = field_sizes(field_index);
+                fread(ptr, fsize, 1, fp);
+
+                // On to the next field
+                ptr += fsize;
+
+                last_offset=offset;
+                last_fsize=fsize;
+            }
+
+            // Do we need to move past any remaining fields?
+            seek_distance = recsize - (last_offset+fsize);
+            if (seek_distance > 0) {
+                fseek(fp, seek_distance, SEEK_CUR);
+            }
+
+        }
+
+        fclose(fp);
+        """
+
+
+        variables = ['filename','file_offset',
+                     'field_offsets','field_sizes','recsize','count',
+                     'output']
+        scipy.weave.inline(code, variables,
+                           type_converters = scipy.weave.converters.blitz)
+
+        output = output.view( field_descr )
+
+
+    if reset:
+        fobj.seek(starting_pos)
+
+    if len( field_descr ) == 1 and stripname:
+        # for single fields we might want to just strip off the name
+        name = field_descr[0][0]
+        return output[name]
+    else:
+        return output
+
+
