@@ -33,7 +33,6 @@ def read(fobj,
          rows=None, fields=None, columns=None,
          header=False, 
          combine=False, view=None,
-         norecfile=False,
          lower=False, upper=False,
          noroot=True, seproot=False,
          verbose=False):
@@ -46,7 +45,6 @@ def read(fobj,
              typ=None,
              ext=0,
              rows=None, fields=None, columns=None,
-             norecfile=False,
              header=False, combine=False, view=None,
              lower=False, upper=False,
              noroot=True, seproot=False,
@@ -83,11 +81,10 @@ def read(fobj,
             read. Default is 0, the first extension.
         rows:  
             For record-type files such as FITS binary tables or simple REC
-            files, setting this keyword will return a subset of the rows.
-            For FITS, this requires reading the entire file and selecting
-            a subset.  For REC files only the requested rows are read from
-            disk by using the recfile package.  That behaviour can be turned
-            off with the norecfile=True keyword.  Default is all rows.
+            files, setting this keyword will return a subset of the rows.  For
+            FITS, this requires reading the entire file and selecting a subset.
+            For REC files only the requested rows are read from disk by using
+            the recfile package.  Default is all rows.
 
         fields=, columns=:  
             For record-type files such as FITS binary tables or simple REC
@@ -95,14 +92,7 @@ def read(fobj,
             "fields" and "columns" are synonyms.  For FITS, this requires
             reading the entire file and selecting a subset.  For REC files
             only the requested rows are read from disk by using the recfile
-            package.  That behaviour can be turned off with the norecfile=True
-            keyword.  Default is all columns.
-
-        norecfile:  Do not use recfile to read subsets of rows/columns for
-            REC file type.  This can be faster in certain situations, such
-            as when all rows are being read and a subset of columns is 
-            requested.  The tradeoff is higher memory usage.
-
+            package.  Default is all columns.
 
         header:  If True, and the file type supports header+data, return a 
             tuple  (data, header).  Default is False.
@@ -138,7 +128,6 @@ def read(fobj,
                         typ=typ, 
                         ext=ext,
                         fields=fields, columns=columns, view=view,
-                        norecfile=norecfile,
                         noroot=noroot, verbose=verbose)
             alldata.append(data)
         if combine:
@@ -183,8 +172,7 @@ def read(fobj,
 
     elif typ == 'rec':
         return sfile.read(fobj, header=header, view=view, 
-                          rows=rows, fields=fields, columns=columns,
-                          norecfile=norecfile)
+                          rows=rows, fields=fields, columns=columns)
 
     elif typ == 'xml':
         return xmltools.xml2dict(fobj, noroot=noroot, seproot=seproot)
