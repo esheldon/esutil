@@ -36,7 +36,7 @@ def Open(fobj, mode='r', delim=None, verbose=False, memmap=False):
         return sf
 
 
-class SFile(dict):
+class SFile():
     def __init__(self, fobj=None, mode='r', delim=None, 
                  padnull=False, ignorenull=False, verbose=False):
         """
@@ -85,9 +85,13 @@ class SFile(dict):
                 if self.verbose:
                     stdout.write("\tReading header\n")
                 self.hdr = self.read_header()
+                
+                self.data_start = self.fobj.tell()
+
                 self.delim = _match_key(self.hdr, '_delim')
                 self.size = _match_key(self.hdr, '_size', require=True)
-                self.dtype = _match_key(self.hdr, '_dtype', require=True)
+                self.descr = _match_key(self.hdr, '_dtype', require=True)
+                self.dtype = numpy.dtype(self.descr)
                 # will be None unless no fields
                 self.shape = self.get_shape()
             else:
@@ -97,30 +101,16 @@ class SFile(dict):
         else:
             raise ValueError("Only support filename inputs for now")
 
-    def get_memmap(self, view=None, header=False):
-        if self.delim is not None:
-            raise ValueError("Cannot memory map ascii files")
-        if not self.has_fields() and self.shape is not None:
-            shape = self.shape
-        else:
-            shape = (self.size,)
-
-        result = numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
-                              mode='r', offset=self.fobj.tell())
-        if view is not None:
-            result = result.view(view)
-        if header:
-            return result, self.hdr
-        else:
-            return result
 
     def close(self):
         """
         Close any open file object.  Make sure fobj, _hdr, and delim are None
         """
         self.hdr=None
+        self.data_start=None
         self.delim=None
         self.size=0
+        self.descr=None
         self.dtype=None
         self.shape=None
         if hasattr(self, 'fobj'):
@@ -179,13 +169,41 @@ class SFile(dict):
         else:
             data.tofile(self.fobj)
 
+    def get_memmap(self, view=None, header=False):
+
+        if self.delim is not None:
+            raise ValueError("Cannot memory map ascii files")
+
+        if self.fobj.tell() != self.data_start:
+            self.fobj.seek(self.data_start)
+
+
+        if not self.has_fields() and self.shape is not None:
+            shape = self.shape
+        else:
+            shape = (self.size,)
+
+        result = numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
+                              mode='r', offset=self.fobj.tell())
+        if view is not None:
+            result = result.view(view)
+        if header:
+            return result, self.hdr
+        else:
+            return result
+
+
+
     def read(self, rows=None, fields=None, columns=None, header=False, 
              view=None):
         """
         Read the data into memory.
         """
         
-        if not self._descr_has_fields(self.dtype):
+        if self.fobj.tell() != self.data_start:
+            self.fobj.seek(self.data_start)
+
+        if not self.has_fields():
             result = self._read_simple()
         else:
             result = self._read_structured(rows=rows, 
@@ -199,10 +217,8 @@ class SFile(dict):
             return result
 
     def has_fields(self):
-        if self._descr_has_fields(self.dtype):
-            return True
-        else:
-            return False
+        return self.dtype.names is not None
+
     def get_shape(self):
         if self.has_fields():
             return None
@@ -238,9 +254,8 @@ class SFile(dict):
         delim=self.delim
         if delim is None:
             delim=""
-        dtype=numpy.dtype(self.dtype)
         robj = recfile.Open(self.fobj, nrows=self.size, mode='r', 
-                            dtype=dtype, delim=delim)
+                            dtype=self.dtype, delim=delim)
         return robj.Read(rows=rows, fields=fields)
 
     def _memmap_read(self,rows=None, fields=None):
@@ -303,7 +318,7 @@ class SFile(dict):
 
         if not isinstance(f[0],str):
             # this is probably a list of column numbers, convert to strings
-            allnames = [d[0] for d in self.dtype]
+            allnames = self.dtype.names
             f = [allnames[i] for i in f]
 
         if self.verbose:
@@ -603,7 +618,8 @@ class SFile(dict):
 
         return hdr
 
-
+    def header(self):
+        return self.hdr
 
 
 
