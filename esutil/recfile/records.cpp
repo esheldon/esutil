@@ -265,14 +265,14 @@ void Records::ReadRow()
 	if (mReadWholeRowBinary) {
 		// We can read a whole line if reading all fields
 		ReadWholeRowBinary();
-		/*
+		
 	} else if (mFileType == BINARY_FILE) {
 		// Reading particular fields of a binary file.
 		ReadBinaryFields();
-		*/
+	
 	} else {
 		// Reading particular fields
-		ReadFields();
+		ReadAsciiFields();
 	}
 }
 
@@ -280,7 +280,7 @@ void Records::ReadBinaryFields()
 {
 	// use messy code here for a significant speedup
 	npy_intp 
-		last_offset=0, last_fsize=0, seek_distance=0, offset=0, fsize=0;
+		last_offset=0, last_fsize=0, seek_distance=0, offset=0;
 
 	for (npy_intp fnum=0; fnum<mNfields; fnum++) {
 		if (mKeep[fnum]) {
@@ -288,46 +288,44 @@ void Records::ReadBinaryFields()
 			offset  = mOffsets[fnum];
 			seek_distance = offset-(last_offset + last_fsize);
 
-			if (seek_distance > 0) {
-				fseek(mFptr, seek_distance, SEEK_CUR);
-			}
+			// This could be zero if we didn't skip any fields
+			DoSeek(seek_distance);
 
 			// Read the data
-			fsize = mSizes[fnum];
-			fread(mData, fsize, 1, mFptr);
-
-			// On to the next field
-			mData += fsize;
+			ReadFieldAsBinary(fnum);
 
 			last_offset=offset;
-			last_fsize=fsize;
+			last_fsize=mSizes[fnum];
 		}
 	}
 
 	// Do we need to move past any remaining fields?
 	seek_distance = mRowSize - (last_offset+last_fsize);
-	if (seek_distance > 0) {
-		fseek(mFptr, seek_distance, SEEK_CUR);
-	}
+	DoSeek(seek_distance);
 
 }
 
-void Records::ReadFields()
-{
-	for (npy_intp fnum=0; fnum<mNfields; fnum++) {
-		if (mKeep[fnum]) {
-			ReadField(fnum);
-		} else {
-			SkipField(fnum);
+void Records::DoSeek(npy_intp seek_distance) {
+	if (seek_distance > 0) {
+		if(fseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
+			string err="Error skipping fields";
+			throw err.c_str();
 		}
 	}
+}
 
+void Records::ReadAsciiFields()
+{
+	for (npy_intp fnum=0; fnum<mNfields; fnum++) {
+		// This program understands when a field is skipped
+		ReadFieldAsAscii(fnum);
+	}
 }
 
 
 
 
-
+/*
 void Records::ReadField(long long fnum)
 {
 	if (mFileType == BINARY_FILE) {
@@ -336,6 +334,7 @@ void Records::ReadField(long long fnum)
 		ReadFieldAsAscii(fnum);
 	}
 }
+*/
 
 
 

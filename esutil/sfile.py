@@ -29,25 +29,18 @@ except:
 
 
 def Open(fobj, mode='r', delim=None, verbose=False, memmap=False):
-    sf = Sfile(fobj, mode=mode, delim=delim, verbose=verbose)
+    sf = SFile(fobj, mode=mode, delim=delim, verbose=verbose)
     if memmap and delim is None:
         return sf.get_memmap()
     else:
         return sf
 
 
-class Sfile(dict):
-    def __init__(self, fobj=None, mode='r', delim=None, verbose=False):
+class SFile(dict):
+    def __init__(self, fobj=None, mode='r', delim=None, 
+                 padnull=False, ignorenull=False, verbose=False):
         """
-
-        Currently only support a filename as input
-
-        For the input being a file name string, we by default open the file
-        read only.
-
-        I don't like that some of the metadata I'm using is in the hdr and
-        other is attributes
-
+        do some docs
         """
         self.open(fobj, mode=mode, delim=delim, verbose=verbose)
 
@@ -75,6 +68,17 @@ class Sfile(dict):
 
             if self.verbose:
                 stdout.write("\nOpening file: %s\n" % fpath)
+
+            if mode == 'r+' and not os.path.exists(fobj):
+                # path doesn't exist but we want to append.  Change the
+                # mode to write
+                if self.verbose:
+                    stdout.write("Requested append on non-existent file: "
+                                 "Will create a new file\n")
+                mode = 'w'
+
+            self.mode=mode
+
             self.fobj = open(fobj, mode)
             if mode[0] == 'r':
                 # For 'r' and 'r+' try to read the header
@@ -93,15 +97,22 @@ class Sfile(dict):
         else:
             raise ValueError("Only support filename inputs for now")
 
-    def get_memmap(self):
+    def get_memmap(self, view=None, header=False):
         if self.delim is not None:
             raise ValueError("Cannot memory map ascii files")
         if not self.has_fields() and self.shape is not None:
             shape = self.shape
         else:
             shape = (self.size,)
-        return numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
-                            mode='r', offset=self.fobj.tell())
+
+        result = numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
+                              mode='r', offset=self.fobj.tell())
+        if view is not None:
+            result = result.view(view)
+        if header:
+            return result, self.hdr
+        else:
+            return result
 
     def close(self):
         """
@@ -123,7 +134,7 @@ class Sfile(dict):
 
     def write(self, data, header=None):
         """
-        delim is ignored if the file is being appended to
+        do some docs
         """
 
         # Write or update the header. If we are updating the file, this will
@@ -168,7 +179,8 @@ class Sfile(dict):
         else:
             data.tofile(self.fobj)
 
-    def read(self, rows=None, fields=None, columns=None, header=False):
+    def read(self, rows=None, fields=None, columns=None, header=False, 
+             view=None):
         """
         Read the data into memory.
         """
@@ -178,6 +190,9 @@ class Sfile(dict):
         else:
             result = self._read_structured(rows=rows, 
                                            fields=fields, columns=columns)
+        if view is not None:
+            result = result.view(view)
+
         if header:
             return result, self.hdr
         else:
@@ -595,7 +610,7 @@ class Sfile(dict):
 
 
 def write(array, outfile, header=None, delim=None, 
-          padnull=False, ignorenull=False, append=False):
+          padnull=False, ignorenull=False, append=False, verbose=False):
     """
     sfile.write()
 
@@ -664,6 +679,25 @@ def write(array, outfile, header=None, delim=None,
         onto the next line.  2009-05-05
 
     """
+
+
+
+    #def write(array, outfile, header=None, delim=None, 
+    #      padnull=False, ignorenull=False, append=False):
+
+    if append:
+        mode = 'r+'
+    else:
+        mode = 'w'
+
+    sf=SFile(outfile, mode=mode, delim=delim, 
+             padnull=padnull, ignorenull=ignorenull, verbose=verbose)
+    sf.write(array, header=header)
+
+    return
+
+
+    # old code
 
     if not have_numpy:
         raise ImportError("numpy could not be imported")
@@ -786,8 +820,8 @@ def open_memmap(infile, header=False, mode='r+'):
         return mmap
 
 
-def read(infile, rows=None, fields=None, columns=None, norecfile=False,
-         header=False, view=None, memmap=False):
+def read(infile, rows=None, fields=None, columns=None, 
+         header=False, view=None, memmap=False, verbose=False):
     """
     sfile.read()
 
@@ -796,7 +830,7 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
     For ascii files the recfile package is used for reading and writing.
 
     Calling Sequence:
-        arr = sfile.read(infile, rows=None, columns=None, norecfile=False, 
+        arr = sfile.read(infile, rows=None, columns=None, 
                          header=False, view=numpy.ndarray)
 
     Inputs:
@@ -807,20 +841,6 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
         columns=: A scalar, list or tuple of strings naming columns to read 
             from the file.  Default is all.
         fields=:  Same as sending columns=.
-        norecfile=False:  
-            Don't use recfile to get subsets of binary data files.  Normally
-            the package recfile is used (if available ) to read subsets of the
-            columns and rows.  This saves memory.  It also can be faster,
-            especially when only a subset of rows is returned.  But this can
-            be slower when reading many rows and only a few columns due to all
-            the extra file seeks.  If you have enough memory you can send
-            norecfile=True, which will read all the data into memory and then
-            extract subsets.  Note, if you are only reading a small number of
-            rows this is probably *not* faster!
-
-            Note if recfile is not found on your system this is the default
-            action.
-
         header=False:  If True, return both the array and the header dict in
             a tuple.
         view=:  How to view the array.  Default is numpy.ndarray.
@@ -846,6 +866,19 @@ def read(infile, rows=None, fields=None, columns=None, norecfile=False,
 
         Switched over to new header format.  2009-10-38, Erin Sheldon, BNL.
     """
+
+    #def read(infile, rows=None, fields=None, columns=None, norecfile=False,
+    #         header=False, view=None, memmap=False):
+
+    sf = SFile(infile, verbose=verbose)
+    if memmap:
+        return sf.get_memmap(view=view, header=header)
+    else:
+        return sf.read(rows=rows, fields=fields, columns=columns, 
+                       view=view, header=header)
+
+    # old code
+
 
     if not have_numpy:
         raise ImportError("numpy could not be imported")
@@ -985,9 +1018,9 @@ def extract_fields(arr, keepnames):
     return new_arr
 
 
-def read_header(infile):
+def read_header(infile, verbose=False):
     """
-    sfile..read_header()
+    sfile.read_header()
 
     Read the header from a simple self-describing file format with an 
     ascii header.  See the write() function for information
@@ -1077,6 +1110,11 @@ def read_header(infile):
                     2009-10-28. Erin Sheldon, BNL
     """
 
+    sf = SFile(infile, verbose=verbose)
+    return sf.hdr
+
+
+    # old code
     if not have_numpy:
         raise ImportError("numpy could not be imported")
 
@@ -1312,7 +1350,8 @@ def test():
 
 def read_file_field(fobj, descr, field, count):
     """
-    Read a field from binary file of fixed length records.
+    weave Read a field from binary file of fixed length records.  Been doing
+    some testing.
     """
 
     import scipy.weave
@@ -1408,9 +1447,10 @@ def _match_fields(descr, fields):
     field_sizes=numpy.array(field_sizes, dtype='i8')
     return field_descr, field_offsets, field_sizes
 
-def recread(fobj, descr_or_dtype, fields, count, stripname=False):
+def recread(fobj, descr_or_dtype, fields, count, stripname=False, reset=False):
     """
     Read a subset of fields from binary file of fixed length records.
+    This is the weave version, just been using it for testing.
     """
 
     import scipy.weave

@@ -196,9 +196,10 @@ Modification history:
 		void ReadAllAsBinary();
 		void ReadRows();
 		void ReadRow();
-		void ReadFields();
+		void ReadAsciiFields();
 		void ReadBinaryFields();
-		void ReadField(long long fnum);
+		void DoSeek(npy_intp seek_distance);
+		//void ReadField(long long fnum);
 		void ReadFieldAsBinary(long long fnum);
 		void ReadFieldAsAscii(long long fnum);
 		void ReadAsciiBytes(long long fnum);
