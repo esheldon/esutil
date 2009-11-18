@@ -61,7 +61,7 @@ class SFile():
         self.close()
         self.padnull=padnull
         self.ignorenull=ignorenull
-        if isinstance(fobj, (str,unicode)):
+        if isstring(fobj):
             # expand shortcut variables
             fpath = os.path.expanduser(fobj)
             fpath = os.path.expandvars(fpath)
@@ -92,6 +92,7 @@ class SFile():
                 self.size = _match_key(self.hdr, '_size', require=True)
                 self.descr = _match_key(self.hdr, '_dtype', require=True)
                 self.dtype = numpy.dtype(self.descr)
+                self.has_fields = (self.dtype.names is not None)
                 # will be None unless no fields
                 self.shape = self.get_shape()
             else:
@@ -112,6 +113,7 @@ class SFile():
         self.size=0
         self.descr=None
         self.dtype=None
+        self.has_fields=None
         self.shape=None
         if hasattr(self, 'fobj'):
             if self.fobj is not None:
@@ -121,6 +123,49 @@ class SFile():
 
         self.padnull=False
         self.ignorenull=False
+
+    def __repr__(self):
+        s = []
+
+        if self.fobj is not None:
+            s += ["filename: '%s'" % self.fobj.name]
+        if self.delim is not None:
+            s=["delim: '%s'" % self.delim]
+
+        s += ["size: %s" % self.size]
+
+        if self.shape is not None:
+            s += ["shape: " + pprint.pformat(self.shape)]
+        #if self.has_fields is not None:
+            #s += ["has_fields: %s" % self.has_fields]
+        if self.descr is not None:
+            s += ["dtype: \n"+pprint.pformat(self.descr)]
+
+        if self.hdr is not None:
+            hs = self.h2string()
+            if hs != '':
+                s += ["hdr: \n"+hs]
+        s = "\n".join(s)
+        return s
+
+    def h2string(self, strip=True):
+        if self.hdr is None:
+            return ''
+        newd = {}
+
+        skipkeys=['_DTYPE','_SIZE','_NROWS','_HAS_FIELDS','_DELIM','_SHAPE']
+        for key in self.hdr:
+            if strip:
+                if key not in skipkeys:
+                    newd[key] = self.hdr[key]
+            else:
+                news[key] = self.hdr[key]
+
+        if len(newd) == 0:
+            return ''
+        return pprint.pformat(newd)
+
+
 
     def write(self, data, header=None):
         """
@@ -134,7 +179,7 @@ class SFile():
 
         self._write_header(data, header=header)
 
-        if not self.hdr['_HAS_FIELDS']:
+        if not self.has_fields:
             self._write_simple(data)
         else:
             self._write_structured(data)
@@ -169,7 +214,7 @@ class SFile():
         else:
             data.tofile(self.fobj)
 
-    def get_memmap(self, view=None, header=False):
+    def get_memmap(self, mode='r', view=None, header=False):
 
         if self.delim is not None:
             raise ValueError("Cannot memory map ascii files")
@@ -178,13 +223,13 @@ class SFile():
             self.fobj.seek(self.data_start)
 
 
-        if not self.has_fields() and self.shape is not None:
+        if not self.has_fields and self.shape is not None:
             shape = self.shape
         else:
             shape = (self.size,)
 
         result = numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
-                              mode='r', offset=self.fobj.tell())
+                              mode=mode, offset=self.fobj.tell())
         if view is not None:
             result = result.view(view)
         if header:
@@ -195,7 +240,7 @@ class SFile():
 
 
     def read(self, rows=None, fields=None, columns=None, header=False, 
-             view=None):
+             view=None, split=False):
         """
         Read the data into memory.
         """
@@ -203,24 +248,37 @@ class SFile():
         if self.fobj.tell() != self.data_start:
             self.fobj.seek(self.data_start)
 
-        if not self.has_fields():
+        if not self.has_fields:
             result = self._read_simple()
         else:
             result = self._read_structured(rows=rows, 
                                            fields=fields, columns=columns)
         if view is not None:
             result = result.view(view)
+        elif split:
+            result = split_fields(result)
 
         if header:
             return result, self.hdr
         else:
             return result
 
-    def has_fields(self):
-        return self.dtype.names is not None
+    def __getitem__(self, *args):
+        rows, columns = process_items_as_rows_or_columns(args)
+        return SFileSubset(self, rows=rows, columns=columns)
+
+
+    def __getslice__(self, i, j):
+        i=_fix_range(i, self.size)
+        j=_fix_range(j, self.size)
+        if j < i:
+            rows=None
+        else:
+            rows=numpy.arange(i,j, dtype='i8')
+        return SFileSubset(self, rows=rows)
 
     def get_shape(self):
-        if self.has_fields():
+        if self.has_fields:
             return None
         shape = _match_key(self.hdr, '_shape')
         if shape is None:
@@ -311,12 +369,12 @@ class SFile():
             return None
         elif isinstance(fields, (list,numpy.ndarray)):
             f=fields
-        elif isinstance(fields,str):
+        elif isstring(fields):
             f=[fields]
         else:
             raise ValueError('fields must be list,string or array')
 
-        if not isinstance(f[0],str):
+        if not isstring(f[0]):
             # this is probably a list of column numbers, convert to strings
             allnames = self.dtype.names
             f = [allnames[i] for i in f]
@@ -331,24 +389,6 @@ class SFile():
 
 
 
-    def _descr_has_fields(self, descr):
-        if isinstance(descr, str):
-            return False
-        if isinstance(descr, list):
-            firstname=descr[0][0]
-            if firstname == '':
-                return False
-        if isinstance(descr, tuple):
-            if descr[0] == '':
-                return False
-        return True
-
-    def _has_fields(self, data):
-        if data.dtype.names is None:
-            return False
-        else:
-            return True
-
     def _make_header(self, data, header=None):
             if header is None:
                 head={}
@@ -359,7 +399,7 @@ class SFile():
                 if key in head: del head[key]
                 if key.upper() in head: del head[key.upper()]
 
-            has_fields = self._has_fields(data)
+            has_fields = (data.dtype.names is not None)
             if has_fields:
                 descr = data.dtype.descr
             else:
@@ -409,7 +449,7 @@ class SFile():
             self.fobj.write('\n')
 
     def _remove_byteorder(self, descr):
-        if isinstance(descr, str):
+        if isstring(descr):
             return descr[1:]
 
         new_descr = []
@@ -623,6 +663,107 @@ class SFile():
 
 
 
+class SFileSubset():
+    def __init__(self, sf, columns=None, rows=None):
+        """
+        Input is the SFile instance and a list of column names.
+        """
+
+        self.sfile = sf
+        self.columns = columns
+        self.rows=rows
+
+        self._match_columns()
+        self._match_rows()
+
+    def __getitem__(self, *args):
+        rows, columns = process_items_as_rows_or_columns(args)
+        if rows is not None:
+            self.rows=rows
+        if columns is not None:
+            self.columns=columns
+        return SFileSubset(self.sfile, rows=self.rows, columns=self.columns)
+
+    def __getslice__(self, i, j):
+        i=_fix_range(i, self.sfile.size)
+        j=_fix_range(j, self.sfile.size)
+        if j < i:
+            self.rows=None
+        else:
+            self.rows=numpy.arange(i,j, dtype='i8')
+        return SFileSubset(self.sfile, rows=self.rows, columns=self.columns)
+
+
+
+    def read(self, view=None, split=False):
+        """
+        Read the data from disk and return as a numpy array
+        """
+
+        return self.sfile.read(rows=self.rows, columns=self.columns, 
+                               view=view, split=split)
+
+    def _match_columns(self):
+        if self.columns is None:
+            return
+        if isstring(self.columns):
+            self.columns = [self.columns]
+
+        # we don't support tuples in recfile...
+        if isinstance(self.columns, tuple):
+            self.columns = list(self.columns)
+        for col in self.columns:
+            if col not in self.sfile.dtype.names:
+                raise ValueError("column not found: '%s'" % col)
+
+    def _match_rows(self):
+        if self.rows is None:
+            return
+        # we don't support tuples in recfile...
+        self.rows = numpy.array(self.rows, copy=False, ndmin=1)
+        maxrow=self.rows.max()
+        minrow=self.rows.min()
+        if self.rows.min() < 0:
+            raise ValueError("min row: %s out of range" % minrow)
+        if self.rows.max() >= self.sfile.size:
+            raise ValueError("max row: %s out of range" % maxrow)
+
+    def __repr__(self):
+        s=[self.sfile.__repr__()]
+        if self.columns is not None:
+            s += ["column subset: " + pprint.pformat(self.columns)]
+        if self.rows is not None:
+            s += ["row subset: " + pprint.pformat(self.rows)]
+        s = "\n".join(s)
+        return s
+
+def process_items_as_rows_or_columns(*args):
+    firstarg = args[0]
+    columns=None
+    rows=None
+
+    docolumns=False
+    if isinstance(firstarg, (tuple,list,numpy.ndarray)):
+        if isstring(firstarg[0]):
+            docolumns=True
+            columns = firstarg
+        else:
+            rows = firstarg
+    elif isstring(firstarg):
+        docolumns=True
+        columns = args
+    else:
+        rows=args
+
+    return rows, columns
+
+def _fix_range(i, maxval):
+    if i < 0:
+        i=maxval-i
+    if i > maxval:
+        i=maxval
+    return i
+
 
 
 def write(array, outfile, header=None, delim=None, 
@@ -745,96 +886,6 @@ def write(array, outfile, header=None, delim=None,
     # Need to close if string was input
     if f_isstring:
         fobj.close()
-
-def _remove_byteorder(descr):
-    new_descr = []
-    for d in descr:
-        # d is a tuple, make it a list
-        newd = list( copy.copy(d) )
-
-        tdef = newd[1]
-        tdef = tdef[1:]
-        newd[1] = tdef
-        newd = tuple(newd)
-        new_descr.append(newd)
-
-    return new_descr
-
-def _get_rows2read(rows):
-    if rows is None:
-        r=None
-        l=0
-    else:
-        r = numpy.array(rows,ndmin=1)
-        l = r.size
-    return r,l
-
-def _get_fields2read(fields, dt):
-    if fields is None:
-        f=None
-        l=0
-    elif type(fields) == list:
-        f=fields
-        l=len(f)
-    elif type(fields) == numpy.ndarray:
-        f=fields
-        l=len(f)
-    elif type(fields) == str:
-        f=[fields]
-        l=len(f)
-    else:
-        raise ValueError('fields must be list,string or array')
-
-    if f is not None:
-        if not isinstance(f[0],str):
-            # this is probably a list of column numbers, convert to strings
-            allnames = [d[0] for d in dt]
-            f = [allnames[i] for i in f]
-
-    return f,l
-
-
-def open_memmap(infile, header=False, mode='r+'):
-    """
-
-    Be careful not to resize the data, because the header will currently
-    *not* be updated.
-
-    """
-
-    if not have_numpy:
-        raise ImportError("numpy could not be imported")
-
-    if not have_recfile:
-        norecfile=True
-
-    # Get the file object
-    fobj = open(infile, mode)
-    #fobj,f_isstring,junk = _GetFobj(infile,mode)
-
-    # Get the header
-    hdr=read_header(fobj)
-
-    delim = _match_key(hdr,'_delim')
-    if delim is not None:
-        raise ValueError("You can not memmap an ascii file")
-
-    # read the header
-    # number of rows
-    nrows = _GetNrows(hdr)
-
-    # The dtype
-    dtype = _GetDtype(hdr)
-    
-    
-    mmap = numpy.memmap(fobj, dtype=dtype, shape=(nrows,), 
-                        mode=mode, offset=fobj.tell())
-
-    if header:
-        return mmap, hdr
-    else:
-        return mmap
-
 
 def read(infile, rows=None, fields=None, columns=None, 
          header=False, view=None, memmap=False, verbose=False):
@@ -1002,38 +1053,6 @@ def read(infile, rows=None, fields=None, columns=None,
     else:
         return result
 
-
-def copy_fields(arr1, arr2):
-    """
-    Copy the fields that match
-    """
-    if arr1.size != arr2.size:
-        raise ValueError('arr1 and arr2 must be the same size')
-
-    names1=arr1.dtype.names
-    names2=arr2.dtype.names
-    for name in names1:
-        if name in names2:
-            arr2[name] = arr1[name]
-
-def extract_fields(arr, keepnames):
-    if type(keepnames) != list and type(keepnames) != numpy.ndarray:
-        keepnames=[keepnames]
-    arrnames = list( arr.dtype.names )
-    new_descr = []
-    for d in arr.dtype.descr:
-        name=d[0]
-        if name in keepnames:
-            new_descr.append(d)
-    if len(new_descr) == 0:
-        raise ValueError('No field names matched')
-
-    shape = arr.shape
-    new_arr = numpy.zeros(shape,dtype=new_descr)
-    copy_fields(arr, new_arr)
-    return new_arr
-
-
 def read_header(infile, verbose=False):
     """
     sfile.read_header()
@@ -1173,6 +1192,152 @@ def read_header(infile, verbose=False):
     return hdr
 
 
+
+
+def split_fields(data, fields=None, getnames=False):
+    """
+    Name:
+        split_fields
+
+    Calling Sequence:
+        The standard calling sequence is:
+            field_tuple = split_fields(data, fields=)
+            f1,f2,f3,.. = split_fields(data, fields=)
+
+        You can also return a list of the extracted names
+            field_tuple, names = split_fields(data, fields=, getnames=True)
+
+    Purpose:
+        Get a tuple of references to the individual fields in a structured
+        array (aka recarray).  If fields= is sent, just return those
+        fields.  If getnames=True, return a tuple of the names extracted
+        also.
+
+        If you want to extract a set of fields into a new structured array
+        by copying the data, see esutil.numpy_util.extract_fields
+
+    Inputs:
+        data: An array with fields.  Can be a normal numpy array with fields
+            or the recarray or another subclass.
+    Optional Inputs:
+        fields: A list of fields to extract. Default is to extract all.
+        getnames:  If True, return a tuple of (field_tuple, names)
+
+    """
+
+    outlist = []
+    allfields = data.dtype.fields
+
+    if allfields is None:
+        if fields is not None:
+            raise ValueError("Could not extract fields: data has "
+                             "no fields")
+        return (data,)
+    
+    if fields is None:
+        fields = allfields
+    else:
+        if isinstance(fields, (str,unicode)):
+            fields=[fields]
+
+    for field in fields:
+        if field not in allfields:
+            raise ValueError("Field not found: '%s'" % field)
+        outlist.append( data[field] )
+
+    output = tuple(outlist)
+    if getnames:
+        return output, fields
+    else:
+        return output
+
+def _match_key(d, key, require=False):
+    """
+    Match the key in a case-insensitive way and return the value. Return None
+    if not found or raise an error if require=True
+    """
+    if not isinstance(d,dict):
+        raise RuntimeError('Input object must be a dict')
+    keys = list( d.keys() )
+    keyslow = [k.lower() for k in keys]
+    keylow = key.lower()
+    if keyslow.count(keylow) != 0:
+        ind = keyslow.index(keylow)
+        return d[keys[ind]]
+    else:
+        if not require:
+            return None
+        else:
+            raise RuntimeError("Could not find required key: '%s'" % key)
+ 
+
+_major_pyvers = int( sys.version_info[0] )
+def isstring(obj):
+    if _major_pyvers >= 3:
+        string_types=(str, numpy.string_)
+    else:
+        string_types=(str, unicode, numpy.string_)
+
+    if isinstance(obj, string_types):
+        return True
+    else:
+        return False
+
+def test():
+    """
+    very simple test
+    """
+    import tempfile
+    tmpfile = tempfile.TemporaryFile(suffix='.sf')
+    x=numpy.array([(1.0, 3),(4.5,2)], dtype=[('fcol','f4'),('icol','i4')])
+
+    write(x, tmpfile)
+    tmpfile.seek(0)
+    read(tmpfile)
+
+    tmpfile.close()
+
+
+
+
+
+
+
+
+# old crap
+
+def copy_fields(arr1, arr2):
+    """
+    Copy the fields that match
+    """
+    if arr1.size != arr2.size:
+        raise ValueError('arr1 and arr2 must be the same size')
+
+    names1=arr1.dtype.names
+    names2=arr2.dtype.names
+    for name in names1:
+        if name in names2:
+            arr2[name] = arr1[name]
+
+def extract_fields(arr, keepnames):
+    if type(keepnames) != list and type(keepnames) != numpy.ndarray:
+        keepnames=[keepnames]
+    arrnames = list( arr.dtype.names )
+    new_descr = []
+    for d in arr.dtype.descr:
+        name=d[0]
+        if name in keepnames:
+            new_descr.append(d)
+    if len(new_descr) == 0:
+        raise ValueError('No field names matched')
+
+    shape = arr.shape
+    new_arr = numpy.zeros(shape,dtype=new_descr)
+    copy_fields(arr, new_arr)
+    return new_arr
+
+
+
 def _write_header(fobj, nrows, descr, delim=None, header=None, append=False):
     import pprint
 
@@ -1272,25 +1437,7 @@ def _UpdateNrows(fobj, nrows_add):
     nrows_new = nrows_current + nrows_add
     _WriteNrows(fobj, nrows_new)
 
-def _match_key(d, key, require=False):
-    """
-    Match the key in a case-insensitive way and return the value. Return None
-    if not found or raise an error if require=True
-    """
-    if not isinstance(d,dict):
-        raise RuntimeError('Input object must be a dict')
-    keys = list( d.keys() )
-    keyslow = [k.lower() for k in keys]
-    keylow = key.lower()
-    if keyslow.count(keylow) != 0:
-        ind = keyslow.index(keylow)
-        return d[keys[ind]]
-    else:
-        if not require:
-            return None
-        else:
-            raise RuntimeError("Could not find required key: '%s'" % key)
-        
+       
 
 def _GetNrows(header):
     if not isinstance(header,dict):
@@ -1350,82 +1497,56 @@ def _GetFobj(fileobj_input, major_mode, append=False):
     return fobj, f_isstring, doappend
 
 
-def test():
-    """
-    very simple test
-    """
-    import tempfile
-    tmpfile = tempfile.TemporaryFile(suffix='.sf')
-    x=numpy.array([(1.0, 3),(4.5,2)], dtype=[('fcol','f4'),('icol','i4')])
 
-    write(x, tmpfile)
-    tmpfile.seek(0)
-    read(tmpfile)
+def _remove_byteorder(descr):
+    new_descr = []
+    for d in descr:
+        # d is a tuple, make it a list
+        newd = list( copy.copy(d) )
 
-    tmpfile.close()
+        tdef = newd[1]
+        tdef = tdef[1:]
+        newd[1] = tdef
+        newd = tuple(newd)
+        new_descr.append(newd)
 
-def read_file_field(fobj, descr, field, count):
-    """
-    weave Read a field from binary file of fixed length records.  Been doing
-    some testing.
-    """
+    return new_descr
 
-    import scipy.weave
-    dtype = numpy.dtype(descr)
-    recsize = dtype.itemsize
-    outdtype=dtype.fields[field][0]
-    fsize = outdtype.itemsize
-    field_offset = dtype.fields[field][1]
+def _get_rows2read(rows):
+    if rows is None:
+        r=None
+        l=0
+    else:
+        r = numpy.array(rows,ndmin=1)
+        l = r.size
+    return r,l
 
-    seek_size = recsize-fsize
+def _get_fields2read(fields, dt):
+    if fields is None:
+        f=None
+        l=0
+    elif type(fields) == list:
+        f=fields
+        l=len(f)
+    elif type(fields) == numpy.ndarray:
+        f=fields
+        l=len(f)
+    elif type(fields) == str:
+        f=[fields]
+        l=len(f)
+    else:
+        raise ValueError('fields must be list,string or array')
 
-    # will reform to correct dtype later
-    output = numpy.empty(count*fsize, dtype='i1')
+    if f is not None:
+        if not isinstance(f[0],str):
+            # this is probably a list of column numbers, convert to strings
+            allnames = [d[0] for d in dt]
+            f = [allnames[i] for i in f]
 
-    starting_pos = fobj.tell()
-    filename = fobj.name
-
-    # assume we are at the beginning of a record
-    offset = starting_pos + field_offset
-
-    code="""
-    int64_t row_index=0;
-    char* ptr;
-    FILE* fp;
-
-    ptr = (char *) output_array->data;
-
-    fp=fopen(filename.c_str(), "r");
-
-    printf("offset = %d\\n", offset);
-
-    if (offset > 0) {
-        fseek(fp, offset, SEEK_CUR);
-    }
-
-    // begin reading bytes
-    for (row_index=0; row_index<count; row_index++) {
-        fread(ptr, fsize, 1, fp);
-
-        // skip to the beginning of the next entry
-        fseek(fp, (recsize-fsize), SEEK_CUR);
-
-        // next
-        ptr += fsize;
-    }
+    return f,l
 
 
-    fclose(fp);
-    """
 
-
-    variables = ['filename','offset','count','recsize','fsize','output']
-    #variables = ['filename','offset']
-    scipy.weave.inline(code, variables,
-                       type_converters = scipy.weave.converters.blitz)
-
-    fobj.seek(starting_pos)
-    return output.view( outdtype )
 
 
 def _match_fields(descr, fields):

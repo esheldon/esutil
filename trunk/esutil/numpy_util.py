@@ -16,9 +16,16 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         matching is case senitive.
 
     extract_fields(array, names)
+
         Extract a set of fields from a numpy array.  A new array is returned
-        with the requested fields and data copied in.  The name matching 
-        is case sensitive.
+        with the requested fields and data copied in.  The name matching is
+        case sensitive.
+
+    split_fields(array, fields=None, getnames=False)
+
+         Get a tuple of references to the individual fields in a structured
+         array (aka recarray).  If fields= is sent, just return those fields.
+         If getnames=True, return a tuple of the names extracted also.
 
     remove_fields(array, names)
         Remove a set of fields from the array.  A new array is returned
@@ -288,6 +295,64 @@ def extract_fields(arr, keepnames):
     new_arr = numpy.zeros(shape,dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
+
+
+def split_fields(data, fields=None, getnames=False):
+    """
+    Name:
+        split_fields
+
+    Calling Sequence:
+        The standard calling sequence is:
+            field_tuple = split_fields(data, fields=)
+            f1,f2,f3,.. = split_fields(data, fields=)
+
+        You can also return a list of the extracted names
+            field_tuple, names = split_fields(data, fields=, getnames=True)
+
+    Purpose:
+        Get a tuple of references to the individual fields in a structured
+        array (aka recarray).  If fields= is sent, just return those
+        fields.  If getnames=True, return a tuple of the names extracted
+        also.
+
+        If you want to extract a set of fields into a new structured array
+        by copying the data, see esutil.numpy_util.extract_fields
+
+    Inputs:
+        data: An array with fields.  Can be a normal numpy array with fields
+            or the recarray or another subclass.
+    Optional Inputs:
+        fields: A list of fields to extract. Default is to extract all.
+        getnames:  If True, return a tuple of (field_tuple, names)
+
+    """
+
+    outlist = []
+    allfields = data.dtype.fields
+
+    if allfields is None:
+        if fields is not None:
+            raise ValueError("Could not extract fields: data has "
+                             "no fields")
+        return (data,)
+    
+    if fields is None:
+        fields = allfields
+    else:
+        if isinstance(fields, (str,unicode)):
+            fields=[fields]
+
+    for field in fields:
+        if field not in allfields:
+            raise ValueError("Field not found: '%s'" % field)
+        outlist.append( data[field] )
+
+    output = tuple(outlist)
+    if getnames:
+        return output, fields
+    else:
+        return output
 
 
 
