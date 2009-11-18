@@ -197,6 +197,7 @@ Modification history:
 		void ReadRows();
 		void ReadRow();
 		void ReadFields();
+		void ReadBinaryFields();
 		void ReadField(long long fnum);
 		void ReadFieldAsBinary(long long fnum);
 		void ReadFieldAsAscii(long long fnum);
