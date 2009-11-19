@@ -61,6 +61,10 @@ class SFile():
         self.close()
         self.padnull=padnull
         self.ignorenull=ignorenull
+
+        if fobj is None:
+            return
+
         if isstring(fobj):
             # expand shortcut variables
             fpath = os.path.expanduser(fobj)
@@ -77,30 +81,32 @@ class SFile():
                                  "Will create a new file\n")
                 mode = 'w'
 
-            self.mode=mode
-
             self.fobj = open(fobj, mode)
-            if mode[0] == 'r':
-                # For 'r' and 'r+' try to read the header
-                if self.verbose:
-                    stdout.write("\tReading header\n")
-                self.hdr = self.read_header()
-                
-                self.data_start = self.fobj.tell()
-
-                self.delim = _match_key(self.hdr, '_delim')
-                self.size = _match_key(self.hdr, '_size', require=True)
-                self.descr = _match_key(self.hdr, '_dtype', require=True)
-                self.dtype = numpy.dtype(self.descr)
-                self.has_fields = (self.dtype.names is not None)
-                # will be None unless no fields
-                self.shape = self.get_shape()
-            else:
-                # get delim from the keyword.  This will be used for writing
-                # later
-                self.delim=delim
+        elif isinstance(fobj, file):
+            self.fobj = fobj
         else:
-            raise ValueError("Only support filename inputs for now")
+            raise ValueError("Only support filenames and file objects "
+                             "as input")
+
+        if self.fobj.mode[0] == 'r':
+            # For 'r' and 'r+' try to read the header
+            if self.verbose:
+                stdout.write("\tReading header\n")
+            self.hdr = self.read_header()
+            
+            self.data_start = self.fobj.tell()
+
+            self.delim = _match_key(self.hdr, '_delim')
+            self.size = _match_key(self.hdr, '_size', require=True)
+            self.descr = _match_key(self.hdr, '_dtype', require=True)
+            self.dtype = numpy.dtype(self.descr)
+            self.has_fields = (self.dtype.names is not None)
+            # will be None unless no fields
+            self.shape = self.get_shape()
+        else:
+            # get delim from the keyword.  This will be used for writing
+            # later
+            self.delim=delim
 
 
     def close(self):
@@ -127,7 +133,7 @@ class SFile():
     def __repr__(self):
         s = []
 
-        if self.fobj is not None:
+        if isinstance(self.fobj,file):
             s += ["filename: '%s'" % self.fobj.name]
         if self.delim is not None:
             s=["delim: '%s'" % self.delim]
@@ -145,6 +151,15 @@ class SFile():
             hs = self.h2string()
             if hs != '':
                 s += ["hdr: \n"+hs]
+        # maybe we can show an example row
+        old="""
+        if isinstance(self.fobj,file) and self.has_fields:
+            try:
+                tmp = self.read(rows=0)
+                s += ["first row: "+pprint.pformat(tmp)]
+            except:
+                pass
+        """
         s = "\n".join(s)
         return s
 
@@ -737,7 +752,7 @@ class SFileSubset():
         s = "\n".join(s)
         return s
 
-def process_items_as_rows_or_columns(*args):
+def process_items_as_rows_or_columns(args):
     firstarg = args[0]
     columns=None
     rows=None
