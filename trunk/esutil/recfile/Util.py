@@ -40,7 +40,6 @@ def Open(fileobj, mode="r", delim="", dtype=None, nrows=-9999):
             field names defined.
 
     Examples:
-        import numpy
         import recfile
 
         # Read from a binary file
