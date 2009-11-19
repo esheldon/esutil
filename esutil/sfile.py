@@ -134,6 +134,7 @@ class SFile():
 
         if isinstance(self.fobj,file):
             s += ["filename: '%s'" % self.fobj.name]
+            s += ["mode: '%s'" % self.fobj.mode]
         if self.delim is not None:
             s=["delim: '%s'" % self.delim]
 
@@ -188,6 +189,9 @@ class SFile():
         # just alter the number of rows marked in the header and in self.size.
         # Either way, self.fobj will point to the end of the file, ready to
         # write the data
+
+        if self.fobj.mode[0] != 'w' and '+' not in self.fobj.mode:
+            raise ValueError("You must open with 'w*' or 'r+' to write")
 
         self._write_header(data, header=header)
 
@@ -510,14 +514,14 @@ class SFile():
                 if key in head: del head[key]
                 if key.upper() in head: del head[key.upper()]
 
-            has_fields = (data.dtype.names is not None)
-            if has_fields:
+            self.has_fields = (data.dtype.names is not None)
+            if self.has_fields:
                 descr = data.dtype.descr
             else:
                 descr = str(data.dtype.str)
                 head['_SHAPE'] = data.shape
 
-            head['_HAS_FIELDS'] = has_fields
+            head['_HAS_FIELDS'] = self.has_fields
 
             if self.delim is not None:
                 head['_DELIM'] = self.delim
@@ -560,6 +564,8 @@ class SFile():
 
             self.fobj.write('END\n')
             self.fobj.write('\n')
+
+            self.data_start = self.fobj.tell()
 
     def _remove_byteorder(self, descr):
         if isstring(descr):
