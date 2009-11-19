@@ -81,7 +81,7 @@ class SFile():
                                  "Will create a new file\n")
                 mode = 'w'
 
-            self.fobj = open(fobj, mode)
+            self.fobj = open(fpath, mode)
         elif isinstance(fobj, file):
             self.fobj = fobj
         else:
@@ -104,8 +104,7 @@ class SFile():
             # will be None unless no fields
             self.shape = self.get_shape()
         else:
-            # get delim from the keyword.  This will be used for writing
-            # later
+            # get delim from the keyword.  This will be used for writing later
             self.delim=delim
 
 
@@ -142,8 +141,6 @@ class SFile():
 
         if self.shape is not None:
             s += ["shape: " + pprint.pformat(self.shape)]
-        #if self.has_fields is not None:
-            #s += ["has_fields: %s" % self.has_fields]
         if self.descr is not None:
             s += ["dtype: \n"+pprint.pformat(self.descr)]
 
@@ -194,20 +191,21 @@ class SFile():
 
         self._write_header(data, header=header)
 
-        if not self.has_fields:
+        if data.dtype.names is None:
             self._write_simple(data)
         else:
             self._write_structured(data)
 
+
     def _write_structured(self, data):
         if self.verbose:
-            stdout.write("Writing %s: %s\n" % \
+            stdout.write("Writing structured %s: %s\n" % \
                             (data.size,pprint.pformat(data.dtype.descr)))
         if (self.delim is not None) and (have_recfile is not True):
             stdout.write("delim='"+self.delim+"'\n")
             stdout.write("have_recfile=%s\n" % have_recfile)
-            raise ValueError("recfile module not found writing ascii "
-                             "records")
+            raise ImportError("recfile package not found.  recfile is "
+                              "required for writing ascii records")
         elif (self.delim is not None):
             # let recfile deal with ascii writing
             r = recfile.Open(self.fobj, mode='u', delim=self.delim, 
@@ -222,7 +220,7 @@ class SFile():
 
     def _write_simple(self, data):
         if self.verbose:
-            stdout.write("Writing %s: '%s'\n" % (data.size,data.dtype.str))
+            stdout.write("Writing simple %s: '%s'\n" % (data.size,data.dtype.str))
         # got to wrap this because tofile does not support delim=None
         if self.delim is not None:
             data.tofile(self.fobj, sep=self.delim)
@@ -547,6 +545,8 @@ class SFile():
             if self.verbose:
                 stdout.write("\tCreating new header\n")
             self.hdr = self._make_header(data, header=header)
+            self.descr = self.hdr['_DTYPE']
+            self.dtype = numpy.dtype(self.descr)
 
             self.fobj.seek(0)
 
