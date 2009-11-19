@@ -229,6 +229,9 @@ class SFile():
         else:
             data.tofile(self.fobj)
 
+    def get_subset(self, rows=None, fields=None, columns=None):
+        return SFileSubset(self, rows=rows, fields=fields, columns=columns)
+
     def get_memmap(self, mode='r', view=None, header=False):
 
         if self.delim is not None:
@@ -278,19 +281,112 @@ class SFile():
         else:
             return result
 
-    def __getitem__(self, *args):
-        rows, columns = process_items_as_rows_or_columns(args)
-        return SFileSubset(self, rows=rows, columns=columns)
+    def __getitem__(self, arg):
+        """
+        sf = SFile(....)
 
+        # read subsets of columns and/or rows from the file.  Note, lists
+        # of columns or rows cannot be tuples, due to how the __getitem__
+        # call works.
 
-    def __getslice__(self, i, j):
-        i=_fix_range(i, self.size)
-        j=_fix_range(j, self.size)
-        if j < i:
-            rows=None
+        # read subsets of columns
+        data = sf['fieldname']
+        data = sf[ ['field1','field2',...] ]    # can also be an array
+
+        # read subsets of rows
+        data = sf[ 35 ]
+        data = sf[ 35:88 ]
+        data = sf[ [3,234,5551,.. ] ]           # can also be an array
+
+        # read subset of rows *and* columns.
+        data = sf['fieldname', 3:58]
+        data = sf[rowlist, fieldlist]
+        data = sf[fieldlist,rowlist]
+
+        If a single argument is entered, that is set to arg.
+        If more than one is entered, arg is set to a tuple.  d'oh!,  Hard
+            to parse
+        """
+        if not self.has_fields:
+            raise RuntimeError("For simple arrays, use a memmap object "
+                               "returned by get_memmap()")
+        if not isinstance(arg,tuple):
+            send_arg = (arg,)
         else:
-            rows=numpy.arange(i,j, dtype='i8')
-        return SFileSubset(self, rows=rows)
+            send_arg = arg
+
+        rows, columns = self.process_args_as_rows_and_columns(send_arg)
+        return self.read(rows=rows, columns=columns)
+
+    def slice2rows(self, start, stop, step=None):
+        if start is None:
+            start=0
+        if stop is None:
+            stop=self.size
+        if step is None:
+            step=1
+
+        tstart = _fix_range(start, self.size)
+        tstop  = _fix_range(stop,  self.size)
+        if tstart == 0 and tstop == self.size:
+            # this is faster: if all fields are also requested, then a 
+            # single fread will be done
+            return None
+        if stop < start:
+            raise ValueError("start is greater than stop in slice")
+        return numpy.arange(tstart, tstop, step, dtype='i8')
+
+    def process_args_as_rows_and_columns(self, args):
+        """
+
+        args must be a tuple.  Only the first one or two args are used.
+
+        We must be able to interpret the args as as either a column name or
+        row number, or sequences thereof.  Numpy arrays and slices are also
+        fine.
+
+        Examples:
+
+            Single arguments:
+                ( 'field1', )
+                ( 54, )
+                ( ('f1','f2'), )
+                ( [3,4,5,6], )
+            Two arguments:
+                ( 'field36', 27 )
+                ( [33,44], ['ra','dec','flux'] )
+                ( 'ra', slice(5,10) )
+
+        Returns rows,columns but one will be None.  If both entries can be
+        interpreted as rows, the last is used.  Similarly for fields.
+
+        """
+
+        columns=None
+        rows=None
+
+        for arg in args[0:2]:
+
+            if isinstance(arg, (tuple,list,numpy.ndarray)):
+                # a sequence was entered
+                if isstring(arg[0]):
+                    columns = arg
+                else:
+                    rows = arg
+            elif isstring(arg):
+                # a single string was entered
+                columns = arg
+            elif isinstance(arg, slice):
+                rows = self.slice2rows(arg.start, arg.stop, arg.step)
+            else:
+                # a single object was entered.  Probably should apply some more 
+                # checking on this
+                rows=arg
+
+        return rows, columns
+
+
+
 
     def get_shape(self):
         if self.has_fields:
@@ -384,10 +480,12 @@ class SFile():
             return None
         elif isinstance(fields, (list,numpy.ndarray)):
             f=fields
+        elif isinstance(fields,tuple):
+            f=list(fields)
         elif isstring(fields):
             f=[fields]
         else:
-            raise ValueError('fields must be list,string or array')
+            raise ValueError('fields must be list,tuple,string or array')
 
         if not isstring(f[0]):
             # this is probably a list of column numbers, convert to strings
@@ -679,10 +777,13 @@ class SFile():
 
 
 class SFileSubset():
-    def __init__(self, sf, columns=None, rows=None):
+    def __init__(self, sf, fields=None, columns=None, rows=None):
         """
         Input is the SFile instance and a list of column names.
         """
+
+        if columns is None:
+            columns=fields
 
         self.sfile = sf
         self.columns = columns
@@ -692,7 +793,7 @@ class SFileSubset():
         self._match_rows()
 
     def __getitem__(self, *args):
-        rows, columns = process_items_as_rows_or_columns(args)
+        rows, columns = process_args_as_rows_and_columns(args)
         if rows is not None:
             self.rows=rows
         if columns is not None:
@@ -744,32 +845,68 @@ class SFileSubset():
             raise ValueError("max row: %s out of range" % maxrow)
 
     def __repr__(self):
-        s=[self.sfile.__repr__()]
+        s=[]
         if self.columns is not None:
             s += ["column subset: " + pprint.pformat(self.columns)]
         if self.rows is not None:
             s += ["row subset: " + pprint.pformat(self.rows)]
+        if len(s) > 0:
+            s += ['from:\n']
+        s+=[self.sfile.__repr__()]
         s = "\n".join(s)
         return s
 
-def process_items_as_rows_or_columns(args):
-    firstarg = args[0]
+def process_args_as_rows_and_columns(args, maxrow=None):
+    """
+    args must be a tuple.  Only the first one or two args are used.
+
+    We must be able to interpret the args as as either a column name or
+    row number, or sequences thereof.  Numpy arrays and slices are also fine.
+    Examples:
+
+        Single arguments:
+            ( 'field1', )
+            ( 54, )
+            ( ('f1','f2'), )
+            ( [3,4,5,6], )
+            ( ['x','y'], )
+            ( (8,10), )
+        Two arguments:
+            ( 'field36', 27 )
+            ( [33,44], ('ra','dec','flux') )
+            ( 'ra', slice(5,10) )
+
+    Returns rows,columns but one will be None.  If both entries can be
+    interpreted as rows, the last is used.  Similarly for fields.
+
+    """
+
+    print args
     columns=None
     rows=None
 
-    docolumns=False
-    if isinstance(firstarg, (tuple,list,numpy.ndarray)):
-        if isstring(firstarg[0]):
-            docolumns=True
-            columns = firstarg
-        else:
-            rows = firstarg
-    elif isstring(firstarg):
-        docolumns=True
-        columns = args
-    else:
-        rows=args
+    for arg in args[0:2]:
 
+        if isinstance(arg, (tuple,list,numpy.ndarray)):
+            # a sequence was entered
+            if isstring(arg[0]):
+                columns = arg
+            else:
+                rows = arg
+        elif isstring(arg):
+            # a single string was entered
+            columns = arg
+        elif isinstance(arg, slice):
+            start = _fix_range(arg.start, self.size)
+            stop = _fix_range(arg.stop, self.size)
+            rows = numpy.arange(start, stop, dtype='i8')
+        else:
+            # a single object was entered.  Probably should apply some more 
+            # checking on this
+            rows=arg
+
+    print 'rows=',rows
+    print 'columns=',columns
     return rows, columns
 
 def _fix_range(i, maxval):

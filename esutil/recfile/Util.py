@@ -21,10 +21,11 @@ def Open(fileobj, mode="r", delim="", dtype=None, nrows=-9999):
         Inputs:
             file/fileobj:  A string file name or an open file object.
             mode: The file mode.  Default is "r" but can be "u" or "w".
-            delim: The delimiter used in the file.  Default is "" for 
-                binary files, but can be any string such as ",", "\\t", etc.
+            delim: The delimiter used in the file.  Use "" or None for
+                binary files.  Default is "". Can also be any string such 
+                as ",", "\\t", etc.
             dtype:  A numpy dtype object.  REQUIRED FOR READING. For example:
-                numpy.dtype([('field1', 'i4'),('field2', 'f8')])
+                [('field1', 'i4'),('field2', 'f8')]
                 some_numpy_array.dtype
             nrows: The number of rows in the file.  REQUIRED FOR READING.
 
@@ -44,7 +45,7 @@ def Open(fileobj, mode="r", delim="", dtype=None, nrows=-9999):
 
         # Read from a binary file
         file='test.bin'
-        dtype=numpy.dtype([('field1','f8'),('field2','2i4'),('field3','i8')])
+        dtype=[('field1','f8'),('field2','2i4'),('field3','i8')]
         nrows=10000000
 
         robj = recfile.Open(file, dtype=dtype, nrows=nrows)
@@ -66,7 +67,11 @@ def Open(fileobj, mode="r", delim="", dtype=None, nrows=-9999):
         Created: 2008-07-18, Erin Sheldon
 
     """
-    return records.Records(fileobj, mode, delim, dtype=dtype, nrows=nrows)
+    if delim is None:
+        delim=""
+    dt=numpy.dtype( dtype )
+    
+    return records.Records(fileobj, mode, delim, dtype=dt, nrows=nrows)
 
 
 
