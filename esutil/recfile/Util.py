@@ -725,9 +725,16 @@ class RecfileSubset():
 
         sf = recfile.Open(fname, dtype=dtype)
 
-        sub = sf.get_subset(rows=rows)
-        sub2 = sub.get_subset(columns=columns)
+        sub = sf.get_subset(rows=rowlist, columns=colliset)
+
+        sub1 = sf.get_subset(rows=rows)
+        sub2 = sub1.get_subset(columns=columns)
+        or simpley call the object
+        sub2 = sub1(columns=columns)
+
         data = sub2.read()
+
+        data = sf.get_subset(rows=rows)(columns=cols).read()
 
     Useful because subsets can be passed around to functions.
     """
@@ -743,6 +750,8 @@ class RecfileSubset():
         self.rows=self.recfile._get_rows2read(rows)
         self.columns = self.recfile._get_fields2read(columns)
 
+        # alias
+        self.__call__ = self.get_subset
 
     def read(self, view=None, split=False):
         """
@@ -752,11 +761,19 @@ class RecfileSubset():
         return self.recfile.read(rows=self.rows, columns=self.columns, 
                                  view=view, split=split)
 
+
     def get_subset(self, fields=None, columns=None, rows=None):
         """
         Specify subsets of the data.  Returns a new RecfileSubset object.
         """
-        return self.recfile.get_subset(fields=None, columns=None, rows=None)
+        if columns is not None:
+            self.columns=columns
+        elif fields is not None:
+            self.columns=fields
+        if rows is not None:
+            self.rows=rows
+
+        return self.recfile.get_subset(columns=self.columns, rows=self.rows)
 
     def __repr__(self):
         s=[]
