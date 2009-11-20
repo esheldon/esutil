@@ -289,11 +289,6 @@ class Recfile():
     def open(self, fobj, mode='r', delim=None, dtype=None, 
              nrows=-9999, offset=0, 
              padnull=False, ignorenull=False, verbose=False):
-        """
-        Open the file.  If the file already exists and the mode is 'r*' then
-        a read of the header is attempted.  If this succeeds, delim is gotten
-        from the header and the delim= keyword is ignored.
-        """
 
         self.verbose=verbose
 
@@ -405,9 +400,6 @@ class Recfile():
 
     def read(self, rows=None, fields=None, columns=None,
              view=None, split=False):
-        """
-        Read the data into memory.
-        """
         
         if self.fobj.tell() != self.offset:
             self.fobj.seek(self.offset)
@@ -434,14 +426,6 @@ class Recfile():
             return result
 
     def write(self, data, header=None):
-        """
-        """
-
-        # Write or update the header. If we are updating the file, this will
-        # just alter the number of rows marked in the header and in self.size.
-        # Either way, self.fobj will point to the end of the file, ready to
-        # write the data
-
         if self.fobj.mode[0] != 'w' and '+' not in self.fobj.mode:
             raise ValueError("You must open with 'w*' or 'r+' to write")
 
@@ -502,6 +486,15 @@ class Recfile():
     def __len__(self):
         return self.nrows
 
+
+    def get_subset(self, rows=None, fields=None, columns=None):
+        """
+        sub = rf.get_subset(rows=None, fields=None, columns=None)
+
+        Get a RecfileSubset object with the specified rows/columns. See
+        the docs for RecfileSubset for more info.
+        """
+        return RecfileSubset(self, rows=rows, fields=fields, columns=columns)
 
     def process_args_as_rows_or_columns(self, arg):
         """
@@ -726,6 +719,18 @@ class Recfile():
 
 
 class RecfileSubset():
+    """
+    A class representing a subset of the data on disk.  Useful for chaining
+    together selections. e.g.
+
+        sf = recfile.Open(fname, dtype=dtype)
+
+        sub = sf.get_subset(rows=rows)
+        sub2 = sub.get_subset(columns=columns)
+        data = sub2.read()
+
+    Useful because subsets can be passed around to functions.
+    """
     def __init__(self, rf, fields=None, columns=None, rows=None):
         """
         Input is the SFile instance and a list of column names.
@@ -747,6 +752,12 @@ class RecfileSubset():
         return self.recfile.read(rows=self.rows, columns=self.columns, 
                                  view=view, split=split)
 
+    def get_subset(self, fields=None, columns=None, rows=None):
+        """
+        Specify subsets of the data.  Returns a new RecfileSubset object.
+        """
+        return self.recfile.get_subset(fields=None, columns=None, rows=None)
+
     def __repr__(self):
         s=[]
         if self.columns is not None:
@@ -764,6 +775,27 @@ class RecfileSubset():
         return s
 
 class RecfileColumnSubset():
+    """
+
+    A class representing a subset of the the columns on disk.  When called
+    with .read() or [ rows ]  the data are read from disk.
+
+    Useful because subsets can be passed around to functions, or chained
+    with a row selection.
+    
+    This class is returned when using [ ] notation to specify fields in the
+    recfile class
+
+        sf = recfile.Open(fname, dtype=dtype)
+        colsub = sf[field_list]
+
+    returns aa RecfileColumnSubset object.  To read rows:
+
+        data = colsub[row_list]
+        data = colsub.read(rows=row_list)
+    to read all, use .read() with no args or [:]
+    """
+
     def __init__(self, rf, fields=None, columns=None):
         """
         Input is the SFile instance and a list of column names.
