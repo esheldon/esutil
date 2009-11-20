@@ -162,29 +162,6 @@ PyObject* Records::Read(
 
 
 
-/*
-PyObject* Records::Read(
-		PyObject* descr, 
-		long long nrows, 
-		PyObject* rows,
-		PyObject* fields) throw (const char* )
-{
-	if (mFptr == NULL) {
-		throw "File is not open";
-	}
-	ProcessDescr(descr);
-	ProcessNrows(nrows);
-	ProcessRowsToRead(rows);
-	ProcessFieldsToRead(fields);
-	CreateOutputArray();
-	ReadPrepare();
-
-	ReadFromFile();
-
-	return (PyObject* ) mReturnObject;
-}
-*/
-
 void Records::ReadPrepare()
 {
 	if (mFileType == BINARY_FILE 
@@ -843,6 +820,13 @@ void Records::ProcessRowsToRead(PyObject* rows)
 		mNrowsToRead = PyArray_SIZE(mRowsToRead);
 	}
 
+	if (mNrowsToRead > mNrows) {
+		stringstream serr;
+		serr<<"You said the file has "<<mNrows<<" rows but requested to read "
+			<<mNrowsToRead<<" rows";
+		throw serr.str().c_str();
+	}
+
 	if (mDebug) {
 		cout<<"Will read "<<mNrowsToRead<<"/"<<mNrows<<" rows"<<endl;
 		fflush(stdout);
@@ -921,13 +905,13 @@ void Records::GetFptr(PyObject* file_obj, const char* mode)
 
 void Records::ProcessDelim(PyObject* delim_obj)
 {
-	if (delim_obj == NULL) {
+	if (delim_obj == NULL || delim_obj == Py_None) {
 		mDelim="";
 	} else {
 		if (PyString_Check(delim_obj)) {
 			mDelim = PyString_AsString(delim_obj);
 		} else {
-			throw "delim keyword must be a string"; 
+			throw "delim keyword must be a string or None"; 
 		}
 	}
 
