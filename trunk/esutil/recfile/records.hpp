@@ -90,7 +90,7 @@ Modification history:
 #endif
 		Records(PyObject* fileobj, 
 				const char* mode, // mode won't be used if file is object
-				PyObject* delim, 
+				PyObject* delim=NULL, 
 				PyObject* dtype=NULL,
 				long long nrows=-9999) throw (const char *);
 

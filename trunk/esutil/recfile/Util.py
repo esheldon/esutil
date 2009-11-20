@@ -5,72 +5,875 @@ import records
 import sys
 import os
 import math
+import pprint
 
 
-def Open(fileobj, mode="r", delim="", dtype=None, nrows=-9999):
+def Open(fileobj, mode="r", delim=None, dtype=None, 
+         nrows=-9999, offset=0, 
+         padnull=False, ignorenull=False, verbose=False):
     """
-    Instantiate a new Records class
+    Instantiate a new Recfile class
         For writing:
             import recfile
-            r = recfile.Open(file/fileobj, mode="w", delim="")
+            r = recfile.Open(file/fileobj, mode="w", delim=None, 
+                             padnull=False, ignorenull=False, verbose=False)
         For reading:
             import recfile
-            r = recfile.Open(file/fileobj, delim="", dtype=None, nrows=-9999)
+            r = recfile.Open(file/fileobj, delim=None, dtype=None, 
+                             nrows=-9999, offset=0, verbose=False)
             # Arguments can all be given as keywords except the file
 
         Inputs:
             file/fileobj:  A string file name or an open file object.
+
+        Optional Inputs:
             mode: The file mode.  Default is "r" but can be "u" or "w".
             delim: The delimiter used in the file.  Use "" or None for
-                binary files.  Default is "". Can also be any string such 
+                binary files.  Default is None. Can also be any string such 
                 as ",", "\\t", etc.
-            dtype:  A numpy dtype object.  REQUIRED FOR READING. For example:
-                [('field1', 'i4'),('field2', 'f8')]
-                some_numpy_array.dtype
-            nrows: The number of rows in the file.  REQUIRED FOR READING.
 
-    Class Methods:
-        Read(rows=, fields=):
+            dtype:  A numpy dtype object.  REQUIRED FOR READING. 
+                For example:
+                    [('field1', 'i4'),('field2', 'f8')]
+                    array.dtype
+                the type must contain fields.
+
+            nrows: The number of rows in the file.  REQUIRED FOR READING
+                ASCII. If reading binary and nrows is not sent, it will be
+                determined from the file data and dtype.
+
+            offset:  Offset into the file where reading will begin.  Used
+                if opening with "r" or "r+".  For "w" or "w+" offset is
+                zero by definition.
+
+            padnull: When writing ascii, replace nulls in strings with spaces.
+                Useful for programs that don't understand nulls like sqlite
+                databases.
+            ignorenull:  When writing ascii, just ignore nulls when writing
+                strings. Note this will not result in fixed length data so
+                you cannot read it back in using recfile. Useful for 
+                programs that don't understand nulls, like sqlite databases.
+
+    Useful Recfile Class Methods:
+
+        While reading, you can access rows and columns using [ ] notation.
+
+            r=recfile.Open(...)
+            data = r[rows]              # rows can be single number,slice,list
+            or
+            data = r[field_names][rows] # field names must come first. You
+                                        # must specify something for rows
+
+            If you put field_names *after* rows, then all rows will be read
+            and *then* the fields are extracted, which is inefficient. 
+
+            If only the fields are specified, the data are not read, rather a
+            RecfileColumnSubset object is returned.  
+            
+            You must specify the rows.  If you want them all, use the [:]
+            slice.
+
+            data = r[:]                   # read all rows and columns
+            data = r[field_names][:]      # read all rows but subset of columns.
+            data = r[field_names[rowlist] # subset of rows and columns
+
+        read(rows=, fields=):
             Returns the data in a NumPy array.  Specific rows and fields 
             of the file can be specified with the keywords.  Rows must be
             sorted and unique.  Fields must be unique but can be in any
             order.
-        Write(numpy_array):
+        write(numpy_array):
             Write the input numpy array to the file.  The array must have
             field names defined.
 
     Examples:
         import recfile
 
-        # Read from a binary file
+        # Read from a binary file.  Number of rows will be determined from
+        # the file data and dtype if not entered.
         file='test.bin'
         dtype=[('field1','f8'),('field2','2i4'),('field3','i8')]
         nrows=10000000
 
-        robj = recfile.Open(file, dtype=dtype, nrows=nrows)
-        res=robj.Read()
+        robj = recfile.Open(file, dtype=dtype)
+
+        # read all rows and columns
+        data = robj.read()
+        data = robj[:]
+
+        # read a subset of rows
+        data = robj.read(rows=row_list)
+        data = robj[ 3500:5238 ]
+        data = robj[ rowlist ]
+
+        # read a subset of columns.
+        data = robj.read(columns=column_list)
+        data = robj.read(fields=column_list)    # columns/fields are synonyms
+
+        # In bracket notation, you must specify rows to read the data.
+        data = robj['fieldname'][:]
+        data = robj[ fieldlist ][ rowlist ]
+        data = robj['fieldname'].read()
+
 
         # Read from a CSV file of the same structure, and only read a subset 
-        # of the data
+        # of the data.  Nrows must be specified.
         rows2get=[2335,122332,1550021]
         fields2get='field2'
         robj = recfile.Open('test.csv', delim=",", dtype=dtype, nrows=nrows)
-        res = robj.Read(rows=rows2get, fields=fields2get)
+        data = robj.read(rows=rows2get, fields=fields2get)
+        data = robj[fields2get][rows2get]
 
 
         # Write a numpy array to a file
-        r = recfile.Open('test.tab', "w", "\\t")
+        r = recfile.Open('test.tab', "w", ",")
         r.Write(my_array)
+
+    Todo:
+        implement auto-getting of size for ascii
 
     Modification history:
         Created: 2008-07-18, Erin Sheldon
+        Wrapper class Recfile added.  This is not returned by Open.  Support
+            for [ ] style reading notation. 2009-11-20, ESS, BNL
 
     """
-    if delim is None:
-        delim=""
-    dt=numpy.dtype( dtype )
+    # make sure it's a dtype and not just a descr
+    return Recfile(fileobj, mode=mode, delim=delim, dtype=dtype, 
+                   nrows=nrows, offset=offset, 
+                   padnull=padnull, ignorenull=ignorenull, 
+                   verbose=verbose)
+
+
+class Recfile():
+    """
+    Instantiate a new Recfile class
+        For writing:
+            import recfile
+            r = recfile.Open(file/fileobj, mode="w", delim=None, 
+                             padnull=False, ignorenull=False, verbose=False)
+        For reading:
+            import recfile
+            r = recfile.Open(file/fileobj, delim=None, dtype=None, 
+                             nrows=-9999, offset=0, verbose=False)
+            # Arguments can all be given as keywords except the file
+
+        Inputs:
+            file/fileobj:  A string file name or an open file object.
+
+        Optional Inputs:
+            mode: The file mode.  Default is "r" but can be "u" or "w".
+            delim: The delimiter used in the file.  Use "" or None for
+                binary files.  Default is None. Can also be any string such 
+                as ",", "\\t", etc.
+
+            dtype:  A numpy dtype object.  REQUIRED FOR READING. 
+                For example:
+                    [('field1', 'i4'),('field2', 'f8')]
+                    array.dtype
+                the type must contain fields.
+
+            nrows: The number of rows in the file.  REQUIRED FOR READING
+                ASCII. If reading binary and nrows is not sent, it will be
+                determined from the file data and dtype.
+
+            offset:  Offset into the file where reading will begin.  Used
+                if opening with "r" or "r+".  For "w" or "w+" offset is
+                zero by definition.
+
+            padnull: When writing ascii, replace nulls in strings with spaces.
+                Useful for programs that don't understand nulls like sqlite
+                databases.
+            ignorenull:  When writing ascii, just ignore nulls when writing
+                strings. Note this will not result in fixed length data so
+                you cannot read it back in using recfile. Useful for 
+                programs that don't understand nulls, like sqlite databases.
+
+    Useful Recfile Class Methods:
+
+        While reading, you can access rows and columns using [ ] notation.
+
+            r=recfile.Open(...)
+            data = r[rows]              # rows can be single number,slice,list
+            or
+            data = r[field_names][rows] # field names must come first. You
+                                        # must specify something for rows
+
+            If you put field_names *after* rows, then all rows will be read
+            and *then* the fields are extracted, which is inefficient. 
+
+            If only the fields are specified, the data are not read, rather a
+            RecfileColumnSubset object is returned.  
+            
+            You must specify the rows.  If you want them all, use the [:]
+            slice.
+
+            data = r[:]                   # read all rows and columns
+            data = r[field_names][:]      # read all rows but subset of columns.
+            data = r[field_names[rowlist] # subset of rows and columns
+
+        read(rows=, fields=):
+            Returns the data in a NumPy array.  Specific rows and fields 
+            of the file can be specified with the keywords.  Rows must be
+            sorted and unique.  Fields must be unique but can be in any
+            order.
+        write(numpy_array):
+            Write the input numpy array to the file.  The array must have
+            field names defined.
+
+    Examples:
+        import recfile
+
+        # Read from a binary file.  Number of rows will be determined from
+        # the file data and dtype if not entered.
+        file='test.bin'
+        dtype=[('field1','f8'),('field2','2i4'),('field3','i8')]
+        nrows=10000000
+
+        robj = recfile.Open(file, dtype=dtype)
+
+        # read all rows and columns
+        data = robj.read()
+        data = robj[:]
+
+        # read a subset of rows
+        data = robj.read(rows=row_list)
+        data = robj[ 3500:5238 ]
+        data = robj[ rowlist ]
+
+        # read a subset of columns.
+        data = robj.read(columns=column_list)
+        data = robj.read(fields=column_list)    # columns/fields are synonyms
+
+        # In bracket notation, you must specify rows to read the data.
+        data = robj['fieldname'][:]
+        data = robj[ fieldlist ][ rowlist ]
+        data = robj['fieldname'].read()
+
+
+        # Read from a CSV file of the same structure, and only read a subset 
+        # of the data.  Nrows must be specified.
+        rows2get=[2335,122332,1550021]
+        fields2get='field2'
+        robj = recfile.Open('test.csv', delim=",", dtype=dtype, nrows=nrows)
+        data = robj.read(rows=rows2get, fields=fields2get)
+        data = robj[fields2get][rows2get]
+
+
+        # Write a numpy array to a file
+        r = recfile.Open('test.tab', "w", ",")
+        r.Write(my_array)
+
+    Todo:
+        implement auto-getting of size for ascii
+
+    Modification history:
+        Created: 2008-07-18, Erin Sheldon
+        Wrapper class Recfile added.  This is not returned by Open.  Support
+        for [ ] style reading notation. 2009-11-20, ESS, BNL
+
+    """
+
+
+    def __init__(self, fobj, mode="r", delim=None, dtype=None, 
+                 nrows=-9999, offset=0, 
+                 padnull=False, ignorenull=False, verbose=False):
+
+        # an alias
+        self.Read = self.read
+        self.Write = self.write
+        self.open(fobj, mode=mode, delim=delim, dtype=dtype, 
+                  nrows=nrows, offset=offset, 
+                  padnull=padnull, ignorenull=ignorenull, verbose=verbose)
+
+    def open(self, fobj, mode='r', delim=None, dtype=None, 
+             nrows=-9999, offset=0, 
+             padnull=False, ignorenull=False, verbose=False):
+        """
+        Open the file.  If the file already exists and the mode is 'r*' then
+        a read of the header is attempted.  If this succeeds, delim is gotten
+        from the header and the delim= keyword is ignored.
+        """
+
+        self.verbose=verbose
+
+        self.close()
+        self.padnull=padnull
+        self.ignorenull=ignorenull
+        self.delim = delim
+
+        if fobj is None:
+            return
+
+        if isstring(fobj):
+            # expand shortcut variables
+            fpath = os.path.expanduser(fobj)
+            fpath = os.path.expandvars(fpath)
+
+            if self.verbose:
+                stdout.write("\nOpening file: %s\n" % fpath)
+
+            if mode == 'r+' and not os.path.exists(fobj):
+                # path doesn't exist but we want to append.  Change the
+                # mode to w+
+                if self.verbose:
+                    stdout.write("Requested append on non-existent file: "
+                                 "Will create a new file\n")
+                mode = 'w+'
+
+            self.fobj = open(fpath, mode)
+
+        elif isinstance(fobj, file):
+            self.fobj = fobj
+        else:
+            raise ValueError("Only support filenames and file objects "
+                             "as input")
+
+        if self.fobj.mode[0] == 'r':
+            if dtype is None:
+                raise ValueError("You must enter dtype when reading")
+            self.dtype = numpy.dtype(dtype)
+
+            # we only pay attention to the offset when mode is 'r' or 'r+'
+            if offset < 0:
+                offset=0
+            self.offset=offset
+            # go to the offset position in the file
+            if self.offset > 0:
+                self.fobj.seek(offset)
+            
+            if nrows is None or nrows < 0:
+                self.nrows = self.get_nrows()
+            else:
+                self.nrows=nrows
+
+        
+    def get_nrows(self):
+        if self.delim != "" and self.delim is not None:
+            raise ValueError("You must enter nrows >=0 for ascii")
+
+        # For binary, try to figure out the number of rows based on
+        # the number of bytes
+
+        rowsize=self.dtype.itemsize
+        # go to end
+        self.fobj.seek(0,2)
+        datasize = self.fobj.tell() - self.offset
+        nrows = datasize/rowsize
+        self.fobj.seek(self.offset)
+
+        return nrows
+
+
+    def close(self):
+        """
+        Close any open file object.  Make sure fobj, _hdr, and delim are None
+        """
+        self.offset=0
+        self.delim=None
+        self.nrows=0
+        self.dtype=None
+        if hasattr(self, 'fobj'):
+            if self.fobj is not None:
+                if isinstance(self.fobj, file):
+                    self.fobj.close()
+        self.fobj=None
+
+        self.padnull=False
+        self.ignorenull=False
+
+
+    def __repr__(self):
+        s = []
+
+        if isinstance(self.fobj,file):
+            s += ["filename: '%s'" % self.fobj.name]
+            s += ["mode: '%s'" % self.fobj.mode]
+        if self.delim is not None:
+            s=["delim: '%s'" % self.delim]
+
+        s += ["nrows: %s" % self.nrows]
+
+        if self.dtype is not None:
+            drepr=pprint.pformat(self.dtype.descr)
+            drepr = '  '+drepr.replace('\n','\n  ')
+            s += ["dtype: \n"+drepr]
+
+        s = "\n".join(s)
+        return s
+
+
+    def read(self, rows=None, fields=None, columns=None,
+             view=None, split=False):
+        """
+        Read the data into memory.
+        """
+        
+        if self.fobj.tell() != self.offset:
+            self.fobj.seek(self.offset)
+
+        rows2read = self._get_rows2read(rows)
+        fields2read = self._get_fields2read(fields, columns=columns)
+
+        if fields2read is None and rows2read is None and self.delim is None:
+            # Its binary and we are reading everything.  Use fromfile.
+            result = numpy.fromfile(self.fobj,dtype=self.dtype,count=self.nrows)
+        else:
+            robj = records.Records(
+                self.fobj, mode='r', 
+                nrows=self.nrows, dtype=self.dtype, 
+                delim=self.delim)
+            result = robj.Read(rows=rows2read, fields=fields2read)
+
+        if view is not None:
+            result = result.view(view)
+
+        if split:
+            return split_fields(result)
+        else:
+            return result
+
+    def write(self, data, header=None):
+        """
+        """
+
+        # Write or update the header. If we are updating the file, this will
+        # just alter the number of rows marked in the header and in self.size.
+        # Either way, self.fobj will point to the end of the file, ready to
+        # write the data
+
+        if self.fobj.mode[0] != 'w' and '+' not in self.fobj.mode:
+            raise ValueError("You must open with 'w*' or 'r+' to write")
+
+        self.fobj.seek(0,2) # Seek to end of file
+
+        if self.verbose:
+            stdout.write("Writing %s: %s\n" % \
+                            (data.size,pprint.pformat(data.dtype.descr)))
+        if (self.delim is not None):
+            # let recfile deal with ascii writing
+            r = records.Records(self.fobj, mode='u', delim=self.delim)
+            dataview = data.view(numpy.ndarray) 
+            r.Write(dataview, padnull=self.padnull, ignorenull=self.ignorenull)
+        else:
+            # Write data out as a binary chunk
+            data.tofile(self.fobj)
+
+        # update nrows to reflect the write
+        self.nrows += data.size
+
+
+    def __getitem__(self, arg):
+        """
+        sf = Recfile(....)
+
+        # read subsets of columns and/or rows from the file.  Rows and
+        # columns can be lists/tuples/arrays
+
+        # read subsets of rows
+        data = sf[:]
+        data = sf[ 35 ]
+        data = sf[ 35:88 ]
+        data = sf[ [3,234,5551,.. ] ]
+
+        # read subsets of columns
+        data = sf['fieldname'][:]
+        data = sf[ ['field1','field2',...] ][row_list]
+
+
+        # read subset of rows *and* columns.
+        data = sf['fieldname'][3:58]
+        data = sf[rowlist][fieldlist]
+
+        # Note, if you send just columns, a RecfileColumnSubset object is
+        # returned
+        sub = sf['fieldname']
+        data = sub.read(rows=)
+        """
+
+        res, isrows = self.process_args_as_rows_or_columns(arg)
+        if isrows:
+            # rows were entered: read all columns
+            return self.read(rows=res)
+
+        # columns was entered.  Return a subset objects
+        return RecfileColumnSubset(self, columns=res)
+
+    def __len__(self):
+        return self.nrows
+
+
+    def process_args_as_rows_or_columns(self, arg):
+        """
+
+        args must be a tuple.  Only the first one or two args are used.
+
+        We must be able to interpret the args as as either a column name or
+        row number, or sequences thereof.  Numpy arrays and slices are also
+        fine.
+
+        Examples:
+            'field'
+            35
+            [35,55,86]
+            ['f1',f2',...]
+        Can also be tuples or arrays.
+
+        """
+
+        isrows = False
+        result=arg
+        if isinstance(arg, (tuple,list,numpy.ndarray)):
+            # a sequence was entered
+            if isstring(arg[0]):
+                pass
+            else:
+                isrows=True
+                result = arg
+        elif isstring(arg):
+            # a single string was entered
+            pass
+        elif isinstance(arg, slice):
+            isrows=True
+            result = self.slice2rows(arg.start, arg.stop, arg.step)
+        else:
+            # a single object was entered.  Probably should apply some more 
+            # checking on this
+            isrows=True
+
+        return result, isrows
+
+
+
+    def __getitem__old(self, arg):
+        """
+        sf = Recfile(....)
+
+        # read subsets of columns and/or rows from the file.  Note, lists
+        # of columns or rows cannot be tuples, due to how the __getitem__
+        # call works.
+
+        # read subsets of columns
+        data = sf['fieldname']
+        data = sf[ ['field1','field2',...] ]    # can also be an array
+
+        # read subsets of rows
+        data = sf[ 35 ]
+        data = sf[ 35:88 ]
+        data = sf[ [3,234,5551,.. ] ]           # can also be an array
+
+        # read subset of rows *and* columns.
+        data = sf['fieldname', 3:58]
+        data = sf[rowlist, fieldlist]
+        data = sf[fieldlist,rowlist]
+
+        If a single argument is entered, that is set to arg.
+        If more than one is entered, arg is set to a tuple.  d'oh!,  Hard
+            to parse
+        """
+        if not isinstance(arg,tuple):
+            send_arg = (arg,)
+        else:
+            send_arg = arg
+
+        rows, columns = self.process_args_as_rows_and_columns(send_arg)
+        return self.read(rows=rows, columns=columns)
+
+
+    def process_args_as_rows_and_columns(self, args):
+        """
+
+        args must be a tuple.  Only the first one or two args are used.
+
+        We must be able to interpret the args as as either a column name or
+        row number, or sequences thereof.  Numpy arrays and slices are also
+        fine.
+
+        Examples:
+
+            Single arguments:
+                ( 'field1', )
+                ( 54, )
+                ( ('f1','f2'), )
+                ( [3,4,5,6], )
+            Two arguments:
+                ( 'field36', 27 )
+                ( [33,44], ['ra','dec','flux'] )
+                ( 'ra', slice(5,10) )
+
+        Returns rows,columns but one will be None.  If both entries can be
+        interpreted as rows, the last is used.  Similarly for fields.
+
+        """
+
+        columns=None
+        rows=None
+
+        for arg in args[0:2]:
+
+            if isinstance(arg, (tuple,list,numpy.ndarray)):
+                # a sequence was entered
+                if isstring(arg[0]):
+                    columns = arg
+                else:
+                    rows = arg
+            elif isstring(arg):
+                # a single string was entered
+                columns = arg
+            elif isinstance(arg, slice):
+                rows = self.slice2rows(arg.start, arg.stop, arg.step)
+            else:
+                # a single object was entered.  Probably should apply some more 
+                # checking on this
+                rows=arg
+
+        return rows, columns
+
+    def slice2rows(self, start, stop, step=None):
+        if start is None:
+            start=0
+        if stop is None:
+            stop=self.nrows
+        if step is None:
+            step=1
+
+        tstart = self._fix_range(start)
+        tstop  = self._fix_range(stop)
+        if tstart == 0 and tstop == self.nrows:
+            # this is faster: if all fields are also requested, then a 
+            # single fread will be done
+            return None
+        if stop < start:
+            raise ValueError("start is greater than stop in slice")
+        return numpy.arange(tstart, tstop, step, dtype='intp')
+
+    def _fix_range(self, num, isslice=True):
+        """
+        If el=True, then don't treat as a slice element
+        """
+
+        if isslice:
+            # include the end
+            if num < 0:
+                num=self.nrows + (1+num)
+            elif num > self.nrows:
+                num=self.nrows
+        else:
+            # single element
+            if num < 0:
+                num=self.nrows + num
+            elif num > (self.nrows-1):
+                num=self.nrows-1
+
+        return num
+
+
+
+    def _get_rows2read(self, rows):
+        if rows is None:
+            return None
+        try:
+            # a sequence entered
+            rowlen=len(rows)
+
+            # no copy is made if it is an intp numpy array
+            rows2read = numpy.array(rows,ndmin=1,copy=False, dtype='intp')
+            if rows2read.size == 1:
+                rows2read[0] = self._fix_range(rows2read[0], isslice=False)
+        except:
+            # single object entered
+            rows2read = self._fix_range(rows, isslice=False)
+            rows2read = numpy.array([rows2read], dtype='intp')
+
+
+        # should we do this sort, or assume sorted?
+        rows2read.sort()
+        rmin = rows2read[0]
+        rmax = rows2read[-1]
+        if rmin < 0 or rmax >= self.nrows:
+            raise ValueError("Requested rows range from %s->%s: out of "
+                             "range %s->%s" % (rmin,rmax,0,self.nrows-1))
+        if self.verbose:
+            stdout.write("\t\tReading %s rows\n" % len(rows2read))
+
+        return rows2read
+
+    def _get_fields2read(self, fields, columns=None):
+        if fields is None:
+            fields=columns
+
+        if fields is None:
+            return None
+        elif isinstance(fields, (list,numpy.ndarray)):
+            f=fields
+        elif isinstance(fields,tuple):
+            f=list(fields)
+        elif isstring(fields):
+            f=[fields]
+        else:
+            raise ValueError('fields must be list,tuple,string or array')
+
+        if not isstring(f[0]):
+            # this is probably a list of column numbers, convert to strings
+            allnames = self.dtype.names
+            f = [allnames[i] for i in f]
+
+        if self.verbose:
+            _out = (len(f), pprint.pformat(f))
+            stdout.write("\t\tReading %s fields: %s\n" % _out)
+
+        return f
+
+
+class RecfileSubset():
+    def __init__(self, rf, fields=None, columns=None, rows=None):
+        """
+        Input is the SFile instance and a list of column names.
+        """
+
+        if columns is None:
+            columns=fields
+
+        self.recfile = rf
+        self.rows=self.recfile._get_rows2read(rows)
+        self.columns = self.recfile._get_fields2read(columns)
+
+
+    def read(self, view=None, split=False):
+        """
+        Read the data from disk and return as a numpy array
+        """
+
+        return self.recfile.read(rows=self.rows, columns=self.columns, 
+                                 view=view, split=split)
+
+    def __repr__(self):
+        s=[]
+        if self.columns is not None:
+            c=pprint.pformat(self.columns)
+            c="  "+c.replace('\n','\n  ')
+            s += ["column subset:\n" + c]
+        if self.rows is not None:
+            r=pprint.pformat(self.rows)
+            r="  "+r.replace('\n','\n  ')
+            s += ["row subset:\n" + r]
+        if len(s) > 0:
+            s += ['\nfrom file:']
+        s+=[self.recfile.__repr__()]
+        s = "\n".join(s)
+        return s
+
+class RecfileColumnSubset():
+    def __init__(self, rf, fields=None, columns=None):
+        """
+        Input is the SFile instance and a list of column names.
+        """
+
+        if columns is None:
+            columns=fields
+
+        self.recfile = rf
+        self.columns = columns
+        self.columns = self.recfile._get_fields2read(columns)
+
+
+    def read(self, rows=None, view=None, split=False):
+        """
+        Read the data from disk and return as a numpy array
+        """
+
+        return self.recfile.read(rows=rows, columns=self.columns, 
+                                 view=view, split=split)
+
+    def __getitem__(self, arg):
+        """
+        If columns are sent, then the columns will just get reset and
+        we'll return a new object
+
+        If rows are sent, they are read and the result returned.
+        """
+        res, isrows = self.recfile.process_args_as_rows_or_columns(arg)
+        if isrows:
+            # rows was entered: read all columns
+            return self.read(rows=res)
+
+        # columns was entered.  Return a subset objects
+        return RecfileColumnSubset(self, columns=res)
+
+
+
+    def __repr__(self):
+        s=[]
+        if self.columns is not None:
+            c=pprint.pformat(self.columns)
+            c="  "+c.replace('\n','\n  ')
+            s += ["column subset:\n" + c]
+        if len(s) > 0:
+            s += ['\nfrom file:']
+        s+=[self.recfile.__repr__()]
+        s = "\n".join(s)
+        return s
+
+
+
+
+
+def split_fields(data, fields=None, getnames=False):
+    """
+    Name:
+        split_fields
+
+    Calling Sequence:
+        The standard calling sequence is:
+            field_tuple = split_fields(data, fields=)
+            f1,f2,f3,.. = split_fields(data, fields=)
+
+        You can also return a list of the extracted names
+            field_tuple, names = split_fields(data, fields=, getnames=True)
+
+    Purpose:
+        Get a tuple of references to the individual fields in a structured
+        array (aka recarray).  If fields= is sent, just return those
+        fields.  If getnames=True, return a tuple of the names extracted
+        also.
+
+        If you want to extract a set of fields into a new structured array
+        by copying the data, see esutil.numpy_util.extract_fields
+
+    Inputs:
+        data: An array with fields.  Can be a normal numpy array with fields
+            or the recarray or another subclass.
+    Optional Inputs:
+        fields: A list of fields to extract. Default is to extract all.
+        getnames:  If True, return a tuple of (field_tuple, names)
+
+    """
+
+    outlist = []
+    allfields = data.dtype.fields
+
+    if allfields is None:
+        if fields is not None:
+            raise ValueError("Could not extract fields: data has "
+                             "no fields")
+        return (data,)
     
-    return records.Records(fileobj, mode, delim, dtype=dt, nrows=nrows)
+    if fields is None:
+        fields = allfields
+    else:
+        if isinstance(fields, (str,unicode)):
+            fields=[fields]
+
+    for field in fields:
+        if field not in allfields:
+            raise ValueError("Field not found: '%s'" % field)
+        outlist.append( data[field] )
+
+    output = tuple(outlist)
+    if getnames:
+        return output, fields
+    else:
+        return output
 
 
 
@@ -515,5 +1318,17 @@ def test():
 
 
 
+
+_major_pyvers = int( sys.version_info[0] )
+def isstring(obj):
+    if _major_pyvers >= 3:
+        string_types=(str, numpy.string_)
+    else:
+        string_types=(str, unicode, numpy.string_)
+
+    if isinstance(obj, string_types):
+        return True
+    else:
+        return False
 
 

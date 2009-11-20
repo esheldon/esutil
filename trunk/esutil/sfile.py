@@ -246,7 +246,7 @@ class SFile():
                 if self.verbose:
                     stdout.write("Requested append on non-existent file: "
                                  "Will create a new file\n")
-                mode = 'w'
+                mode = 'w+'
 
             self.fobj = open(fpath, mode)
         elif isinstance(fobj, file):
@@ -505,7 +505,7 @@ class SFile():
             return None
         if stop < start:
             raise ValueError("start is greater than stop in slice")
-        return numpy.arange(tstart, tstop, step, dtype='i8')
+        return numpy.arange(tstart, tstop, step, dtype='intp')
 
     def process_args_as_rows_and_columns(self, args):
         """
@@ -690,7 +690,8 @@ class SFile():
                 descr = str(data.dtype.str)
                 head['_SHAPE'] = data.shape
 
-            head['_HAS_FIELDS'] = has_fields
+            # this is not needed
+            #head['_HAS_FIELDS'] = has_fields
 
             if self.delim is not None:
                 head['_DELIM'] = self.delim

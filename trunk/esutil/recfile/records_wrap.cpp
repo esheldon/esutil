@@ -2821,7 +2821,7 @@ SWIGINTERN PyObject *_wrap_new_Records(PyObject *SWIGUNUSEDPARM(self), PyObject 
   PyObject *resultobj = 0;
   PyObject *arg1 = (PyObject *) 0 ;
   char *arg2 = (char *) 0 ;
-  PyObject *arg3 = (PyObject *) 0 ;
+  PyObject *arg3 = (PyObject *) NULL ;
   PyObject *arg4 = (PyObject *) NULL ;
   long long arg5 = (long long) -9999 ;
   Records *result = 0 ;
@@ -2839,14 +2839,16 @@ SWIGINTERN PyObject *_wrap_new_Records(PyObject *SWIGUNUSEDPARM(self), PyObject 
     (char *) "fileobj",(char *) "mode",(char *) "delim",(char *) "dtype",(char *) "nrows", NULL 
   };
   
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO|OO:new_Records",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO|OOO:new_Records",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
   arg1 = obj0;
   res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
   if (!SWIG_IsOK(res2)) {
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_Records" "', argument " "2"" of type '" "char const *""'");
   }
   arg2 = reinterpret_cast< char * >(buf2);
-  arg3 = obj2;
+  if (obj2) {
+    arg3 = obj2;
+  }
   if (obj3) {
     arg4 = obj3;
   }
