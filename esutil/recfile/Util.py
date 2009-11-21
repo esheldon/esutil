@@ -275,7 +275,7 @@ class Recfile():
     """
 
 
-    def __init__(self, fobj, mode="r", delim=None, dtype=None, 
+    def __init__(self, fobj=None, mode="r", delim=None, dtype=None, 
                  nrows=-9999, offset=0, 
                  padnull=False, ignorenull=False, verbose=False):
 
@@ -401,6 +401,9 @@ class Recfile():
     def read(self, rows=None, fields=None, columns=None,
              view=None, split=False):
         
+        if self.fobj is None:
+            raise ValueError("You have not yet opened a file")
+
         if self.fobj.tell() != self.offset:
             self.fobj.seek(self.offset)
 
@@ -425,7 +428,10 @@ class Recfile():
         else:
             return result
 
-    def write(self, data, header=None):
+    def write(self, data):
+        if self.fobj is None:
+            raise ValueError("You have not yet opened a file")
+
         if self.fobj.mode[0] != 'w' and '+' not in self.fobj.mode:
             raise ValueError("You must open with 'w*' or 'r+' to write")
 
@@ -474,6 +480,9 @@ class Recfile():
         sub = sf['fieldname']
         data = sub.read(rows=)
         """
+
+        if self.fobj is None:
+            raise ValueError("You have not yet opened a file")
 
         res, isrows = self.process_args_as_rows_or_columns(arg)
         if isrows:

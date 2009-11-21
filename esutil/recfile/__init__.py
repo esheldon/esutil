@@ -110,7 +110,8 @@ Classes
         data = robj.read(columns=column_list)
         data = robj.read(fields=column_list)    # columns/fields are synonyms
 
-        # In bracket notation, you must specify rows to read the data.
+        # In bracket notation, you must specify rows to read the data, or use
+        # .read()
         data = robj['fieldname'][:]
         data = robj[ fieldlist ][ rowlist ]
         data = robj['fieldname'].read()
