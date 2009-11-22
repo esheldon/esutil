@@ -245,12 +245,28 @@ class SFile():
 
             self.fobj = open(fpath, mode)
         elif isinstance(fobj, file):
+            #elif hasattr(fobj,'readline'):
             self.fobj = fobj
         else:
             raise ValueError("Only support filenames and file objects "
                              "as input")
 
+        
+        crap="""
+        import gzip
+        reading=False
+        if isinstance(self.fobj,gzip.GzipFile):
+            if self.fobj.mode == 1:
+                reading=True
+
+        elif isinstance(self.fobj,file):
+            if self.fobj.mode[0] == 'r':
+                reading=True
+        """
+
+
         if self.fobj.mode[0] == 'r':
+            #if reading:
             # For 'r' and 'r+' try to read the header
             if self.verbose:
                 stdout.write("\tReading header\n")
