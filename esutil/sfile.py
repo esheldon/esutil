@@ -1292,12 +1292,8 @@ def _match_key(d, key, require=False):
             raise RuntimeError("Could not find required key: '%s'" % key)
  
 
-_major_pyvers = int( sys.version_info[0] )
 def isstring(obj):
-    if _major_pyvers >= 3:
-        string_types=(str, numpy.string_)
-    else:
-        string_types=(str, unicode, numpy.string_)
+    string_types=(basestring, numpy.string_)
 
     if isinstance(obj, string_types):
         return True
