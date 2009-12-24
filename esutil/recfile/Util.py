@@ -484,13 +484,65 @@ class Recfile():
         if self.fobj is None:
             raise ValueError("You have not yet opened a file")
 
-        res, isrows = self.process_args_as_rows_or_columns(arg)
+        res, isrows, isslice = self.process_args_as_rows_or_columns(arg)
         if isrows:
             # rows were entered: read all columns
-            return self.read(rows=res)
+            if isslice:
+                return self.read_slice(arg)
+            else:
+                return self.read(rows=res)
 
         # columns was entered.  Return a subset objects
         return RecfileColumnSubset(self, columns=res)
+
+    def read_slice(self, arg, split=False):
+        """
+        Use a memory map to read row slices. This is more powerful than
+        the simple slicer built into recfile.
+        """
+
+        if self.fobj is None:
+            raise ValueError("You have not yet opened a file")
+
+        if self.fobj.tell() != self.offset:
+            self.fobj.seek(self.offset)
+
+
+        mmap = self.get_memmap()
+        # this does not actually read the data yet
+        data_view = mmap[arg]
+
+        # now copy out to an array
+        result = numpy.zeros(data_view.size, dtype=data_view.dtype)
+        result[:] = data_view[:]
+
+        if split:
+            return split_fields(result)
+        else:
+            return result
+
+        return result
+
+    def get_memmap(self, mode='r', view=None, header=False):
+
+        if self.delim is not None:
+            raise ValueError("Cannot memory map ascii files")
+
+        if self.fobj.tell() != self.offset:
+            self.fobj.seek(self.offset)
+
+
+        shape = (self.nrows,)
+
+        result = numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
+                              mode=mode, offset=self.fobj.tell())
+        if view is not None:
+            result = result.view(view)
+
+        return result
+
+
+
 
     def __len__(self):
         return self.nrows
@@ -505,7 +557,7 @@ class Recfile():
         """
         return RecfileSubset(self, rows=rows, fields=fields, columns=columns)
 
-    def process_args_as_rows_or_columns(self, arg):
+    def process_args_as_rows_or_columns(self, arg, unpack=False):
         """
 
         args must be a tuple.  Only the first one or two args are used.
@@ -523,6 +575,7 @@ class Recfile():
 
         """
 
+        isslice = False
         isrows = False
         result=arg
         if isinstance(arg, (tuple,list,numpy.ndarray)):
@@ -537,13 +590,17 @@ class Recfile():
             pass
         elif isinstance(arg, slice):
             isrows=True
-            result = self.slice2rows(arg.start, arg.stop, arg.step)
+            isslice=True
+            if unpack:
+                result = self.slice2rows(arg.start, arg.stop, arg.step)
+            else:
+                result = arg
         else:
             # a single object was entered.  Probably should apply some more 
             # checking on this
             isrows=True
 
-        return result, isrows
+        return result, isrows, isslice
 
 
 
@@ -850,9 +907,10 @@ class RecfileColumnSubset():
 
         If rows are sent, they are read and the result returned.
         """
-        res, isrows = self.recfile.process_args_as_rows_or_columns(arg)
+        res, isrows, isslice = \
+            self.recfile.process_args_as_rows_or_columns(arg, unpack=True)
         if isrows:
-            # rows was entered: read all columns
+            # rows was entered: read all current column subset
             return self.read(rows=res)
 
         # columns was entered.  Return a subset objects

@@ -151,6 +151,38 @@ class Records(_object):
         """
         return _records.Records_Read(*args, **kwargs)
 
+    def ReadSlice(*args, **kwargs):
+        """
+        Read(rows=None, fields=None)
+
+        A class method for the Records class.  Reads the specified rows
+        and fields from the open file and returns the data in a NumPy array.
+
+        Inputs:
+            rows:  A sorted unique set of rows.  May be a scala/rlist/array.
+              Default is all rows.
+            fields: The fields to read.  May be a single string or a list
+              of strings.  Can be in any order.  Default is all fields.
+        Examples:
+            import numpy
+            import records
+            # Read from a binary file
+            file='test.bin'
+            dtype=numpy.dtype([('field1','f8'),('field2','2i4'),('field3','i8')])
+            nrows=10000000
+
+            robj = records.Open(file, dtype=dtype, nrows=nrows)
+            res=robj.Read()
+
+            # Read from a CSV file of the same structure, and only read a subset 
+            # of the data
+            rows2get=[2335,122332,1550021]
+            fields2get='field2'
+            robj = records.Open('test.csv', delim=',', dtype=dtype, nrows=nrows)
+            res = robj.Read(rows=rows2get, fields=fields2get)
+        """
+        return _records.Records_ReadSlice(*args, **kwargs)
+
     def Write(*args, **kwargs):
         """
         Write(numpy_array, pad=False)

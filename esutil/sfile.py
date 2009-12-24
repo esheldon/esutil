@@ -327,9 +327,10 @@ class SFile():
 
         if self.hdr is not None:
             hs = self.h2string()
-            hs = '  '+hs.replace('\n','\n  ')
             if hs != '':
-                s += ["hdr: \n"+hs]
+                hs = '  '+hs.replace('\n','\n  ')
+                if hs != '':
+                    s += ["hdr: \n"+hs]
         s = "\n".join(s)
         return s
 
@@ -433,7 +434,7 @@ class SFile():
 
 
     def read(self, rows=None, fields=None, columns=None, header=False, 
-             view=None, split=False):
+             view=None, split=False, reduce=False):
         """
         Read the data into memory.
         """
@@ -450,6 +451,8 @@ class SFile():
             result = result.view(view)
         elif split:
             result = split_fields(result)
+        elif reduce:
+            result = reduce_array(result)
 
         if header:
             return result, self.hdr
@@ -1271,6 +1274,17 @@ def split_fields(data, fields=None, getnames=False):
         return output, fields
     else:
         return output
+
+def reduce_array(data):
+    # if this is a structured array with fields, and only has a single
+    # field, return a simple array view of that field, e.g. data[fieldname]
+    if hasattr(data, 'dtype'):
+        if data.dtype.names is not None:
+            if len(data.dtype.names) == 1:
+                # get a simpler view
+                return data[data.dtype.names[0]]
+    else:
+        return data
 
 def _match_key(d, key, require=False):
     """

@@ -133,6 +133,8 @@ Modification history:
 				PyObject* rows=NULL,
 				PyObject* fields=NULL) throw (const char*);
 
+        PyObject* ReadSlice(npy_intp row1, npy_intp row2) throw (const char*);
+
 #ifdef SWIG
 %feature("docstring",
 		"
@@ -191,7 +193,7 @@ Modification history:
 		void CreateOutputArray();
 
 		void ReadPrepare();
-
+        npy_intp ProcessSlice(npy_intp row1, npy_intp row2);
 		void ReadFromFile();
 		void ReadAllAsBinary();
 		void ReadRows();
