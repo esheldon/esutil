@@ -2467,8 +2467,9 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 #define SWIGTYPE_p_Records swig_types[0]
 #define SWIGTYPE_p_char swig_types[1]
-static swig_type_info *swig_types[3];
-static swig_module_info swig_module = {swig_types, 2, 0, 0, 0, 0};
+#define SWIGTYPE_p_npy_intp swig_types[2]
+static swig_type_info *swig_types[4];
+static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2942,6 +2943,73 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Records_ReadSlice(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  Records *arg1 = (Records *) 0 ;
+  npy_intp arg2 ;
+  npy_intp arg3 ;
+  PyObject *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "row1",(char *) "row2", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:Records_ReadSlice",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Records, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Records_ReadSlice" "', argument " "1"" of type '" "Records *""'"); 
+  }
+  arg1 = reinterpret_cast< Records * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_npy_intp,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Records_ReadSlice" "', argument " "2"" of type '" "npy_intp""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Records_ReadSlice" "', argument " "2"" of type '" "npy_intp""'");
+    } else {
+      npy_intp * temp = reinterpret_cast< npy_intp * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  {
+    res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_npy_intp,  0  | 0);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Records_ReadSlice" "', argument " "3"" of type '" "npy_intp""'"); 
+    }  
+    if (!argp3) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Records_ReadSlice" "', argument " "3"" of type '" "npy_intp""'");
+    } else {
+      npy_intp * temp = reinterpret_cast< npy_intp * >(argp3);
+      arg3 = *temp;
+      if (SWIG_IsNewObj(res3)) delete temp;
+    }
+  }
+  try {
+    result = (PyObject *)(arg1)->ReadSlice(arg2,arg3);
+  }
+  catch(char const *_e) {
+    PyErr_SetString(PyExc_RuntimeError, _e);
+    SWIG_fail;
+    
+  }
+  
+  resultobj = result;
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Records_Write(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Records *arg1 = (Records *) 0 ;
@@ -3040,6 +3108,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_Records", (PyCFunction) _wrap_new_Records, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"delete_Records", _wrap_delete_Records, METH_VARARGS, NULL},
 	 { (char *)"Records_Read", (PyCFunction) _wrap_Records_Read, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"Records_ReadSlice", (PyCFunction) _wrap_Records_ReadSlice, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"Records_Write", (PyCFunction) _wrap_Records_Write, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"Records_Close", _wrap_Records_Close, METH_VARARGS, NULL},
 	 { (char *)"Records_swigregister", Records_swigregister, METH_VARARGS, NULL},
@@ -3051,18 +3120,22 @@ static PyMethodDef SwigMethods[] = {
 
 static swig_type_info _swigt__p_Records = {"_p_Records", "Records *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_npy_intp = {"_p_npy_intp", "npy_intp *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_Records,
   &_swigt__p_char,
+  &_swigt__p_npy_intp,
 };
 
 static swig_cast_info _swigc__p_Records[] = {  {&_swigt__p_Records, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_npy_intp[] = {  {&_swigt__p_npy_intp, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_Records,
   _swigc__p_char,
+  _swigc__p_npy_intp,
 };
 
 

@@ -139,6 +139,35 @@ void Records::InitializeVariables()
 
 }
 
+PyObject* Records::ReadSlice(npy_intp row1, npy_intp row2)  throw (const char* )
+{
+	if (mFptr == NULL) {
+		throw "File is not open";
+	}
+	if (mAction != READ) {
+		throw "File is not open for reading";
+	}
+	if (mFileType != BINARY_FILE) {
+		throw "slices currently only supported for binary files";
+	}
+
+	// juse some error checking and return implied length
+	mNrowsToRead = ProcessSlice(row1, row2);
+
+	// slice we read all fields, so send Py_None
+	ProcessFieldsToRead(Py_None);
+	CreateOutputArray();
+
+	if (row1 > 0) {
+		SkipRows(0, row1);
+	}
+	npy_intp nread = fread(mData, mRowSize, mNrowsToRead, mFptr);
+	if (nread != mNrowsToRead) {
+		throw "Error reading slice";
+	} 
+
+	return (PyObject* ) mReturnObject;
+}
 PyObject* Records::Read(
 		PyObject* rows,
 		PyObject* fields) throw (const char* )
@@ -807,6 +836,26 @@ void Records::ProcessFieldsToRead(PyObject* fields)
 	}
 
 }
+
+npy_intp Records::ProcessSlice(npy_intp row1, npy_intp row2)
+{
+	// Just do some error checking on the requested rows
+	stringstream serr;
+	if (row1 < 0) {
+		serr<<"Requested first row < 0";
+		throw serr.str().c_str();
+	}
+	if (row2 > mNrows) {
+		serr<<"Requested slice beyond delcared size "<<mNrows;
+		throw serr.str().c_str();
+	}
+
+	// we use python slicing rules:  [n1:n2] really means  from n1 to n2-1
+	// so the number of rows to read is simply n2-n1
+	return row2-row1;
+}
+
+
 
 void Records::ProcessRowsToRead(PyObject* rows)
 {
