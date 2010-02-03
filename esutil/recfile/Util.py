@@ -378,6 +378,11 @@ class Recfile():
         self.ignorenull=False
 
 
+    def flush(self):
+        if hasattr(self,'fobj'):
+            if isinstance(self.fobj, file):
+                self.fobj.flush()
+
     def __repr__(self):
         s = []
 
