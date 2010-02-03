@@ -402,6 +402,13 @@ class SFile():
         else:
             data.tofile(self.fobj)
 
+
+    def flush(self):
+        if hasattr(self,'fobj'):
+            if isinstance(self.fobj, file):
+                self.fobj.flush()
+
+
     def get_subset(self, rows=None, fields=None, columns=None):
         robj = recfile.Open(self.fobj, nrows=self.size, mode='r', 
                             offset=self.fobj.tell(),
