@@ -5,7 +5,10 @@ import esutil.numpy_util
 
 
 
-class qgauss():
+class QGauss():
+    """
+    Class to perform gauss-legendre integration
+    """
     def __init__(self, npts=None):
 
         self.npts = None
