@@ -56,7 +56,8 @@ import sfile
 import io
 import wcsutil
 import cosmology
-import astro_util
+import coords
+import coords as astro_util
 import plotting
 import sqlite_util
 
