@@ -512,14 +512,23 @@ class Recfile():
         if self.fobj.tell() != self.offset:
             self.fobj.seek(self.offset)
 
+        if self.delim is not None:
+            # we can't use a memmap on ascii files
+            start=arg.start
+            stop=arg.stop
+            if arg.step is not None:
+                rows=range(start,stop,arg.step)
+            else:
+                rows=range(start,stop)
+            result = self.read(rows=rows)
+        else:
+            mmap = self.get_memmap()
+            # this does not actually read the data yet
+            data_view = mmap[arg]
 
-        mmap = self.get_memmap()
-        # this does not actually read the data yet
-        data_view = mmap[arg]
-
-        # now copy out to an array
-        result = numpy.zeros(data_view.size, dtype=data_view.dtype)
-        result[:] = data_view[:]
+            # now copy out to an array
+            result = numpy.zeros(data_view.size, dtype=data_view.dtype)
+            result[:] = data_view[:]
 
         if split:
             return split_fields(result)
