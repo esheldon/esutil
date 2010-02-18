@@ -1,9 +1,9 @@
 """
     NAME
-        astro_util
+        coords
     PURPOSE
-        A set of astronomical utilities. This is mostly just coordinate 
-        transformations at this point
+        A set of astronomical utilities for dealing with coordinates and
+        coordinate transformations.
 
     COORDINATE TRANSFORMATIONS
         euler:  
@@ -491,8 +491,8 @@ def eq2sdss(ra_in, dec_in, dtype='f8'):
        is incorrect since it has poles at [-90,90]
 
     CALLING SEQUENCE:
-      import astro_util as au
-      (clambda, ceta) = au.eq2sdss(ra, dec, dtype='f8')
+      from esutil import coords
+      (clambda, ceta) = coords.eq2sdss(ra, dec, dtype='f8')
 
     INPUTS: 
       ra: Equatorial latitude in degrees. 
@@ -566,8 +566,8 @@ def sdss2eq(clambda_in, ceta_in, dtype='f8'):
        equatorial coords.  
 
     CALLING SEQUENCE:
-      import astro_util as au
-      (ra, dec) = au.sdss2eq(clambda, ceta, dtype='f8')
+      from esutil import coords
+      (ra, dec) = coords.sdss2eq(clambda, ceta, dtype='f8')
 
     INPUTS: 
       clambda: Corrected Survey longitude (actually lattitude) in degrees
@@ -621,8 +621,8 @@ def _eq2survey(ra_in, dec_in, dtype='f8'):
        not well defined.  Recommend you use csurvey coords.
 
     CALLING SEQUENCE:
-      import astro_util as au
-      (lambda, eta) = au._eq2survey(ra, dec, dtype='f8')
+      from esutil import coords
+      (lambda, eta) = coords._eq2survey(ra, dec, dtype='f8')
 
     INPUTS: 
       ra: Equatorial latitude in degrees. 
@@ -706,8 +706,8 @@ def _survey2eq(ra, dec, dtype='f8'):
        equatorial coords.  
 
     CALLING SEQUENCE:
-      import astro_util as au
-      (ra, dec) = au._survey2eq(lam, eta, dtype='f8')
+      from esutil import coords
+      (ra, dec) = coords._survey2eq(lam, eta, dtype='f8')
 
     INPUTS: 
       lambda: Survey longitude (actually lattitude) in degrees
