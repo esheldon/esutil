@@ -37,8 +37,10 @@
                 Dc(zmin,zmax): Comoving distance.
                 Dm(zmin,zmax): Transverse comoving distance.
                 DH: Hubble distance c/H. 
-                Ez_inverse(z): 1/sqrt( omega_m*(1+z)**3 + omega_k*(1+z)**2 + omega_l)
-                Ezinv_integral(z1,z2): Integral of Ez_inverse over a range of redshifts.
+                Ez_inverse(z): 
+                    1/sqrt( omega_m*(1+z)**3 + omega_k*(1+z)**2 + omega_l)
+                Ezinv_integral(z1,z2): 
+                    Integral of Ez_inverse over a range of redshifts.
 
     The module also provides these Convenience Functions.  These are called in
     the same way as the class methods listed above, but each also takes in the
@@ -229,9 +231,11 @@ class Cosmo():
         """
         NAME:
             Dm
+
         PURPOSE:
-            Calculate the transverse comoving distance between two objects at the
-            same redshift in a a FRW universe.  Units: Mpc.
+            Calculate the transverse comoving distance between two objects at
+            the same redshift in a a FRW universe.  Units: Mpc.
+
         CALLING SEQUENCE:
             import esutil
             cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
