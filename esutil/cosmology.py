@@ -25,7 +25,7 @@
                                              npts=5,
                                              vnpts=10)
 
-            All parameters are optional.  For the defaults simpley use
+            All parameters are optional.  For the defaults simply use
                 cosmo=esutil.cosmology.Cosmo()
 
             Methods (see method docs for more details):
