@@ -1,6 +1,7 @@
 """
-    Name:
+    Module Name:
         cosmology
+
     Purpose:
         A set of tools for calculating distances in an expanding universe.
         These routines are completely general for any specified omega_m,
@@ -10,7 +11,40 @@
         All distances are in units of Mpc/h unless h is specified. Volumes are
         in (Mpc/h)**3.  All return values are arrays.
 
-    Convenience Functions:
+    Classes:
+        Cosmo :  This class is instantiated with the desired cosmology and
+            all subsequent calculations are in that cosmology.
+
+            Instantiation:
+                import esutil
+                cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                             omega_l=0.7,
+                                             omega_k=0.0,
+                                             h=1.0,
+                                             flat=True,
+                                             npts=5,
+                                             vnpts=10)
+
+            All parameters are optional.
+
+            Cosmo Class Methods (see method docs for more details):
+
+                Da(zmin, zmax) : angular diameter distance.
+                Dl(zmin, zmax) : luminosity distance.
+                Distmod(z): Distance modulus.
+                dV(z, comoving=True): Volume element.
+                V(zmin, zmax, comoving=True):  Volume between two redshifts.
+                Dc(zmin,zmax): Comoving distance.
+                Dm(zmin,zmax): Transverse comoving distance.
+                DH: Hubble distance c/H. 
+                Ez_inverse(z): 1/sqrt( omega_m*(1+z)**3 + omega_k*(1+z)**2 + omega_l)
+                Ezinv_integral(z1,z2): Integral of Ez_inverse over a range of redshifts.
+
+    The module also provides these Convenience Functions.  These are called in
+    the same way as the class methods listed above, but each also takes in the
+    cosmological keywords omega_m,omega_l,omega_k,h,flat as well as appropriate
+    integration parameters.
+
         Da: angular diameter distance.
         Dl: luminosity distance.
         Distmod: Distance modulus.
@@ -22,14 +56,21 @@
         Ez_inverse: 1/sqrt( omega_m*(1+z)**3 + omega_k*(1+z)**2 + omega_l)
         Ezinv_integral: Integral of Ez_inverse over a range of redshifts.
 
+
     Examples:
-        >>> import cosmology as c
-        >>> c.Da(0.0, 0.35, omega_m=0.24, h=0.7)
+        # using the Cosmo class.  
+        >>> import esutil
+        >>> cosmo=esutil.cosmology.Cosmo(omega_m=0.24,h=0.7)
+        >>> cosmo.Da(0.0, 0.35)
+        array([ 1034.76013423])
+        # using a convenience function
+        >>> esutil.cosmology.Da(0.0,0.35,omega_m=0.24,h=0.7)
         array([ 1034.76013423])
 
     Requirements:
         NumPy
-        SciPy for integrations implemented using weave
+        SciPy for fast integrations using Gauss-Legendre weights.
+            the weights are calculated using scipy.weave
 
     Revision History:
         Copied from IDL routines.  2006-11-07, Erin Sheldon, NYU
@@ -38,6 +79,8 @@
         Cleaned up imports so the module can be imported without
             numpy/scipy even though nothing will work.  2009-11-01. E.S.S. BNL
 
+        Added Cosmo class for more convenient usage.
+            2010-02-18, Erin Sheldon, BNL
 
 """
 
