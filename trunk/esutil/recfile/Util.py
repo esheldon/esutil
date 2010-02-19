@@ -1082,7 +1082,7 @@ def WriteTestData(fname, delim, duplicate=1):
     f.close()
 
 
-def DiffData(d1, d2):
+def DiffTestData(d1, d2):
     if type(d1) == numpy.string_:
         if len(d1) != len(d2):
             diff=math.fabs(len(d1)-len(d2))
@@ -1097,7 +1097,7 @@ def DiffData(d1, d2):
         else:
             diff=0.0
             for tmp1,tmp2 in zip(d1,d2):
-                diff += DiffData(tmp1,tmp2)
+                diff += DiffTestData(tmp1,tmp2)
             diff = diff/len(d1)
     else:
             diff = math.fabs( d1-d2)
@@ -1146,7 +1146,7 @@ def CompareWriteDelim(delim):
         for i in range(data.size):
             orig = data[name][i]
             read = res[name][i]
-            diff = DiffData(orig,read)
+            diff = DiffTestData(orig,read)
             diffs[ii] = diff
             ii += 1
             oprint = str(orig).replace('\n','')
@@ -1213,7 +1213,7 @@ def CompareReadDelim(delim):
         for i in range(len(rows)):
             orig = data[name][i]
             read = res[name][rows[i]]
-            diff = DiffData(orig,read)
+            diff = DiffTestData(orig,read)
             diffs[ii] = diff
             ii += 1
             oprint = str(orig).replace('\n','')
@@ -1246,7 +1246,7 @@ def CompareReadDelim(delim):
 
             orig = data[name][row]
             read = res[name][0]
-            diff = DiffData(orig,read)
+            diff = DiffTestData(orig,read)
             diffs[ii] = diff
             ii += 1
             oprint = str(orig).replace('\n','')
@@ -1278,7 +1278,7 @@ def CompareReadDelim(delim):
 
             orig = data[name][row]
             read = res[name][0]
-            diff = DiffData(orig,read)
+            diff = DiffTestData(orig,read)
             diffs[ii] = diff
             ii += 1
             oprint = str(orig).replace('\n','')
@@ -1306,7 +1306,7 @@ def CompareReadDelim(delim):
         for row in range(data.size):
             orig = data[name][row]
             read = res[name][row]
-            diff = DiffData(orig,read)
+            diff = DiffTestData(orig,read)
             diffs[ii] = diff
             ii += 1
             oprint = str(orig).replace('\n','')
