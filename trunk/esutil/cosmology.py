@@ -110,23 +110,6 @@ class Cosmo():
         self._ezi_run_gauleg()
         self._vi_run_gauleg()
 
-    def extract_omegas(self, omega_m, omega_l, omega_k, flat):
-        """
-        If flat is specified, make sure omega_l = 1-omega_m
-        and omega_k=0
-        """
-        if flat:
-            omega_l = 1.0-omega_m
-            omega_k = 0.0
-        return omega_m, omega_l, omega_k
-
-
-
-    def _ezi_run_gauleg(self):
-        self.xxi, self.wwi = gauleg(-1.0,1.0,self.npts)
-    def _vi_run_gauleg(self):
-        self.vxxi, self.vwwi = gauleg(-1.0,1.0,self.vnpts)
-
 
     def DH(self):
         """
@@ -156,6 +139,14 @@ class Cosmo():
             Calculate the comoving distance between redshifts z1 and z2 in
             a FRW universe. Units: Mpc 
         CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
             d=cosmo.Dc(z1, z2)
         INPUTS:
             z1, z2: The redshifts.  These must either be 
@@ -190,6 +181,219 @@ class Cosmo():
                 raise ValueError("z1,z2: Must be same length or one a scalar")
 
         return dc
+
+    def Dm(self, zmin, zmax):
+        """
+        NAME:
+            Dm
+        PURPOSE:
+            Calculate the transverse comoving distance between two objects at the
+            same redshift in a a FRW universe.  Units: Mpc.
+        CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
+            d=cosmo.Dm(zmin, zmax)
+        INPUTS:
+            zmin, zmax: The redshifts.  
+                Note, to interpret as the transverse distance between objects
+                at the same redshift as viewed by a redshift zero observer,
+                zmin=0.0  It is useful to allow zmin != 0 when measuring for
+                example angular diameter distances between two non zero
+                redshifts, as in lensing calculations.  These redshifts must
+                either be 
+
+                1) Two scalars
+                2) A scalar and an array.
+                3) Two arrays of the same length.
+
+        """
+
+        dh = self.DH()
+        dc=self.Dc(zmin, zmax)
+
+        if self.omega_k == 0:
+            return dc
+        elif self.omega_k > 0:
+            return dh/sqrt(self.omega_l)*sinh( sqrt(self.omega_k)*dc/dh )
+        else:
+            return dh/sqrt(self.omega_l)*sin( sqrt(self.omega_k)*dc/dh )
+
+
+    def Da(self, zmin, zmax):
+        """
+        NAME:
+            Da 
+        PURPOSE:
+            Calculate the angular diameter distance between z1 and z2 in a 
+            FRW universe. Units: Mpc.
+        CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
+            d=cosmo.Da(zmin, zmax)
+        INPUTS:
+            zmin, zmax: The redshifts.  These must either be 
+                1) Two scalars
+                2) A scalar and an array.
+                3) Two arrays of the same length.
+        """
+
+        z1 = numpy.array(zmin, ndmin=1, copy=False)
+        z2 = numpy.array(zmax, ndmin=1, copy=False)
+        d = self.Dm(z1, z2)
+
+        da = numpy.where( z1 < z2, d/(1.0+z2), d/(1.0+z1) )
+
+        return da
+
+
+    def Dl(self, zmin, zmax):
+        """
+        NAME:
+            Dl
+        PURPOSE:
+            Calculate the luminosity distance between z1 and z2 in a 
+            FRW universe. Units: Mpc.
+        CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
+            d=cosmo.Dl(zmin, zmax)
+        INPUTS:
+            zmin, zmax: The redshifts.  These must either be 
+                1) Two scalars
+                2) A scalar and an array.
+                3) Two arrays of the same length.
+        """
+
+        z1 = numpy.array(zmin, ndmin=1, copy=False)
+        z2 = numpy.array(zmax, ndmin=1, copy=False)
+        return self.Da(z1,z2)*(1.0+z2)**2
+
+    def Distmod(self, z):
+        """
+        NAME:
+            Distmod
+        PURPOSE:
+            Calculate the distance modulus to redshift z.
+        CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
+            d=cosmo.Distmod(z)
+        INPUTS:
+            z: The redshift(s).
+        """
+
+        dmpc = self.Dl(0.0, z)
+        dpc = dmpc*1.e6
+        dm = 5.0*log10(dpc/10.0)
+        return dm      
+
+    def dV(self, z_input, comoving=True):
+        """
+        NAME:
+            dV
+        PURPOSE:
+            Calculate the volume elementd dV in a FRW universe. Units: Mpc**3
+        CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
+            dv = cosmo.dV(z, comoving=True)
+        INPUTS:
+            z: The redshift
+            comoving=True: Use comoving coords, default True.
+        """
+
+        z = numpy.array(z_input, ndmin=1, copy=False)
+
+        dh = self.DH()
+        da = self.Da(0.0, z)
+        Ez = 1.0/self.Ez_inverse(z)
+        if comoving:
+            dv = dh*da**2/Ez*(1.0+z)**2
+        else:
+            dv = dh*da**2/Ez*(1.0+z)
+
+        return dv
+
+    def V(self, zmin, zmax, comoving=True):
+        """
+        NAME:
+            V
+        PURPOSE:
+            Calculate the volume between zmin and zmax in an FRW universe.
+            Units: Mpc**3
+        CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
+            v = cosmo.V(zmin, zmax, comoving=True)
+        INPUTS:
+            zmin, zmax The redshift limits.  
+            comoving: Use comoving coords, default True.
+        """
+
+        # these needed for coordinate transformation
+        f1 = (zmax-zmin)/2.
+        f2 = (zmax+zmin)/2.
+
+        zvals = self.vxxi*f1 + f2
+        ezivals = self.dV(zvals, comoving=comoving)
+
+        v =  f1 * ((ezivals*self.vwwi).sum())
+        v = numpy.array(v, ndmin=1)
+        return v
+
+
+    def extract_omegas(self, omega_m, omega_l, omega_k, flat):
+        """
+        If flat is specified, make sure omega_l = 1-omega_m
+        and omega_k=0
+        """
+        if flat:
+            omega_l = 1.0-omega_m
+            omega_k = 0.0
+        return omega_m, omega_l, omega_k
+
+
+
+    def _ezi_run_gauleg(self):
+        self.xxi, self.wwi = gauleg(-1.0,1.0,self.npts)
+    def _vi_run_gauleg(self):
+        self.vxxi, self.vwwi = gauleg(-1.0,1.0,self.vnpts)
 
 
 
@@ -603,7 +807,8 @@ def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
     f2 = (zmax+zmin)/2.
 
     zvals = _VI_XXi*f1 + f2
-    ezivals = dV(zvals, omega_m, omega_l, omega_k, h, flat, comoving, npts=npts)
+    ezivals = dV(zvals, omega_m, omega_l, omega_k, h, flat, 
+                 comoving=comoving, npts=npts)
 
     v =  f1 * ((ezivals*_VI_WWi).sum())
     v = numpy.array(v, ndmin=1)
