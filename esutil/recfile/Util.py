@@ -15,7 +15,7 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
     Instantiate a new Recfile class
         For writing:
             import recfile
-            r = recfile.Open(file/fileobj, mode="w", delim=None, 
+            r = recfile.Open(file/fileobj, mode="r", delim=None, 
                              padnull=False, ignorenull=False, verbose=False)
         For reading:
             import recfile
@@ -27,7 +27,7 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
             file/fileobj:  A string file name or an open file object.
 
         Optional Inputs:
-            mode: The file mode.  Default is "r" but can be "u" or "w".
+            mode: The file mode.  Default is "r" but can also be "r+","w","w+".
             delim: The delimiter used in the file.  Use "" or None for
                 binary files.  Default is None. Can also be any string such 
                 as ",", "\\t", etc.
@@ -63,6 +63,9 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
             or
             data = r[field_names][rows] # field names must come first. You
                                         # must specify something for rows
+                                        # in order to read the data, otherwise
+                                        # a RecfileColumnSubset object is 
+                                        # returned.
 
             If you put field_names *after* rows, then all rows will be read
             and *then* the fields are extracted, which is inefficient. 
@@ -70,12 +73,12 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
             If only the fields are specified, the data are not read, rather a
             RecfileColumnSubset object is returned.  
             
-            You must specify the rows.  If you want them all, use the [:]
-            slice.
+            You must specify the rows to actually read any data.  If you want
+            them all, use the [:] slice.
 
             data = r[:]                   # read all rows and columns
             data = r[field_names][:]      # read all rows but subset of columns.
-            data = r[field_names[rowlist] # subset of rows and columns
+            data = r[field_names][rowlist] # subset of rows and columns
 
         read(rows=, fields=):
             Returns the data in a NumPy array.  Specific rows and fields 
@@ -136,6 +139,7 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
         Created: 2008-07-18, Erin Sheldon
         Wrapper class Recfile added.  This is not returned by Open.  Support
             for [ ] style reading notation. 2009-11-20, ESS, BNL
+        Added simple slicing for ASCII.  2010-02-18, Erin Sheldon, BNL
 
     """
     # make sure it's a dtype and not just a descr
@@ -150,7 +154,7 @@ class Recfile():
     Instantiate a new Recfile class
         For writing:
             import recfile
-            r = recfile.Open(file/fileobj, mode="w", delim=None, 
+            r = recfile.Open(file/fileobj, mode="r", delim=None, 
                              padnull=False, ignorenull=False, verbose=False)
         For reading:
             import recfile
@@ -162,7 +166,7 @@ class Recfile():
             file/fileobj:  A string file name or an open file object.
 
         Optional Inputs:
-            mode: The file mode.  Default is "r" but can be "u" or "w".
+            mode: The file mode.  Default is "r" but can also be "r+","w","w+".
             delim: The delimiter used in the file.  Use "" or None for
                 binary files.  Default is None. Can also be any string such 
                 as ",", "\\t", etc.
@@ -271,6 +275,7 @@ class Recfile():
         Created: 2008-07-18, Erin Sheldon
         Wrapper class Recfile added.  This is not returned by Open.  Support
         for [ ] style reading notation. 2009-11-20, ESS, BNL
+        Added simple slicing for ASCII.  2010-02-18, Erin Sheldon, BNL
 
     """
 
@@ -1049,7 +1054,7 @@ def AddPrintElement(d, elements):
     else:
         elements += ['%s' % (d,) ]
 
-def WriteData(fname, delim, duplicate=1):
+def WriteTestData(fname, delim, duplicate=1):
     """
     This is until we get writing into the NumpyRecords
     """
@@ -1178,7 +1183,7 @@ def CompareReadDelim(delim):
 
     sys.stdout.write("Writing data\n")
     fname=TestFile(delim)
-    WriteData(fname, delim)
+    WriteTestData(fname, delim)
 
     # Set up some formatting stuff
     fwidth=20
@@ -1375,7 +1380,7 @@ def timing(delim, duplicate):
     if not os.path.exists(fname):
         sys.stdout.write("Writing data to '"+delim+"' delimited file %s,  "+\
                          "%s times" % (fname, duplicate))
-        WriteData(fname, delim, duplicate=duplicate)
+        WriteTestData(fname, delim, duplicate=duplicate)
 
     nrows = data.size*duplicate
     rows2read = [int(nrows*0.25), int(nrows*0.75), nrows-10]
