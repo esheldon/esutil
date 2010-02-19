@@ -25,9 +25,10 @@
                                              npts=5,
                                              vnpts=10)
 
-            All parameters are optional.
+            All parameters are optional.  For the defaults simpley use
+                cosmo=esutil.cosmology.Cosmo()
 
-            Cosmo Class Methods (see method docs for more details):
+            Methods (see method docs for more details):
 
                 Da(zmin, zmax) : angular diameter distance.
                 Dl(zmin, zmax) : luminosity distance.
