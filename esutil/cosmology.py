@@ -1,7 +1,7 @@
 """
-    NAME:
+    Name:
         cosmology
-    PURPOSE:
+    Purpose:
         A set of tools for calculating distances in an expanding universe.
         These routines are completely general for any specified omega_m,
         omega_k, and cosmological constant omega_l.  This code follows the
@@ -10,7 +10,7 @@
         All distances are in units of Mpc/h unless h is specified. Volumes are
         in (Mpc/h)**3.  All return values are arrays.
 
-    FUNCTIONS:
+    Convenience Functions:
         Da: angular diameter distance.
         Dl: luminosity distance.
         Distmod: Distance modulus.
@@ -22,26 +22,27 @@
         Ez_inverse: 1/sqrt( omega_m*(1+z)**3 + omega_k*(1+z)**2 + omega_l)
         Ezinv_integral: Integral of Ez_inverse over a range of redshifts.
 
-    EXAMPLES:
+    Examples:
         >>> import cosmology as c
         >>> c.Da(0.0, 0.35, omega_m=0.24, h=0.7)
         array([ 1034.76013423])
 
-    REQUIREMENTS:
+    Requirements:
         NumPy
         SciPy for integrations implemented using weave
-    REVISION HISTORY:
+
+    Revision History:
         Copied from IDL routines.  2006-11-07, Erin Sheldon, NYU
         Converted to using faster Gauss-Legendre integration 
             2007-05-17, Erin Sheldon, NYU
         Cleaned up imports so the module can be imported without
-        numpy/scipy even though nothing will work.  2009-11-01. E.S.S. BNL
+            numpy/scipy even though nothing will work.  2009-11-01. E.S.S. BNL
 
 
 """
 
 license="""
-  Copyright (C) 2009  Erin Sheldon
+  Copyright (C) 2009-10  Erin Sheldon
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of version 2 of the GNU General Public License as
@@ -80,6 +81,160 @@ try:
     have_scipy=True
 except:
     have_scipy=False
+
+
+class Cosmo():
+    def __init__(self, 
+                 omega_m=0.3, 
+                 omega_l=0.7,
+                 omega_k=0.0,
+                 h=1.0,
+                 flat=True,
+                 npts=5,
+                 vnpts=10):
+
+        # If flat is specified, make sure omega_l = 1-omega_m
+        # and omega_k=0
+        omega_m, omega_l, omega_k = \
+                self.extract_omegas(omega_m,omega_l,omega_k,flat)
+
+        self.omega_m=omega_m
+        self.omega_l=omega_l
+        self.omega_k=omega_k
+        self.h=h
+        self.flat=flat
+        self.npts=npts
+        self.vnpts=vnpts
+
+        # Will only change if npts changes 
+        self._ezi_run_gauleg()
+        self._vi_run_gauleg()
+
+    def extract_omegas(self, omega_m, omega_l, omega_k, flat):
+        """
+        If flat is specified, make sure omega_l = 1-omega_m
+        and omega_k=0
+        """
+        if flat:
+            omega_l = 1.0-omega_m
+            omega_k = 0.0
+        return omega_m, omega_l, omega_k
+
+
+
+    def _ezi_run_gauleg(self):
+        self.xxi, self.wwi = gauleg(-1.0,1.0,self.npts)
+    def _vi_run_gauleg(self):
+        self.vxxi, self.vwwi = gauleg(-1.0,1.0,self.vnpts)
+
+
+    def DH(self):
+        """
+        NAME:
+            DH
+        PURPOSE:
+            Calculate the Hubble distance in Mpc/h
+        CALLING SEQUENCE:
+            import esutil
+            cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
+                                         omega_l=0.7,
+                                         omega_k=0.0,
+                                         h=1.0,
+                                         flat=True,
+                                         npts=5,
+                                         vnpts=10)
+            d = cosmo.DH()
+        """
+        return 2.9979e5/100.0/self.h
+
+
+    def Dc(self, z1in, z2in):
+        """
+        NAME:
+            Dc
+        PURPOSE:
+            Calculate the comoving distance between redshifts z1 and z2 in
+            a FRW universe. Units: Mpc 
+        CALLING SEQUENCE:
+            d=cosmo.Dc(z1, z2)
+        INPUTS:
+            z1, z2: The redshifts.  These must either be 
+                1) Two scalars
+                2) A scalar and an array.
+                3) Two arrays of the same length.
+        """
+  
+        # Make sure they are arrays, but don't copy if already an array
+        z1 = numpy.array(z1in, ndmin=1, copy=False)
+        z2 = numpy.array(z2in, ndmin=1, copy=False)
+
+        # All the permutations of inputs
+        dh=self.DH()
+        if z1.size == z2.size:
+            if z1.size == 1:
+                return dh*self.Ezinv_integral(z1,z2)
+            else:
+                dc = numpy.zeros(z1.size)
+                for i in numpy.arange(z1.size):
+                    dc[i] = dh*self.Ezinv_integral(z1[i],z2[i])
+        else:
+            if z1.size == 1:
+                dc = numpy.zeros(z2.size)
+                for i in numpy.arange(z2.size):
+                    dc[i] = dh*self.Ezinv_integral(z1,z2[i])
+            elif z2.size == 1:
+                dc = numpy.zeros(z1.size)
+                for i in numpy.arange(z1.size):
+                    dc[i] = dh*self.Ezinv_integral(z1[i],z2)
+            else:
+                raise ValueError("z1,z2: Must be same length or one a scalar")
+
+        return dc
+
+
+
+
+    def Ez_inverse(self,z):
+        """
+        NAME:
+            Ez_inverse
+        PURPOSE:
+            Calculate kernel 1/E(z) for distance integrals in FRW universe.
+        CALLING SEQUENCE:
+            ezi = cosmo.Ez_inverse(z)
+        """
+        arg=self.omega_m*(1.0+z)**3 + self.omega_k*(1.0+z)**2 + self.omega_l
+        return 1.0/sqrt(arg)
+
+
+
+    def Ezinv_integral(self, z1, z2):
+        """
+        NAME:
+            Ezinv_integral
+        PURPOSE:
+            Integrate kernel 1/E(z) used for distance calculations in FRW
+            universe. Gauss-legendre integration.  Default of npts=5 is
+            actually good to 0.05% to redshift 1 because it is such a slow
+            function.
+        CALLING SEQUENCE:
+            ezint = Ezinv_integral(z1, z2)
+        INPUTS:
+            z1, z2: The redshift interval, scalars.
+        """
+
+
+        f1 = (z2-z1)/2.
+        f2 = (z2+z1)/2.
+
+        zvals = self.xxi*f1 + f2
+        ezivals = self.Ez_inverse(zvals)
+
+        ezint = f1 * ((ezivals*self.wwi).sum())
+        return abs(ezint)
+
+
+
 
 def DH(h=1.0):
     """
