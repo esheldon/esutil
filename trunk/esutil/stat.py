@@ -12,8 +12,498 @@ try:
 except:
     have_scipy=False
 
+# for checking function type, method type
+from types import *
+
+import numpy_util
+
+class RandomGenerator():
+    """
+    Class Name:
+        RandomGenerator
+
+    Purpose:
+        A class for creating random samples from an arbitrary input probability
+        distribution.  The input distribution can either be an array of points
+        along with corresponding x values, or a function.
+
+    Calling Sequence:
+        import esutil
+        gen = esutil.stat.RandomGenerator(pofx, x=None, xrange=None, nx=None,
+                                          method='accum', cumulative=False, seed=None)
+
+        r = gen.genrand(num)
+        r = gen.genrand(num, seed=None)
+
+    Inputs:
+        pofx: Either an array of points or a function.  If p(x) is an array sample
+            from the p(x) you must also enter the corresponding x values.
+
+    Optional Inputs:
+        x:  An array of x values.  If p(x) is a n array, these must correspond.
+            If p(x) is a function, these values will be used to define the
+            range over which randoms are generated, and if the cut method is
+            used, to find the maximum of the input p(x) over the input range.
+
+        xrange=[xmin,xmax]:  If p(x) is a function, you can enter xrange and nx
+            and a set of x values will be generated.
+        nx:  The number of points to generate in [xmin,xmax].  If p(x) is a
+            function you can enter xrange and nx and a set of x values will
+            be generated.
+
+        method:  The method used for getting random points. 
+
+            'accum': The cumulative, or accumulated, distribution is used to
+                generate random points.
+
+            'cut': Points are drawn randomly in the 2-d space defined by
+                [min(x),max(x)] [0,max(prob)] and only those that lie underneath
+                the pofx curve are kept.  This can be used to generate randoms
+                from complex distributions that do not integrate easily.
+
+        cumulative: The input distrubtion pofx is actually the accumulated distro.
+            Note for method='cut' this is ignored: you must enter the differential 
+            distribution.
 
 
+    Examples:
+
+        Using a sampled distribution pofx measured at values x.  In this case
+        pofx and x are arrays.
+
+            import esutil
+            gen = esutil.stat.RandomGenerator(pofx, x)
+            rand = gen.genrand(1000000)
+
+
+        Using a function:
+
+            def gaussfunc(x):
+                return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
+
+            gen = esutil.stat.RandomGenerator(gaussfunc, 
+                                              xrange=[-4.5,4.5], nx=100)
+            rand = gen.genrand(1000000)
+
+    Revision History:
+        2010-02-18: Created, Erin Sheldon, BNL.
+    """
+
+
+    def __init__(self, pofx, x=None, xrange=None, nx=None, 
+                 method='accum', cumulative=False, seed=None):
+
+        # make sure the method is valid
+        self._check_method(method)
+        self.method=method
+
+        self.cumulative=cumulative
+
+
+
+        # different initializations depending if p(x) array was sent or a
+        # function
+
+        if isinstance(pofx,(FunctionType,MethodType)):
+            if x is None:
+                # we'll generate the points from xrange and nx
+                if xrange is None or nx is None:
+                    raise ValueError("Enter the points x or both xrange and nx")
+                x = numpy.arange(nx,dtype='f8')
+                x = numpy_util.arrscl(x, xrange[0], xrange[1] )
+
+            self.xinput = numpy.array(x, ndmin=1, copy=False)
+
+            # input is some type of function
+            self.isfunc=True
+            self.pofx = pofx
+
+            self.initialize_func()
+        else:
+            if x is None:
+                raise ValueError("For p(x) an array, you must also enter the "
+                                 "corresponding x values")
+
+            self.xinput = numpy.array(x, ndmin=1, copy=False)
+
+            # points were entered
+            self.isfunc=False
+            self.pofx = numpy.array(pofx, ndmin=1, copy=False)
+            if self.xinput.size != self.pofx.size:
+                raise ValueError("x and pofx must be same size")
+
+            self.initialize_points()
+
+        if self.method == 'cut':
+            self.xmin = self.xinput.min()
+            self.xmax = self.xinput.max()
+            self.xwidth = self.xmax - self.xmin
+
+            # maked rescaled with ranges to [0,1]
+            self.xinput_scale = (self.xinput-self.xmin)/self.xwidth
+            if not self.isfunc:
+                self.pofx_max = pofx.max()
+                self.pofx_scale = self.pofx/self.pofx_max
+            else:
+                # get max from evaluating at input x values
+                p=self.pofx(self.xinput)
+                self.pofx_max = p.max()
+
+
+
+        if seed is not None:
+            numpy.random.seed(seed=seed)
+
+    def _check_method(self, method):
+        if method not in ['accum','cut']:
+            raise ValueError("method must be 'accum' or 'cut'")
+
+
+
+
+    def genrand(self, numrand, seed=None):
+        if self.method == 'accum':
+            return self.genrand_accum(numrand, seed=None)
+        elif self.method == 'cut':
+            return self.genrand_cut(numrand, seed=None)
+
+    def genrand_accum(self, numrand, seed=None):
+        if seed is not None:
+            numpy.random.seed(seed=seed)
+
+        # this returns f8
+        urand = numpy.random.random(numrand)
+
+        # to get randoms from the distribution, we interpolate the x(pcum) at
+        # the test rand values.  Clever!
+        rand = interplin(self.xvals, self.pcum, urand)
+
+        return rand
+
+
+    def genrand_cut(self, numrand, seed=None):
+
+        if seed is not None:
+            numpy.random.seed(seed=seed)
+
+        rand = numpy.zeros(numrand,dtype='f8')
+
+        nleft=numrand
+        ngood=0
+        nleft=numrand
+        while nleft > 0:
+
+            # generate x,y values in a plane covering [xmin,xmax] [0,max(p(x))]
+            randx, randy, pinterp = self.generate_cut_values(nleft)
+
+            # keep ones where the random y values lie under the interpolated
+            # curve
+            w,=numpy.where(randy < pinterp)
+            if w.size > 0:
+                rand[ngood:ngood+w.size] = randx[w]
+                ngood += w.size
+                nleft -= w.size
+
+
+        if not self.isfunc:
+            # If we were not working with a function, we had used scaled versions
+            # of x and p(x) for speed
+            rand *= self.xwidth
+            rand += self.xmin
+
+        return rand
+
+    def generate_cut_values(self, num):
+        randx = numpy.random.random(num)
+        randy = numpy.random.random(num)
+
+        if self.isfunc:
+            # get x,y on the right range and evaluate function
+            randx *= self.xwidth
+            randx += self.xmin
+            randy *= self.pofx_max
+            pinterp = self.pofx(randx)
+        else:
+            # for the point distribution, we have scaled versions of the
+            # input x and y.  This will save some computation, but we have
+            # to interpolate
+            pinterp = interplin(self.pofx_scale, self.xinput_scale, randx)
+        return randx, randy, pinterp
+
+
+
+    def initialize_points(self):
+        """
+        Set up the case where the user sent x and p(x) points instead
+        of a function for p(x)
+        """
+
+        if self.method == 'accum':
+            # we need the cumulative probability distribution
+
+            if self.cumulative:
+                # we are done
+                self.xvals = self.xinput
+                self.norm = self.pofx[-1]
+                self.pcum = self.pofx/self.norm
+
+            else:
+                # we must integrate and take a subset of x, since the
+                # first value is not defined.
+
+                import scipy.integrate
+
+                pcum = scipy.integrate.cumtrapz(self.pofx,self.xinput)
+                self.norm = pcum[-1]
+                self.pcum = pcum/self.norm
+
+                # interval is smaller, no integral in first point
+                self.xvals = self.xinput[1:]
+
+
+
+    def initialize_func(self):
+        """
+        Set up the case where the user sent x and p(x) as a function
+        """
+
+        if self.method == 'accum':
+            # we need the cumulative probability distribution
+
+            if self.cumulative:
+                self.xvals = self.xinput
+                self.norm = self.pofx(self.xinput[-1])
+                self.pcum = self.pofx(self.xinput)/self.norm
+            else:
+                # we must integrate and take a subset of x, since the
+                # first value is not defined.
+
+                import scipy.integrate
+
+                pofxvals = self.pofx(self.xinput)
+
+                pcum = scipy.integrate.cumtrapz(pofxvals,self.xinput)
+                self.norm = pcum[-1]
+                self.pcum = pcum/self.norm
+
+                # interval is smaller, no integral in first point
+                self.xvals = self.xinput[1:]
+ 
+def gaussfunc(x):
+    """
+    for testing function stuff
+    """
+    return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
+
+
+def genrand(pofx, x=None, num=1, xrange=None, nx=None, 
+            method='accum', cumulative=False, seed=None):
+    """
+    Name
+        genrand
+    Purpose
+
+        This is a convenience function to create random samples from an input
+        distribution.  The input distribution can either be an array of points
+        along with corresponding x values, or a function.  This is just a 
+        wrapper for the RandomGenerator class, using that class if preferable.
+
+    Calling Sequence:
+        import esutil
+        rand = esutil.stat.genrand(pofx, x=None, num=1, xrange=None, nx=None,
+                                   method='accum', cumulative=False, seed=None)
+
+        See the documentation for the esutil.stat.RandomGenerator class for
+        more info.
+
+    Inputs:
+        pofx: Either an array of points or a function.  If p(x) is an array
+          sample from the p(x) you must also enter the corresponding x values.
+
+    Optional Inputs:
+        x:  An array of x values.  If p(x) is a n array, these must correspond.
+            If p(x) is a function, these values will be used to define the
+            range over which randoms are generated, and if the cut method is
+            used, to find the maximum of the input p(x) over the input range.
+
+        num=1: Number of randoms to generate. Default is 1.
+
+        xrange=[xmin,xmax]:  If p(x) is a function, you can enter xrange and nx
+            and a set of x values will be generated.
+        nx:  The number of points to generate in [xmin,xmax].  If p(x) is a
+            function you can enter xrange and nx and a set of x values will
+            be generated.
+
+        method:  The method used for getting random points. 
+
+            'accum': The cumulative, or accumulated, distribution is used to
+                generate random points.
+
+            'cut': Points are drawn randomly in the 2-d space defined by
+                [min(x),max(x)] [0,max(prob)] and only those that lie underneath
+                the pofx curve are kept.  This can be used to generate randoms
+                from complex distributions that do not integrate easily.
+
+        cumulative: The input distrubtion pofx is actually the accumulated
+          distro.  Note for method='cut' this is ignored: you must enter the
+          differential distribution.  Default False.
+
+
+    Examples:
+
+        Using a sampled distribution pofx measured at values x.  In this case
+        pofx and x are arrays.
+
+            import esutil
+            gen = esutil.stat.RandomGenerator(pofx, x=x)
+            rand = esutil.genrand(pofx, x, 1000000)
+
+
+        Using a function:
+
+            def gaussfunc(x):
+                return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
+
+            rand = gen.genrand(gaussfunc, num=1000000,
+                               xrange=[-4.5,4.5], nx=100)
+
+    Revision History:
+        2010-02-18: Created, Erin Sheldon, BNL.
+    """
+
+
+
+
+        Generate random points from the input probability distribution.
+        Currently the pofx must be a sample of points, and the corresponding
+        x values must be present.  TODO:  Allow p(x) to be a function, in which
+        case x is optional.
+
+    Calling Sequence
+        rand = genrand(x, pofx, numrand, method='accum')
+
+    Inputs
+        x: 
+
+            For method='accum', these are the x values used to generate the
+            cumulative probability distribution.  For method='cut' the p(x) is
+            evaluated at these locations in performing the 2-d cut.
+
+            If p(x) is a set of points, they must correspond to these x values.
+            If p(x) is a function, it will be evaluated at these points for
+            integration or cutting depending on method.  
+
+        pofx: 
+
+            probability distribution of x.  p(x) can be a set of points
+            corresponding to the input x values or a function. 
+            
+            For method='accum' this distribution will be integrated to get the
+            cumulative, or accumulated, distribution.  If the cumulative=True
+            keyword is set, the distribution is assumed to already be the
+            accumulated one.
+
+        cumulative: The input distrubtion pofx is actually the accumulated distro.
+            Entering this can save some time.  Note for method='cut' this is
+            ignored: you must enter the differential distribution.
+
+        method: 
+            
+            The method used for getting random points. 
+
+            'accum': The cumulative, or accumulated, distribution is used to
+                generate random points.  This is a fast method.
+            'cut': Points are drawn randomly in the 2-d space defined by
+                [min(x),max(x)] [0,max(prob)] and only those that lie underneath
+                the pofx curve are kept.  This is slow but easy to understand.
+
+    """
+
+    x = numpy.array(x_input, ndmin=1, copy=False)
+
+    if isinstance(pofx_input,(FunctionType,MethodType)):
+        isfunc=True
+        pofx = pofx_input
+    else:
+        isfunc=False
+        pofx = numpy.array(pofx_input, ndmin=1, copy=False)
+        if x.size != pofx.size:
+            raise ValueError("x and pofx must be same size")
+
+    if method == 'accum':
+        import scipy.integrate
+
+        if cumulative:
+            pcum = pofx
+            xvals = x
+        else:
+            # we have to do the integral
+            if isfunc:
+                pofx_vals = pofx(x)
+                pcum = scipy.integrate.cumtrapz(pofx_vals,x)
+                xvals = x[1:]
+            else:
+                pcum = scipy.integrate.cumtrapz(pofx,x)
+                # interval is smaller, no integral in first point
+                xvals = x[1:]
+        
+        # the normalization of the distribution
+        norm = pcum[-1]
+        pcum /= norm
+
+        # generate some uniform random numbers
+        numpy.random.seed(seed=seed)
+        # this returns f8
+        urand = numpy.random.random(numrand)
+
+        # to get randoms from the distribution, we interpolate the 
+        # x(pcum) at the test rand values.  Clever!
+
+        rand = interplin(xvals, pcum/norm, urand)
+    elif method=='cut':
+
+        rand = numpy.zeros(numrand,dtype='f8')
+
+        xmin = x.min()
+        xmax = x.max()
+        xrnge=xmax-xmin
+
+        # rescale range to [0,1]
+        x_scale = (x-xmin)/xrnge
+        pofx_scale = pofx/pofx.max()
+        pmax=pofx.max()
+
+        nleft=numrand
+        ngood=0
+        nleft=numrand
+        while nleft > 0:
+            # because we scaled x to [0,1] and pofx to [0,1] we can generate
+            # randoms in the [0,1] [0,1] plane
+
+            randx = numpy.random.random(nleft)
+            randy = numpy.random.random(nleft)
+
+            # interpolate the scaled pofx to the random x points
+            pinterp = interplin(pofx_scale, x_scale, randx)
+
+            # keep ones where the random y values lie under the interpolated
+            # curve
+
+            w,=numpy.where(randy < pinterp)
+            if w.size > 0:
+                rand[ngood:ngood+w.size] = randx[w]
+                ngood += w.size
+                nleft -= w.size
+
+
+        # rescale from [0,1] to proper range
+        rand = rand*xrnge + xmin
+
+    else:
+        raise ValueError("method should be 'accum' or 'cut'")
+
+
+    return rand
 
 
 def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
