@@ -78,7 +78,7 @@ Records::~Records()
 	// Always decref.  Either null or a new reference to mTypeDescr
 	Py_XDECREF(mKeepTypeDescr);
 
-	// This is also a copy
+	// This may or may not be a copy, but we must decref 
 	Py_XDECREF(mRowsToRead);
 
 	Close();
@@ -658,19 +658,54 @@ void Records::WriteRows()
 	for (long long row=0; row< mNrows; row++) {
 		for (long long fnum=0; fnum< mNfields; fnum++) {
 
+			WriteField(fnum);
+			/*
 			long long nel=mNel[fnum];
 			long long elsize = mSizes[fnum]/nel;
 
 			for (long long el=0; el< nel; el++) {
-				WriteField(fnum);
+				WriteField(fnum,el);
 				mData += elsize;
 			} // elements of this field
+			*/
 		} // fields
 		// Write the newline character
 		fputc('\n', mFptr);
 	} // rows
 }
 
+void Records::WriteField(long long fnum) 
+{
+
+	long long nel=mNel[fnum];
+	long long elsize = mSizes[fnum]/nel;
+	long long type_num = mTypeNums[fnum];
+
+	for (long long el=0; el<nel; el++) {
+
+		if (type_num == NPY_STRING) {
+			WriteStringAsAscii(fnum);
+		} else {
+			WriteNumberAsAscii(mData, type_num);
+		}
+
+		// Add a delimiter between elements
+		if (el < (nel-1) ) {
+			fprintf(mFptr, "%s", mDelim.c_str());
+		}
+
+		mData += elsize;
+
+	}
+
+	// Also will add a delim after the field
+	if ( fnum < (mNfields-1) ) {
+		fprintf(mFptr, "%s", mDelim.c_str());
+	}
+
+}
+
+/*
 void Records::WriteField(long long fnum) 
 {
 	if (mTypeNums[fnum] == NPY_STRING) {
@@ -680,8 +715,11 @@ void Records::WriteField(long long fnum)
 	}
 	if ( fnum < (mNfields-1) ) {
 		fprintf(mFptr, "%s", mDelim.c_str());
+		// Trying single char
+		//fputc(mDelim[0], mFptr);
 	}
 }
+*/
 
 void Records::WriteStringAsAscii(long long fnum)
 {
