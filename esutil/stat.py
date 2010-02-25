@@ -372,53 +372,6 @@ def genrand(pofx, x=None, num=1, xrange=None, nx=None,
     """
 
 
-
-
-        Generate random points from the input probability distribution.
-        Currently the pofx must be a sample of points, and the corresponding
-        x values must be present.  TODO:  Allow p(x) to be a function, in which
-        case x is optional.
-
-    Calling Sequence
-        rand = genrand(x, pofx, numrand, method='accum')
-
-    Inputs
-        x: 
-
-            For method='accum', these are the x values used to generate the
-            cumulative probability distribution.  For method='cut' the p(x) is
-            evaluated at these locations in performing the 2-d cut.
-
-            If p(x) is a set of points, they must correspond to these x values.
-            If p(x) is a function, it will be evaluated at these points for
-            integration or cutting depending on method.  
-
-        pofx: 
-
-            probability distribution of x.  p(x) can be a set of points
-            corresponding to the input x values or a function. 
-            
-            For method='accum' this distribution will be integrated to get the
-            cumulative, or accumulated, distribution.  If the cumulative=True
-            keyword is set, the distribution is assumed to already be the
-            accumulated one.
-
-        cumulative: The input distrubtion pofx is actually the accumulated distro.
-            Entering this can save some time.  Note for method='cut' this is
-            ignored: you must enter the differential distribution.
-
-        method: 
-            
-            The method used for getting random points. 
-
-            'accum': The cumulative, or accumulated, distribution is used to
-                generate random points.  This is a fast method.
-            'cut': Points are drawn randomly in the 2-d space defined by
-                [min(x),max(x)] [0,max(prob)] and only those that lie underneath
-                the pofx curve are kept.  This is slow but easy to understand.
-
-    """
-
     x = numpy.array(x_input, ndmin=1, copy=False)
 
     if isinstance(pofx_input,(FunctionType,MethodType)):
