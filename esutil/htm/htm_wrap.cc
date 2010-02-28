@@ -2503,8 +2503,9 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 #define SWIGTYPE_p_HTM swig_types[0]
 #define SWIGTYPE_p_char swig_types[1]
-static swig_type_info *swig_types[3];
-static swig_module_info swig_module = {swig_types, 2, 0, 0, 0, 0};
+#define SWIGTYPE_p_int32_t swig_types[2]
+static swig_type_info *swig_types[4];
+static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2743,10 +2744,20 @@ SWIG_AsVal_int (PyObject * obj, int *val)
   return res;
 }
 
+
+  #define SWIG_From_long   PyInt_FromLong 
+
+
+SWIGINTERNINLINE PyObject *
+SWIG_From_int  (int value)
+{    
+  return SWIG_From_long  (value);
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-SWIGINTERN PyObject *_wrap_new_HTM(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_HTM__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int val1 ;
@@ -2772,6 +2783,171 @@ SWIGINTERN PyObject *_wrap_new_HTM(PyObject *SWIGUNUSEDPARM(self), PyObject *arg
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_HTM, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_HTM__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  HTM *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_HTM")) SWIG_fail;
+  try {
+    result = (HTM *)new HTM();
+  }
+  catch(char const *_e) {
+    PyErr_SetString(PyExc_RuntimeError, _e);
+    SWIG_fail;
+    
+  }
+  
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_HTM, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_HTM(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 0) {
+    return _wrap_new_HTM__SWIG_1(self, args);
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_new_HTM__SWIG_0(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'new_HTM'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    HTM(int)\n"
+    "    HTM()\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_HTM_init__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  HTM *arg1 = (HTM *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:HTM_init",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTM, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTM_init" "', argument " "1"" of type '" "HTM *""'"); 
+  }
+  arg1 = reinterpret_cast< HTM * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "HTM_init" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  try {
+    (arg1)->init(arg2);
+  }
+  catch(char const *_e) {
+    PyErr_SetString(PyExc_RuntimeError, _e);
+    SWIG_fail;
+    
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_HTM_init__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  HTM *arg1 = (HTM *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:HTM_init",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTM, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTM_init" "', argument " "1"" of type '" "HTM *""'"); 
+  }
+  arg1 = reinterpret_cast< HTM * >(argp1);
+  try {
+    (arg1)->init();
+  }
+  catch(char const *_e) {
+    PyErr_SetString(PyExc_RuntimeError, _e);
+    SWIG_fail;
+    
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_HTM_init(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[3];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTM, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_HTM_init__SWIG_1(self, args);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTM, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_HTM_init__SWIG_0(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'HTM_init'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    init(HTM *,int)\n"
+    "    init(HTM *)\n");
   return NULL;
 }
 
@@ -2833,6 +3009,110 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_HTM_match_helper(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  HTM *arg1 = (HTM *) 0 ;
+  PyObject *arg2 = (PyObject *) 0 ;
+  PyObject *arg3 = (PyObject *) 0 ;
+  PyObject *arg4 = (PyObject *) 0 ;
+  PyObject *arg5 = (PyObject *) 0 ;
+  PyObject *arg6 = (PyObject *) 0 ;
+  PyObject *arg7 = (PyObject *) 0 ;
+  int32_t arg8 ;
+  int32_t arg9 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp8 ;
+  int res8 = 0 ;
+  void *argp9 ;
+  int res9 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:HTM_match_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTM, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTM_match_helper" "', argument " "1"" of type '" "HTM *""'"); 
+  }
+  arg1 = reinterpret_cast< HTM * >(argp1);
+  arg2 = obj1;
+  arg3 = obj2;
+  arg4 = obj3;
+  arg5 = obj4;
+  arg6 = obj5;
+  arg7 = obj6;
+  {
+    res8 = SWIG_ConvertPtr(obj7, &argp8, SWIGTYPE_p_int32_t,  0  | 0);
+    if (!SWIG_IsOK(res8)) {
+      SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "HTM_match_helper" "', argument " "8"" of type '" "int32_t""'"); 
+    }  
+    if (!argp8) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "HTM_match_helper" "', argument " "8"" of type '" "int32_t""'");
+    } else {
+      int32_t * temp = reinterpret_cast< int32_t * >(argp8);
+      arg8 = *temp;
+      if (SWIG_IsNewObj(res8)) delete temp;
+    }
+  }
+  {
+    res9 = SWIG_ConvertPtr(obj8, &argp9, SWIGTYPE_p_int32_t,  0  | 0);
+    if (!SWIG_IsOK(res9)) {
+      SWIG_exception_fail(SWIG_ArgError(res9), "in method '" "HTM_match_helper" "', argument " "9"" of type '" "int32_t""'"); 
+    }  
+    if (!argp9) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "HTM_match_helper" "', argument " "9"" of type '" "int32_t""'");
+    } else {
+      int32_t * temp = reinterpret_cast< int32_t * >(argp9);
+      arg9 = *temp;
+      if (SWIG_IsNewObj(res9)) delete temp;
+    }
+  }
+  try {
+    result = (PyObject *)(arg1)->match_helper(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+  }
+  catch(char const *_e) {
+    PyErr_SetString(PyExc_RuntimeError, _e);
+    SWIG_fail;
+    
+  }
+  
+  resultobj = result;
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_HTM_depth(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  HTM *arg1 = (HTM *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:HTM_depth",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTM, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTM_depth" "', argument " "1"" of type '" "HTM *""'"); 
+  }
+  arg1 = reinterpret_cast< HTM * >(argp1);
+  result = (int)(arg1)->depth();
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *HTM_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char*)"O:swigregister", &obj)) return NULL;
@@ -2842,8 +3122,11 @@ SWIGINTERN PyObject *HTM_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_HTM", _wrap_new_HTM, METH_VARARGS, NULL},
+	 { (char *)"HTM_init", _wrap_HTM_init, METH_VARARGS, NULL},
 	 { (char *)"delete_HTM", _wrap_delete_HTM, METH_VARARGS, NULL},
 	 { (char *)"HTM_lookup_id", _wrap_HTM_lookup_id, METH_VARARGS, NULL},
+	 { (char *)"HTM_match_helper", _wrap_HTM_match_helper, METH_VARARGS, NULL},
+	 { (char *)"HTM_depth", _wrap_HTM_depth, METH_VARARGS, NULL},
 	 { (char *)"HTM_swigregister", HTM_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
@@ -2853,18 +3136,22 @@ static PyMethodDef SwigMethods[] = {
 
 static swig_type_info _swigt__p_HTM = {"_p_HTM", "HTM *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_int32_t = {"_p_int32_t", "int32_t *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_HTM,
   &_swigt__p_char,
+  &_swigt__p_int32_t,
 };
 
 static swig_cast_info _swigc__p_HTM[] = {  {&_swigt__p_HTM, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_int32_t[] = {  {&_swigt__p_int32_t, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_HTM,
   _swigc__p_char,
+  _swigc__p_int32_t,
 };
 
 
