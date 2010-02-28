@@ -58,9 +58,12 @@ class HTM(_object):
         this = _htm.new_HTM(*args)
         try: self.this.append(this)
         except: self.this = this
+    def init(*args): return _htm.HTM_init(*args)
     __swig_destroy__ = _htm.delete_HTM
     __del__ = lambda self : None;
     def lookup_id(*args): return _htm.HTM_lookup_id(*args)
+    def match_helper(*args): return _htm.HTM_match_helper(*args)
+    def depth(*args): return _htm.HTM_depth(*args)
 HTM_swigregister = _htm.HTM_swigregister
 HTM_swigregister(HTM)
 
