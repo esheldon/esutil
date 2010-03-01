@@ -1,1 +1,1 @@
-swig -python -c++ -o htm_wrap.cc htm.i
+swig -python -c++ -o htmc_wrap.cc htmc.i
