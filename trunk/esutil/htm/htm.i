@@ -1,7 +1,7 @@
-%module htm
+%module htmc
 //%include std_string.i
 %{
-#include "htm.h"
+#include "htmc.h"
 %}
 //%feature("kwargs");
 
@@ -12,14 +12,14 @@
 %}
 
 
-//%include "htm.h"
+//%include "htmc.h"
 
-class HTM {
+class HTMC {
 	public:
 
-		HTM(int depth=10) throw (const char *);
+		HTMC(int depth=10) throw (const char *);
         void init(int depth=10) throw (const char *);
-		~HTM() {};
+		~HTMC() {};
 
         // take in ra/dec and output the htm index for each
 		PyObject* lookup_id(

@@ -3,16 +3,16 @@
 #include "NumpyVector.h"
 
 
-HTM::HTM(int depth) throw (const char *) {
+HTMC::HTMC(int depth) throw (const char *) {
     init(depth);
 }
 
-void HTM::init(int depth) throw (const char *) {
+void HTMC::init(int depth) throw (const char *) {
     mDepth = depth;
     mHtmInterface.init(depth);
 }
 
-PyObject* HTM::lookup_id(
+PyObject* HTMC::lookup_id(
         PyObject* ra_array, 
         PyObject* dec_array) throw (const char* ) {
 
@@ -37,7 +37,7 @@ PyObject* HTM::lookup_id(
     return htmidPyObj;
 }
 
-PyObject* HTM::match_helper(
+PyObject* HTMC::match_helper(
         PyObject* angle_array,
         PyObject* ra1_array, // all in degrees
         PyObject* dec1_array,

@@ -8,12 +8,14 @@
 // doesn't seem to work to include it here with swig...
 //#include "../NumpyVector.h"
 
-class HTM {
+// called HTMC because we will have another python-only class that
+// inherits from this one.
+class HTMC {
 	public:
 
-		HTM(int depth=10) throw (const char *);
+		HTMC(int depth=10) throw (const char *);
         void init(int depth=10) throw (const char *);
-		~HTM() {};
+		~HTMC() {};
 
         // take in ra/dec and output the htm index for each
 		PyObject* lookup_id(
