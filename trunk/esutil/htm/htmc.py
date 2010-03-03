@@ -79,9 +79,117 @@ class HTMC(_object):
     def init(self, depth = 10): return _htmc.HTMC_init(self, depth)
     __swig_destroy__ = _htmc.delete_HTMC
     __del__ = lambda self : None;
-    def lookup_id(self, *args): return _htmc.HTMC_lookup_id(self, *args)
-    def cmatch(self, *args): return _htmc.HTMC_cmatch(self, *args)
-    def depth(self): return _htmc.HTMC_depth(self)
+    def lookup_id(self, *args):
+        """
+        Class:
+            HTM
+
+        Method Name:
+            lookup_id
+
+        Purpose:
+
+            Return the index of the input ra/dec at the current htm depth.   ra/dec may
+            be arrays.
+
+        Calling Sequence:
+
+            import esutil
+            h=esutil.htm.HTM(depth)
+            htmid = h.lookup_id(ra, dec)
+
+        Inputs:
+            ra,dec:  Scalars or arrays of equal length.
+
+        Outputs:
+            htmid:  An array with the htm id.
+
+        Example:
+
+            >>> import esutil
+            >>> h=esutil.htm.HTM(depth)
+            >>> htmid = h.lookup_id(ra, dec)
+
+        Revision History:
+            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
+
+        """
+        return _htmc.HTMC_lookup_id(self, *args)
+
+    def cmatch(self, *args):
+        """
+        Class:
+            HTM
+
+        Method Name:
+            lookup_id
+
+        Purpose:
+
+            Return the index of the input ra/dec at the current htm depth.   ra/dec may
+            be arrays.
+
+        Calling Sequence:
+
+            import esutil
+            h=esutil.htm.HTM(depth)
+            htmid = h.lookup_id(ra, dec)
+
+        Inputs:
+            ra,dec:  Scalars or arrays of equal length.
+
+        Outputs:
+            htmid:  An array with the htm id.
+
+        Example:
+
+            >>> import esutil
+            >>> h=esutil.htm.HTM(depth)
+            >>> htmid = h.lookup_id(ra, dec)
+
+        Revision History:
+            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
+
+        """
+        return _htmc.HTMC_cmatch(self, *args)
+
+    def depth(self):
+        """
+        Class:
+            HTM
+
+        Method Name:
+            lookup_id
+
+        Purpose:
+
+            Return the index of the input ra/dec at the current htm depth.   ra/dec may
+            be arrays.
+
+        Calling Sequence:
+
+            import esutil
+            h=esutil.htm.HTM(depth)
+            htmid = h.lookup_id(ra, dec)
+
+        Inputs:
+            ra,dec:  Scalars or arrays of equal length.
+
+        Outputs:
+            htmid:  An array with the htm id.
+
+        Example:
+
+            >>> import esutil
+            >>> h=esutil.htm.HTM(depth)
+            >>> htmid = h.lookup_id(ra, dec)
+
+        Revision History:
+            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
+
+        """
+        return _htmc.HTMC_depth(self)
+
 HTMC_swigregister = _htmc.HTMC_swigregister
 HTMC_swigregister(HTMC)
 
