@@ -1,6 +1,7 @@
 import sys,os
 import time
 from sys import stdout,stderr
+from glob import glob
 
 from distutils.core import setup,Extension
 
@@ -32,13 +33,28 @@ tablefile.close()
 
 # can we build recfile?
 packages = ['esutil']
+ext_modules = []
 try:
     import numpy
-    include_dirs=numpy.get_include()
-    ext_modules = [Extension('esutil.recfile._records', 
-                               sources=['esutil/recfile/records.cpp',
-                                        'esutil/recfile/records_wrap.cpp'])]
+    include_dirs=[numpy.get_include()]
+    include_dirs += ['esutil/include']
+
+    recfile_sources = ['esutil/recfile/records.cpp',
+                       'esutil/recfile/records_wrap.cpp']
+    recfile_module = Extension('esutil.recfile._records', 
+                               sources=recfile_sources)
+    ext_modules.append(recfile_module)
     packages.append('esutil.recfile')
+
+
+    include_dirs += ['esutil/htm/htm_src']
+    htm_sources = glob('esutil/htm/htm_src/*.cpp')
+    htm_sources += ['esutil/htm/htm.cc','esutil/htm/htm_wrap.cc']
+    htm_module = Extension('esutil.htm._htm',
+                           sources=htm_sources)
+
+    ext_modules.append(htm_module)
+    packages.append('esutil.htm')
 
 except:
     stdout.write('Numpy not found:  Not building recfile\n')
