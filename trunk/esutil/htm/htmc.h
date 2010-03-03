@@ -48,7 +48,8 @@ class HTMC {
                 PyObject* htmrev2_array,
                 PyObject* minid_obj,
                 PyObject* maxid_obj,
-				PyObject* maxmatch_obj) throw (const char *);
+				PyObject* maxmatch_obj,
+				PyObject* filename_obj) throw (const char *);
 
 
         int depth() {
