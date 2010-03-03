@@ -31,6 +31,7 @@ class HTMC {
         void init(int depth=10) throw (const char *);
 		~HTMC() {};
 
+
         // take in ra/dec and output the htm index for each
 		PyObject* lookup_id(
                 PyObject* ra_array, 

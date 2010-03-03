@@ -22,6 +22,43 @@ class HTMC {
         ~HTMC() {};
 
         // take in ra/dec and output the htm index for each
+#ifdef SWIG
+%feature("docstring",
+"
+Class:
+    HTM
+
+Method Name:
+    lookup_id
+
+Purpose:
+
+    Return the index of the input ra/dec at the current htm depth.   ra/dec may
+    be arrays.
+
+Calling Sequence:
+
+    import esutil
+    h=esutil.htm.HTM(depth)
+    htmid = h.lookup_id(ra, dec)
+
+Inputs:
+    ra,dec:  Scalars or arrays of equal length.
+
+Outputs:
+    htmid:  An array with the htm id.
+
+Example:
+
+    >>> import esutil
+    >>> h=esutil.htm.HTM(depth)
+    >>> htmid = h.lookup_id(ra, dec)
+
+Revision History:
+    2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
+");
+#endif
+
         PyObject* lookup_id(
                 PyObject* ra_array, 
                 PyObject* dec_array) throw (const char *);
