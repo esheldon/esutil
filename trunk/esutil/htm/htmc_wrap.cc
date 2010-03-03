@@ -3206,6 +3206,7 @@ SWIGINTERN PyObject *_wrap_HTMC_cmatch(PyObject *SWIGUNUSEDPARM(self), PyObject 
   PyObject *arg8 = (PyObject *) 0 ;
   PyObject *arg9 = (PyObject *) 0 ;
   PyObject *arg10 = (PyObject *) 0 ;
+  PyObject *arg11 = (PyObject *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -3218,9 +3219,10 @@ SWIGINTERN PyObject *_wrap_HTMC_cmatch(PyObject *SWIGUNUSEDPARM(self), PyObject 
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
   PyObject *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:HTMC_cmatch",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:HTMC_cmatch",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_cmatch" "', argument " "1"" of type '" "HTMC *""'"); 
@@ -3235,8 +3237,9 @@ SWIGINTERN PyObject *_wrap_HTMC_cmatch(PyObject *SWIGUNUSEDPARM(self), PyObject 
   arg8 = obj7;
   arg9 = obj8;
   arg10 = obj9;
+  arg11 = obj10;
   try {
-    result = (PyObject *)(arg1)->cmatch(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10);
+    result = (PyObject *)(arg1)->cmatch(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
   }
   catch(char const *_e) {
     PyErr_SetString(PyExc_RuntimeError, _e);

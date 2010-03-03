@@ -8,8 +8,8 @@
 #include "numpy/arrayobject.h"
 
 typedef struct {
-	npy_intp i1;	
-	npy_intp i2;	
+	int64_t i1;	
+	int64_t i2;	
 	double d12;
 } PAIR_INFO;
 

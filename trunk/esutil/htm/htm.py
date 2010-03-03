@@ -1,5 +1,7 @@
 import htmc
 from esutil import stat
+import numpy
+from sys import stdout
 
 class HTM(htmc.HTMC):
 
@@ -36,4 +38,25 @@ class HTM(htmc.HTMC):
                            htmrev2,
                            minid,
                            maxid,
-                           maxmatch)
+                           maxmatch,
+                           file)
+
+    def read(self, filename, verbose=False):
+        """
+        Read the binary file format written by the ra,dec matching code
+        """
+
+        fobj=open(filename,'r')
+
+        nrows=numpy.fromfile(fobj,count=1,dtype='i8')
+
+        if verbose:
+            stdout.write("Reading %s rows from file: %s\n" % (nrows[0],filename))
+
+        dtype=[('i1','i8'),('i2','i8'),('d12','f8')]
+
+        data = numpy.fromfile(fobj, count=nrows[0], dtype=dtype)
+
+        fobj.close()
+
+        return data

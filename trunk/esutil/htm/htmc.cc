@@ -122,26 +122,30 @@ PyObject* HTMC::cmatch(
     int32_t maxid = maxidVec[0];
     int32_t maxmatch = maxmatchVec[0];
 
-    //
-    //std::string filename="";
-    int writefile=0;
+    
+    // These will temporarily hold the results
+    std::vector<int64_t> m1;
+    std::vector<int64_t> m2;
+    std::vector<double> d12;
+
+    // total number of pairs
+    int64_t ntotal = 0;
+
     FILE* fptr=NULL;
     if (PyString_Check(filename_obj)) {
 		char* filename=PyString_AsString(filename_obj);
         fptr = fopen(filename, "w");
         if (fptr==NULL) 
         {
-            std::stringstream ss;
-            ss<<"Cannot open file: "<<filename<<" : "<<strerror(errno);
-            throw ss.str.c_str();
-            return;
+            std::stringstream err;
+            err<<"Cannot open file: "<<filename<<" : "<<strerror(errno);
+            throw err.str().c_str();
         }
+        // zero for starters
+        fwrite(&ntotal, sizeof(int64_t), 1, fptr);
     }
 
-    // These will temporarily hold the results
-    std::vector<int32_t> m1;
-    std::vector<int32_t> m2;
-    std::vector<double> d12;
+
 
     static const double
         D2R=0.0174532925199433;
@@ -155,7 +159,7 @@ PyObject* HTMC::cmatch(
         rad = radius[0];
         d = cos( rad*D2R );
     }
-
+ 
 
 
     npy_intp n1 = ra1.size();
@@ -198,10 +202,6 @@ PyObject* HTMC::cmatch(
 
 
         // these are temporary vectors to hold matches to this point
-
-        std::vector<int32_t> m1tmp;
-        std::vector<int32_t> m2tmp;
-        std::vector<double> d12tmp;
 
         std::vector<PAIR_INFO> pair_info;
 
@@ -258,14 +258,21 @@ PyObject* HTMC::cmatch(
                 }
             }
             for (npy_intp ci=0; ci<nkeep; ci++) {
-                m1.push_back(pair_info[ci].i1);
-                m2.push_back(pair_info[ci].i2);
-                d12.push_back(pair_info[ci].d12);
+                if (fptr) {
+                    fwrite(&(pair_info[ci].i1), sizeof(int64_t), 1, fptr);
+                    fwrite(&(pair_info[ci].i2), sizeof(int64_t), 1, fptr);
+                    fwrite(&(pair_info[ci].d12), sizeof(double), 1, fptr);
+                } else {
+                    m1.push_back(pair_info[ci].i1);
+                    m2.push_back(pair_info[ci].i2);
+                    d12.push_back(pair_info[ci].d12);
+                }
+                // keep track of the total number actually saved or written
+                ntotal += 1;
             }
         }
 
     } // loop over list 1
-
 
 
     // This will hold the tuple of match1 and match2 and possibly
@@ -273,12 +280,13 @@ PyObject* HTMC::cmatch(
 
     PyObject* output_tuple = PyTuple_New(3);
 
+    if (ntotal > 0 && fptr == NULL) {
 
-    npy_intp ntotal = m1.size();
-    if (ntotal > 0) {
-        // copy out data
-        NumpyVector<npy_intp> m1out(ntotal);
-        NumpyVector<npy_intp> m2out(ntotal);
+        // copy out data only if there were matches 
+        // and we were not writing to a file
+        
+        NumpyVector<int64_t> m1out(ntotal);
+        NumpyVector<int64_t> m2out(ntotal);
         NumpyVector<double> d12out(ntotal);
 
         for (npy_intp i=0; i<ntotal; i++) {
@@ -292,6 +300,19 @@ PyObject* HTMC::cmatch(
         PyTuple_SetItem(output_tuple, 2, d12out.getref());
 
     } else {
+
+        if (ntotal > 0 && fptr != NULL) {
+
+            /* if we found some matches and were writing to a file, write out
+             * the count to the front of the file and close it */
+
+            rewind(fptr);
+            fwrite(&ntotal, sizeof(int64_t), 1, fptr);
+            fflush(fptr);
+            fclose(fptr);
+        } 
+
+        // No results, return tuple of Py_None
         Py_INCREF(Py_None);
         PyTuple_SetItem(output_tuple, 0, Py_None);
         Py_INCREF(Py_None);
@@ -299,7 +320,6 @@ PyObject* HTMC::cmatch(
         Py_INCREF(Py_None);
         PyTuple_SetItem(output_tuple, 2, Py_None);
     }
-
 
 
     return output_tuple;
