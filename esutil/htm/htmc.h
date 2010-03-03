@@ -4,6 +4,20 @@
 #include <Python.h>
 #include "SpatialInterface.h"
 #include <stdint.h>
+#include <vector>
+#include "numpy/arrayobject.h"
+
+typedef struct {
+	npy_intp i1;	
+	npy_intp i2;	
+	double d12;
+} PAIR_INFO;
+
+struct PAIR_INFO_ORDERING {
+	bool operator()(PAIR_INFO const& pi1, PAIR_INFO const& pi2) {
+		return pi1.d12 < pi2.d12;
+	}
+};
 
 // doesn't seem to work to include it here with swig...
 //#include "../NumpyVector.h"
@@ -25,21 +39,26 @@ class HTMC {
         // this requires the reverse indices must already be created,
         // and other obscure inputs. The python wrapper takes care of
         // all that.
-        PyObject* match_helper(
-                PyObject* angle_array,
+        PyObject* cmatch(
+                PyObject* radius_array,
                 PyObject* ra1_array, // all in degrees
                 PyObject* dec1_array,
                 PyObject* ra2_array, 
                 PyObject* dec2_array,
                 PyObject* htmrev2_array,
-                int32_t minid,
-                int32_t maxid) throw (const char *);
+                PyObject* minid_obj,
+                PyObject* maxid_obj,
+				PyObject* maxmatch_obj) throw (const char *);
+
 
         int depth() {
             return mDepth;
         }
 
     private:
+
+
+
         htmInterface mHtmInterface;
         int mDepth;
 };

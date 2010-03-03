@@ -61,7 +61,10 @@ import coords as astro_util
 import plotting
 import sqlite_util
 
-import htm
+try:
+    import htm
+except:
+    pass
 
 try:
     import recfile

@@ -54,9 +54,66 @@ def test():
     tests += 1
 
 
+    # try the matching
+    stdout.write('Matching by ra/dec, expect 10 matches ordered by distance....')
+    two = 2.0/3600.
+    # offset second list by fraction of 2 arcsec in dec
+    # not last ones don'e match at all
+    ra1 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 21.36])
+    dec1 = numpy.array( [24.3,          24.3,            24.3,  -28.25, -15.32])
+    ra2 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 55.25])
+    dec2 = numpy.array( [24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])
+
+    m1,m2,d12 = match_tuple = h.match(ra1,dec1,ra2,dec2,two)
+
+    if m1.size != 10:
+        stdout.write('Error\n')
+        errors += 1
+    else:
+        stdout.write('OK\n')
+    tests += 1
+
+    for i in range(m1.size):
+        stdout.write('%s %s %s\n' % (m1[i],m2[i],d12[i]))
+
+
+    # try the matching with maxmatch=2
+    stdout.write('Matching with maxmatch=2, expect 7 matches ordered by distance....')
+
+    m1,m2,d12 = match_tuple = h.match(ra1,dec1,ra2,dec2,two,maxmatch=2)
+
+    if m1.size != 7:
+        stdout.write('Error\n')
+        errors += 1
+    else:
+        stdout.write('OK\n')
+    tests += 1
+
+    for i in range(m1.size):
+        stdout.write('%s %s %s\n' % (m1[i],m2[i],d12[i]))
+
+
+    # try the matching with maxmatch=1
+    stdout.write('Matching with maxmatch=1, expect 4 matches ordered by distance....')
+
+    m1,m2,d12 = match_tuple = h.match(ra1,dec1,ra2,dec2,two,maxmatch=1)
+
+    if m1.size != 4:
+        stdout.write('Error\n')
+        errors += 1
+    else:
+        stdout.write('OK\n')
+    tests += 1
+
+    for i in range(m1.size):
+        stdout.write('%s %s %s\n' % (m1[i],m2[i],d12[i]))
+
 
 
 
 
     stdout.write('\n' + '-'*50 + '\n')
     stdout.write('Founds %s errors in %s tests\n' % (errors,tests))
+
+if __name__ == '__main__':
+    test()

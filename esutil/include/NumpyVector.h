@@ -324,6 +324,8 @@ NumpyVector<T>::NumpyVector(PyObject* obj)  throw (const char *) {
 	// DONT FORGET THIS!!!!
 	import_array();
 
+	mNumpyTypeInfo.init();
+
 	// don't forget to initialize
 	mArray = NULL;
 	mSize=0;
@@ -343,6 +345,8 @@ template <class T>
 NumpyVector<T>::NumpyVector(npy_intp size) throw (const char *) {
 	// DONT FORGET THIS!!!!
 	import_array();
+
+	mNumpyTypeInfo.init();
 
 	// don't forget to initialize
 	mArray = NULL;
