@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <cstdio>
 #include <vector>
 #include <math.h>
 #include "htmc.h"
@@ -96,7 +98,8 @@ PyObject* HTMC::cmatch(
         PyObject* htmrev2_array,
         PyObject* minid_obj,
         PyObject* maxid_obj,
-        PyObject* maxmatch_obj) throw (const char *) {
+        PyObject* maxmatch_obj,
+        PyObject* filename_obj) throw (const char *) {
 
     // no copies made if already double vectors
     NumpyVector<double> radius(radius_array);
@@ -118,6 +121,22 @@ PyObject* HTMC::cmatch(
     int32_t minid = minidVec[0];
     int32_t maxid = maxidVec[0];
     int32_t maxmatch = maxmatchVec[0];
+
+    //
+    //std::string filename="";
+    int writefile=0;
+    FILE* fptr=NULL;
+    if (PyString_Check(filename_obj)) {
+		char* filename=PyString_AsString(filename_obj);
+        fptr = fopen(filename, "w");
+        if (fptr==NULL) 
+        {
+            std::stringstream ss;
+            ss<<"Cannot open file: "<<filename<<" : "<<strerror(errno);
+            throw ss.str.c_str();
+            return;
+        }
+    }
 
     // These will temporarily hold the results
     std::vector<int32_t> m1;
