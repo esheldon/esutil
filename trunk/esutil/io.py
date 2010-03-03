@@ -35,7 +35,8 @@ def read(fobj,
          combine=False, view=None,
          lower=False, upper=False,
          noroot=True, seproot=False,
-         verbose=False):
+         verbose=False, 
+         ensure_native=False):
     """
     Name:
         io.read
@@ -164,15 +165,21 @@ def read(fobj,
 
     # pick the right reader based on typ
     if typ == 'fits':
-        return read_fits(fobj, ext=ext, header=header, view=view,
+        data = read_fits(fobj, ext=ext, header=header, view=view,
                          lower=lower,upper=upper)
+        if ensure_native:
+            numpy_util.to_native(data, inplace=True)
+        return data
 
     elif typ == 'json':
         return json_util.read(fobj)
 
     elif typ == 'rec':
-        return sfile.read(fobj, header=header, view=view, 
+        data = sfile.read(fobj, header=header, view=view, 
                           rows=rows, fields=fields, columns=columns)
+        if ensure_native:
+            numpy_util.to_native(data, inplace=True)
+        return data
 
     elif typ == 'xml':
         return xmltools.xml2dict(fobj, noroot=noroot, seproot=seproot)

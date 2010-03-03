@@ -49,8 +49,8 @@ try:
 
     include_dirs += ['esutil/htm/htm_src']
     htm_sources = glob('esutil/htm/htm_src/*.cpp')
-    htm_sources += ['esutil/htm/htm.cc','esutil/htm/htm_wrap.cc']
-    htm_module = Extension('esutil.htm._htm',
+    htm_sources += ['esutil/htm/htmc.cc','esutil/htm/htmc_wrap.cc']
+    htm_module = Extension('esutil.htm._htmc',
                            sources=htm_sources)
 
     ext_modules.append(htm_module)
