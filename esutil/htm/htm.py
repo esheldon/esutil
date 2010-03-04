@@ -162,7 +162,7 @@ class HTM(htmc.HTMC):
             m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two)
 
             for i in range(m1.size):
-                stdout.write('%s %s %s\\n' % (m1[i],m2[i],d12[i]))
+                print m1[i],m2[i],d12[i]
 
             # this produces
             0 1 0.00013888984367
