@@ -87,7 +87,7 @@ Examples:
 
 
 
-    # try the matching two lists of ra/dec points
+    # try matching two lists of ra/dec points
     # Matching by ra/dec, expect 10 matches ordered by distance....
 
     # match within two arcseconds
