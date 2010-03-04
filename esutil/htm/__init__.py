@@ -9,7 +9,7 @@ Classes:
 
 Purpose:
 
-    This is a Class to deal with the Heirarchical Triangular Mesh, which is a
+    This is a Class to deal with the Hierarchical Triangular Mesh, which is a
     method for breaking the unit sphere into a tree structure where each node
     in the tree is represented by a spherical triangle.  The "depth" of the
     tree determines the size of the smallest triangle, with higher depths
@@ -54,7 +54,7 @@ Methods:
           maxid=None,
           file=None)
 
-        Match two sets of ra/dec points using the Heierarchical Triangular
+        Match two sets of ra/dec points using the Hierarchical Triangular
         Mesh code.  This is very efficient for large search angles and
         large lists.  May seem slow otherwise due to overhead creating htm
         indices.
