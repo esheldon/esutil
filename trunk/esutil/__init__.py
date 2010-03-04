@@ -47,7 +47,7 @@ def get_python_version(numerical=False):
 import xmltools
 import ostools
 import misc
-import math_util
+import integrate
 import json_util
 import stat
 import numpy_util
