@@ -3,33 +3,38 @@ Module:
     random
 
 Classes:
-    Generator
 
-Purpose:
-    A class for creating random samples from an arbitrary input probability
-    distribution.  The input distribution can either be an array of points
-    along with corresponding x values, or a function.
+    Class Name:
+        Generator
 
-See docs for the Generator class for more details.
+    Purpose:
 
-Examples:
+        A class for creating random samples from an arbitrary input probability
+        distribution.  The input distribution can either be an array of points
+        along with corresponding x values, or a function.
 
-    Using a sampled distribution pofx measured at values x.  In this case pofx
-    is an array of data instead of a function.
-
+    ** See docs for the Generator class for more details.  To do so in IPython:
         import esutil
-        gen = esutil.random.Generator(pofx, x)
-        rand = gen.genrand(1000000)
+        esutil.random.Generator?
+
+    Examples:
+
+        Using a sampled distribution pofx measured at values x.  In this case pofx
+        is an array of data instead of a function.
+
+            import esutil
+            gen = esutil.random.Generator(pofx, x)
+            rand = gen.genrand(1000000)
 
 
-    Using a function:
+        Using a function:
 
-        def gaussfunc(x):
-            return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
+            def gaussfunc(x):
+                return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
 
-        gen = esutil.random.Generator(gaussfunc, 
-                                          xrange=[-4.5,4.5], nx=100)
-        rand = gen.genrand(1000000)
+            gen = esutil.random.Generator(gaussfunc, 
+                                              xrange=[-4.5,4.5], nx=100)
+            rand = gen.genrand(1000000)
 
 Modification History:
     Created:  2010-02, Erin Sheldon, BNL.
@@ -52,6 +57,7 @@ except:
 from types import *
 
 import numpy_util
+import stat
 
 class Generator():
     """
@@ -198,6 +204,22 @@ class Generator():
 
 
     def genrand(self, numrand, seed=None):
+        """
+        Class:
+            random.Genrand
+
+        Purpose:
+            Generate random points from the current probability distribution.
+
+        Calling Sequence:
+            import esutil
+
+            # see docs on Genrand for info about constructor.
+            generator = esutil.random.Generator(pofx, ...)
+
+            rand = generator.genrand(numrand)
+
+        """
         if self.method == 'accum':
             return self.genrand_accum(numrand, seed=None)
         elif self.method == 'cut':
@@ -212,7 +234,7 @@ class Generator():
 
         # to get randoms from the distribution, we interpolate the x(pcum) at
         # the test rand values.  Clever!
-        rand = interplin(self.xvals, self.pcum, urand)
+        rand = stat.interplin(self.xvals, self.pcum, urand)
 
         return rand
 
@@ -324,7 +346,46 @@ class Generator():
 
                 # interval is smaller, no integral in first point
                 self.xvals = self.xinput[1:]
+
+        
+def test_generator(doplot=False):
+    """
+    Do some tests of the random generator
+    """
+
+    # first a function
+    funcgen = Generator(gaussfunc, xrange=[-4.5,4.5], nx=100)
+
+    nrand = 100000
+    func_rand = funcgen.genrand(nrand)
  
+
+
+    # now points
+    x = numpy_util.arrscl( numpy.arange(100,dtype='f4'), -4.5,4.5 )
+    pofx = gaussfunc(x)
+
+    pointgen = Generator(pofx, x=x)
+    point_rand = pointgen.genrand(nrand)
+
+
+    if doplot:
+        import plotting
+        plt=plotting.setuplot()
+        plt.subplot(2,1,1)
+        plt.hist(func_rand,bins=100,normed=True)
+        plt.plot(x,pofx)
+
+        plt.subplot(2,1,2)
+        plt.hist(point_rand,bins=100,normed=True,color='red',edgecolor='black')
+        plt.plot(x,pofx,color='blue')
+
+        leg = plt.legend()
+        leg.draw_frame(False)
+
+        plt.show()
+
+
 def gaussfunc(x):
     """
     for testing function stuff
