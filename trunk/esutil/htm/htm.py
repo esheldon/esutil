@@ -50,7 +50,7 @@ class HTM(htmc.HTMC):
         
         Purpose:
 
-          Match two sets of ra/dec points using the Heierarchical Triangular
+          Match two sets of ra/dec points using the Hierarchical Triangular
           Mesh code.  This is very efficient for large search angles and large
           lists.  May seem slow otherwise due to overhead creating htm indices.
         
