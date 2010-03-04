@@ -1,3 +1,41 @@
+"""
+Module:
+    random
+
+Classes:
+    Generator
+
+Purpose:
+    A class for creating random samples from an arbitrary input probability
+    distribution.  The input distribution can either be an array of points
+    along with corresponding x values, or a function.
+
+See docs for the Generator class for more details.
+
+Examples:
+
+    Using a sampled distribution pofx measured at values x.  In this case pofx
+    is an array of data instead of a function.
+
+        import esutil
+        gen = esutil.random.Generator(pofx, x)
+        rand = gen.genrand(1000000)
+
+
+    Using a function:
+
+        def gaussfunc(x):
+            return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
+
+        gen = esutil.random.Generator(gaussfunc, 
+                                          xrange=[-4.5,4.5], nx=100)
+        rand = gen.genrand(1000000)
+
+Modification History:
+    Created:  2010-02, Erin Sheldon, BNL.
+    2010-03-03: Moved to new module random.py, Erin Sheldon, BNL
+
+"""
 try:
     import numpy
     have_numpy=True
