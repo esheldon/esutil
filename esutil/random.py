@@ -19,21 +19,21 @@ Classes:
 
     Examples:
 
-        Using a sampled distribution pofx measured at values x.  In this case pofx
-        is an array of data instead of a function.
+        Generate random points from a "sampled" pofx, measured at values x.  In
+        this case pofx is an array of data instead of a function.
 
             import esutil
             gen = esutil.random.Generator(pofx, x)
             rand = gen.genrand(1000000)
 
 
-        Using a function:
+        Generate random points from an arbitrary function:
 
             def gaussfunc(x):
                 return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
 
             gen = esutil.random.Generator(gaussfunc, 
-                                              xrange=[-4.5,4.5], nx=100)
+                                          xrange=[-4.5,4.5], nx=100)
             rand = gen.genrand(1000000)
 
 Modification History:
