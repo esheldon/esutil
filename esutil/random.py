@@ -27,7 +27,9 @@ Classes:
             rand = gen.genrand(1000000)
 
 
-        Generate random points from an arbitrary function:
+        Generate random points from an arbitrary function. In this case we can
+        send a range over which x will be generated and the number of points in
+        x to use for the integration.
 
             def gaussfunc(x):
                 return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
