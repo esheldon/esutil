@@ -1,13 +1,51 @@
+license="""
+  Copyright (C) 2010  Erin Sheldon
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of version 2 of the GNU General Public License as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+"""
+
+
+
+
 from sys import stdout
 import numpy
 import esutil.stat
 import esutil.numpy_util
 
-
+# for checking function type, method type
+from types import *
 
 class QGauss():
     """
-    Class to perform gauss-legendre integration
+    Module:
+        integrate
+
+    Class Name:
+        QGauss
+    
+    Purpose:
+        Perform gauss-legendre integration
+
+    Examples:
+        import esutil
+        npoints = 30
+        qg = esutil.integrate.QGauss(npoints)
+
+        result = qg.integrate(x, y)
+
+        result = qg.integrate(x, some_function)
     """
     def __init__(self, npts=None):
 
@@ -25,6 +63,16 @@ class QGauss():
                 self.npts=npts
                 self.xxi, self.wii = gauleg(-1.0, 1.0, self.npts)
 
+
+    def integrate(self, xvals, yvals_or_func, npts=None):
+        """
+        Integrate a function or points
+        """
+
+        if isinstance(yvals_or_func,(FunctionType,MethodType)):
+            return self.integrate_func(xvals,yvals_or_func,npts)
+        else:
+            return self.integrate_data(xvals,yvals_or_func,npts)
 
     def integrate_func(self, xvals, func, npts=None):
         """
