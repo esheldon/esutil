@@ -57,8 +57,10 @@ Methods:
         Match two sets of ra/dec points using the Hierarchical Triangular
         Mesh code.  This is very efficient for large search angles and
         large lists.  May seem slow otherwise due to overhead creating htm
-        indices.
+        indices.  You can optionally write the results to a file.
     
+    read(filename)
+        Read the binary file format written by the match() code.
         
     See the docs for each method for more details.  For example, in ipython:
         >>> import esutil
