@@ -15,14 +15,19 @@
  *    // PyArrayObject
  *    NumpyVector<int> vec(100);
  *
- *    // Get some info
+ *
+ *
+ *    // Get some info about the array
  *
  *    // the string representation of the type, from <typeinfo>
  *    cout<<"type name is: "<<vec.type_name()<<"\n";
- *    // The numby type number
+ *
+ *    // The numpy type number
  *    int type_num = vec.type_num();
+ *
  *    // the number of elements in the vector
  *    npy_intp nel = vec.size();
+ *
  *    // the stride of the array
  *    npy_inpt stride = vec.stride();
  *
