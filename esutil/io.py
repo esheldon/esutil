@@ -11,6 +11,17 @@ The functions most users will use:
         Provide a single interface to write a variety of file types.
         Not yet implemented.
 
+    Useful functions called by the above:
+
+        read_fits(): 
+            A convenience function wrapping pyfits.getdata.  Adds some extra
+            functionality such as getting subsets of rows and columns for
+            binary tables, ensuring native byte ordering, and forcing the case
+            of binary table columns to be upper/lower.
+
+Created late 2009 Erin Sheldon, Brookhaven National Laboratory.  See docs
+for individual methods for revision history.
+
 """
 
 license="""
@@ -49,16 +60,7 @@ except:
     have_pyfits=False
 
 
-def read(fobj, 
-         typ=None, 
-         ext=0,
-         rows=None, fields=None, columns=None,
-         header=False, 
-         combine=False, view=None,
-         lower=False, upper=False,
-         noroot=True, seproot=False,
-         verbose=False, 
-         ensure_native=False):
+def read(fobj, **keywords): 
     """
     Name:
         io.read
@@ -68,10 +70,13 @@ def read(fobj,
              typ=None,
              ext=0,
              rows=None, fields=None, columns=None,
-             header=False, combine=False, view=None,
+             header=False, 
+             combine=False, 
+             view=None,
              lower=False, upper=False,
              noroot=True, seproot=False,
-             verbose=False)
+             verbose=False, 
+             ensure_native=False)
 
     Purpose:
         Provide a single interface to read from a variety of file types.
@@ -79,6 +84,7 @@ def read(fobj,
 
     Currently Supported File Types:
         FITS
+            Flexible Image Transport System
         REC
             Simple ascii header followed by data in binary or text form. These
             files can be written/read using the esutil.sfile module.  Supports
@@ -86,7 +92,11 @@ def read(fobj,
             writing/reading of recarrays (numpy arrays with fields) to ascii
             and binary.  Supports reading sub-selections of rows and columns.
         XML
+            Extensible Markup Language
         JSON
+            JavaScript Object Notation.  Less flexible than XML but more useful
+            in most practical situations such as storing inhomogeneous data in
+            a portable way. 
 
     Inputs:
         filename/fileobject:  
@@ -97,25 +107,27 @@ def read(fobj,
             as the data types match.
 
     Keywords:
-        typ:  A string describing the file type.  If this is not sent, then
-            the file type is determined from the file extension.
-        ext: The file extension.  If multiple extensions are supported by
-            the file type, then use this keyword to select which is to be
-            read. Default is 0, the first extension.
+        type: A string describing the file type.  If this is not sent, then
+              the file type is determined from the file extension.
+        ext: 
+            The file extension.  If multiple extensions are supported by the
+            file type, such as for FITS, then use this keyword to select which
+            is to be read. Default is 0, the first extension.
+
         rows:  
-            For record-type files such as FITS binary tables or simple REC
-            files, setting this keyword will return a subset of the rows.  For
-            FITS, this requires reading the entire file and selecting a subset.
-            For REC files only the requested rows are read from disk by using
-            the recfile package.  Default is all rows.
+            For numpy record-type files such as FITS binary tables or simple
+            REC files, setting this keyword will return a subset of the rows.
+            For FITS, this requires reading the entire file and selecting a
+            subset.  For REC files only the requested rows are read from disk
+            by using the recfile package.  Default is all rows.
 
         fields=, columns=:  
-            For record-type files such as FITS binary tables or simple REC
-            files, return a subset of the columns or fields.  The keywords
+            For numpy record-type files such as FITS binary tables or simple
+            REC files, return a subset of the columns or fields.  The keywords
             "fields" and "columns" are synonyms.  For FITS, this requires
-            reading the entire file and selecting a subset.  For REC files
-            only the requested rows are read from disk by using the recfile
-            package.  Default is all columns.
+            reading the entire file and selecting a subset.  For REC files only
+            the requested rows are read from disk by using the recfile package.
+            Default is all columns.
 
         header:  If True, and the file type supports header+data, return a 
             tuple  (data, header).  Default is False.
@@ -139,84 +151,103 @@ def read(fobj,
         seproot: For XML files, return a tuple (data, rootname) instead of
             just the data under the root.
 
+        ensure_native: For numpy arrays, make sure data is in native
+            byte ordering.
+
+    Revision History:
+        Use **keywords for input and for sending to all called methods. Much
+        more flexible when adding new keywords and file types.
+        2010
     """
 
+
+    verbose = keywords.get('verbose', False)
+
     # If input is a sequence, read them all.
-    if isinstance(fobj, list) or isinstance(fobj, tuple):
+    if isinstance(fobj, (list,tuple)):
+        combine = keywords.get('combine', False)
+
+        # a list was given
         alldata = []
         for f in fobj:
             # note, only fields/columns is begin passed on but not rows
             # also note seproot is not being passed on
-            data = read(f, 
-                        typ=typ, 
-                        ext=ext,
-                        fields=fields, columns=columns, view=view,
-                        noroot=noroot, verbose=verbose)
+            data = read(f, **keywords) 
             alldata.append(data)
-        if combine:
-            # only attempt this if we are dealing with numpy arrays
-            if typ is None:
-                typ=get_ftype(f)
 
-            if typ == 'fits' or typ == 'rec':
-                # this will only work if the all data has the 
-                # same structure
-                if verbose:
-                    stdout.write("Combining arrays\n")
-                alldata = numpy_util.combine_arrlist(alldata)
+        if combine:
+            if len(fobj) == 1:
+                alldata = alldata[0]
+            else:
+                type = _get_fname_ftype_from_inputs(fobj[0], **keywords)
+                if type == 'fits' or type == 'rec':
+                    # this will only work if the all data has the 
+                    # same structure
+                    if verbose:
+                        stdout.write("Combining arrays\n")
+                    alldata = numpy_util.combine_arrlist(alldata)
         return alldata
 
-
     # a scalar was input
-    if isinstance(fobj, file):
-        fname = fobj.name
-    elif isinstance(fobj, str) or isinstance(fobj, unicode):
-        # make sure we expand all ~username and other variables
-        fname=ostools.expand_filename(fobj)
-        if verbose:
-            stdout.write("Reading: %s\n" % fobj)
+    fname,type=_get_fname_ftype_from_inputs(fobj, **keywords)
+    if verbose:
+        stdout.write("Reading: %s\n" % fname)
+
+    # pick the right reader based on type
+    if type == 'fits':
+        data = read_fits(fobj, **keywords)
+    elif type == 'json':
+        data = json_util.read(fobj)
+    elif type == 'rec':
+        data = read_rec(fobj, **keywords)
+    elif type == 'xml':
+        data = read_xml(fobj, **keywords)
     else:
-        raise ValueError("Input must be a string or file object, or a "
-                         "list thereof")
+        raise ValueError("Don't know about file type '%s'" % type)
 
-    # we can guess the filetype from the extension if not input
-    if typ is None:
-        typ=get_ftype(fname)
-
-    typ = typ.lower()
-
-    # pick the right reader based on typ
-    if typ == 'fits':
-        data = read_fits(fobj, ext=ext, header=header, view=view,
-                         lower=lower,upper=upper)
-        if ensure_native:
-            numpy_util.to_native(data, inplace=True)
-        return data
-
-    elif typ == 'json':
-        return json_util.read(fobj)
-
-    elif typ == 'rec':
-        data = sfile.read(fobj, header=header, view=view, 
-                          rows=rows, fields=fields, columns=columns)
-        if ensure_native:
-            numpy_util.to_native(data, inplace=True)
-        return data
-
-    elif typ == 'xml':
-        return xmltools.xml2dict(fobj, noroot=noroot, seproot=seproot)
-
-    else:
-        raise ValueError("Don't know about file type '%s'" %ftype)
+    return data
 
 
 
+def read_fits(fobj, **keywords):
+    """
+    Name:
+        read_fits
+    Purpose:
+        Read data from a single fits file.
+    Calling Sequence:
+        data=read_fits(fobj, **keywords)
+    Inputs:
+        fobj: The file name/file object for a fits file.
+    Keywords:
+        ext: Which extension, or HDU, to read.  Default 0.
+        view: What view of the data to return. Default is numpy.ndarray
+        header:  Return the data,header tuple?  Default False.
+        rows:  Subset of the rows to return if reading a binary table extension.
+        columns:  Subset of the columns to return if reading a binary table.
+        fields: synonymous with columns
+        lower: Force the field names to be lower case.
+        upper: Force the field names to be upper case.
+        ensure_native:  FITS always stores big-endian byte order.  Sending
+            ensure_native=True forces the byte ordering to be machine native.
+    Example:
+        import esutil
+        data=esutil.io.read('test.fits', ext=1, )
+    """
 
-def read_fits(fobj, ext=0, view=None, header=False, 
-              rows=None, fields=None, columns=None,
-              lower=False, upper=False):
     if not have_pyfits:
         raise ImportError("Could not import pyfits")
+    import numpy
+
+    ext=keywords.get('ext',0)
+    view = keywords.get('view', numpy.ndarray)
+    header = keywords.get('header', False)
+    rows=keywords.get('rows',None)
+    fields = keywords.get('fields', None)
+    columns = keywords.get('columns', None)
+    lower= keywords.get('lower',False)
+    upper= keywords.get('upper',False)
+    ensure_native = keywords.get('ensure_native',False)
 
     if fields is None:
         if columns is not None:
@@ -228,11 +259,14 @@ def read_fits(fobj, ext=0, view=None, header=False,
         view = numpy.ndarray
 
     if header:
-        d,h = pyfits.getdata(fobj, ext=ext, header=header, 
-                             lower=lower, upper=upper)
+        d,h = pyfits.getdata(fobj, ext=ext, header=header)
     else:
-        d = pyfits.getdata(fobj, ext=ext, lower=lower, upper=upper)
+        d = pyfits.getdata(fobj, ext=ext)
 
+    if lower:
+        d.dtype.names = [n.lower() for n in d.dtype.names]
+    elif upper:
+        d.dtype.names = [n.upper() for n in d.dtype.names]
 
     # extract subsets of the data
     if rows is not None:
@@ -242,13 +276,37 @@ def read_fits(fobj, ext=0, view=None, header=False,
 
     d=d.view(view)
 
+    if ensure_native:
+        numpy_util.to_native(d, inplace=True)
+
     if header:
         return d,h
     else:
         return d
 
 
+def read_rec(fobj, **keywords):
+    import numpy
+    header=keywords.get('header',False)
+    view=keywords.get('view',numpy.ndarray)
+    rows=keywords.get('rows',None)
+    columns=keywords.get('columns',None)
+    fields=keywords.get('fields',None)
+    ensure_native = keywords.get('ensure_native',False)
 
+    data = sfile.read(fobj, header=header, view=view, 
+                      rows=rows, fields=fields, columns=columns)
+    if ensure_native:
+        numpy_util.to_native(data, inplace=True)
+
+    return data
+
+
+def read_xml(fobj, **keywords):
+    noroot=keywords.get('noroot',True)
+    seproot=keywords.get('seproot',False)
+    data = xmltools.xml2dict(fobj, noroot=noroot, seproot=seproot)
+    return data
 
 def ftype2fext(ftype_input):
     ftype=ftype_input.lower()
@@ -279,7 +337,35 @@ def fext2ftype(fext_input):
     else:
         raise ValueError("Don't know about files with '%s' extension" % fext)
 
+def _get_fname_ftype_from_inputs(fobj, **keywords):
+
+    if isinstance(fobj, file):
+        fname = fobj.name
+    elif isinstance(fobj, (str,unicode)):
+        # make sure we expand all ~username and other variables
+        fname=ostools.expand_filename(fobj)
+    else:
+        raise ValueError("Input must be a string or file object, or a "
+                         "list thereof")
+
+
+    ftype=None
+    if 'type' in keywords:
+        ftype=keywords['type']
+    elif 'typ' in keywords:
+        ftype = keywords['typ']
+
+    if ftype is None:
+        ftype=get_ftype(fname)
+    ftype = ftype.lower()
+
+    return fname, ftype
+
+
 def get_ftype(filename):
-    fext=filename.split('.')[-1]
+    fsplit = filename.split('.')
+    fext = fsplit[-1]
+    if (fext == 'gz' or fext == 'bz' or fext == 'bz2') and len(fsplit) > 2:
+        fext = fsplit[-2]
     typ = fext2ftype(fext)
     return typ
