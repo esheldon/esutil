@@ -91,9 +91,9 @@ def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
     # edges at the beginning of reverse indices
 
     if use_weave:
-        _weave_dohist(data, s, bsize, hist, revind, dorev=rev)
+        _weave_dohist(data, dmin, s, bsize, hist, revind, dorev=rev)
     else:
-        _dohist(data, s, bsize, hist, revind, dorev=rev)
+        _dohist(data, dmin, s, bsize, hist, revind, dorev=rev)
 
     if rev:
         return hist, revind
@@ -101,7 +101,12 @@ def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
         return hist
 
 
-def _weave_dohist(data, s, binsize, hist, rev, dorev=False):
+def _weave_dohist(data_in, datamin, s, binsize, hist, rev, dorev=False):
+
+    # the data must be native byte order and not-strided
+    data = numpy_util.to_native(data_in)
+    requirements = ['C_CONTIGUOUS','ALIGNED']
+    data = numpy.require(data, data.dtype, requirements)
 
     if dorev:
         dorev=1
@@ -118,7 +123,7 @@ def _weave_dohist(data, s, binsize, hist, rev, dorev=False):
     int64_t binnum_old = -1;
 
     // index of minimum value
-    int64_t imin = s(0);
+    //int64_t imin = s(0);
     for (int64_t i=0; i<s.size(); i++) {
 
         int64_t offset = i+nbin+1;
@@ -129,7 +134,7 @@ def _weave_dohist(data, s, binsize, hist, rev, dorev=False):
             rev(offset) = data_index;
         }
 
-        int64_t binnum = (int64_t) ( (data(data_index)-data(imin))/binsize);
+        int64_t binnum = (int64_t) ( (data(data_index)-datamin)/binsize);
 
         if (binnum >= 0 && binnum < nbin) {
             if (dorev && (binnum > binnum_old) ) {
@@ -154,19 +159,18 @@ def _weave_dohist(data, s, binsize, hist, rev, dorev=False):
 
     """
 
-    scipy.weave.inline(code, ['data','s','binsize','hist','rev','dorev'],
+    scipy.weave.inline(code, ['data','datamin','s','binsize','hist','rev','dorev'],
                        type_converters = scipy.weave.converters.blitz)
     return
 
 
-def _dohist(data, s, binsize, hist, revind, dorev=False):
+def _dohist(data, dmin, s, binsize, hist, revind, dorev=False):
 
     nbin=hist.size
     offset = nbin+1
     i=0
     binnum_old = -1
 
-    dmin = data[s[0]]
     while i < s.size:
         data_index = s[i]
         if dorev:
