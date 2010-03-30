@@ -34,7 +34,7 @@ class HTM(htmc.HTMC):
         return area
 
     def match(self, ra1, dec1, ra2, dec2, radius,
-              maxmatch=0, 
+              maxmatch=1, 
               htmid2=None, 
               htmrev2=None,
               minid=None,
@@ -80,9 +80,9 @@ class HTM(htmc.HTMC):
         
         Keyword Parameters:
 
-            maxmatch=0: 
+            maxmatch=1: 
                 The maximum number of allowed matches per point. Defaults to
-                return all matches sorted by distance.
+                return the closest match, maxmatch=1
 
             htmid2=None: 
                 the htm indexes for the second list.  If not sent they are
@@ -181,6 +181,7 @@ class HTM(htmc.HTMC):
          MODIFICATION HISTORY:
             SWIG Wrapper and matching code working 2010-03-03, 
                 Erin Sheldon, BNL.
+            2010-03-19: Default to maxmatch=1, return the closest match.
 
 
         """
