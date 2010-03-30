@@ -64,7 +64,7 @@ def test():
     ra2 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 55.25])
     dec2 = numpy.array( [24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])
 
-    m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two)
+    m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,maxmatch=0)
 
     if m1.size != 10:
         stdout.write('Error\n')
@@ -122,7 +122,7 @@ def test():
     dec2 = numpy.array( [24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])
 
     fname='/tmp/test.bin'
-    m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,file=fname)
+    m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,file=fname,maxmatch=0)
 
     res = h.read(fname)
 
