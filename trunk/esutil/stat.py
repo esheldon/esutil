@@ -61,11 +61,13 @@ def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
     else:
         dmin = data[s[0]]
 
+
     if max is not None:
         dmax = max
         dowhere=True
     else:
         dmax = data[s[-1]]
+
 
     bsize = float(binsize)
 
@@ -134,7 +136,8 @@ def _weave_dohist(data_in, datamin, s, binsize, hist, rev, dorev=False):
             rev(offset) = data_index;
         }
 
-        int64_t binnum = (int64_t) ( (data(data_index)-datamin)/binsize);
+        //int64_t binnum = (int64_t) ( (data(data_index)-datamin)/binsize);
+        int64_t binnum = (int64_t) ( (data(data_index)-(double)datamin)/binsize);
 
         if (binnum >= 0 && binnum < nbin) {
             if (dorev && (binnum > binnum_old) ) {
