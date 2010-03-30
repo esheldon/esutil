@@ -52,6 +52,20 @@ class HTMC {
 				PyObject* maxmatch_obj,
 				PyObject* filename_obj) throw (const char *);
 
+		/*
+        PyObject* cbincount(
+                PyObject* radius_array,
+                PyObject* ra1_array, // all in degrees
+                PyObject* dec1_array,
+                PyObject* ra2_array, 
+                PyObject* dec2_array,
+                PyObject* htmrev2_array,
+                PyObject* minid_obj,
+                PyObject* maxid_obj) throw (const char *);
+
+*/
+
+
 
         int depth() {
             return mDepth;
