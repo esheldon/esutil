@@ -41,7 +41,8 @@ import numpy_util
 
 
 
-def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
+def histogram(data_input, binsize=1., min=None, max=None, rev=False, 
+              use_weave=True):
     """
     Similar to IDL histogram.
 
@@ -49,6 +50,10 @@ def histogram(data, binsize=1., min=None, max=None, rev=False, use_weave=True):
     default.  If scipy is not available a slower version is used.
 
     """
+
+    # this will only copy the data if its not an array or if it is an
+    # array scalar
+    data = numpy.array(data_input, ndmin=1, copy=False)
 
     if not have_scipy:
         use_weave=False

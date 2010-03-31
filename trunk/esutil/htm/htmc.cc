@@ -12,12 +12,13 @@
 // raturn great circle distance in degrees
 double gcirc(
         double ra1, double dec1, 
-        double ra2, double dec2)
+        double ra2, double dec2,
+        bool degrees)
 
 {
 
     double sindec1, cosdec1, sindec2, cosdec2, 
-           radiff, cosradiff, cosdis; 
+           radiff, cosradiff, dis, cosdis; 
 
     static const double
         D2R=0.0174532925199433;
@@ -36,7 +37,11 @@ double gcirc(
     if (cosdis < -1.0) cosdis=-1.0;
     if (cosdis >  1.0) cosdis= 1.0;
 
-    return( acos(cosdis)/D2R );
+    dis = acos(cosdis);
+    if (degrees) {
+        dis /= D2R;
+    }
+    return( dis );
 
 }
 
@@ -225,7 +230,7 @@ PyObject* HTMC::cmatch(
                         npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
 
                         // Returns distance in degrees
-                        double dis = gcirc(ra1[i1], dec1[i1], ra2[i2], dec2[i2]);
+                        double dis = gcirc(ra1[i1], dec1[i1], ra2[i2], dec2[i2],true);
 
                         // Turns out, this pushing is not a bottleneck!
                         // Time is negligible compared to the leaf finding
@@ -327,5 +332,172 @@ PyObject* HTMC::cmatch(
 
 }
 
+
+
+
+PyObject* HTMC::cbincount(
+                PyObject* rmin_object, // units of scale*angle in radians
+                PyObject* rmax_object, // units of scale*angle in radians
+				PyObject* nbin_object, 
+                PyObject* ra1_array, // all in degrees
+                PyObject* dec1_array,
+                PyObject* ra2_array, 
+                PyObject* dec2_array,
+                PyObject* htmrev2_array,
+                PyObject* minid_obj,
+                PyObject* maxid_obj, 
+                PyObject* scale_object) // will bin in radians*scale.  
+                                       // Same length as ra1.
+                          throw (const char *) {
+
+
+    double scale=1, logscale=0;
+    double rmin = PyFloat_AsDouble(rmin_object);
+    double rmax = PyFloat_AsDouble(rmax_object);
+    int nbin = PyLong_AsLong(nbin_object);
+
+    double logrmin = log10(rmin);
+    double logrmax = log10(rmax);
+
+    double log_binsize = (logrmax-logrmin)/nbin;
+    if (log_binsize < 0) {
+        throw("found log_binsize < 0");
+    }
+
+    NumpyVector<double> ra1(ra1_array);
+    NumpyVector<double> dec1(dec1_array);
+    NumpyVector<double> ra2(ra2_array);
+    NumpyVector<double> dec2(dec2_array);
+    NumpyVector<int64_t> htmrev2(htmrev2_array);
+    // get these as numpyvectors even though they are only length 1
+    // because it does a good job with conversions
+    NumpyVector<int64_t> minid_array(minid_obj);
+    NumpyVector<int64_t> maxid_array(maxid_obj);
+    int64_t minid = minid_array[0];
+    int64_t maxid = maxid_array[0];
+
+    // ensure scale is an array if input
+    NumpyVector<double> scale_array;
+    npy_intp nscale=0;
+    if (scale_object != NULL && scale_object != Py_None) {
+        scale_array.init(scale_object);
+        nscale = scale_array.size();
+        if (nscale > 1) {
+            if (ra1.size()!=scale_array.size() 
+                    || dec1.size() !=scale_array.size()) {
+                throw("scale must be scalar or same size as ra1/dec1");
+            }
+        } else {
+            scale = scale_array[0];
+            logscale = log10(scale);
+        }
+    }
+
+
+    std::cout<<"rmin: "<<rmin<<"\n";
+    std::cout<<"rmax: "<<rmax<<"\n";
+    std::cout<<"nbin: "<<nbin<<"\n";
+    std::cout<<"logrmin: "<<logrmin<<"\n";
+    std::cout<<"logrmax: "<<logrmax<<"\n";
+    std::cout<<"log binsize: "<<log_binsize<<"\n";
+    std::cout<<"len(scale_array) = "<<scale_array.size()<<"\n";
+    std::cout<<"ra1[0]: "<<ra1[0]<<"\n";
+    std::cout<<"ra1[-1]: "<<ra1[ra1.size()-1]<<"\n";
+    std::cout<<"dec1[0]: "<<dec1[0]<<"\n";
+    std::cout<<"dec1[-1]: "<<dec1[dec1.size()-1]<<"\n";
+    std::cout<<"ra2[0]: "<<ra2[0]<<"\n";
+    std::cout<<"ra2[-1]: "<<ra2[ra1.size()-1]<<"\n";
+    std::cout<<"dec2[0]: "<<dec2[0]<<"\n";
+    std::cout<<"dec2[-1]: "<<dec2[dec1.size()-1]<<"\n";
+
+    // Output counts in bins
+    NumpyVector<int64_t> counts(nbin);
+
+    // This is used in the basic calculations
+    const SpatialIndex &index = mHtmInterface.index();
+
+    for (npy_intp i1=0; i1<ra1.size(); i1++) {
+        // Declare the domain and the lists
+        SpatialDomain domain;    // initialize empty domain
+        ValVec<uint64> plist, flist;	// List results
+
+        if (nscale > 1) {
+            scale = scale_array[i1];
+            logscale = log10(scale);
+        }
+
+        // get actual max search radius in radians for this point
+        double maxangle = rmax/scale;
+        double d = cos( maxangle );
+
+        // Find the triangles around this point
+        domain.setRaDecD(ra1[i1],dec1[i1],d); //put in ra,dec,d E.S.S.
+        domain.intersect(&index,plist,flist);	  // intersect with list
+
+        // number of triangles found
+        npy_intp nfound = flist.length() + plist.length();
+        std::vector<int64_t> idlist(nfound);
+        npy_intp idcount=0;
+
+        // ----------- FULL NODES -------------
+        for(npy_intp i = 0; i < flist.length(); i++)
+        {  
+            idlist[idcount] = flist(i);
+            idcount++;
+        }
+        // ----------- Partial Nodes ----------
+        for(npy_intp i = 0; i < plist.length(); i++)
+        {  
+            idlist[idcount] = plist(i);
+            idcount++;
+        }
+
+        for (npy_intp j=0; j<nfound; j++) {
+            int64_t leafid = idlist[j];
+
+            // Make sure leaf is in list for ra2,dec2
+            if ( leafid >= minid && leafid <= maxid) {
+                int64_t leafbin = idlist[j] - minid;
+
+                // Any found in this leaf?
+                if ( htmrev2[leafbin] != htmrev2[leafbin+1] ) {
+
+                    // Now loop over the sources in this leaf node
+                    int64_t nLeafBin = htmrev2[leafbin+1] - htmrev2[leafbin];
+
+                    for (int64_t ileaf=0; ileaf<nLeafBin;ileaf++) {
+
+                        npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
+
+                        // Returns distance in radians
+                        double dis = gcirc(ra1[i1], dec1[i1], ra2[i2], dec2[i2],false);
+                        // maxangle is also in radians
+                        std::cout<<"dis = "<<dis<<"\n";
+                        if (dis <= maxangle) {
+                            double logr = logscale + log10(dis);
+
+                            int radbin = (int) ( (logr-logrmin)/log_binsize );
+                            if (radbin >=0 && radbin < nbin) {
+                                std::cout<<"keeping in bin: "<<radbin<<"\n";
+                                counts[radbin] += 1;
+                            } // in one of our radial bins
+                        } // Within max angle
+
+                    } // loop over objects in leaf 
+
+
+                } // points exist in this leafbin
+
+            } // leafid in range of list 2
+
+        }
+
+
+    }
+
+
+    PyObject* countsPyObject= counts.getref();
+    return countsPyObject;
+}
 
 

@@ -137,8 +137,23 @@ def test():
         stdout.write('%s %s %s\n' % (res['i1'][i],res['i2'][i],res['d12'][i]))
 
 
+    # try counts in radial bins
+    ten=10.0/3600.
+    eighty=30.0/3600.0
+    hundred=100.0/3600.0
+    ra1 = numpy.array(  [200.0,         200.0,         200.0,           175.23,  21.36])
+    dec1 = numpy.array( [24.3,           24.3,          24.3,           -28.25, -15.32])
+    ra2 = numpy.array(  [200.0,         200.0,         200.0,           175.23,  55.25])
+    dec2 = numpy.array( [24.3+two, 24.3 + ten, 24.3 - eighty, -28.25 + hundred,  75.22])
 
+    # these must be in radians
+    rmin = 5/3600.*numpy.pi/180.
+    rmax = 150/3600.*numpy.pi/180.
+    nbin = 10
 
+    lower,upper,counts = h.bincount(rmin,rmax,nbin,ra1,dec1,ra2,dec2,getbins=True)
+    for i in range(nbin):
+        stdout.write("%s %s %s %s\n" % (i,lower[i], upper[i], counts[i]))
 
 
     stdout.write('\n' + '-'*50 + '\n')
