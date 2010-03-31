@@ -179,7 +179,7 @@ def read(fobj, **keywords):
             if len(fobj) == 1:
                 alldata = alldata[0]
             else:
-                type = _get_fname_ftype_from_inputs(fobj[0], **keywords)
+                fn,type = _get_fname_ftype_from_inputs(fobj[0], **keywords)
                 if type == 'fits' or type == 'rec':
                     # this will only work if the all data has the 
                     # same structure
@@ -258,6 +258,8 @@ def read_fits(fobj, **keywords):
         import numpy
         view = numpy.ndarray
 
+    if isinstance(fobj,(str,unicode)):
+        fobj=ostools.expand_filename(fobj)
     if header:
         d,h = pyfits.getdata(fobj, ext=ext, header=header)
     else:
