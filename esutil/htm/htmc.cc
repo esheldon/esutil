@@ -379,9 +379,11 @@ PyObject* HTMC::cbincount(
     // ensure scale is an array if input
     NumpyVector<double> scale_array;
     npy_intp nscale=0;
+	bool degrees = true;
     if (scale_object != NULL && scale_object != Py_None) {
         scale_array.init(scale_object);
         nscale = scale_array.size();
+		degrees = false;
         if (nscale > 1) {
             if (ra1.size()!=scale_array.size() 
                     || dec1.size() !=scale_array.size()) {
@@ -396,19 +398,12 @@ PyObject* HTMC::cbincount(
 
     std::cout<<"rmin: "<<rmin<<"\n";
     std::cout<<"rmax: "<<rmax<<"\n";
+	std::cout<<"degrees?: "<<(degrees ? "True" : "False")<<"\n";
     std::cout<<"nbin: "<<nbin<<"\n";
     std::cout<<"logrmin: "<<logrmin<<"\n";
     std::cout<<"logrmax: "<<logrmax<<"\n";
     std::cout<<"log binsize: "<<log_binsize<<"\n";
     std::cout<<"len(scale_array) = "<<scale_array.size()<<"\n";
-    std::cout<<"ra1[0]: "<<ra1[0]<<"\n";
-    std::cout<<"ra1[-1]: "<<ra1[ra1.size()-1]<<"\n";
-    std::cout<<"dec1[0]: "<<dec1[0]<<"\n";
-    std::cout<<"dec1[-1]: "<<dec1[dec1.size()-1]<<"\n";
-    std::cout<<"ra2[0]: "<<ra2[0]<<"\n";
-    std::cout<<"ra2[-1]: "<<ra2[ra1.size()-1]<<"\n";
-    std::cout<<"dec2[0]: "<<dec2[0]<<"\n";
-    std::cout<<"dec2[-1]: "<<dec2[dec1.size()-1]<<"\n";
 
     // Output counts in bins
     NumpyVector<int64_t> counts(nbin);
@@ -416,7 +411,21 @@ PyObject* HTMC::cbincount(
     // This is used in the basic calculations
     const SpatialIndex &index = mHtmInterface.index();
 
+    static const double D2R=0.0174532925199433;
+	int step=500;
+	int linelen=70*step;
+	npy_intp totcount=0;
+
+	std::cout << "\n" <<
+        "Each dot is " << step << " points" << std::endl;
     for (npy_intp i1=0; i1<ra1.size(); i1++) {
+		if ( ((i1+1) % step) == 0 && (i1 > 0) ) {
+			std::cout<<".";
+			if ( ((i1+1) % linelen) == 0) {
+				std::cout<<"\n"<<(i1+1)<<"/"<<ra1.size()<<"  pair count: "<<totcount<<"\n";
+			}
+			fflush(stdout);
+		}
         // Declare the domain and the lists
         SpatialDomain domain;    // initialize empty domain
         ValVec<uint64> plist, flist;	// List results
@@ -427,8 +436,13 @@ PyObject* HTMC::cbincount(
         }
 
         // get actual max search radius in radians for this point
+		double d=0;
         double maxangle = rmax/scale;
-        double d = cos( maxangle );
+		if (degrees) { 
+			d = cos( maxangle*D2R );
+		} else {
+			d = cos( maxangle );
+		}
 
         // Find the triangles around this point
         domain.setRaDecD(ra1[i1],dec1[i1],d); //put in ra,dec,d E.S.S.
@@ -469,17 +483,16 @@ PyObject* HTMC::cbincount(
 
                         npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
 
-                        // Returns distance in radians
-                        double dis = gcirc(ra1[i1], dec1[i1], ra2[i2], dec2[i2],false);
-                        // maxangle is also in radians
-                        std::cout<<"dis = "<<dis<<"\n";
+                        double dis = gcirc(ra1[i1], dec1[i1], ra2[i2], dec2[i2],degrees);
+                        //std::cout<<"dis = "<<dis<<"\n";
                         if (dis <= maxangle) {
                             double logr = logscale + log10(dis);
 
                             int radbin = (int) ( (logr-logrmin)/log_binsize );
                             if (radbin >=0 && radbin < nbin) {
-                                std::cout<<"keeping in bin: "<<radbin<<"\n";
+                                //std::cout<<"keeping in bin: "<<radbin<<"\n";
                                 counts[radbin] += 1;
+								totcount+=1;
                             } // in one of our radial bins
                         } // Within max angle
 
@@ -494,7 +507,8 @@ PyObject* HTMC::cbincount(
 
 
     }
-
+	std::cout<<"\n";
+	fflush(stdout);
 
     PyObject* countsPyObject= counts.getref();
     return countsPyObject;
