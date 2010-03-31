@@ -33,6 +33,8 @@ class HTM(htmc.HTMC):
         area = area0/areadiv*(180.0/pi)**2
         return area
 
+
+
     def match(self, ra1, dec1, ra2, dec2, radius,
               maxmatch=1, 
               htmid2=None, 
@@ -270,3 +272,62 @@ class HTM(htmc.HTMC):
         fobj.close()
 
         return data
+
+
+
+    def bincount(self,
+                 rmin, rmax, nbin, ra1, dec1, ra2, dec2, scale=None,
+                 htmid2=None, 
+                 htmrev2=None,
+                 minid=None,
+                 maxid=None,
+                 getbins=False):
+
+        if htmid2 is None:
+            htmid2 = self.lookup_id(ra2, dec2)
+            minid = htmid2.min()
+            maxid = htmid2.max()
+        else:
+            if minid is None:
+                minid = htmid2.min()
+            if maxid is None:
+                maxid = htmid2.max()
+
+        if htmrev2 is None:
+            hist2, htmrev2 = stat.histogram(htmid2-minid,rev=True)
+
+        counts = self.cbincount(rmin,rmax,nbin,ra1,dec1,ra2,dec2,
+                                htmrev2,minid,maxid,scale)
+        if getbins:
+            lower,upper = log_bins(rmin, rmax, nbin)
+            return lower,upper,counts
+        else:
+            return counts
+
+def gmean(r1, r2, dim):
+    e1 = dim + 1
+    e2 = dim
+
+    frac = (1.0*e2)/e1
+    gm = frac*( r1**e1 - r2**e1)/( r1**e2 - r2**e2)
+    return gm
+
+def log_bins(rmin, rmax, nbin):
+    log_rmin = numpy.log10(rmin)
+    log_rmax = numpy.log10(rmax)
+    log_binsize = (log_rmax-log_rmin)/nbin
+
+    log_lower_edges = log_rmin + log_binsize*numpy.arange(nbin)
+    log_upper_edges = log_lower_edges + log_binsize
+    #print 'log_lower_edges:',log_lower_edges
+    #print 'log_upper_edges:',log_upper_edges
+
+    lower_edges = 10**log_lower_edges
+    upper_edges = 10**log_upper_edges
+    #print 'lower_edges:',lower_edges
+    #print 'upper_edges:',upper_edges
+
+    #gm = gmean(upper_edges, lower_edges, 2)
+    #print 'gmean: ',gm
+    return lower_edges, upper_edges
+

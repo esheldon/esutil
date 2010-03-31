@@ -78,6 +78,23 @@ Revision History:
                 PyObject* maxmatch_obj,
                 PyObject* filename_obj) throw (const char *);
 
+        PyObject* cbincount(
+                PyObject* rmin_object, // units of scale*angle in radians
+                PyObject* rmax_object, // units of scale*angle in radians
+				PyObject* nbin_object, 
+                PyObject* ra1_array, // all in degrees
+                PyObject* dec1_array,
+                PyObject* ra2_array, 
+                PyObject* dec2_array,
+                PyObject* htmrev2_array,
+                PyObject* minid_obj,
+                PyObject* maxid_obj,
+				PyObject* scale_object=NULL) // will bin in radians*scale.  
+                                            // Same length as ra1.
+                              throw (const char *);
+
+
+
         int depth() {
             return mDepth;
         }
