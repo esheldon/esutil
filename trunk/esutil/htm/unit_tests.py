@@ -138,7 +138,7 @@ def test():
 
 
     # try counts in radial bins
-    stdout.write("Testing bincounts....\n\n")
+    stdout.write("\nTesting bincount....\n\n")
 
     ten=10.0/3600.
     eighty=30.0/3600.0
