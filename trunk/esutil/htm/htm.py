@@ -315,7 +315,7 @@ class HTM(htmc.HTMC):
         Inputs:
             rmin,rmax: Smallest and largest separations to consider.  This
                 is in degrees unless the scale= keyword is sent, in which
-                case the units are angle*scale with scale in radians.
+                case the units are angle*scale with angle in radians.
             nbin:  The number of bins to use.  Bins will be equally spaced
                 in the log10 of the separation.
             ra1,dec1,ra2,dec2: 

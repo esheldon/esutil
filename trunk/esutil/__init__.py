@@ -59,7 +59,10 @@ import cosmology
 import coords
 import coords as astro_util
 import plotting
-import sqlite_util
+try:
+    import sqlite_util
+except:
+    pass
 import random
 
 try:
