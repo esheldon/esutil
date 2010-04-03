@@ -1,3 +1,25 @@
+"""
+Package:
+    stat
+
+This is a sub-package of the esutil package. The full reference is esutil.stat
+
+Methods:
+    histogram:  
+        Calculate the histogram of the input data.  The reverse indices are
+        also optionally calculated.  This function behaves similarly to the
+        IDL histogram funcion.
+    histogram2d:  
+        Histgram two variables.
+    wmom:  
+        Calculate weighted mean and error for the given input data.
+    sigma_clip:  
+        Return the sigma-clipped mean and error for the input data.
+    interplin:  
+        Perform linear interpolation.  This function is less powerful than
+        scipy.interpolate.interp1d but behaves like the IDL interpol()
+        function, including extrapolation beyond boundaries.
+"""
 license="""
   Copyright (C) 2010  Erin Sheldon
 
@@ -15,10 +37,6 @@ license="""
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 """
-
-
-
-
 
 try:
     import numpy
@@ -44,11 +62,37 @@ import numpy_util
 def histogram(data_input, binsize=1., min=None, max=None, rev=False, 
               use_weave=True):
     """
-    Similar to IDL histogram.
+    Name:
+        histogram
+    Purpose:
+        Calculate the histogram of the input data.  Similar to IDL histogram.
+        The reverse indices are also optionally calculated.
+    Calling Sequence:
+        h = histogram(data, binsize=1., min=None, max=None, rev=False, 
+                      use_weave=True)
 
-    For reverse indices, the fast version uses weave from scipy. This is the
-    default.  If scipy is not available a slower version is used.
+    Inputs:
+        data:  A numpy array or a sequence that can be converted.
 
+    Optional Inputs:
+        binsize:  Default 1.0.  The bin size for histogramming.
+        min, max:  The min and max data to use from the array.
+        rev: If true, return a tuple 
+                h, rev
+            Where rev is the reverse indices.   Default is false.
+        use_weave:  If True, use a scipy.weave function to calculate the
+            histogram and reverse indices.  Much faster than the alternative.
+            Default is True.
+
+    Using Reverse Indices:
+        h,rev = histogram(data, binsize=binsize, rev=True)
+
+        for i in range(h.size):
+            if rev[i] != rev[i+1]:
+                # data points were found in this bin, get their indices
+                indices = rev[ rev[i]:rev[i+1] ]
+
+                # do calculations with data[indices] ...
     """
 
     # this will only copy the data if its not an array or if it is an
@@ -274,7 +318,7 @@ def histogram2d(x, y,
         return hist
 
 
-def wmom(arrin, weightsin, inputmean=None, calcerr=False, sdev=False):
+def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
     """
     NAME:
       wmom()
@@ -290,12 +334,15 @@ def wmom(arrin, weightsin, inputmean=None, calcerr=False, sdev=False):
       arr: A numpy array or a sequence that can be converted.
       weights: A set of weights for each elements in array.
     OPTIONAL INPUTS:
-      inputmean: An input mean value, around which them mean is calculated.
-      calcerr=False: Calculate the weighted error.  By default the error
-        is calculated as 1/sqrt( weights.sum() ).  In this case it is
-        calculated as sqrt( (w**2 * (arr-mean)**2).sum() )/weights.sum()
-      sdev=False: If True, also return the weighted standard deviation 
-        as a third element in the tuple.
+      inputmean: 
+          An input mean value, around which them mean is calculated.
+      calcerr=False: 
+          Calculate the weighted error.  By default the error is calculated as
+          1/sqrt( weights.sum() ).  If calcerr=True it is calculated as sqrt(
+          (w**2 * (arr-mean)**2).sum() )/weights.sum()
+      sdev=False: 
+          If True, also return the weighted standard deviation as a third
+          element in the tuple.
 
     OUTPUTS:
       wmean, werr: A tuple of the weighted mean and error. If sdev=True the
@@ -305,16 +352,13 @@ def wmom(arrin, weightsin, inputmean=None, calcerr=False, sdev=False):
       Converted from IDL: 2006-10-23. Erin Sheldon, NYU
 
    """
-    from numpy import float64
     
     # no copy made if they are already arrays
     arr = numpy.array(arrin, ndmin=1, copy=False)
-    weights = numpy.array(weightsin, ndmin=1, copy=False)
     
     # Weights is forced to be type double. All resulting calculations
     # will also be double
-    if weights.dtype != float64:
-        weights = numpy.array(weights, dtype=float64)
+    weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
   
     wtot = weights.sum()
         
@@ -371,7 +415,7 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
     REVISION HISTORY:
       Converted from IDL: 2006-10-23. Erin Sheldon, NYU
 
-   """
+    """
     arr = numpy.array(arrin, ndmin=1, copy=False)
 
     index = numpy.arange( arr.size )
@@ -389,9 +433,9 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
         w, = numpy.where( (numpy.abs(arr[index]) - m) < clip )
 
         if w.size == 0:
-            sys.stderr.write("nsig too small. Everything clipped on iteration %d" % i+1)
+            sys.stderr.write("nsig too small. Everything clipped on "
+                             "iteration %d\n" % i+1)
             return m,s
-
 
         index = index[w]
 
@@ -410,10 +454,10 @@ def interplin(vin, xin, uin):
       
     PURPOSE:
       Perform 1-d linear interpolation.  Values outside the bounds are
-      permitted unlike the scipy.interpolate.interp1d module. The are
-      extrapolated from the line between the 0,1 or n-2,n-1 entries.
-      This program is not as powerful as interp1d but it does provide
-      this which makes it compatible with the IDL interpol() function.
+      permitted unlike the scipy.interpolate.interp1d module. They are
+      extrapolated from the line between the 0,1 or n-2,n-1 entries.  This
+      program is not as powerful as interp1d but it does provide this feature
+      which makes it compatible with the IDL interpol() function.
 
     CALLING SEQUENCE:
       yint = interplin(y, x, u)
