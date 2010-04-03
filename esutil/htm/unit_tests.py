@@ -138,6 +138,8 @@ def test():
 
 
     # try counts in radial bins
+    stdout.write("Testing bincounts....\n\n")
+
     ten=10.0/3600.
     eighty=30.0/3600.0
     hundred=100.0/3600.0
@@ -146,14 +148,24 @@ def test():
     ra2 = numpy.array(  [200.0,         200.0,         200.0,           175.23,  55.25])
     dec2 = numpy.array( [24.3+two, 24.3 + ten, 24.3 - eighty, -28.25 + hundred,  75.22])
 
-    # these must be in radians
-    rmin = 5/3600.*numpy.pi/180.
-    rmax = 150/3600.*numpy.pi/180.
+    # these must be in degrees unless scale is sent, in which case it is in
+    # units of radians*scale
+    rmin = 5/3600.
+    rmax = 150/3600.
     nbin = 10
 
     lower,upper,counts = h.bincount(rmin,rmax,nbin,ra1,dec1,ra2,dec2,getbins=True)
     for i in range(nbin):
         stdout.write("%s %s %s %s\n" % (i,lower[i], upper[i], counts[i]))
+    counts_truth = numpy.array([0, 0, 3, 0, 0, 3, 0, 0, 1, 0],dtype='i8')
+    wbad, = numpy.where(counts != counts_truth)
+    if wbad.size > 0:
+        stdout.write('    ....Error\n')
+        errors += 1
+    else:
+        stdout.write('    ....OK\n')
+    tests += 1
+
 
 
     stdout.write('\n' + '-'*50 + '\n')
