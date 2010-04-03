@@ -407,8 +407,6 @@ class HTM(htmc.HTMC):
                                               cat1['ra'],cat1['dec'],
                                               cat2['ra'],cat2['dec'],
                                               scale=DA)
-
-        
         
          MODIFICATION HISTORY:
              Created:  2010-03-31, Erin Sheldon, BNL

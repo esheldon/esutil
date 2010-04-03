@@ -95,8 +95,8 @@ PyObject* HTMC::lookup_id(
  */
 
 PyObject* HTMC::cmatch(
-        PyObject* radius_array, // degrees
-        PyObject* ra1_array, // all in degrees
+		PyObject* radius_array, // degrees
+		PyObject* ra1_array, // all in degrees
         PyObject* dec1_array,
         PyObject* ra2_array, 
         PyObject* dec2_array,
@@ -336,17 +336,17 @@ PyObject* HTMC::cmatch(
 
 
 PyObject* HTMC::cbincount(
-                PyObject* rmin_object, // units of scale*angle in radians
-                PyObject* rmax_object, // units of scale*angle in radians
-				PyObject* nbin_object, 
-                PyObject* ra1_array, // all in degrees
-                PyObject* dec1_array,
-                PyObject* ra2_array, 
-                PyObject* dec2_array,
-                PyObject* htmrev2_array,
-                PyObject* minid_obj,
-                PyObject* maxid_obj, 
-                PyObject* scale_object) throw (const char *) {
+		PyObject* rmin_object, // units of scale*angle in radians
+		PyObject* rmax_object, // units of scale*angle in radians
+		PyObject* nbin_object, 
+		PyObject* ra1_array, // all in degrees
+		PyObject* dec1_array,
+		PyObject* ra2_array, 
+		PyObject* dec2_array,
+		PyObject* htmrev2_array,
+		PyObject* minid_obj,
+		PyObject* maxid_obj, 
+		PyObject* scale_object) throw (const char *) {
 
 
 	double scale=1, logscale=0;
