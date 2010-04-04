@@ -1,0 +1,34 @@
+-----------------------------------------------
+v0.3.0 (2010-04-04)
+
+New files and packages:
+	htm package:  
+		Added C++ code for working with the Heierarchical Triangular Mesh
+		(HTM).  This is a code for breaking the sky into spherical triangles, a
+		quad tree, which makes for fast searching.  Includes the class HTM with
+		methods such as lookup_id for finding the htm id of an ra,dec, match
+		for finding matches between lists of ra,dec and bincount for counting
+		pairs in radial bins, useful for calculating correlation functions.
+
+	integrate.py: 
+		Tools for numerical integration.  Currently has a class for performing
+		gauss-legendre integration.
+
+	plotting.py: 
+		Tools for plotting with matplotlib.  
+			setuplot() for setting up the plotting and establishing a plot
+				object.
+			set_mino0r_ticks() for setting up minor tick mark locations in
+				a smart way.
+			whiskers: Plot whiskers, or arrowless vectors.
+	random.py:  
+		Contains a class for generating random points from an arbitrary
+		probability distribution.
+
+	coords.py:  
+		astro_util.py is now coords.py, appropriate since all the code was
+		coordinate transformations.
+	
+Other Changes:
+	Numerous changes that I forgot to write into this release notes. Will be
+	more diligent in the future.
