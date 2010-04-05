@@ -117,6 +117,131 @@ try:
 except:
     have_numpy=False
 
+
+def ahelp(array, recurse=False, pretty=True):
+    """
+    Name:
+      ahelp()
+
+    Purpose:
+        Print out a formatted description of the input array.   If the array
+        has fields, individual descriptions are printed for each field.  This
+        is designed to be similar to help, struct, /str in IDL. 
+
+    Calling Sequence:
+        ahelp(array, recurse=False, pretty=True)
+    
+    Inputs:
+        array: A numpy array.
+
+    Optional Inputs:
+        recurse: for sub-arrays with fields, print out a full description. 
+            default is False.
+        pretty:  If True, split field descriptions onto multiple lines if
+            the name is longer than 15 characters.  Nicer for the eye, but
+            harder for a machine to parse.  Also, strings are surrounded
+            by quotes 'string'.  Default is True.[:w
+
+    Example:
+        ahelp(a)
+        size: 1147506 nfields: 27 type: records
+          run                >i4  1933
+          rerun              |S3  '157'
+          camcol             >i2  1
+          field              >i4  11
+          mjd                >i4  51886
+          tai                >f8  array[5]
+          ra                 >f8  102.905870701
+          dec                >f8  -1.05070432844
+
+    Revision History:
+        Created: 2010-04-05, Erin Sheldon, BNL 
+
+    """
+
+    if not isinstance(array, numpy.ndarray):
+        raise ValueError("input must be an array")
+
+    names = array.dtype.names
+    descr = array.dtype.descr
+
+    topformat="size: %s nfields: %s type: %s\n"
+
+    if names is None:
+        type=descr[0][1]
+        nfields=0 
+        line=topformat % (array.size, nfields, type)
+        stdout.write(line)
+
+    else:
+        line=topformat % (array.size, len(names), 'records')
+        stdout.write(line)
+        _print_field_info(array, recurse=recurse, pretty=pretty)
+
+           
+
+def _print_field_info(array, nspace=2, recurse=False, pretty=True):
+    names = array.dtype.names
+    if names is None:
+        raise ValueError("array has no fields")
+
+    spacing = ' '*nspace
+
+    nname = 15
+    ntype = 6
+
+    # this format makes something machine readable
+    format = spacing + "%-" + str(nname) + "s %" + str(ntype) + "s  %s\n"
+    # this one is prettier since lines wrap after long names
+    pformat = spacing + "%-" + str(nname) + "s\n %" + str(nspace+nname+ntype) + "s  %s\n"
+
+    max_pretty_slen = 25
+    
+    for i in range(len(names)):
+
+        hasfields=False
+
+
+        n=names[i]
+
+        type=array.dtype.descr[i][1]
+
+        fdata = array[n][0]
+
+        shape_str = ','.join( str(s) for s in fdata.shape)
+
+        if fdata.dtype.names is not None:
+            type = 'rec[%s]' % shape_str
+            d=''
+            hasfields=True
+        elif numpy.isscalar(fdata):
+            if isinstance(fdata, numpy.string_):
+                d=fdata
+
+                # if pretty printing, reduce string lengths
+                if pretty and len(d) > max_pretty_slen:
+                    d = fdata[0:max_pretty_slen]
+                    d = "'" + d +"'"
+                    d = d+'...'
+                else:
+                    if pretty:
+                        d = "'" + d +"'"
+            else:
+                d = fdata
+        else:
+            d = 'array[%s]' % shape_str
+        
+        if pretty and len(n) > 15:
+            l = pformat % (n,type,d)
+        else:
+            l = format % (n,type,d)
+        stdout.write(l)
+
+        if hasfields and recurse:
+            new_nspace = nspace + nname + 1 + ntype + 2
+            _print_field_info(array[n], nspace=new_nspace, recurse=recurse)
+
+
 def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
     """
     NAME:

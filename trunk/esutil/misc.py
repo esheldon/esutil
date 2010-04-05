@@ -20,6 +20,8 @@ license="""
 import subprocess
 from sys import stdout, stderr
 
+
+
 def ptime(seconds, fobj=None, format='%s\n'):
     """
     ptime(seconds, fobj=None, format='%s\n')
