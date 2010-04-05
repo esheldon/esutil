@@ -1,9 +1,12 @@
 -----------------------------------------------
 Additions:
-	numpy_util.ahelp:  
+	numpy_util.ahelp():  
         Print out a formatted description of the input array.   If the array
         has fields, individual descriptions are printed for each field.  This
         is designed to be similar to help, struct, /str in IDL. 
+
+	misc.colprint():
+		Print a set of input sequences or arrays in columns.
 
 -----------------------------------------------
 v0.3.0 (2010-04-04)
