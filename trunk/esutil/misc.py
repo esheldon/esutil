@@ -21,13 +21,99 @@ import subprocess
 from sys import stdout, stderr
 
 
+def colprint(*args, **keys):
+    """
+    Name:
+        colprint
+    Purpose:
+        print the input sequences or arrays in columns.  All must be the
+        same length.
+    Calling Sequence:
+        colprint(var1, var2, ..., nlines=all, sep=' ', file=None)
+
+    Inputs:
+        A set of python objects.  Each must be a sequence or array and all must
+        be the same length.
+
+    Optional Inputs:
+        nlines:  Number of lines to print.  Default is all.
+        sep: Separator, default is ' '
+        file:  A file path or file object.  Default is to print to standard
+            output.
+
+    Revision History:
+        Create: 2010-04-05, Erin Sheldon, BNL
+    """
+    nargs = len(args)
+    if nargs == 0:
+        return
+
+    try:
+        n1 = len(args[0])
+    except:
+        raise ValueError("Could not get len() of argument 1")
+
+    if 'nlines' in keys:
+        nlines = keys['nlines']
+        if nlines > n1:
+            nlines = n1
+    else:
+        nlines = n1
+
+    if 'sep' in keys:
+        sep=keys['sep']
+    else:
+        sep=' '
+
+    if 'file' in keys:
+        f = keys['file']
+        if isinstance(f, file):
+            fobj = f
+        else:
+            fobj = open(f,'w')
+    else:
+        fobj = stdout
+
+    for i in range(nargs):
+        try:
+            l=len(args[i])
+        except:
+            raise ValueError("Could not get len() of argument %s" % (i+1))
+        if l != n1:
+            e="argument %s has non-matching length.  %s instead of %s" \
+                    % (i+1, l, n1)
+            raise ValueError(e)
+
+    format = ['%s']*nargs
+    format = sep.join(format)
+    for i in range(nlines):
+        data = []
+        for iarg in range(nargs):
+            data.append(args[iarg][i])
+        
+        data = tuple(data)
+
+        line = format % data
+        fobj.write(line)
+        fobj.write("\n")
+
+    if fobj != stdout:
+        fobj.close()
+
 
 def ptime(seconds, fobj=None, format='%s\n'):
     """
-    ptime(seconds, fobj=None, format='%s\n')
-
-    Print a pretty version of the input seconds.  
+    Name:
+        ptime(seconds, fobj=None, format='%s\n')
+    Purpose:
+        Print a pretty version of the input seconds.  
+    Calling Sequence:
+        ptime(seconds, fobj=None, format='%s\n')
     
+    Inputs:
+        Time in seconds.
+
+    Optional Inputs:
         fobj: A file object in which to write the result.
         format: The format for printing.  The default is '%s\n'
 
@@ -63,20 +149,29 @@ def ptime(seconds, fobj=None, format='%s\n'):
         fobj.write(format % tstr)
 
 
-def exec_process(command, timeout=None, 
+def exec_process(command, 
+                 timeout=None, 
                  stdout_file=subprocess.PIPE, 
                  stderr_file=subprocess.PIPE, 
                  shell=True,
                  verbose=False):
     """
-    exit_status, stdout_returned, stderr_returned = \
-       execute_command(command, 
-                        timeout=None, 
-                        stdout=subprocess.PIPE, 
-                        stderr=subprocess.PIPE, 
-                        verbose=False)
+    Name:
+        execute_command
+    Purpose:
+        Execute a command on the operating system with a possible timeout in
+        seconds
+    
+    Calling Sequence:
 
-    Execute the command with a possible timeout in seconds
+        exit_status, stdout_returned, stderr_returned = \
+           execute_command(command, 
+                           timeout=None, 
+                           stdout=subprocess.PIPE, 
+                           stderr=subprocess.PIPE, 
+                           shell=True,
+                           verbose=False)
+
     """
 
     # the user can send file names, PIPE, or a file object
@@ -132,16 +227,26 @@ def exec_process(command, timeout=None,
 
     return exit_status, stdout_ret, stderr_ret
 
-def dict_select(input_dict, keep=[], remove=[]):
+def dict_select(input_dict, keep=None, remove=None):
     """
-    newdict = dict_select(input_dict, keep=all, remove=[])
+    Name:
+        dict_select
+    Purpose:
+        Select a subset of keys from the input dict.
 
-    Select a subset of keys from the input dict.
+    Calling Sequence:
+        newdict = dict_select(input_dict, keep=all, remove=[])
 
-        keep=[]: A list of keys to keep. If the input
-            is None or [] all keys are returned that are not in the
-            remove list.  Default [].
-        remove=[]: A list of keys to ignore.  Defaults to [].
+    Inputs:
+        dict: the input dictionary.
+
+    Optional Inputs:
+        keep=None: 
+            A list of keys to keep. If the input is None or [] all keys are
+            returned that are not in the remove list.  Default [].
+
+        remove=None: 
+            A list of keys to ignore.  Defaults to [].
 
     """
 
