@@ -1,5 +1,12 @@
 -----------------------------------------------
 Additions:
+	pyfitspatch:
+		A patched version of pyfits that allows writing binary tables from a
+		numpy array with fields, recarray, etc. with a single call.  The io.py
+		sub-module uses this for input and output from FITS.  The patches have
+		been sent to the pyfits people and when incorporated pyfitspatch will
+		be dropped.
+
 	numpy_util.ahelp():  
         Print out a formatted description of the input array.   If the array
         has fields, individual descriptions are printed for each field.  This
