@@ -110,6 +110,7 @@ license="""
 import sys
 from sys import stdout, stderr
 import copy
+import stat
 
 try:
     import numpy
@@ -1147,3 +1148,63 @@ def dict2array(d, sort=False, keys=None):
     return a
 
 
+def splitarray(nper, var_input):
+    """
+    Name:
+        splitarray()
+
+    Purpose:
+        Split up an array into chunks of at least a given size.  Return a
+        list of these subarrays.  The ordering is perserved.
+
+    Calling Sequence:
+        split_list = splitarray(nper, array)
+    
+    Inputs:
+        nper: Number obj elements in each sub-array.  Note, the last one
+            may have fewer if len(array) % nper != 0
+        array: A numpy array or object that can be converted to an array.
+
+    Output:
+        A list with all the sub-arrays.
+
+    Example:
+        In [1]: l=numpy.arange(25)
+        In [2]: nper = 3
+        In [3]: split_list = eu.numpy_util.splitarray(nper, l)
+        In [4]: split_list
+        Out[4]:
+        [array([0, 1, 2]),
+         array([3, 4, 5]),
+         array([6, 7, 8]),
+         array([ 9, 10, 11]),
+         array([14, 12, 13]),
+         array([15, 16, 17]),
+         array([18, 19, 20]),
+         array([23, 21, 22]),
+         array([24])]
+
+
+    Revision History:
+        Created: 2010-04-05, Erin Sheldon, BNL 
+
+    """
+
+
+    var = numpy.array(var_input, ndmin=0, copy=False)
+
+    ind = numpy.arange(var.size)
+
+    # this will tell us which bin the object belongs to
+    bin_nums = ind/nper
+
+    h,rev = stat.histogram(bin_nums, binsize=1, min=0, rev=True)
+
+    split_list = []
+    for i in range(len(h)):
+        if rev[i] != rev[i+1]:
+            w=rev[ rev[i]:rev[i+1] ]
+
+            split_list.append(var[w])
+
+    return split_list
