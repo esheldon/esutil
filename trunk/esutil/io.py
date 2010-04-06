@@ -54,10 +54,14 @@ from esutil import ostools
 from sys import stdout, stderr
 
 try:
-    import pyfits
+    import pyfitspatch as pyfits
     have_pyfits=True
 except:
-    have_pyfits=False
+    try:
+        import pyfits
+        have_pyfits=True
+    except:
+        have_pyfits=False
 
 
 def read(fobj, **keywords): 

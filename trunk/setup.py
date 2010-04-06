@@ -39,6 +39,7 @@ try:
     include_dirs=[numpy.get_include()]
     include_dirs += ['esutil/include']
 
+    # recfile
     recfile_sources = ['esutil/recfile/records.cpp',
                        'esutil/recfile/records_wrap.cpp']
     recfile_module = Extension('esutil.recfile._records', 
@@ -47,6 +48,7 @@ try:
     packages.append('esutil.recfile')
 
 
+    # HTM
     include_dirs += ['esutil/htm/htm_src']
     htm_sources = glob('esutil/htm/htm_src/*.cpp')
     htm_sources += ['esutil/htm/htmc.cc','esutil/htm/htmc_wrap.cc']
@@ -55,6 +57,17 @@ try:
 
     ext_modules.append(htm_module)
     packages.append('esutil.htm')
+
+
+    # pyfitspatch
+    include_dirs += ['esutil/pyfitspatch']
+    pyfits_sources = glob('esutil/pyfitspatch/*.c')
+    pyfits_module = Extension("pyfitspatch.pyfitsComp",
+                              sources=pyfits_sources)
+    ext_modules.append(pyfits_module)
+    packages.append('esutil.pyfitspatch')
+
+
 
 except:
     stdout.write('Numpy not found:  Not building recfile\n')

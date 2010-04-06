@@ -71,6 +71,11 @@ except:
     pass
 
 try:
+    import pyfitspatch
+except:
+    pass
+
+try:
     import recfile
 except:
     pass
