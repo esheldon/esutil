@@ -70,17 +70,19 @@ def read(fobj, **keywords):
         io.read
 
     Usage:
-        read(filename/fileobject,
-             typ=None,
-             ext=0,
-             rows=None, fields=None, columns=None,
-             header=False, 
-             combine=False, 
-             view=None,
-             lower=False, upper=False,
-             noroot=True, seproot=False,
-             verbose=False, 
-             ensure_native=False)
+        import esutil
+        data = esutil.io.read(
+            filename/fileobject,
+            typ=None,
+            ext=0,
+            rows=None, fields=None, columns=None,
+            header=False, 
+            combine=False, 
+            view=None,
+            lower=False, upper=False,
+            noroot=True, seproot=False,
+            verbose=False, 
+            ensure_native=False)
 
     Purpose:
         Provide a single interface to read from a variety of file types.
@@ -212,6 +214,63 @@ def read(fobj, **keywords):
     return data
 
 
+def write(fobj, data, **keywords):
+    """
+    Name:
+        io.write
+    Purpose:
+        Provide a single interface to write a variety of file types.
+
+
+    Usage:
+        import esutil
+        esutil.io.write(fobj, data, **keywords)
+
+    Inputs:
+        filename/object:
+            File name or an open file object.  If type= is not sent, file
+            type is determined from the name of the file.
+        data:
+            Data that can be written to indicated file type. E.g. for 
+            FITS files this should be a numpy array or a fits object.
+
+    Optional Inputs:
+        type:
+            Indicator of the file type, e.g. 'fits'.  If None, the type is
+            determined from the file name.
+        append:
+            If true, append the data if supported by the indicated file type.
+            Default is False.
+        header:
+            If not None, write the header to the file if supported.
+
+    
+    All other keywords will be passed on to the underlying file writer if
+    **keywords is supported.  See those functions for more details, e.g
+    esutil.pyfitspyatch.writeto()
+
+
+    Currently Supported File Types:
+        FITS
+            Flexible Image Transport System
+            NOTE: requires the patched version of pyfits that comes with esutil.
+    """
+
+
+    verbose = keywords.get('verbose', False)
+
+    # a scalar was input
+    fname,type=_get_fname_ftype_from_inputs(fobj, **keywords)
+    if verbose:
+        stdout.write("Writing to: %s\n" % fname)
+
+    # pick the right reader based on type
+    if type == 'fits':
+        write_fits(fobj, data, **keywords)
+    else:
+        raise ValueError("Need to implement writing file type: %s\n" % type)
+
+
 
 def read_fits(fobj, **keywords):
     """
@@ -289,6 +348,10 @@ def read_fits(fobj, **keywords):
         return d,h
     else:
         return d
+
+
+def write_fits(fobj, data, header=None, **keys):
+    pyfits.writeto(fobj, data, header=header, **keys)
 
 
 def read_rec(fobj, **keywords):
