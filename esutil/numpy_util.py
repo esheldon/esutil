@@ -999,7 +999,7 @@ def unique(arr, values=False):
 
 
 
-def match(arr1, arr2):
+def match(arr1input, arr2input):
     """
     NAME:
         match
@@ -1022,6 +1022,10 @@ def match(arr1, arr2):
     REVISION HISTORY:
         Created 2009, Erin Sheldon, NYU.
     """
+
+    arr1 = numpy.array(arr1input, ndmin=1, copy=False)
+    arr2 = numpy.array(arr2input, ndmin=1, copy=False)
+
     dtype = 'i8'
     n1 = len(arr1)
     n2 = len(arr2)
@@ -1129,8 +1133,8 @@ def dict2array(d, sort=False, keys=None):
         if key not in d:
             raise KeyError("Requested key %s not in dictionary" % key)
 
-        if isinstance(d[key], int):
-            dt=int
+        if isinstance(d[key], (int,long)):
+            dt=long
         elif isinstance(d[key], float):
             dt=float
         elif isinstance(d[key], str):
