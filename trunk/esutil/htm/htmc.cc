@@ -350,25 +350,28 @@ PyObject* HTMC::cbincount(
 
 
 	double scale=1, logscale=0;
-	double rmin = PyFloat_AsDouble(rmin_object);
-	double rmax = PyFloat_AsDouble(rmax_object);
-	int nbin = PyLong_AsLong(nbin_object);
+
+	// get these as numpyvectors even though they are only length 1
+	// because it does a good job with conversions
+	NumpyVector<double> rminvec(rmin_object);
+	NumpyVector<double> rmaxvec(rmax_object);
+	NumpyVector<int64_t> nbinvec(nbin_object);
+
+	double rmin=rminvec[0];
+	double rmax=rmaxvec[0];
+	int64_t nbin=nbinvec[0];
+
 
 	double logrmin = log10(rmin);
 	double logrmax = log10(rmax);
 
-	double log_binsize = (logrmax-logrmin)/nbin;
-	if (log_binsize < 0) {
-		throw("found log_binsize < 0");
-	}
 
 	NumpyVector<double> ra1(ra1_array);
 	NumpyVector<double> dec1(dec1_array);
 	NumpyVector<double> ra2(ra2_array);
 	NumpyVector<double> dec2(dec2_array);
 	NumpyVector<int64_t> htmrev2(htmrev2_array);
-	// get these as numpyvectors even though they are only length 1
-	// because it does a good job with conversions
+
 	NumpyVector<int64_t> minid_array(minid_obj);
 	NumpyVector<int64_t> maxid_array(maxid_obj);
 	int64_t minid = minid_array[0];
@@ -393,13 +396,19 @@ PyObject* HTMC::cbincount(
 		}
 	}
 
-
 	std::cout<<"rmin: "<<rmin<<"\n";
 	std::cout<<"rmax: "<<rmax<<"\n";
 	std::cout<<"degrees?: "<<(degrees ? "True" : "False")<<"\n";
 	std::cout<<"nbin: "<<nbin<<"\n";
 	std::cout<<"logrmin: "<<logrmin<<"\n";
 	std::cout<<"logrmax: "<<logrmax<<"\n";
+
+	double log_binsize = (logrmax-logrmin)/nbin;
+	if (log_binsize < 0) {
+		throw("found log_binsize < 0");
+	}
+
+
 	std::cout<<"log binsize: "<<log_binsize<<"\n";
 	std::cout<<"len(scale_array) = "<<scale_array.size()<<"\n";
 
@@ -416,14 +425,9 @@ PyObject* HTMC::cbincount(
 
 	std::cout << "\n" <<
 		"Each dot is " << step << " points" << std::endl;
-	for (npy_intp i1=0; i1<ra1.size(); i1++) {
-		if ( ((i1+1) % step) == 0 && (i1 > 0) ) {
-			std::cout<<".";
-			if ( ((i1+1) % linelen) == 0) {
-				std::cout<<"\n"<<(i1+1)<<"/"<<ra1.size()<<"  pair count: "<<totcount<<"\n";
-			}
-			fflush(stdout);
-		}
+
+	npy_intp n1 = ra1.size();
+	for (npy_intp i1=0; i1<n1; i1++) {
 		// Declare the domain and the lists
 		SpatialDomain domain;    // initialize empty domain
 		ValVec<uint64> plist, flist;	// List results
@@ -493,18 +497,23 @@ PyObject* HTMC::cbincount(
 								totcount+=1;
 							} // in one of our radial bins
 						} // Within max angle
-
 					} // loop over objects in leaf 
-
-
 				} // points exist in this leafbin
-
 			} // leafid in range of list 2
+		} // loop over HTM leaves
 
+
+		if ( ( ((i1+1) % step) == 0 && (i1 > 0) ) 
+				|| (i1 == (n1-1)) ) {
+			std::cout<<".";
+			if ( ((i1+1) % linelen) == 0 || (i1 == (n1-1)) ) {
+				std::cout<<"\n"<<(i1+1)<<"/"<<n1<<"  pair count: "<<totcount<<"\n";
+			}
+			fflush(stdout);
 		}
 
+	} // loop over list 1
 
-	}
 	std::cout<<"\n";
 	fflush(stdout);
 
