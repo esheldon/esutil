@@ -61,7 +61,8 @@ def test():
     # not last ones don'e match at all
     ra1 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 21.36])
     dec1 = numpy.array( [24.3,          24.3,            24.3,  -28.25, -15.32])
-    ra2 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 55.25])
+    # make one of them big endian to check byte swapping
+    ra2 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 55.25], dtype='>f8')
     dec2 = numpy.array( [24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])
 
     m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,maxmatch=0)
