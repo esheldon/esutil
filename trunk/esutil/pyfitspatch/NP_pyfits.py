@@ -9769,7 +9769,7 @@ def _array_with_fields_writeto(filename, data, header=None, **keys):
 
 
 
-def writeto(filename, data, header=None, **keys):
+def writeto(filename, data, **keys):
     """Create a new FITS file using the supplied data/header.
 
        @type filename: string, file object, or file like object
@@ -9811,9 +9811,10 @@ def writeto(filename, data, header=None, **keys):
     # Just send to the append() method if we are appending a new extension
     doappend = keys.get('append',False)
     if doappend:
-        append(filename, data, header=header, **keys)
+        append(filename, data, **keys)
         return
 
+    header = keys.get('header',None)
 
     if header is None:
         if 'header' in keys:
@@ -9843,7 +9844,7 @@ def writeto(filename, data, header=None, **keys):
                 checksum=checksum, classExtensions=classExtensions)
 
 # E.S.S. added **keys
-def append(filename, data, header=None, classExtensions={}, checksum=False,
+def append(filename, data, classExtensions={}, checksum=False,
            copy=True, noswap=False, **keys):
     """Append the header/data to FITS file if filename exists, create if not.
 
@@ -9889,6 +9890,8 @@ def append(filename, data, header=None, classExtensions={}, checksum=False,
     # E.S.S.  use function, since these tests get performed in a 
     # few different places
     name, closed, noexist_or_empty = _stat_filename_or_fileobj(filename)
+
+    header = keys.get('header',None)
 
     if noexist_or_empty:
         #

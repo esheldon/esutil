@@ -119,7 +119,7 @@ except:
     have_numpy=False
 
 
-def ahelp(array, recurse=False, pretty=True):
+def ahelp(array, recurse=False, pretty=True, index=0):
     """
     Name:
       ahelp()
@@ -160,7 +160,8 @@ def ahelp(array, recurse=False, pretty=True):
 
     """
 
-    if not isinstance(array, numpy.ndarray):
+
+    if not hasattr(array, 'dtype'):
         raise ValueError("input must be an array")
 
     names = array.dtype.names
@@ -177,11 +178,11 @@ def ahelp(array, recurse=False, pretty=True):
     else:
         line=topformat % (array.size, len(names), 'records')
         stdout.write(line)
-        _print_field_info(array, recurse=recurse, pretty=pretty)
+        _print_field_info(array, recurse=recurse, pretty=pretty, index=index)
 
            
 
-def _print_field_info(array, nspace=2, recurse=False, pretty=True):
+def _print_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
     names = array.dtype.names
     if names is None:
         raise ValueError("array has no fields")
@@ -207,7 +208,7 @@ def _print_field_info(array, nspace=2, recurse=False, pretty=True):
 
         type=array.dtype.descr[i][1]
 
-        fdata = array[n][0]
+        fdata = array[n][index]
 
         shape_str = ','.join( str(s) for s in fdata.shape)
 
@@ -1133,14 +1134,24 @@ def dict2array(d, sort=False, keys=None):
         if key not in d:
             raise KeyError("Requested key %s not in dictionary" % key)
 
-        if isinstance(d[key], (int,long)):
-            dt=long
-        elif isinstance(d[key], float):
-            dt=float
-        elif isinstance(d[key], str):
-            dt='S%s' % len(d[key])
+        if not isinstance(d[key], (int,long,float,str,unicode)):
+            try:
+                strval = '%s' % d[key]
+                val = eval(strval)
+            except:
+                val = str(d[key])
         else:
-            raise ValueError("Only support int, float, string currently")
+            val = d[key]
+
+        if isinstance(val, (int,long)):
+            dt=long
+        elif isinstance(val, float):
+            dt=float
+        elif isinstance(val, (str,unicode)):
+            dt='S%s' % len(val)
+        else:
+            raise ValueError("Only support int, float, string currently, "
+                             "found %s" % type(d[key]))
 
         desc.append( (key, dt) )
 

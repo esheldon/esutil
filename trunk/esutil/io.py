@@ -256,13 +256,8 @@ def write(fobj, data, **keywords):
             NOTE: requires the patched version of pyfits that comes with esutil.
     """
 
-
-    verbose = keywords.get('verbose', False)
-
     # a scalar was input
     fname,type=_get_fname_ftype_from_inputs(fobj, **keywords)
-    if verbose:
-        stdout.write("Writing to: %s\n" % fname)
 
     # pick the right reader based on type
     if type == 'fits':
@@ -350,8 +345,21 @@ def read_fits(fobj, **keywords):
         return d
 
 
-def write_fits(fobj, data, header=None, **keys):
-    pyfits.writeto(fobj, data, header=header, **keys)
+def write_fits(fobj, data, **keys):
+    verbose = keys.get('verbose', False)
+    if verbose:
+        # only write if appending: pyfits will print a message
+        # when over-writing but not appending.
+        append = keys.get('append', False)
+        if append:
+            if isinstance(fobj,file):
+                name=f.name
+            else:
+                name=fobj
+            stdout.write("Appending to: %s\n" % name)
+
+
+    pyfits.writeto(fobj, data, **keys)
 
 
 def read_rec(fobj, **keywords):
