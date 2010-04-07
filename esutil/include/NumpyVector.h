@@ -390,13 +390,10 @@ void NumpyVector<T>::init(PyObject* obj)  throw (const char *) {
 
         PyArray_Descr* descr = PyArray_DESCR(obj);
 
-        if (descr->type_num == mTypeNum) {
-            // it is the right type, just make sure it isn't byteswapped.
-            if (PyArray_ISNOTSWAPPED(obj)) {
-                // We are set!  Just copy the reference.
-                mArray = obj;
-                Py_INCREF(obj);
-            }
+        if (descr->type_num == mTypeNum && PyArray_ISNOTSWAPPED(obj)) {
+			// We are set!  Just copy the reference.
+			mArray = obj;
+			Py_INCREF(obj);
         } else {
             // Either it is not the right type or it is byteswapped.  So we
             // need to make a copy.
