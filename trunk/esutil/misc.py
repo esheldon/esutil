@@ -70,28 +70,21 @@ def colprint(*args, **keys):
         raise ValueError("Could not get len() of argument 1")
 
     # Should we print only a subset?
-    if 'nlines' in keys:
-        nlines = keys['nlines']
-        if nlines > n1:
-            nlines = n1
-    else:
+    nlines = keys.get('nlines',n1)
+    if nlines is None:
+        nlines = n1
+    elif nlines > n1:
         nlines = n1
 
     # what separator should be used?
-    if 'sep' in keys:
-        sep=keys['sep']
-    else:
-        sep=' '
+    sep = keys.get('sep',' ')
 
     # should we print to a file?
-    if 'file' in keys:
-        f = keys['file']
-        if isinstance(f, file):
-            fobj = f
-        else:
-            fobj = open(f,'w')
+    f = keys.get('file', stdout)
+    if isinstance(f, file):
+        fobj = f
     else:
-        fobj = stdout
+        fobj = open(f,'w')
 
     # make sure all the arguments are the same length.
     for i in range(nargs):
@@ -105,23 +98,23 @@ def colprint(*args, **keys):
             raise ValueError(e)
 
     # print a header
-    if 'names' in keys:
-        names = keys['names']
+    names = keys.get('names',None)
+    if names is not None:
         nnames = len(names)
         if len(names) != nargs:
             raise ValueError("Expected %s names, got %s" % (nargs,nnames))
         
         # see if explicit format has been requested.
-        if 'nformat' in keys:
-            nformat=keys['nformat']
+        nformat =keys.get('nformat',None)
+
+        if nformat is not None:
             nformat = [nformat]*nnames
         else:
             # try to use the other format
-            if 'format' in keys:
-                nformat=keys['format']
-                nformat = [nformat]*nnames
-            else:
-                nformat = ['%s']*nnames
+            fmt=keys.get('format','%s')
+            if fmt is None:
+                fmt='%s'
+            nformat=[fmt]*nnames
 
         nformat = sep.join(nformat) + '\n'
         try:
@@ -133,8 +126,8 @@ def colprint(*args, **keys):
 
 
     # format for columns.  Same is used for all.
-    if 'format' in keys:
-        format = keys['format']
+    format = keys.get('format','%s')
+    if format is not None:
         format = [format]*nargs
     else:
         format = ['%s']*nargs
