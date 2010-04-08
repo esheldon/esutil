@@ -120,6 +120,7 @@ import sys
 from sys import stdout, stderr
 import copy
 import stat
+import esutil
 
 try:
     import numpy
@@ -251,6 +252,24 @@ def _print_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
         if hasfields and recurse:
             new_nspace = nspace + nname + 1 + ntype + 2
             _print_field_info(array[n], nspace=new_nspace, recurse=recurse)
+
+
+def aprint(arr, fields=None, nlines=None, format=None):
+    if fields is None:
+        fields = arr.dtype.names
+
+    ftup = split_fields(arr, fields=fields)
+
+    colprint =esutil.misc.colprint
+
+    command = 'colprint('
+    arglist=[]
+    for i in range(len(fields)):
+        arglist.append('ftup[%s]' % i)
+
+    arglist = ', '.join(arglist)
+    command = 'colprint('+arglist+', nlines=nlines,format=format,names=fields)'
+    eval(command)
 
 
 def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
