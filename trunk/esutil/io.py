@@ -50,6 +50,7 @@ from esutil import json_util
 from esutil import xmltools
 from esutil import sfile
 from esutil import ostools
+import os
 
 from sys import stdout, stderr
 
@@ -348,15 +349,21 @@ def read_fits(fobj, **keywords):
 def write_fits(fobj, data, **keys):
     verbose = keys.get('verbose', False)
     if verbose:
-        # only write if appending: pyfits will print a message
-        # when over-writing but not appending.
+
+        # only write if appending or file does not exist: pyfits will print a
+        # message when over-writing only
+
+        if isinstance(fobj,file):
+            name=f.name
+        else:
+            name=fobj
+
         append = keys.get('append', False)
         if append:
-            if isinstance(fobj,file):
-                name=f.name
-            else:
-                name=fobj
             stdout.write("Appending to: %s\n" % name)
+        else:
+            if not os.path.exists(name):
+                stdout.write("Writing to: %s\n" % name)
 
 
     pyfits.writeto(fobj, data, **keys)
