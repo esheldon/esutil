@@ -15,17 +15,11 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         Copy common fields from one numpy array to another.  The name 
         matching is case senitive.
 
-    extract_fields(array, names)
+    extract_fields(array, names, strict=True)
 
         Extract a set of fields from a numpy array.  A new array is returned
         with the requested fields and data copied in.  The name matching is
         case sensitive.
-
-    split_fields(array, fields=None, getnames=False)
-
-         Get a tuple of references to the individual fields in a structured
-         array (aka recarray).  If fields= is sent, just return those fields.
-         If getnames=True, return a tuple of the names extracted also.
 
     remove_fields(array, names)
         Remove a set of fields from the array.  A new array is returned
@@ -37,8 +31,23 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         fields as indicated by the input numpy type descriptor.
         The data are copied from the original array.
 
+
+    reorder_fields(arr, ordered_names, strict=True)
+        Re-order the fields according the the listed names.  Names not in the
+        list are put at the end.
+
+
     copy_fields_by_name(arr, names, values)
         Copy values into a numpy array by field name.
+
+
+    split_fields(array, fields=None, getnames=False)
+
+         Get a tuple of references to the individual fields in a structured
+         array (aka recarray).  If fields= is sent, just return those fields.
+         If getnames=True, return a tuple of the names extracted also.
+
+
 
     compare_arrays(array1, array2, ignore_missing=True, verbose=False)
         Compare the values field-by-field in two sets of numpy arrays or
@@ -413,32 +422,52 @@ def copy_fields(arr1, arr2):
         if name in names2:
             arr2[name] = arr1[name]
 
-def extract_fields(arr, keepnames):
+def extract_fields(arr, keepnames, strict=True):
     """
     NAME:
         extract_fields
 
     CALLING SEQUENCE:
-        newarr = extract_fields(arr, names)
+        newarr = extract_fields(arr, names, strict=True)
 
     PURPOSE:
         Extract a set of fields from a numpy array.  A new array is returned
-        with the requested fields and data copied in.  The name matching 
-        is case sensitive.
+        with the requested fields and data copied in.  The name matching is
+        case sensitive.
+
+        The order of the fields is the order in the original array.
+
+    Inputs:
+        arr: A numpy structure, or array with fields.
+        names: The subset of names to extract.  
+
+    Optional Inputs:
+        strict: 
+            If True, requested names that are not found in the input array will
+            raise a ValueError.  Default is True.
 
     REVISION HISTORY:
         Created 2007, Erin Sheldon, NYU.
+        Added strict keyword, 2010-04-07, Erin Sheldon, BNL
     """
-    if type(keepnames) != list and type(keepnames) != numpy.ndarray:
-        keepnames=[keepnames]
+    if not isinstance(keepnames, (tuple,list,numpy.ndarray)):
+        keepnames = [keepnames]
+
     arrnames = list( arr.dtype.names )
+
+    if strict:
+        for name in keepnames:
+            if name not in arrnames:
+                raise ValueError("field not found: %s" % name)
+
     new_descr = []
     for d in arr.dtype.descr:
         name=d[0]
         if name in keepnames:
             new_descr.append(d)
+
     if len(new_descr) == 0:
-        raise ValueError('No field names matched')
+        raise ValueError('No fields kept')
 
     shape = arr.shape
     new_arr = numpy.zeros(shape,dtype=new_descr)
@@ -446,62 +475,9 @@ def extract_fields(arr, keepnames):
     return new_arr
 
 
-def split_fields(data, fields=None, getnames=False):
-    """
-    Name:
-        split_fields
 
-    Calling Sequence:
-        The standard calling sequence is:
-            field_tuple = split_fields(data, fields=)
-            f1,f2,f3,.. = split_fields(data, fields=)
 
-        You can also return a list of the extracted names
-            field_tuple, names = split_fields(data, fields=, getnames=True)
 
-    Purpose:
-        Get a tuple of references to the individual fields in a structured
-        array (aka recarray).  If fields= is sent, just return those
-        fields.  If getnames=True, return a tuple of the names extracted
-        also.
-
-        If you want to extract a set of fields into a new structured array
-        by copying the data, see esutil.numpy_util.extract_fields
-
-    Inputs:
-        data: An array with fields.  Can be a normal numpy array with fields
-            or the recarray or another subclass.
-    Optional Inputs:
-        fields: A list of fields to extract. Default is to extract all.
-        getnames:  If True, return a tuple of (field_tuple, names)
-
-    """
-
-    outlist = []
-    allfields = data.dtype.fields
-
-    if allfields is None:
-        if fields is not None:
-            raise ValueError("Could not extract fields: data has "
-                             "no fields")
-        return (data,)
-    
-    if fields is None:
-        fields = allfields
-    else:
-        if isinstance(fields, (str,unicode)):
-            fields=[fields]
-
-    for field in fields:
-        if field not in allfields:
-            raise ValueError("Field not found: '%s'" % field)
-        outlist.append( data[field] )
-
-    output = tuple(outlist)
-    if getnames:
-        return output, fields
-    else:
-        return output
 
 
 
@@ -592,6 +568,69 @@ def add_fields(arr, add_dtype_or_descr, defaults=None):
 
     return new_arr
 
+
+def reorder_fields(arr, ordered_names, strict=True):
+    """
+    NAME:
+        reorder_fields
+
+    CALLING SEQUENCE:
+        newarr = reorder_fields(arr, ordered_names, strict=True)
+
+    PURPOSE:
+        Re-order the fields according the the listed names.  Names
+        not in the list are put at the end.
+
+
+    Inputs:
+        arr: A numpy structure, or array with fields.
+        ordered_names: The ordered subset of names.  These are placed in order
+            at the front.  Non-matching names are placed at the back.
+
+    Optional Inputs:
+        strict: 
+            If True, requested names that are not found in the input array will
+            raise a ValueError.  Default is True.
+
+    REVISION HISTORY:
+        Created 2007, Erin Sheldon, NYU.
+        Added strict keyword, 2010-04-07, Erin Sheldon, BNL
+    """
+
+    if not isinstance(ordered_names, (tuple,list,numpy.ndarray)):
+        ordered_names = [ordered_names]
+
+    # this is so we can get indices
+    original_names = numpy.array( arr.dtype.names )
+    original_descr = arr.dtype.descr
+
+    new_names = []
+    new_descr = []
+
+    for name in ordered_names:
+        w, = numpy.where( original_names == name )
+        if w.size != 0:
+            new_names.append(name)
+            new_descr.append( original_descr[w[0]] )
+        else:
+            if strict:
+                raise ValueError("field not found: '%s'" % name)
+    
+    # now put in the remaining names in original order at the back
+    for i in range(original_names.size):
+        name = original_names[i]
+        if name not in new_names:
+            new_names.append(name)
+            new_descr.append(original_descr[i])
+
+    shape = arr.shape
+    new_arr = numpy.zeros(shape,dtype=new_descr)
+    copy_fields(arr, new_arr)
+    return new_arr
+
+
+
+
 def copy_fields_by_name(arr, names, vals):
     """
     NAME:
@@ -630,6 +669,67 @@ def copy_fields_by_name(arr, names, vals):
     for name,val in zip(names,vals):
         if name in arrnames:
             arr[name] = val
+
+
+def split_fields(data, fields=None, getnames=False):
+    """
+    Name:
+        split_fields
+
+    Calling Sequence:
+        The standard calling sequence is:
+            field_tuple = split_fields(data, fields=)
+            f1,f2,f3,.. = split_fields(data, fields=)
+
+        You can also return a list of the extracted names
+            field_tuple, names = split_fields(data, fields=, getnames=True)
+
+    Purpose:
+        Get a tuple of references to the individual fields in a structured
+        array (aka recarray).  If fields= is sent, just return those
+        fields.  If getnames=True, return a tuple of the names extracted
+        also.
+
+        If you want to extract a set of fields into a new structured array
+        by copying the data, see esutil.numpy_util.extract_fields
+
+    Inputs:
+        data: An array with fields.  Can be a normal numpy array with fields
+            or the recarray or another subclass.
+    Optional Inputs:
+        fields: A list of fields to extract. Default is to extract all.
+        getnames:  If True, return a tuple of (field_tuple, names)
+
+    """
+
+    outlist = []
+    allfields = data.dtype.fields
+
+    if allfields is None:
+        if fields is not None:
+            raise ValueError("Could not extract fields: data has "
+                             "no fields")
+        return (data,)
+    
+    if fields is None:
+        fields = allfields
+    else:
+        if isinstance(fields, (str,unicode)):
+            fields=[fields]
+
+    for field in fields:
+        if field not in allfields:
+            raise ValueError("Field not found: '%s'" % field)
+        outlist.append( data[field] )
+
+    output = tuple(outlist)
+    if getnames:
+        return output, fields
+    else:
+        return output
+
+
+
 
 
 def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):

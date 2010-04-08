@@ -36,10 +36,26 @@ def colprint(*args, **keys):
         be the same length.
 
     Optional Inputs:
-        nlines:  Number of lines to print.  Default is all.
-        sep: Separator, default is ' '
-        file:  A file path or file object.  Default is to print to standard
+        nlines:  
+            Number of lines to print.  Default is all.
+        sep: 
+            Separator, default is ' '
+        file:  
+            A file path or file object.  Default is to print to standard
             output.
+
+        format: 
+            A format string to apply to every argument.  E.g. format='%15s'
+            Since every arg gets the same format, only %s type formats should
+            be used unless the types are homogeneous.
+
+        names: 
+            A list of names for each argument.  There must be an entry for
+            each argument. The names are printed above each column.
+        nformat:
+            A Format to apply to the names.  By default, the same format used
+            for the arguments is tried.  If formatting fails, a simple '%s' is
+            used for the names.
 
     Revision History:
         Create: 2010-04-05, Erin Sheldon, BNL
@@ -53,6 +69,7 @@ def colprint(*args, **keys):
     except:
         raise ValueError("Could not get len() of argument 1")
 
+    # Should we print only a subset?
     if 'nlines' in keys:
         nlines = keys['nlines']
         if nlines > n1:
@@ -60,11 +77,13 @@ def colprint(*args, **keys):
     else:
         nlines = n1
 
+    # what separator should be used?
     if 'sep' in keys:
         sep=keys['sep']
     else:
         sep=' '
 
+    # should we print to a file?
     if 'file' in keys:
         f = keys['file']
         if isinstance(f, file):
@@ -74,6 +93,7 @@ def colprint(*args, **keys):
     else:
         fobj = stdout
 
+    # make sure all the arguments are the same length.
     for i in range(nargs):
         try:
             l=len(args[i])
@@ -84,8 +104,44 @@ def colprint(*args, **keys):
                     % (i+1, l, n1)
             raise ValueError(e)
 
-    format = ['%s']*nargs
+    # print a header
+    if 'names' in keys:
+        names = keys['names']
+        nnames = len(names)
+        if len(names) != nargs:
+            raise ValueError("Expected %s names, got %s" % (nargs,nnames))
+        
+        # see if explicit format has been requested.
+        if 'nformat' in keys:
+            nformat=keys['nformat']
+            nformat = [nformat]*nnames
+        else:
+            # try to use the other format
+            if 'format' in keys:
+                nformat=keys['format']
+                nformat = [nformat]*nnames
+            else:
+                nformat = ['%s']*nnames
+
+        nformat = sep.join(nformat) + '\n'
+        try:
+            fobj.write(nformat % tuple(names))
+        except:
+            nformat = ['%s']*nnames
+            nformat = sep.join(nformat) + '\n'
+            fobj.write(nformat % tuple(names))
+
+
+    # format for columns.  Same is used for all.
+    if 'format' in keys:
+        format = keys['format']
+        format = [format]*nargs
+    else:
+        format = ['%s']*nargs
+
     format = sep.join(format)
+
+    # loop over and print columns
     for i in range(nlines):
         data = []
         for iarg in range(nargs):
@@ -97,6 +153,7 @@ def colprint(*args, **keys):
         fobj.write(line)
         fobj.write("\n")
 
+    # close if this is not stdout
     if fobj != stdout:
         fobj.close()
 
