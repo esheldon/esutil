@@ -298,7 +298,7 @@ def read_fits(fobj, **keywords):
         raise ImportError("Could not import pyfits")
     import numpy
 
-    ext=keywords.get('ext',0)
+    #ext=keywords.get('ext',0)
     view = keywords.get('view', numpy.ndarray)
     header = keywords.get('header', False)
     rows=keywords.get('rows',None)
@@ -307,6 +307,8 @@ def read_fits(fobj, **keywords):
     lower= keywords.get('lower',False)
     upper= keywords.get('upper',False)
     ensure_native = keywords.get('ensure_native',False)
+
+
 
     if fields is None:
         if columns is not None:
@@ -319,10 +321,15 @@ def read_fits(fobj, **keywords):
 
     if isinstance(fobj,(str,unicode)):
         fobj=ostools.expand_filename(fobj)
+
+    if 'ignore_missing_end' not in keywords:
+        keywords['ignore_missing_end'] = True
     if header:
-        d,h = pyfits.getdata(fobj, ext=ext, header=header)
+        # the ignore_missing_end=True is for the multitude
+        # of malformed FITS files out there
+        d,h = pyfits.getdata(fobj, **keywords)
     else:
-        d = pyfits.getdata(fobj, ext=ext)
+        d = pyfits.getdata(fobj, **keywords)
 
     if lower:
         d.dtype.names = [n.lower() for n in d.dtype.names]
