@@ -143,6 +143,7 @@ def colprint(*args, **keys):
         data = tuple(data)
 
         line = format % data
+        line = line.replace('\n','')
         fobj.write(line)
         fobj.write("\n")
 
