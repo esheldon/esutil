@@ -9227,21 +9227,24 @@ class _Zero(int):
     def __init__(self):
         self = 0
 
-def _getext(filename, mode, *ext1, **ext2):
-    """Open the input file, return the HDUList and the extension."""
+def _getext(filename, mode, *ext1, **ext2_input):
+    """Open the input file, return the HDUList and the extension.
+    
+    E.S.S.  Allow arbitrary keywords to be sent without crashing. 
+    """
 
-    hdulist = open(filename, mode=mode, **ext2)
+    hdulist = open(filename, mode=mode, **ext2_input)
 
-    # delete these from the variable keyword argument list so the extension
-    # will properly validate
-    if ext2.has_key('classExtensions'):
-        del ext2['classExtensions']
 
-    if ext2.has_key('ignore_missing_end'):
-        del ext2['ignore_missing_end']
-
-    if ext2.has_key('uint16'):
-        del ext2['uint16']
+    # the logic below is too convoluted, just fix
+    # ext2
+    ext2 = {}
+    if 'ext' in ext2_input:
+        ext2['ext'] = ext2_input['ext']
+    if 'extver' in ext2_input:
+        ext2['extver'] = ext2_input['extver']
+    if 'extname' in ext2_input:
+        ext2['extname'] = ext2_input['extname']
 
     n_ext1 = len(ext1)
     n_ext2 = len(ext2)
