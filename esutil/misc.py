@@ -20,6 +20,12 @@ license="""
 import subprocess
 from sys import stdout, stderr
 
+try:
+    import numpy
+    have_numpy=True
+except:
+    have_numpy=False
+
 
 def colprint(*args, **keys):
     """
@@ -317,4 +323,18 @@ def dict_select(input_dict, keep=None, remove=None):
             outdict[key] = input_dict[key]
 
     return outdict
+
+
+
+def isstring(obj):
+    if have_numpy:
+        string_types=(basestring, numpy.string_)
+    else:
+        string_types=basestring
+
+    if isinstance(obj, string_types):
+        return True
+    else:
+        return False
+
 

@@ -4,6 +4,8 @@ try:
 except:
     have_numpy = False
 
+import esutil
+
 def setuplot(backend=None, params=None):
     """
     Import pyplot from matplotlib and return it.  Can specify a backend
@@ -105,5 +107,21 @@ def polar2whisker(e1, e2, angle=False):
     return u, v
 
 
+def plotrand(x, y, marker, frac=0.1, plt=None, backend=None, params=None, **keys):
+    if plt is None:
+        plt=setuplot(backend=backend,params=params)
 
+    x=numpy.array(x,ndmin=1,copy=False)
+    y=numpy.array(y,ndmin=1,copy=False)
+    if x.size != y.size:
+        raise ValueError("x,y must be same size")
 
+    nuse = long( x.size*frac)
+    ind=numpy.zeros(nuse,dtype='i4')
+
+    rnd=numpy.random.random(nuse)
+    ind[:]=esutil.numpy_util.arrscl( rnd, 0, x.size-1, arrmin=0.0, arrmax=1.0)
+    
+    plt.plot(x[ind],y[ind],marker,**keys)
+
+    return plt

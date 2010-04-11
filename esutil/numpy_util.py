@@ -410,6 +410,7 @@ def combine_arrlist(arrlist, keep=False):
             data = arrlist.pop(0)
             num = data.size
             output[beg:beg+num] = data
+            del data
             beg=beg+num
 
     return output
