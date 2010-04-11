@@ -58,6 +58,7 @@ import wcsutil
 import cosmology
 import coords
 import coords as astro_util
+import stomp_util
 import plotting
 try:
     import sqlite_util
