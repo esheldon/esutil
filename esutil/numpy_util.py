@@ -1343,3 +1343,26 @@ def splitarray(nper, var_input):
             split_list.append(var[w])
 
     return split_list
+
+def randind(nmax, nrand):
+    """
+    Name:
+        randind
+    Calling Sequence:
+        ind = randind(nmax, nrand)
+    Purpose:
+        Return nrand random indices, with replacement, in the open 
+        range [0,nmax)
+    """
+    
+    if nmax > (2**32-1):
+        dtype = 'u8'
+    else:
+        dtype = 'u4'
+
+    ind=numpy.zeros(nrand,dtype=dtype)
+
+    rnd = numpy.random.random(nrand)
+    ind[:] = arrscl( rnd, 0, nmax-1, arrmin=0.0, arrmax=1.0 )
+
+    return ind
