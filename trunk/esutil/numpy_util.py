@@ -1,6 +1,15 @@
 """
 Utilities for using and manipulating numerical python arrays (NumPy).
 
+    ahelp(array, recurse=False, pretty=True)
+        Print out a formatted description of the input array.   If the array
+        has fields, individual descriptions are printed for each field.  This
+        is designed to be similar to help, struct, /str in IDL. 
+
+
+    aprint(arr, fields=None, nlines=None, format=None)
+        Print fields from the array in columns.
+
     arrscl(arr, minval, maxval, arrmin=None, arrmax=None)
         Rescale the range of an array to be between minval and maxval.
 
@@ -92,6 +101,16 @@ Utilities for using and manipulating numerical python arrays (NumPy).
     dict2array(dict, sort=False, keys=None)
         Convert a dictionary to a numpy array.  Works for simple typs such as
         strings, integers, floating.
+
+    splitarray(nper, array)
+        Split up an array into chunks of at least a given size.  Return a
+        list of these subarrays.  The ordering is perserved.
+
+ 
+    randind(nmax, nrand)
+        Return nrand random indices, with replacement, in the open 
+        range [0,nmax)
+
 
 """ 
 
