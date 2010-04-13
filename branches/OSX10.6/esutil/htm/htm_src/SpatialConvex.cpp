@@ -48,9 +48,13 @@ SpatialConvex::SpatialConvex()
 /////////////COPY CONSTRUCTOR/////////////////////////////
 //
 SpatialConvex::SpatialConvex(const SpatialConvex & c) :
-  index_(c.index_), addlevel_(c.addlevel_), 
-  full_(c.full_), partial_(c.partial_), flist_(c.flist_), plist_(c.plist_),
-  boundingCircle_(c.boundingCircle_)
+	index_(c.index_), 
+	boundingCircle_(c.boundingCircle_), 
+	addlevel_(c.addlevel_), 
+	full_(c.full_),  
+	partial_(c.partial_),  
+	flist_(c.flist_), 
+	plist_(c.plist_)
 {
   constraints_ = c.constraints_;
   corners_ = c.corners_;
@@ -196,6 +200,8 @@ SpatialConvex::add(SpatialConstraint & c)
   case zERO:
     sign_ = c.sign_;
     break;
+  case mIXED:
+	break;
   }
 }
 
@@ -533,6 +539,8 @@ SpatialConvex::simplify() {
     case zERO:
       sign_ = constraints_[i].sign_;
       break;
+    case mIXED:
+	  break;
     }
   }
 
