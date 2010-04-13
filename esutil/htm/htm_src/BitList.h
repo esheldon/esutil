@@ -212,5 +212,4 @@ private:
   size_t bitIndex_;          // The index of the bit in the current word.
 };
 
-#include "BitList.hxx"
 #endif /* _BitList_h */

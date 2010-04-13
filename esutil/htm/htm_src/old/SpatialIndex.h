@@ -29,8 +29,7 @@
 #include <string.h>
 #include <time.h>
 #include <SpatialGeneral.h>
-//#include <VarVecDef.h>
-#include "VarVec.h"
+#include <VarVecDef.h>
 #include <SpatialVector.h>
 #include <SpatialEdge.h>
 #include <SpatialException.h>
@@ -62,24 +61,6 @@
    This is how the quad tree is built up to a certain level by
    decomposing every triangle again and again.
 */
-
-typedef struct {
-	size_t 	level_;		// layer level
-	size_t 	nVert_;		// number of vertices in this layer
-	size_t 	nNode_;		// number of nodes
-	size_t 	nEdge_;		// number of edges
-	uint64 	firstIndex_;	// index of first node of this layer
-	size_t 	firstVertex_;	// index of first vertex of this layer
-} Layer;
-
-typedef struct  {
-	uint64	index_;		// its own index
-	size_t	v_[3];		// The three vertex vector indices
-	size_t	w_[3];		// The three middlepoint vector indices
-	uint64	childID_[4];	// ids of children
-	uint64	parent_;	// id of the parent node (needed for sorting)
-	uint64	id_;		// numeric id -> name
-} QuadNode;
 
 
 
@@ -167,7 +148,6 @@ private:
 
   // STRUCTURES
 
-  /*
   struct Layer {
     size_t 	level_;		// layer level
     size_t 	nVert_;		// number of vertices in this layer
@@ -185,7 +165,6 @@ private:
     uint64	parent_;	// id of the parent node (needed for sorting)
     uint64	id_;		// numeric id -> name
   };
-  */
 
   // FUNCTIONS
 
@@ -224,100 +203,5 @@ private:
   friend class htmInterface;
 };
 
-//#     Filename:       SpatialIndex.hxx
-//#
-//#     H Implementations for spatialindex
-//#
-//#
-//#     Author:         Peter Z. Kunszt, based on A. Szalay s code
-//#
-//#     Date:           October 15, 1998
-//#
-//#
-//#
-//# (c) Copyright The Johns Hopkins University 1998
-//# All Rights Reserved
-//#
-//# The software and information contained herein are proprietary to The
-//# Johns Hopkins University, Copyright 1998.  This software is furnished
-//# pursuant to a written license agreement and may be used, copied,
-//# transmitted, and stored only in accordance with the terms of such
-//# license and with the inclusion of the above copyright notice.  This
-//# software and information or any other copies thereof may not be
-//# provided or otherwise made available to any other person.
-//#
-//#
-
-/////////////leafCount//////////////////////////////////////
-// leafCount: return number of leaf nodes
-inline uint64
-SpatialIndex::leafCount() const
-{
-  return leaves_;
-}
-
-/////////////NVERTICES////////////////////////////////////
-// nVertices: return number of vertices
-inline size_t
-SpatialIndex::nVertices() const
-{
-  return vertices_.length();
-}
-
-//////////////////LEAFNUMBERBYID///////////////////////////////////////////
-//
-inline uint32
-SpatialIndex::leafNumberById(uint64 id) const{
-  if(maxlevel_ > HTMMAXBIT)
-    throw SpatialInterfaceError("SpatialIndex:leafNumberById","BitList may only be used up to level HTMMAXBIT deep");
-
-  return (uint32)(id - leafCount());
-}
-
-//////////////////IDBYLEAFNUMBER///////////////////////////////////////////
-//
-inline uint64
-SpatialIndex::idByLeafNumber(uint32 n) const{
-  uint64 l = leafCount();
-  l += n;
-  return l;
-}
-
-//////////////////NAMEBYLEAFNUMBER////////////////////////////////////////
-//
-inline char *
-SpatialIndex::nameByLeafNumber(uint32 n, char * name) const{
-  return nameById(idByLeafNumber(n), name);
-}
-
-//////////////////IDBYPOINT////////////////////////////////////////////////
-// Find a leaf node where a ra/dec points to
-//
-
-inline uint64
-SpatialIndex::idByPoint(const float64 & ra, const float64 & dec) const {
-  SpatialVector v(ra,dec);
-  return idByPoint(v);
-}
-
-//////////////////NAMEBYPOINT//////////////////////////////////////////////
-// Find a leaf node where a ra/dec points to, return its name
-//
-
-inline char*
-SpatialIndex::nameByPoint(const float64 & ra, const float64 & dec, 
-			  char* name) const {
-  return nameById(idByPoint(ra,dec), name);
-}
-
-//////////////////NAMEBYPOINT//////////////////////////////////////////////
-// Find a leaf node where v points to, return its name
-//
-
-inline char*
-SpatialIndex::nameByPoint(SpatialVector & vector, char* name) const {
-  return nameById(idByPoint(vector),name);
-}
-
-
+#include "SpatialIndex.hxx"
 #endif
