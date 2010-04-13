@@ -456,13 +456,13 @@ PyObject* HTMC::cbincount(
 		npy_intp idcount=0;
 
 		// ----------- FULL NODES -------------
-		for(npy_intp i = 0; i < flist.length(); i++)
+		for(size_t i = 0; i < flist.length(); i++)
 		{  
 			idlist[idcount] = flist(i);
 			idcount++;
 		}
 		// ----------- Partial Nodes ----------
-		for(npy_intp i = 0; i < plist.length(); i++)
+		for(size_t i = 0; i < plist.length(); i++)
 		{  
 			idlist[idcount] = plist(i);
 			idcount++;
