@@ -49,7 +49,7 @@ try:
 
 
     # HTM
-    include_dirs += ['esutil/htm/htm_src']
+    include_dirs += ['esutil/htm','esutil/htm/htm_src']
     htm_sources = glob('esutil/htm/htm_src/*.cpp')
     htm_sources += ['esutil/htm/htmc.cc','esutil/htm/htmc_wrap.cc']
     htm_module = Extension('esutil.htm._htmc',
