@@ -23,7 +23,10 @@ VarStr::~VarStr( void ) {
 // default constructor
 
 VarStr::VarStr( size_t capacity, size_t increment ) :
-  vector_(NULL), increment_(0), length_(0), capacity_(0)
+	increment_(0), 
+	vector_(NULL), 
+	length_(0), 
+	capacity_(0)
 {
    insert( capacity );
    increment_ = increment;
@@ -33,7 +36,10 @@ VarStr::VarStr( size_t capacity, size_t increment ) :
 // construct with a string
 
 VarStr::VarStr( const char * str ) : 
-  vector_(NULL), increment_(0), length_(0), capacity_(0)
+	increment_(0), 
+	vector_(NULL), 
+	length_(0), 
+	capacity_(0)
 {
   *this += str;
 }
