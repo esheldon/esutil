@@ -48,9 +48,13 @@ SpatialConvex::SpatialConvex()
 /////////////COPY CONSTRUCTOR/////////////////////////////
 //
 SpatialConvex::SpatialConvex(const SpatialConvex & c) :
-  index_(c.index_), addlevel_(c.addlevel_), 
-  full_(c.full_), partial_(c.partial_), flist_(c.flist_), plist_(c.plist_),
-  boundingCircle_(c.boundingCircle_)
+	index_(c.index_), 
+	boundingCircle_(c.boundingCircle_),
+	addlevel_(c.addlevel_), 
+	full_(c.full_), 
+	partial_(c.partial_), 
+	flist_(c.flist_), 
+	plist_(c.plist_)
 {
   constraints_ = c.constraints_;
   corners_ = c.corners_;
@@ -187,15 +191,17 @@ SpatialConvex::add(SpatialConstraint & c)
   }
 
   switch (sign_) {
-  case nEG:
-    if(c.sign_ == pOS) sign_ = mIXED;
-    break;
-  case pOS:
-    if(c.sign_ == nEG) sign_ = mIXED;
-    break;
-  case zERO:
-    sign_ = c.sign_;
-    break;
+	  case nEG:
+		  if(c.sign_ == pOS) sign_ = mIXED;
+		  break;
+	  case pOS:
+		  if(c.sign_ == nEG) sign_ = mIXED;
+		  break;
+	  case zERO:
+		  sign_ = c.sign_;
+		  break;
+	  case mIXED:
+		  break;
   }
 }
 
@@ -523,17 +529,19 @@ SpatialConvex::simplify() {
   // reset the sign of the convex
   sign_ = constraints_[0].sign_;
   for(i = 1; i < constraints_.length(); i++) {
-    switch (sign_) {
-    case nEG:
-      if(constraints_[i].sign_ == pOS) sign_ = mIXED;
-      break;
-    case pOS:
-      if(constraints_[i].sign_ == nEG) sign_ = mIXED;
-      break;
-    case zERO:
-      sign_ = constraints_[i].sign_;
-      break;
-    }
+	  switch (sign_) {
+		  case nEG:
+			  if(constraints_[i].sign_ == pOS) sign_ = mIXED;
+			  break;
+		  case pOS:
+			  if(constraints_[i].sign_ == nEG) sign_ = mIXED;
+			  break;
+		  case zERO:
+			  sign_ = constraints_[i].sign_;
+			  break;
+		  case mIXED:
+			  break;
+	  }
   }
 
   if (constraints_.length() == 1) // for one constraint, it is itself the BC

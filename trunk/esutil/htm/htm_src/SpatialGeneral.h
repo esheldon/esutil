@@ -22,35 +22,9 @@
 //#
 //# Modification History:
 
-// Type Definitions
-
-// define portable int and float types where not already defined
-// The SDSS Science Archive and Objectivity define the very same thing.
-//	Objectivity defines these in ooMachine.h (version 4) and
-//	in ooConfig.h (version 5).
-//
-
-// The following list is for different machines:
-//
-// ------------------------------------------------------------------------
-// MACHINE |  CHAR | SHORT |   INT |  LONG | FLOAT | DOUBLE | LONG DOUBLE |
-// ------------------------------------------------------------------------
-//  SUN    |    8  |   16  |   32  |   32  |   32  |   64   |   128       |
-// ------------------------------------------------------------------------
-//  ALPHA  |    8  |   16  |   32  |   64  |   32  |   64   |    64       |
-// ------------------------------------------------------------------------
-//  SGI-n32|    8  |   16  |   32  |   32  |   32  |   64   |   128       |
-// ------------------------------------------------------------------------
-//  SGI    |    8  |   16  |   32  |   32  |   32  |   64   |    64       |
-// ------------------------------------------------------------------------
-//  NT     |    8  |   16  |   32  |   32  |   32  |   64   |    64       |
-// ------------------------------------------------------------------------
-//  LINUX  |    8  |   16  |   32  |   32  |   32  |   64   |    96       |
-// ------------------------------------------------------------------------
-//
-
 
 // using stdint is safer, especially for OSX.
+// ESS
 #include <stdint.h>
 
 typedef uint8_t uint8;
@@ -67,26 +41,6 @@ typedef int64_t int64;
 
 typedef float			float32;
 typedef double			float64;
-
-/*
-#if !defined(OO_MACHINE_H) && !defined(OO_CONFIG_H) && !defined(SXGENERAL_H)
-typedef char			int8;
-typedef unsigned char		uint8;
-typedef short int		int16;
-typedef unsigned short int	uint16;
-typedef int			int32;
-typedef unsigned int		uint32;
-typedef float			float32;
-typedef double			float64;
-#ifdef _WIN32
-typedef __int64			int64;
-typedef unsigned __int64	uint64;
-#else
-typedef long long		int64;
-typedef unsigned long long	uint64;
-#endif
-#endif
-*/
 
 #define IDSIZE                     64
 #define HTMNAMEMAX                 32
