@@ -38,7 +38,18 @@ try:
     import numpy
     include_dirs=[numpy.get_include()]
     include_dirs += ['esutil/include']
+    have_numpy=True
+except:
+    have_numpy=False
+    ext_modules=[]
+    include_dirs=[]
 
+    stdout.write('Numpy not found:  Not building C extensions\n')
+    time.sleep(5)
+
+
+
+if have_numpy:
     # recfile
     recfile_sources = ['esutil/recfile/records.cpp',
                        'esutil/recfile/records_wrap.cpp']
@@ -68,13 +79,6 @@ try:
     packages.append('esutil.pyfitspatch')
 
 
-
-except:
-    stdout.write('Numpy not found:  Not building recfile\n')
-    time.sleep(5)
-
-    ext_modules=[]
-    include_dirs=[]
 
 
 
