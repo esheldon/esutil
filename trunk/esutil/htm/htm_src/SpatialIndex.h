@@ -29,7 +29,8 @@
 #include <string.h>
 #include <time.h>
 #include <SpatialGeneral.h>
-#include <VarVecDef.h>
+//#include <VarVecDef.h>
+#include <VarVec.h>
 #include <SpatialVector.h>
 #include <SpatialEdge.h>
 #include <SpatialException.h>
