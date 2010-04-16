@@ -79,6 +79,13 @@ if have_numpy:
     packages.append('esutil.pyfitspatch')
 
 
+    # stat package
+    chist_sources = glob('esutil/stat/*.cc')
+    chist_module = Extension('esutil.stat._chist', 
+                             sources=chist_sources)
+    ext_modules.append(chist_module)
+    packages.append('esutil.stat')
+
 
 
 
