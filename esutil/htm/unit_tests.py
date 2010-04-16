@@ -56,6 +56,7 @@ def test():
 
     # try the matching
     stdout.write('Matching by ra/dec, expect 10 matches ordered by distance....')
+    stdout.flush()
     two = 2.0/3600.
     # offset second list by fraction of 2 arcsec in dec
     # not last ones don'e match at all
