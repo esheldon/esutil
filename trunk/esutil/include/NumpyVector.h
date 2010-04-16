@@ -93,6 +93,7 @@
 #include <sstream>
 #include <typeinfo>
 #include <map>
+#include <stdint.h>
 //#include "TypeInfo.h"
 #include "numpy/arrayobject.h"
 
@@ -192,6 +193,33 @@ void NumpyTypeInfo::init() {
 
         tname = typeid(npy_float64).name();
         numpy_id_map[tname] = NPY_FLOAT64;
+
+		// On OS X 10.6 these can have different names
+
+
+        tname = typeid(int8_t).name();
+        numpy_id_map[tname] = NPY_INT8;
+        tname = typeid(uint8_t).name();
+        numpy_id_map[tname] = NPY_UINT8;
+
+
+        tname = typeid(int16_t).name();
+        numpy_id_map[tname] = NPY_INT16;
+        tname = typeid(uint16_t).name();
+        numpy_id_map[tname] = NPY_UINT16;
+
+
+        tname = typeid(int32_t).name();
+        numpy_id_map[tname] = NPY_INT32;
+        tname = typeid(uint32_t).name();
+        numpy_id_map[tname] = NPY_UINT32;
+
+
+        tname = typeid(int64_t).name();
+        numpy_id_map[tname] = NPY_INT64;
+        tname = typeid(uint64_t).name();
+        numpy_id_map[tname] = NPY_UINT64;
+
 
     }
 }

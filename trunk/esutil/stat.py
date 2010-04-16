@@ -170,27 +170,27 @@ def _weave_dohist(data_in, datamin, s, binsize, hist, rev, dorev=False):
     """
     code = """
 
-    int64_t nbin = hist.size();
-    int64_t binnum_old = -1;
+    npy_int64 nbin = hist.size();
+    npy_int64 binnum_old = -1;
 
     // index of minimum value
-    //int64_t imin = s(0);
-    for (int64_t i=0; i<s.size(); i++) {
+    //npy_int64 imin = s(0);
+    for (npy_int64 i=0; i<s.size(); i++) {
 
-        int64_t offset = i+nbin+1;
-        int64_t data_index = s(i);
+        npy_int64 offset = i+nbin+1;
+        npy_int64 data_index = s(i);
 
 
         if (dorev) {
             rev(offset) = data_index;
         }
 
-        //int64_t binnum = (int64_t) ( (data(data_index)-datamin)/binsize);
-        int64_t binnum = (int64_t) ( (data(data_index)-(double)datamin)/binsize);
+        //npy_int64 binnum = (npy_int64) ( (data(data_index)-datamin)/binsize);
+        npy_int64 binnum = (npy_int64) ( (data(data_index)-(double)datamin)/binsize);
 
         if (binnum >= 0 && binnum < nbin) {
             if (dorev && (binnum > binnum_old) ) {
-                int64_t tbin = binnum_old + 1;
+                npy_int64 tbin = binnum_old + 1;
                 while (tbin <= binnum) {
                     rev(tbin) = offset;
                     tbin++;
@@ -201,7 +201,7 @@ def _weave_dohist(data_in, datamin, s, binsize, hist, rev, dorev=False):
         }
     }
 
-    int64_t tbin = binnum_old + 1;
+    npy_int64 tbin = binnum_old + 1;
     while (tbin <= nbin) {
         if (dorev) {
             rev(tbin) = rev.size();

@@ -41,7 +41,8 @@ class HTM(htmc.HTMC):
               htmrev2=None,
               minid=None,
               maxid=None,
-              file=None):
+              file=None,
+              verbose=False):
         """
         Class:
             HTM
@@ -191,6 +192,8 @@ class HTM(htmc.HTMC):
                              "both sets of inputs")
 
         if htmid2 is None:
+            if verbose:
+                stdout.write("looking up ids\n");stdout.flush()
             htmid2 = self.lookup_id(ra2, dec2)
             minid = htmid2.min()
             maxid = htmid2.max()
@@ -201,8 +204,12 @@ class HTM(htmc.HTMC):
                 maxid = htmid2.max()
 
         if htmrev2 is None:
+            if verbose:
+                stdout.write("Getting reverse indices\n");stdout.flush()
             hist2, htmrev2 = stat.histogram(htmid2-minid,rev=True)
 
+        if verbose:
+            stdout.write("calling cmatch\n");stdout.flush()
         return self.cmatch(radius,
                            ra1,
                            dec1,
