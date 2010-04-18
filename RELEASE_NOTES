@@ -1,5 +1,6 @@
 -----------------------------------------------
 Additions:
+
 	pyfitspatch:
 		A patched version of pyfits that allows writing binary tables from a
 		numpy array with fields, recarray, etc. with a single call.  The io.py
@@ -7,13 +8,44 @@ Additions:
 		been sent to the pyfits people and when incorporated pyfitspatch will
 		be dropped.
 
-	numpy_util.ahelp():  
+	numpy_util.ahelp:  
         Print out a formatted description of the input array.   If the array
         has fields, individual descriptions are printed for each field.  This
         is designed to be similar to help, struct, /str in IDL. 
 
+	numpy_util.aprint: 
+        Print fields from the array in columns.
+
+    numpy.randind
+        Return nrand random indices, with replacement, in the open 
+        range [0,nmax)
+
 	misc.colprint():
 		Print a set of input sequences or arrays in columns.
+
+	ostools.DirStack: A simple directory stack like that supported by unix
+		shells.
+
+	io.write: Support writing files.  Currently only FITS is supported.
+
+Enhancements:
+	stat.histogram can now return statistics about the histogram and
+		binning of the data.  If getdict=True, a dictionary is returned
+		with the 'hist' as well as the lower end of each bin 'low',
+		'high', 'center', 'mean', 'median', 'std', 'err'.  If the
+		new keyword weights= is sent, the weighted versions are also
+		returned as 'wmean', 'wstd', etc.
+
+Rearrangement:
+	stat is now a sub-package.  The histogram code has now been written
+	as a C++ extension.
+
+Bug Fixes:
+	Fix in NumpyVector.h to allow for the fact that int64_t and npy_int64
+	actually have different type ids.  This affected the htm code.
+
+	Re-implemented the histogramming code as a C extension instead of 
+	using scipy.weave.  This circumvents the bug in weave for gcc >= 4.3.
 
 -----------------------------------------------
 v0.3.0 (2010-04-04)
