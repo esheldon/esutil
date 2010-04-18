@@ -61,34 +61,47 @@ import esutil.numpy_util as numpy_util
 
 
 def histogram(data_input, binsize=1., min=None, max=None, rev=False, 
-              extern=True, use_weave=False, weights=None, getdict=False):
+              extern=True, use_weave=False, weights=None, more=False):
     """
     Name:
         histogram
     Purpose:
         Calculate the histogram of the input data.  Similar to IDL histogram.
         The reverse indices are also optionally calculated.
+
     Calling Sequence:
-        h = histogram(data, binsize=1., min=None, max=None, rev=False, 
-                      extern=True, weights=None)
+        result = histogram(data, 
+                           binsize=1., 
+                           min=None, 
+                           max=None, 
+                           weights=None,
+                           rev=False, 
+                           more=False,
+                           extern=True)
 
     Inputs:
         data:  A numpy array or a sequence that can be converted.
 
     Optional Inputs:
-        binsize:  Default 1.0.  The bin size for histogramming.
-        min, max:  The min and max data to use from the array.
+        binsize:  
+            Default 1.0.  The bin size for histogramming.
+        min, max:  
+            The min and max data to use from the array.  If these are
+            not sent, min and max are determined from the input.
+
+        weights: 
+            A set of weights to use for calculating some statistics.  If
+            weights are sent, both rev and more are set to True, this the
+            return result is a dictionary with a wide variety of statistics
+            tabulated.
+
         rev: If true, return a tuple 
                 h, rev
             Where rev is the reverse indices.   Default is false.
-        extern:
-            If True, use the C++ extension for calculating the histogram and
-            reverse indices.  Default is True.
+            Note if weights are sent, or more=True, the result is always
+            a dictionary.  See below.
 
-        weights: A set of weights to use for calculating some statistics.
-            This is only used if rev=True and getdict=True, see below.
-
-        getdict:
+        more:
             If True, then return more statistics, with all outputs in
             a dictionary.
 
@@ -99,21 +112,26 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
                 'high' Upper edge of the bins.
                 'center': Center of the bins
                 
-                if the keyword rev=True:
-                    'mean': The mean value in the bin. -9999 if there are
-                        no data in the bin.
-                    'std': The standard deviation in the bin.
-                    'err': The error on the mean.
+            if the keyword rev=True or weights are sent:
+                'mean': The mean value in the bin. -9999 if there are
+                    no data in the bin.
+                'std': The standard deviation in the bin.
+                'err': The error on the mean.
 
-                if rev=True and weights are sent:
-                    'whist': The weighted histogram.
-                    'wmean': The weighted mean in the bin.
-                    'wstd': The weighted standard deviation in the bin.
-                    'werr': The weighted error in the bin, calculated as
-                        sqrt(1/sum(weights))
-                    'werr2': The weighted error calculated from the
-                        weighted variance: 
-                          sqrt( (w**2 * (arr-mean)**2).sum() )/weights.sum()
+            if weights are sent:
+                'whist': The weighted histogram.
+                'wmean': The weighted mean in the bin.
+                'wstd': The weighted standard deviation in the bin.
+                'werr': The weighted error in the bin, calculated as
+                    sqrt(1/sum(weights))
+                'werr2': The weighted error calculated from the
+                    weighted variance: 
+                      sqrt( (w**2 * (arr-mean)**2).sum() )/weights.sum()
+
+
+        extern:
+            If True, use the C++ extension for calculating the histogram and
+            reverse indices.  Default is True.
 
 
     Using Reverse Indices:
@@ -137,6 +155,8 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
         if weights.size != data.size:
             raise ValueError("Weights must be same len as data")
         doweights=True
+        more=True
+        rev=True
     else:
         doweights=False
 
@@ -197,7 +217,7 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
 
 
 
-    if not getdict:
+    if not more:
         if rev:
             return hist, revind
         else:
@@ -410,9 +430,8 @@ def testhist(doplot=False):
     esutil.misc.colprint(h,names='hist',min=0,max=1)
     stdout.write('\n')
 
-    stdout.write("Testing getdict=True, weights=0.5\n")
-    res=histogram(d,binsize=0.1,min=0,max=1,rev=True,weights=weights,
-                  getdict=True)
+    stdout.write("Testing weights=0.5\n")
+    res=histogram(d,binsize=0.1,min=0,max=1,weights=weights)
 
     form='%12g'
     nform='%12s'
