@@ -60,7 +60,7 @@ import esutil.numpy_util as numpy_util
 
 
 def histogram(data_input, binsize=1., min=None, max=None, rev=False, 
-              extern=True, use_weave=False):
+              extern=True, use_weave=False, weights=None, getdict=False):
     """
     Name:
         histogram
@@ -84,6 +84,33 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
             If True, use the C++ extension for calculating the histogram and
             reverse indices.  Default is True.
 
+        getdict:
+            If True, then return more statistics, with all outputs in
+            a dictionary.
+
+            keys of the returned dictionary:
+                'hist': The histogram.
+                'rev':  The reverse indices if the keyword rev=True
+                'low': The lower edge of the bins
+                'high' Upper edge of the bins.
+                'center': Center of the bins
+                
+                if the keyword rev=True:
+                    'mean': The mean value in the bin. -9999 if there are
+                        no data in the bin.
+                    'std': The standard deviation in the bin.
+                    'err': The error on the mean.
+
+                if rev=True and weights are sent:
+                    'wmean': The weighted mean in the bin.
+                    'wstd': The weighted standard deviation in the bin.
+                    'werr': The weighted error in the bin, calculated as
+                        sqrt(1/sum(weights))
+                    'werr2': The weighted error calculated from the
+                        weighted variance: 
+                          sqrt( (w**2 * (arr-mean)**2).sum() )/weights.sum()
+
+
     Using Reverse Indices:
         h,rev = histogram(data, binsize=binsize, rev=True)
 
@@ -98,6 +125,15 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
     # this will only copy the data if its not an array or if it is an
     # array scalar
     data = numpy.array(data_input, ndmin=1, copy=False)
+
+
+    if weights is not None:
+        weights = numpy.array(weights, ndmin=1, copy=False)
+        if weights.size != data.size:
+            raise ValueError("Weights must be same len as data")
+        doweights=True
+    else:
+        doweights=False
 
     if not have_chist:
         extern=False
@@ -132,7 +168,10 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
 
     if extern:
         # compute using the external C++ code
-        return chist.chist(data, dmin, s, bsize, nbin, rev)
+        if rev:
+            hist, revind= chist.chist(data, dmin, s, bsize, nbin, rev)
+        else:
+            hist = chist.chist(data, dmin, s, bsize, nbin, rev)
     else:
 
         # compute in a python loop
@@ -151,10 +190,92 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
 
         _dohist(data, dmin, s, bsize, hist, revind, dorev=rev)
 
+
+
+    if not getdict:
         if rev:
             return hist, revind
         else:
             return hist
+    else:
+        output={}
+        output['hist'] = hist
+        if rev:
+            output['rev'] = rev
+
+        # create the bin edges and centers
+        nhist = len(hist)
+
+        low = numpy.arange(nhist, dtype='f8')
+        low = dmin + low*binsize
+
+        high = low + binsize
+        center = low + 0.5*binsize
+
+        output['low'] = low
+        output['high'] = high
+        output['center'] = center
+
+
+        if rev:
+            # calculate the mean in the bins
+            xmean = numpy.zeros(nhist)
+            xmean[:] = -9999.0
+            xstd = xmean.copy()
+            xerr = xmean.copy()
+            xmedian = xmean.copy()
+
+            if doweights:
+                wmean = xmean.copy()
+                wstd = xmean.copy()
+                werr = xmean.copy()
+                werr2 = xmean.copy()
+
+            for i in xrange(nhist):
+                if revind[i] != revind[i+1]:
+                    w = revind[ revind[i]:revind[i+1] ]
+
+                    if w.size == 1:
+                        xmean[i] = data[w[0]]
+                        xmedian[i] = xmean[i]
+                        xstd[i] = 0
+                        xerr[i] = xmean[i]
+
+                        if doweights:
+                            wmean[i] = xmean[i]
+                            wstd[i] = 0
+                            werr[i] = wmean[i]
+                            werr2[i] = wmean[i]
+
+                    else:
+                        xmean[i] = data[w].mean()
+                        xstd[i] = data[w].std()
+                        xerr[i] = xstd[i]/numpy.sqrt(w.size)
+                        xmedian[i] = numpy.median(data[w])
+
+                        if doweights:
+                            wm,we,ws=wmom(data[w],weights[w],sdev=True)
+                            j1,we2=wmom(data[w],weights[w], calcerr=True)
+                            wmean[i] = wm
+                            wstd[i] = ws
+                            werr[i] = we
+                            werr2[i] = we2
+
+
+
+            output['mean'] = xmean
+            output['std'] = xstd
+            output['err'] = xerr
+            output['median'] = xmedian
+
+            if doweights:
+                output['wmean'] = wmean
+                output['wstd'] = wstd
+                output['werr'] = werr
+                output['werr2'] = werr2
+
+        return output
+
 
 
 def _dohist(data, dmin, s, binsize, hist, revind, dorev=False):
@@ -266,6 +387,44 @@ def _weave_dohist(data_in, datamin, s, binsize, hist, rev, dorev=False):
 
 
 
+def testhist(doplot=False):
+    import esutil
+    from sys import stdout
+    d = numpy.random.random(100000)
+    weights = d.copy()
+    weights[:] = 1
+
+    stdout.write("Testing straight hist\n")
+    binsize=0.1
+    h=histogram(d,binsize=binsize)
+    esutil.misc.colprint(h,names='hist',min=0,max=1)
+    stdout.write('\n')
+
+    stdout.write("Testing getdict=True\n")
+    res=histogram(d,binsize=0.1,min=0,max=1,rev=True,weights=weights,
+                  getdict=True)
+
+    form='%15g'
+    nform='%15s'
+    names=['low','center','high',
+           'median',
+           'mean','std','err',
+           'wmean','wstd','werr','werr2',
+           'hist']
+    esutil.misc.colprint(res['low'],res['center'],res['high'],
+                         res['median'],
+                         res['mean'],res['std'],res['err'],
+                         res['wmean'],res['wstd'],res['werr'],res['werr2'],
+                         res['hist'],
+                         names=names, format=form,nformat=nform)
+
+    if doplot:
+        import biggles
+        plt=biggles.FramedPlot()
+        d=biggles.Histogram(res['hist'], x0=min(res['low']), binsize=binsize)
+        plt.add(d)
+        plt.show()
+
 
 
 def histogram2d(x, y, 
@@ -332,8 +491,10 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
       wmom()
       
     PURPOSE:
-      Calculate the weighted mean, error, and optionally standard deviation
-      of an input array.
+      Calculate the weighted mean, error, and optionally standard deviation of
+      an input array.  By default error is calculated assuming the weights are
+      1/err^2, but if you send calcerr=True this assumption is dropped and the
+      error is determined from the weighted scatter.
 
     CALLING SEQUENCE:
      wmean,werr = wmom(arr, weights, inputmean=None, calcerr=False, sdev=False)
