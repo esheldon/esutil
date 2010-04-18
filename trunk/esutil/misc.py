@@ -35,7 +35,8 @@ def colprint(*args, **keys):
         print the input sequences or arrays in columns.  All must be the
         same length.
     Calling Sequence:
-        colprint(var1, var2, ..., nlines=all, sep=' ', file=None)
+        colprint(var1, var2, ..., nlines=all, sep=' ', format=None, 
+                 names=None, nformat=None, file=None)
 
     Inputs:
         A set of python objects.  Each must be a sequence or array and all must
@@ -106,6 +107,8 @@ def colprint(*args, **keys):
     # print a header
     names = keys.get('names',None)
     if names is not None:
+        if isinstance(names, basestring):
+            names = [names]
         nnames = len(names)
         if len(names) != nargs:
             raise ValueError("Expected %s names, got %s" % (nargs,nnames))
