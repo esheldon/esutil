@@ -33,17 +33,17 @@ PyObject* chist(
     npy_int64 nbin = nbin_array[0];
 
     // Make the histogram
-    std::cout<<"Creating histogram with nbin="<<nbin<<"\n";
+    //std::cout<<"Creating histogram with nbin="<<nbin<<"\n";
     NumpyVector<npy_int64> hist(nbin);
 
     // Check if rev is sent, if so we'll fill it in
     NumpyVector<npy_int64> rev;
     if (dorev) {
         npy_int64 revsize = sort.size() + nbin + 1;
-        std::cout<<"Will do reverse indices, size: "<<revsize<<"\n";
+        //std::cout<<"Will do reverse indices, size: "<<revsize<<"\n";
         rev.init(revsize);
     } else {
-        std::cout<<"Not doing reverse indices\n";
+        //std::cout<<"Not doing reverse indices\n";
     }
 
 
