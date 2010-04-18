@@ -351,10 +351,12 @@ def _dohist(data, dmin, s, binsize, hist, revind, dorev=False):
 
 
 def _weave_dohist(data_in, datamin, s, binsize, hist, rev, dorev=False):
+    """
+    this is deprecated!
 
-    # this is deprecated!
+    the data must be native byte order and not-strided
+    """
 
-    # the data must be native byte order and not-strided
     data = numpy_util.to_native(data_in)
     requirements = ['C_CONTIGUOUS','ALIGNED']
     data = numpy.require(data, data.dtype, requirements)
@@ -418,6 +420,13 @@ def _weave_dohist(data_in, datamin, s, binsize, hist, rev, dorev=False):
 
 
 def testhist(doplot=False):
+    """
+    testhist(doplot=False)
+
+    Run some tests on the histogram function.  If doplot=True is sent, you must
+    have the biggles plotting program installed.
+
+    """
     import esutil
     from sys import stdout
     d = numpy.random.random(100000)
@@ -468,6 +477,42 @@ def histogram2d(x, y,
                 ymin=None, 
                 ymax=None, 
                 rev=False):
+    """
+    Name:
+        histogram2d
+    Purpose:
+        Histogram two-dimensional data.
+
+    Calling Sequence:
+        histogram2d(x, y, 
+                    nx=None, 
+                    ny=None, 
+                    xbin=None, 
+                    ybin=None, 
+                    xmin=None, 
+                    xmax=None, 
+                    ymin=None, 
+                    ymax=None, 
+                    rev=False)
+
+    Inputs:
+        x,y:  The x and y values for the data.  Must be same length.
+
+    Keywords:
+        nx: Number of bins in the x direction.
+        ny: Number of bins in the y direction.
+        xbin: binsize in the x direction.
+        ybin: binsize in the y direction.
+        xmin: min range to use in the x direction.
+        xmax: max range to use in the x direction.
+        ymin: min range to use in the y direction.
+        ymax: max range to use in the y direction.
+        rev: if True, return a tuple hist,rev
+
+    """
+
+    x = numpy.array(x, ndmin=1, copy=False)
+    y = numpy.array(y, ndmin=1, copy=False)
 
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
