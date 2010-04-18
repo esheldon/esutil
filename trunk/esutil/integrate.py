@@ -1,3 +1,18 @@
+"""
+Module:
+    integrate
+
+
+See docs for individual classes and functions for more detail.
+
+Classes:
+    QGauss:
+        A class to perform gauss-legendre integration.
+
+Functions:
+    gauleg:
+        Calculate the weights and abscissa for Gauss-Legendre integration.
+"""
 license="""
   Copyright (C) 2010  Erin Sheldon
 
@@ -36,16 +51,21 @@ class QGauss():
         QGauss
     
     Purpose:
-        Perform gauss-legendre integration
+        Perform gauss-legendre integration of points or functions.
 
+    Methods:
+        integrate: Perform the integration.
     Examples:
-        import esutil
+        from esutil.integrate import QGauss
         npoints = 30
-        qg = esutil.integrate.QGauss(npoints)
+        qg = QGauss(npoints)
 
+        # integrate x-y point data
         result = qg.integrate(x, y)
 
-        result = qg.integrate(x, some_function)
+        # integrate a function or method over the range xmin,xmax
+        result = qg.integrate([xmin,xmax], some_function)
+
     """
     def __init__(self, npts=None):
 
@@ -82,8 +102,11 @@ class QGauss():
         if self.npts is None:
             raise ValueError("Set npts on construction or in this call")
 
-        x1 = xvals.min()
-        x2 = xvals.max()
+        if len(xvals) != 2:
+            raise ValueError("When integrating a function, send the "
+                             "x range [xmin,xmax] ")
+        x1 = xvals[0]
+        x2 = xvals[1]
 
         f1 = (x2-x1)/2.
         f2 = (x2+x1)/2.
@@ -120,7 +143,7 @@ class QGauss():
         isum = integrand.sum()
         return f1*isum
 
-    def test_gauss(self, npts=None):
+    def test_gauss_data(self, npts=None):
         mean = 0.0
         sigma = 1.0
 
@@ -141,6 +164,29 @@ class QGauss():
         pdiff = (ival - expected)/expected
         stdout.write("%% diff: %s\n" % pdiff)
 
+    def test_gauss_func(self, npts=None):
+        xrange = [-4.0,4.0]
+
+
+        expected = 1.0
+
+        ival = self.integrate_func(xrange, self.gaussfunc)
+
+        stdout.write("Expected value: %s\n" % expected)
+        stdout.write("Got value: %s\n" % ival)
+
+        pdiff = (ival - expected)/expected
+        stdout.write("%% diff: %s\n" % pdiff)
+
+
+    def gaussfunc(self,xvals):
+        mean=0.0
+        sigma=1.0
+
+        norm = 1.0/numpy.sqrt(2.0*numpy.pi*sigma**2)
+        gauss = norm*numpy.exp(-0.5*(xvals - mean)**2/sigma**2 )
+
+        return gauss
 
 
 def gauleg(x1, x2, npts):
