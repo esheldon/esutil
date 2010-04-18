@@ -69,7 +69,7 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
         The reverse indices are also optionally calculated.
     Calling Sequence:
         h = histogram(data, binsize=1., min=None, max=None, rev=False, 
-                      extern=True)
+                      extern=True, weights=None)
 
     Inputs:
         data:  A numpy array or a sequence that can be converted.
@@ -83,6 +83,9 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
         extern:
             If True, use the C++ extension for calculating the histogram and
             reverse indices.  Default is True.
+
+        weights: A set of weights to use for calculating some statistics.
+            This is only used if rev=True and getdict=True, see below.
 
         getdict:
             If True, then return more statistics, with all outputs in
@@ -102,6 +105,7 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
                     'err': The error on the mean.
 
                 if rev=True and weights are sent:
+                    'whist': The weighted histogram.
                     'wmean': The weighted mean in the bin.
                     'wstd': The weighted standard deviation in the bin.
                     'werr': The weighted error in the bin, calculated as
@@ -226,6 +230,8 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
             xmedian = xmean.copy()
 
             if doweights:
+                whist = xmean.copy()
+                whist[:] = 0
                 wmean = xmean.copy()
                 wstd = xmean.copy()
                 werr = xmean.copy()
@@ -242,6 +248,7 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
                         xerr[i] = xmean[i]
 
                         if doweights:
+                            whist[i] = data[w[0]]*weights[w[0]]
                             wmean[i] = xmean[i]
                             wstd[i] = 0
                             werr[i] = wmean[i]
@@ -254,6 +261,7 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
                         xmedian[i] = numpy.median(data[w])
 
                         if doweights:
+                            whist[i] = weights[w].sum()
                             wm,we,ws=wmom(data[w],weights[w],sdev=True)
                             j1,we2=wmom(data[w],weights[w], calcerr=True)
                             wmean[i] = wm
@@ -269,6 +277,7 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
             output['median'] = xmedian
 
             if doweights:
+                output['whist'] = whist
                 output['wmean'] = wmean
                 output['wstd'] = wstd
                 output['werr'] = werr
@@ -392,7 +401,7 @@ def testhist(doplot=False):
     from sys import stdout
     d = numpy.random.random(100000)
     weights = d.copy()
-    weights[:] = 1
+    weights[:] = 0.5
 
     stdout.write("Testing straight hist\n")
     binsize=0.1
@@ -400,22 +409,24 @@ def testhist(doplot=False):
     esutil.misc.colprint(h,names='hist',min=0,max=1)
     stdout.write('\n')
 
-    stdout.write("Testing getdict=True\n")
+    stdout.write("Testing getdict=True, weights=0.5\n")
     res=histogram(d,binsize=0.1,min=0,max=1,rev=True,weights=weights,
                   getdict=True)
 
-    form='%15g'
-    nform='%15s'
+    form='%12g'
+    nform='%12s'
     names=['low','center','high',
            'median',
            'mean','std','err',
+           'hist',
            'wmean','wstd','werr','werr2',
-           'hist']
+           'whist']
     esutil.misc.colprint(res['low'],res['center'],res['high'],
                          res['median'],
                          res['mean'],res['std'],res['err'],
-                         res['wmean'],res['wstd'],res['werr'],res['werr2'],
                          res['hist'],
+                         res['wmean'],res['wstd'],res['werr'],res['werr2'],
+                         res['whist'],
                          names=names, format=form,nformat=nform)
 
     if doplot:
