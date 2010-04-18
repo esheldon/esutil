@@ -8,7 +8,8 @@ Methods:
     histogram:  
         Calculate the histogram of the input data.  The reverse indices are
         also optionally calculated.  This function behaves similarly to the
-        IDL histogram funcion.
+        IDL histogram funcion.  Also has the option to use weights, and
+        to tabulate a large number of statistics for each bin.
     histogram2d:  
         Histgram two variables.
     wmom:  
