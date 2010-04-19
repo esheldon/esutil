@@ -112,7 +112,7 @@ class NumpyTypeInfo {
 				return numpy_id_map[name];
 			} else {
 				std::stringstream err;
-				err<<"unsupported type: "<<name<<"\n";
+				err<<"NumpyTypeInfo: unsupported type: '"<<name<<"'\n";
 				throw err.str().c_str();
 			}
 		}
@@ -219,6 +219,7 @@ void NumpyTypeInfo::init() {
         numpy_id_map[tname] = NPY_INT64;
         tname = typeid(uint64_t).name();
         numpy_id_map[tname] = NPY_UINT64;
+
 
 
     }

@@ -13,7 +13,7 @@ Classes:
         for the DirStack class for more details.
 
     Example:
-        >>> ds=DirStack(verbose=True)
+        >>> ds=esutil.ostools.DirStack(verbose=True)
         >>> ds.push('~/data')
         ~/data ~
         >>> ds.push('/usr/bin')
@@ -48,6 +48,7 @@ import os
 import os
 import sys
 from sys import stdout
+
 class DirStack(object):
     """
     Class:
@@ -66,7 +67,7 @@ class DirStack(object):
             that directory.
 
     Example:
-        >>> ds=DirStack(verbose=True)
+        >>> ds=esutil.ostools.DirStack(verbose=True)
         >>> ds.push('~/data')
         ~/data ~
         >>> ds.push('/usr/bin')

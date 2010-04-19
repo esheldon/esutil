@@ -80,11 +80,21 @@ if have_numpy:
 
 
     # stat package
+    include_dirs += ['esutil/stat']
     chist_sources = glob('esutil/stat/*.cc')
     chist_module = Extension('esutil.stat._chist', 
                              sources=chist_sources)
     ext_modules.append(chist_module)
     packages.append('esutil.stat')
+
+
+    # integrate package
+    include_dirs += ['esutil/integrate']
+    cgauleg_sources = glob('esutil/integrate/*.cc')
+    cgauleg_module = Extension('esutil.integrate._cgauleg', 
+                               sources=cgauleg_sources)
+    ext_modules.append(cgauleg_module)
+    packages.append('esutil.integrate')
 
 
 
