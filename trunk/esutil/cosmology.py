@@ -72,8 +72,6 @@
 
     Requirements:
         NumPy
-        SciPy for fast integrations using Gauss-Legendre weights.
-            the weights are calculated using scipy.weave
 
     Revision History:
         Copied from IDL routines.  2006-11-07, Erin Sheldon, NYU
@@ -122,12 +120,7 @@ try:
 except:
     have_numpy=False
 
-try:
-    from scipy import weave
-    have_scipy=True
-except:
-    have_scipy=False
-
+import esutil.integrate
 
 class Cosmo():
     def __init__(self, 
@@ -439,9 +432,9 @@ class Cosmo():
 
 
     def _ezi_run_gauleg(self):
-        self.xxi, self.wwi = gauleg(-1.0,1.0,self.npts)
+        self.xxi, self.wwi = esutil.integrate.gauleg(-1.0,1.0,self.npts)
     def _vi_run_gauleg(self):
-        self.vxxi, self.vwwi = gauleg(-1.0,1.0,self.vnpts)
+        self.vxxi, self.vwwi = esutil.integrate.gauleg(-1.0,1.0,self.vnpts)
 
 
 
@@ -531,7 +524,7 @@ def Ezinv_integral_old(z1, z2, omega_m, omega_l, omega_k):
 
 def _ezi_run_gauleg(npts):
     if _EZI_XXi.size != npts:
-        globals()['_EZI_XXi'], globals()['_EZI_WWi'] = gauleg(-1.0,1.0,npts)
+        globals()['_EZI_XXi'], globals()['_EZI_WWi'] = esutil.integrate.gauleg(-1.0,1.0,npts)
 
 def Ezinv_integral(z1, z2, omega_m, omega_l, omega_k, npts=5):
     """
@@ -821,7 +814,7 @@ def Vold(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
 
 def _vi_run_gauleg(npts):
     if _VI_XXi.size != npts:
-        globals()['_VI_XXi'], globals()['_VI_WWi'] = gauleg(-1.0,1.0,npts)
+        globals()['_VI_XXi'], globals()['_VI_WWi'] = esutil.integrate.gauleg(-1.0,1.0,npts)
  
 def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
       flat=True, npts=5, vnpts=10, comoving=True):
@@ -865,91 +858,5 @@ def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
 
 
 
-
-def gauleg(x1, x2, npts):
-    """
-    NAME:
-      gauleg()
-      
-    PURPOSE:
-      Calculate the weights and abscissa for Gauss-Legendre integration.
-    
-    CALLING SEQUENCE:
-      x,w = gauleg(x1,x2,npts)
-
-    INPUTS:
-      x1,x2: The range for the integration.
-      npts: Number of points to use in the integration.
-
-    REVISION HISTORY:
-      Created: 2006-10-24. Adapted from Numerial recipes in C. Uses
-        scipy.weave.inline for the C loops.  2006-10-24 Erin Sheldon NYU
-    """
-
-    try:
-        from scipy import weave
-    except:
-        raise ImportError("scipy.weave could not be imported")
-    # outputs
-    x = numpy.zeros(npts, dtype='f8')
-    w = numpy.zeros(npts, dtype='f8')
-
-    # Code string for weave
-    code = \
-         """
-         int i, j, m;
-         double xm, xl, z1, z, p1, p2, p3, pp, pi, EPS, abszdiff;
-         
-         EPS = 3.e-11;
-         pi=3.1415927;
-
-         m = (npts + 1)/2;
-
-         xm = (x1 + x2)/2.0;
-         xl = (x2 - x1)/2.0;
-         z1 = 0.0;
-
-         for (i=1; i<= m; ++i) 
-         {
-      
-           z=cos( pi*(i-0.25)/(npts+.5) );
-
-           abszdiff = fabs(z-z1);
-
-           while (abszdiff > EPS) 
-           {
-             p1 = 1.0;
-             p2 = 0.0;
-             for (j=1; j <= npts;++j)
-             {
-                p3 = p2;
-                p2 = p1;
-                p1 = ( (2.0*j - 1.0)*z*p2 - (j-1.0)*p3 )/j;
-             }
-             pp = npts*(z*p1 - p2)/(z*z -1.);
-             z1=z;
-             z=z1 - p1/pp;
-
-             abszdiff = fabs(z-z1);
-
-           }
-      
-           x(i-1) = xm - xl*z;
-           x(npts+1-i-1) = xm + xl*z;
-           w(i-1) = 2.0*xl/( (1.-z*z)*pp*pp );
-           w(npts+1-i-1) = w(i-1);
-
-
-         }
-
-         return_val = 0;
-         
-
-         """
-    
-    weave.inline(code, ['x1', 'x2', 'npts', 'x', 'w'],
-                       type_converters = weave.converters.blitz)
-
-    return x,w
 
 
