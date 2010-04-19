@@ -396,6 +396,8 @@ def testhist(doplot=False):
         plt=biggles.FramedPlot()
         d=biggles.Histogram(res['hist'], x0=min(res['low']), binsize=binsize)
         plt.add(d)
+        plt.xlabel = 'data'
+        plt.ylabel = 'counts'
         plt.show()
 
 
