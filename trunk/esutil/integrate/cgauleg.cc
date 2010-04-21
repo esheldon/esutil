@@ -24,7 +24,7 @@ PyObject* cgauleg(
     double xm, xl, z1, z, p1, p2, p3, pp=0, pi, EPS, abszdiff;
 
     EPS = 3.e-11;
-    pi=3.1415927;
+	pi = 3.141592653589793;
 
     m = (npts + 1)/2;
 
