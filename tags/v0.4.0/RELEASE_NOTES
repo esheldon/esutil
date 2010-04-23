@@ -1,0 +1,88 @@
+----------------------------------------------------------------------
+v0.4.0 (2010-04-23)  Lots of major changes and additions.
+
+Additions:
+
+	pyfitspatch:
+		A patched version of pyfits that allows writing binary tables from a
+		numpy array with fields, recarray, etc. with a single call.  The io.py
+		sub-module uses this for input and output from FITS.  The patches have
+		been sent to the pyfits people and when incorporated pyfitspatch will
+		be dropped.
+
+	numpy_util.ahelp:  
+        Print out a formatted description of the input array.   If the array
+        has fields, individual descriptions are printed for each field.  This
+        is designed to be similar to help, struct, /str in IDL. 
+
+	numpy_util.aprint: 
+        Print fields from the array in columns.
+
+    numpy.randind
+        Return nrand random indices, with replacement, in the open 
+        range [0,nmax)
+
+	misc.colprint():
+		Print a set of input sequences or arrays in columns.
+
+	ostools.DirStack: A simple directory stack like that supported by unix
+		shells.
+
+	io.write: Support writing files.  Currently only FITS is supported.
+
+Enhancements:
+	stat.histogram can now return statistics about the histogram and
+		binning of the data.  If getdict=True, a dictionary is returned
+		with the 'hist' as well as the lower end of each bin 'low',
+		'high', 'center', 'mean', 'median', 'std', 'err'.  If the
+		new keyword weights= is sent, the weighted versions are also
+		returned as 'wmean', 'wstd', etc.
+
+Rearrangement:
+	stat is now a sub-package.  The histogram code has now been written
+	as a C++ extension.
+
+	gauleg is not a C++ extension instead of a scipy.weave thing.
+
+Bug Fixes:
+	Fix in NumpyVector.h to allow for the fact that int64_t and npy_int64
+	actually have different type ids on OS X.  This affected the htm code.
+
+	Re-implemented the histogramming code as a C extension instead of 
+	using scipy.weave.  This circumvents the bug in weave for gcc >= 4.3.
+	Same for gauleg.
+
+-----------------------------------------------
+v0.3.0 (2010-04-04)
+
+New files and packages:
+	htm package:  
+		Added C++ code for working with the Heierarchical Triangular Mesh
+		(HTM).  This is a code for breaking the sky into spherical triangles, a
+		quad tree, which makes for fast searching.  Includes the class HTM with
+		methods such as lookup_id for finding the htm id of an ra,dec, match
+		for finding matches between lists of ra,dec and bincount for counting
+		pairs in radial bins, useful for calculating correlation functions.
+
+	integrate.py: 
+		Tools for numerical integration.  Currently has a class for performing
+		gauss-legendre integration.
+
+	plotting.py: 
+		Tools for plotting with matplotlib.  
+			setuplot() for setting up the plotting and establishing a plot
+				object.
+			set_mino0r_ticks() for setting up minor tick mark locations in
+				a smart way.
+			whiskers: Plot whiskers, or arrowless vectors.
+	random.py:  
+		Contains a class for generating random points from an arbitrary
+		probability distribution.
+
+	coords.py:  
+		astro_util.py is now coords.py, appropriate since all the code was
+		coordinate transformations.
+	
+Other Changes:
+	Numerous changes that I forgot to write into this release notes. Will be
+	more diligent in the future.
