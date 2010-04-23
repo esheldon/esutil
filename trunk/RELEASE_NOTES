@@ -1,4 +1,6 @@
------------------------------------------------
+----------------------------------------------------------------------
+v0.4.0 (2010-04-23)  Lots of major changes and additions.
+
 Additions:
 
 	pyfitspatch:
@@ -40,12 +42,15 @@ Rearrangement:
 	stat is now a sub-package.  The histogram code has now been written
 	as a C++ extension.
 
+	gauleg is not a C++ extension instead of a scipy.weave thing.
+
 Bug Fixes:
 	Fix in NumpyVector.h to allow for the fact that int64_t and npy_int64
-	actually have different type ids.  This affected the htm code.
+	actually have different type ids on OS X.  This affected the htm code.
 
 	Re-implemented the histogramming code as a C extension instead of 
 	using scipy.weave.  This circumvents the bug in weave for gcc >= 4.3.
+	Same for gauleg.
 
 -----------------------------------------------
 v0.3.0 (2010-04-04)
