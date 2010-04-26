@@ -74,11 +74,15 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         an array with fields.
 
 
+
     to_big_endian(array, inplace=False, keep_dtype=False)
         Convert an array to big endian byte order, updating the dtype to
         reflect this.  The array can have fields. 
     to_little_endian(array, inplace=False, keep_dtype=False)
         Convert an array to little endian byte order, updating the dtype to
+        reflect this.  The array can have fields.  
+    to_native(array, inplace=False, keep_dtype=False)
+        Convert an array to native byteorder, updating the dtype to
         reflect this.  The array can have fields.  
 
     byteswap(array, inplace=False, keep_dtype=False)
