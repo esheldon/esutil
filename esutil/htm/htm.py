@@ -62,7 +62,7 @@ class HTM(htmc.HTMC):
             depth = 10
             h=esutil.htm.HTM(depth)
             m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,radius,
-                                maxmach=0,
+                                maxmatch=1,
                                 htmid2=None,
                                 htmrev2=None,
                                 minid=None,
