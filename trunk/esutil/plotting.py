@@ -6,6 +6,89 @@ except:
 
 import esutil
 
+# biggles plotting routines.  mostly convenience functions for interactive work
+
+def bscatter(x, y, plt=None, **keywords):
+    """
+    Name:
+        bscatter
+    Purpose:
+        A wrapper to perform a quick scatter plot with biggles.  For anything
+        more complex, it is better to use the object oriented interface.
+
+    Calling Sequence:
+        bscatter(x, y, 
+                 xerr=None, 
+                 yerr=None,
+                 xrange=None,
+                 yrange=None,
+                 type='diamond', 
+                 color='black',
+                 xlabel=None, 
+                 ylabel=None, 
+                 title=None,
+                 file=None, 
+                 xsize=None, 
+                 ysize=None,
+                 aspect_ratio=None,
+                 plt=None)
+
+    Return value is the used biggles plot object.
+
+    For overplotting, send an existing biggles plot object in the plt= keyword
+
+    """
+
+    import biggles
+
+    if plt is None:
+        plt = biggles.FramedPlot()
+
+    type = keywords.get('type', 'diamond')
+    color = keywords.get('color', 'black')
+    
+
+    p=biggles.Points(x, y, type=type, color=color)
+    plt.add(p)
+
+    if 'yerr' in keywords:
+        p_yerr = biggles.SymmetricErrorBarsY(x, y, keywords['yerr'], color=color)
+        plt.add(p_yerr)
+    if 'xerr' in keywords:
+        p_xerr = biggles.SymmetricErrorBarsX(x, y, keywords['yerr'], color=color)
+        plt.add(p_xerr)
+
+    if 'xrange' in keywords:
+        plt.xrange = xrange
+    if 'yrange' in keywords:
+        plt.yrange = yrange
+
+    if 'xlabel' in keywords:
+        plt.xlabel = xlabel
+    if 'ylabel' in keywords:
+        plt.ylabel = ylabel
+
+    if 'title' in keywords:
+        plt.title=title
+
+    if 'aspect_ratio' in keywords:
+        plt.aspect_ratio = aspect_ratio
+            
+
+    if 'file' in keywords:
+        fname = keywords['file']
+        if fname.find('.eps') != -1 or fname.find('.ps'):
+            plt.write_eps(fname)
+        else:
+            xsize = keywords.get('xsize',512)
+            ysize = keywords.get('ysize',512)
+            plt.write_image(xsize, ysize, fname)
+    else:
+        plt.show()
+
+    return plt
+
+# matplotlib related routines
 def setuplot(backend=None, params=None):
     """
     Import pyplot from matplotlib and return it.  Can specify a backend
