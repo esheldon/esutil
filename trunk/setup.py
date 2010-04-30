@@ -70,13 +70,13 @@ if have_numpy:
     packages.append('esutil.htm')
 
 
-    # pyfitspatch
-    include_dirs += ['esutil/pyfitspatch']
-    pyfits_sources = glob('esutil/pyfitspatch/*.c')
-    pyfits_module = Extension("pyfitspatch.pyfitsComp",
+    # pyfits
+    include_dirs += ['esutil/pyfits']
+    pyfits_sources = glob('esutil/pyfits/*.c')
+    pyfits_module = Extension("esutil.pyfits.pyfitsComp",
                               sources=pyfits_sources)
     ext_modules.append(pyfits_module)
-    packages.append('esutil.pyfitspatch')
+    packages.append('esutil.pyfits')
 
 
     # stat package

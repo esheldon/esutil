@@ -55,7 +55,7 @@ import os
 from sys import stdout, stderr
 
 try:
-    import pyfitspatch as pyfits
+    from . import pyfits
     have_pyfits=True
 except:
     try:
