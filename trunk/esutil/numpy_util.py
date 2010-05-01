@@ -178,7 +178,7 @@ def ahelp(array, recurse=False, pretty=True, index=0):
 
     Example:
         ahelp(a)
-        size: 1147506 nfields: 27 type: records
+        size: 1147506  nfields: 27  type: records
           run                >i4  1933
           rerun              |S3  '157'
           camcol             >i2  1
@@ -200,7 +200,7 @@ def ahelp(array, recurse=False, pretty=True, index=0):
     names = array.dtype.names
     descr = array.dtype.descr
 
-    topformat="size: %s nfields: %s type: %s\n"
+    topformat="size: %s  nfields: %s  type: %s\n"
 
     if names is None:
         type=descr[0][1]
