@@ -88,6 +88,28 @@ def bscatter(x, y, plt=None, **keywords):
 
     return plt
 
+def bhist(x, binsize=1.0, min=None, max=None, weights=None, plt=None, **keywords):
+
+    import esutil
+    import biggles
+    hout = esutil.stat.histogram(x, 
+                                 binsize=binsize, 
+                                 min=min,
+                                 max=max,
+                                 weights=weights,
+                                 more=True)
+    
+
+    if plt is None:
+        plt = biggles.FramedPlot()
+
+    ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize)
+
+    plt.add(ph)
+
+    plt.show()
+
+
 # matplotlib related routines
 def setuplot(backend=None, params=None):
     """
