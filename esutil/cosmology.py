@@ -122,7 +122,7 @@ except:
 
 import esutil.integrate
 
-class Cosmo():
+class Cosmo(object):
     def __init__(self, 
                  omega_m=0.3, 
                  omega_l=0.7,

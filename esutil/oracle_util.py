@@ -107,7 +107,7 @@ _int_digits_err=\
 
 _string_err='The size of field "%s" is %s but must be greater than zero'
 
-class Connection:
+class Connection(object):
     """
     CLASS
         oracle_util.Connection(conninfo=default, f4_digits=6, f8_digits=15)

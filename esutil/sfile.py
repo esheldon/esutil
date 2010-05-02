@@ -204,7 +204,7 @@ def Open(fobj, mode='r', delim=None, verbose=False, memmap=False):
     else:
         return sf
 
-class SFile():
+class SFile(object):
     """
     Class SFile
 

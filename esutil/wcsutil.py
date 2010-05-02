@@ -126,7 +126,7 @@ for key in smkeys:
 
 
 
-class WCS:
+class WCS(object):
     """
     A class to do WCS transformations.  Currently supports TAN projections
     for RA---TAN and DEC--TAN and RA---TAN--SIP,DEC--TAN--SIP ctypes in 
