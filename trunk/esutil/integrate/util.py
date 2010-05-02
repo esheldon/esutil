@@ -48,7 +48,7 @@ try:
 except:
     have_cgauleg=False
 
-class QGauss():
+class QGauss:
     """
     Module:
         integrate

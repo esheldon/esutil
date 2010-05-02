@@ -23,7 +23,7 @@ def bscatter(x, y, plt=None, **keywords):
                  xrange=None,
                  yrange=None,
                  type='diamond', 
-                 color='black',
+                 color=None,
                  xlabel=None, 
                  ylabel=None, 
                  title=None,
@@ -45,34 +45,36 @@ def bscatter(x, y, plt=None, **keywords):
         plt = biggles.FramedPlot()
 
     type = keywords.get('type', 'diamond')
-    color = keywords.get('color', 'black')
-    
 
-    p=biggles.Points(x, y, type=type, color=color)
+    pkeywords = {}
+    if 'color' in keywords:
+        pkeywords['color'] = keywords['color']
+
+    p=biggles.Points(x, y, type=type, **pkeywords)
     plt.add(p)
 
     if 'yerr' in keywords:
-        p_yerr = biggles.SymmetricErrorBarsY(x, y, keywords['yerr'], color=color)
+        p_yerr=biggles.SymmetricErrorBarsY(x, y, keywords['yerr'], **pkeywords)
         plt.add(p_yerr)
     if 'xerr' in keywords:
-        p_xerr = biggles.SymmetricErrorBarsX(x, y, keywords['yerr'], color=color)
+        p_xerr=biggles.SymmetricErrorBarsX(x, y, keywords['yerr'], **pkeywords)
         plt.add(p_xerr)
 
     if 'xrange' in keywords:
-        plt.xrange = xrange
+        plt.xrange = keywords['xrange']
     if 'yrange' in keywords:
-        plt.yrange = yrange
+        plt.yrange = keywords['yrange']
 
     if 'xlabel' in keywords:
-        plt.xlabel = xlabel
+        plt.xlabel = keywords['xlabel']
     if 'ylabel' in keywords:
-        plt.ylabel = ylabel
+        plt.ylabel = keywords['ylabel']
 
     if 'title' in keywords:
-        plt.title=title
+        plt.title=keywords['title']
 
     if 'aspect_ratio' in keywords:
-        plt.aspect_ratio = aspect_ratio
+        plt.aspect_ratio =keywords[' aspect_ratio']
             
 
     if 'file' in keywords:
@@ -88,7 +90,24 @@ def bscatter(x, y, plt=None, **keywords):
 
     return plt
 
-def bhist(x, binsize=1.0, min=None, max=None, weights=None, plt=None, **keywords):
+def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
+    """
+    Name:
+        bhist
+    Purpose:
+        A wrapper to perform a quick histogram plot with biggles.  For anything
+        more complex, it is better to use the object oriented interface.
+
+    Calling Sequence:
+        bhist(x, 
+              binsize=1.0,
+              min=None,
+              max=None,
+              xrange=None,
+              yrange=None,
+              color='black',
+
+    """
 
     import esutil
     import biggles
@@ -103,11 +122,43 @@ def bhist(x, binsize=1.0, min=None, max=None, weights=None, plt=None, **keywords
     if plt is None:
         plt = biggles.FramedPlot()
 
-    ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize)
+    pkeywords = {}
+    if 'color' in keywords:
+        pkeywords['color'] = keywords['color']
+
+    ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize, 
+                         **pkeywords)
 
     plt.add(ph)
 
-    plt.show()
+    if 'xrange' in keywords:
+        plt.xrange = keywords['xrange']
+    if 'yrange' in keywords:
+        plt.yrange = keywords['yrange']
+
+    if 'xlabel' in keywords:
+        plt.xlabel = keywords['xlabel']
+    if 'ylabel' in keywords:
+        plt.ylabel = keywords['ylabel']
+
+    if 'title' in keywords:
+        plt.title=keywords['title']
+
+    if 'aspect_ratio' in keywords:
+        plt.aspect_ratio =keywords[' aspect_ratio']
+ 
+    if 'file' in keywords:
+        fname = keywords['file']
+        if fname.find('.eps') != -1 or fname.find('.ps'):
+            plt.write_eps(fname)
+        else:
+            xsize = keywords.get('xsize',512)
+            ysize = keywords.get('ysize',512)
+            plt.write_image(xsize, ysize, fname)
+    else:
+        plt.show()
+
+    return plt
 
 
 # matplotlib related routines

@@ -61,7 +61,7 @@ from types import *
 import numpy_util
 import stat
 
-class Generator():
+class Generator(object):
     """
     Class Name:
         Generator
