@@ -77,6 +77,8 @@ Classes
             them all, use the [:] slice.
 
             data = r[:]                   # read all rows and columns
+            data = r[start:stop]          # full slices allowed
+            data = r[start:stop:step]     # slice with step specified
             data = r[field_names][:]      # read all rows but subset of columns.
             data = r[field_names][rowlist] # subset of rows and columns
 
@@ -107,6 +109,11 @@ Classes
         # read a subset of rows
         data = robj.read(rows=row_list)
         data = robj[ 3500:5238 ]
+
+        # get every 3rd in a slice
+        data = robj[ 10:1234:3 ]
+
+        # send a full list
         data = robj[ rowlist ]
 
         # read a subset of columns.
@@ -129,9 +136,13 @@ Classes
         data = robj[fields2get][rows2get]
 
 
-        # Write a numpy array to a file
-        r = recfile.Open('test.tab', "w", ",")
+        # Write a numpy array to a file, with ability to
+        # append
+        r = recfile.Open('test.tab', "r+", ",")
         r.Write(my_array)
+
+        # append more rows
+        r.Write(second_array)
 
     Todo:
         implement auto-getting of size for ascii

@@ -77,6 +77,8 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
             them all, use the [:] slice.
 
             data = r[:]                   # read all rows and columns
+            data = r[start:stop]          # full slices allowed
+            data = r[start:stop:step]     # slice with step specified
             data = r[field_names][:]      # read all rows but subset of columns.
             data = r[field_names][rowlist] # subset of rows and columns
 
@@ -133,9 +135,13 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
         data = robj[fields2get][rows2get]
 
 
-        # Write a numpy array to a file
-        r = recfile.Open('test.tab', "w", ",")
+        # Write a numpy array to a file, with ability to
+        # append
+        r = recfile.Open('test.tab', "r+", ",")
         r.Write(my_array)
+
+        # append more rows
+        r.Write(second_array)
 
     Todo:
         implement auto-getting of size for ascii
@@ -218,6 +224,8 @@ class Recfile(object):
             slice.
 
             data = r[:]                   # read all rows and columns
+            data = r[start:stop]          # full slices allowed
+            data = r[start:stop:step]     # slice with step specified
             data = r[field_names][:]      # read all rows but subset of columns.
             data = r[field_names[rowlist] # subset of rows and columns
 
@@ -274,9 +282,13 @@ class Recfile(object):
         data = robj[fields2get][rows2get]
 
 
-        # Write a numpy array to a file
-        r = recfile.Open('test.tab', "w", ",")
+        # Write a numpy array to a file, with ability to
+        # append
+        r = recfile.Open('test.tab', "r+", ",")
         r.Write(my_array)
+
+        # append more rows
+        r.Write(second_array)
 
     Todo:
         implement auto-getting of size for ascii

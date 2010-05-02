@@ -147,9 +147,6 @@ PyObject* Records::ReadSlice(long long row1, long long row2, long long step)  th
 	if (mAction != READ) {
 		throw "File is not open for reading";
 	}
-	if (mFileType != BINARY_FILE) {
-		throw "slices currently only supported for binary files";
-	}
 
 	// juse some error checking and return implied length
 	mNrowsToRead = ProcessSlice(row1, row2, step);
