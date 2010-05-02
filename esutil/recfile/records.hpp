@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <stdint.h>
 #include "numpy/arrayobject.h"
 
 #ifndef _readfields_2_h
@@ -133,7 +134,7 @@ Modification history:
 				PyObject* rows=NULL,
 				PyObject* fields=NULL) throw (const char*);
 
-        PyObject* ReadSlice(npy_intp row1, npy_intp row2) throw (const char*);
+        PyObject* ReadSlice(long long row1, long long row2, long long step) throw (const char*);
 
 #ifdef SWIG
 %feature("docstring",
@@ -193,10 +194,14 @@ Modification history:
 		void CreateOutputArray();
 
 		void ReadPrepare();
-        npy_intp ProcessSlice(npy_intp row1, npy_intp row2);
+        npy_intp ProcessSlice(npy_intp row1, npy_intp row2, npy_intp step);
 		void ReadFromFile();
 		void ReadAllAsBinary();
+
 		void ReadRows();
+
+		void ReadRowsSlice(npy_intp row1, npy_intp step) throw (const char* );
+
 		void ReadRow();
 		void ReadAsciiFields();
 		void ReadBinaryFields();

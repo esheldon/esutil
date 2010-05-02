@@ -107,6 +107,11 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
         # read a subset of rows
         data = robj.read(rows=row_list)
         data = robj[ 3500:5238 ]
+
+        # get every 3rd in a slice
+        data = robj[ 10:1234:3 ]
+
+        # send a full list
         data = robj[ rowlist ]
 
         # read a subset of columns.
@@ -149,7 +154,7 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
                    verbose=verbose)
 
 
-class Recfile():
+class Recfile(object):
     """
     Instantiate a new Recfile class
         For writing:
@@ -243,6 +248,11 @@ class Recfile():
         # read a subset of rows
         data = robj.read(rows=row_list)
         data = robj[ 3500:5238 ]
+
+        # get every 3rd in a slice
+        data = robj[ 10:1234:3 ]
+
+        # send a full list
         data = robj[ rowlist ]
 
         # read a subset of columns.
@@ -498,7 +508,7 @@ class Recfile():
         if isrows:
             # rows were entered: read all columns
             if isslice:
-                return self.read_slice(arg)
+                return self.read_slice(res)
             else:
                 return self.read(rows=res)
 
@@ -517,23 +527,12 @@ class Recfile():
         if self.fobj.tell() != self.offset:
             self.fobj.seek(self.offset)
 
-        if self.delim is not None:
-            # we can't use a memmap on ascii files
-            start=arg.start
-            stop=arg.stop
-            if arg.step is not None:
-                rows=range(start,stop,arg.step)
-            else:
-                rows=range(start,stop)
-            result = self.read(rows=rows)
-        else:
-            mmap = self.get_memmap()
-            # this does not actually read the data yet
-            data_view = mmap[arg]
+        robj = records.Records(
+                self.fobj, mode='r', 
+                nrows=self.nrows, dtype=self.dtype, 
+                delim=self.delim)
+        result = robj.ReadSlice(long(arg.start), long(arg.stop), long(arg.step))
 
-            # now copy out to an array
-            result = numpy.zeros(data_view.size, dtype=data_view.dtype)
-            result[:] = data_view[:]
 
         if split:
             return split_fields(result)
@@ -613,7 +612,7 @@ class Recfile():
             if unpack:
                 result = self.slice2rows(arg.start, arg.stop, arg.step)
             else:
-                result = arg
+                result = self.process_slice(arg)
         else:
             # a single object was entered.  Probably should apply some more 
             # checking on this
@@ -621,7 +620,31 @@ class Recfile():
 
         return result, isrows, isslice
 
+    def process_slice(self, arg):
+        start = arg.start
+        stop = arg.stop
+        step = arg.step
 
+        if step is None:
+            step=1
+        if start is None:
+            start = 0
+        if stop is None:
+            stop = self.nrows
+
+        if start < 0:
+            start = self.nrows + start
+            if start < 0:
+                raise IndexError("Index out of bounds")
+
+        if stop < 0:
+            stop = self.nrows + start + 1
+
+        if stop < start:
+            # will return an empty struct
+            stop = start
+
+        return slice(start, stop, step)
 
     def __getitem__old(self, arg):
         """
@@ -803,7 +826,7 @@ class Recfile():
         return f
 
 
-class RecfileSubset():
+class RecfileSubset(object):
     """
     A class representing a subset of the data on disk.  Useful for chaining
     together selections. e.g.
@@ -876,7 +899,7 @@ class RecfileSubset():
         s = "\n".join(s)
         return s
 
-class RecfileColumnSubset():
+class RecfileColumnSubset(object):
     """
 
     A class representing a subset of the the columns on disk.  When called
@@ -926,6 +949,12 @@ class RecfileColumnSubset():
 
         If rows are sent, they are read and the result returned.
         """
+
+        # we have to unpack the rows if we are reading a subset
+        # of the columns because our slice operator only works
+        # on whole rows.  We could allow rows= keyword to
+        # be a slice...
+
         res, isrows, isslice = \
             self.recfile.process_args_as_rows_or_columns(arg, unpack=True)
         if isrows:
