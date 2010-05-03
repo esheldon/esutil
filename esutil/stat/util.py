@@ -226,7 +226,7 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
         output={}
         output['hist'] = hist
         if rev:
-            output['rev'] = rev
+            output['rev'] = revind
 
         # create the bin edges and centers
         nhist = len(hist)
@@ -411,7 +411,8 @@ def histogram2d(x, y,
                 xmax=None, 
                 ymin=None, 
                 ymax=None, 
-                rev=False):
+                rev=False,
+                more=False):
     """
     Name:
         histogram2d
@@ -428,7 +429,8 @@ def histogram2d(x, y,
                     xmax=None, 
                     ymin=None, 
                     ymax=None, 
-                    rev=False)
+                    rev=False,
+                    more=False)
 
     Inputs:
         x,y:  The x and y values for the data.  Must be same length.
@@ -443,6 +445,10 @@ def histogram2d(x, y,
         ymin: min range to use in the y direction.
         ymax: max range to use in the y direction.
         rev: if True, return a tuple hist,rev
+
+        more: If True, return a dictionary with the histogram in the
+            'hist' key, as well as xlow,xhigh,xcenter and other bin
+            information.
 
     """
 
@@ -479,6 +485,9 @@ def histogram2d(x, y,
         # determine nx,ny from binsizes
         nx = numpy.int64(  (xmax-xmin)/xbin ) + 1
         ny = numpy.int64(  (ymax-ymin)/ybin ) + 1
+    else:
+        xbin = (xmax-xmin)/nx
+        ybin = (ymax-ymin)/ny
 
     xind=numpy.floor((x[w]-xmin)*(nx/(xmax-xmin)))
     yind=numpy.floor((y[w]-ymin)*(ny/(ymax-ymin)))
@@ -486,14 +495,65 @@ def histogram2d(x, y,
     ind=xind+nx*yind
 
 
-    hist=histogram(ind, min=0l, max=nx*ny-1, rev=rev)
-    if rev:
-        hist, revind=hist
-        hist = hist.reshape(nx,ny)
-        return hist, revind
+    result = histogram(ind, min=0, max=nx*ny-1, rev=rev)
+
+    if not more:
+        if rev:
+            hist, revind=result
+            hist = hist.reshape(nx,ny)
+            return hist, revind
+        else:
+            hist = result.reshape(nx,ny)
+            return hist
     else:
-        hist = hist.reshape(nx,ny)
-        return hist
+
+        output={}
+        if rev:
+            hist, revind = result
+            hist = hist.reshape(nx,ny)
+            output['hist'] = hist
+            output['rev'] = revind
+        else:
+            hist = result.reshape(nx,ny)
+            output['hist'] = hist
+
+
+        # create the bin edges and centers
+        xlow = numpy.arange(nx, dtype='f8')
+        xlow = xmin + xlow*xbin
+        xhigh = xlow + xbin
+        xcenter = xlow + 0.5*xbin
+
+        ylow = numpy.arange(ny, dtype='f8')
+        ylow = ymin + ylow*ybin
+        yhigh = ylow + ybin
+        ycenter = ylow + 0.5*ybin
+
+        output['xlow'] = xlow
+        output['xhigh'] = xhigh
+        output['xcenter'] = xcenter
+
+        output['ylow'] = ylow
+        output['yhigh'] = yhigh
+        output['ycenter'] = ycenter
+
+        output['nx'] = nx
+        output['xbin'] = xbin
+        output['xmin'] = xmin
+        output['xmax'] = xmax
+
+        output['ny'] = ny
+        output['ybin'] = ybin
+        output['ymin'] = ymin
+        output['ymax'] = ymax
+
+        output['ranges'] = ( (xmin,ymin), (xmax,ymax) )
+        # useful for biggles
+        output['ranges_reverse'] = ( (ymin,xmin), (ymax,xmax) )
+
+        return output
+
+
 
 
 def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
