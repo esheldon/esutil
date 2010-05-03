@@ -295,13 +295,13 @@ def aprint(arr, fields=None, nlines=None, format=None):
     eval(command)
 
 
-def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
+def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
     """
     NAME:
       arrscl()
 
     CALLING SEQUENCE:
-      newarr = arrscl(arr, minval, maxval, arrmin=None, arrmax=None)
+      newarr = arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8')
 
     PURPOSE:
       Rescale the range of an array to be between minval and maxval.
@@ -310,6 +310,8 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
       arr: An array
       minval: The minimum value for the output array
       maxval: The maximum value for the output array
+    OPTIONAL INPUTS:
+        dtype: Default is double, 'f8'
 
     OPTIONAL OUTPUTS:
       arrmin=None: An number to use for the min range of the input array. By
@@ -329,8 +331,7 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None):
       
     """
 
-    # makes a copy either way (asarray would not if it was an array already)
-    output = numpy.array(arr)
+    output = numpy.array(arr, dtype=dtype, copy=True)
     
     if arrmin == None: arrmin = output.min()
     if arrmax == None: arrmax = output.max()
