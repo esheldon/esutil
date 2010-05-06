@@ -8,7 +8,7 @@ import esutil
 
 # biggles plotting routines.  mostly convenience functions for interactive work
 
-def bscatter(x, y, plt=None, **keywords):
+def bscatter(x, y, show=True, plt=None, **keywords):
     """
     Name:
         bscatter
@@ -31,6 +31,7 @@ def bscatter(x, y, plt=None, **keywords):
                  xsize=None, 
                  ysize=None,
                  aspect_ratio=None,
+                 show=True,
                  plt=None)
 
     Return value is the used biggles plot object.
@@ -74,19 +75,20 @@ def bscatter(x, y, plt=None, **keywords):
         plt.title=keywords['title']
 
     if 'aspect_ratio' in keywords:
-        plt.aspect_ratio =keywords[' aspect_ratio']
+        plt.aspect_ratio =keywords['aspect_ratio']
             
 
     if 'file' in keywords:
         fname = keywords['file']
-        if fname.find('.eps') != -1 or fname.find('.ps'):
+        if fname.find('.eps') != -1 or fname.find('.ps') != -1:
             plt.write_eps(fname)
         else:
             xsize = keywords.get('xsize',512)
             ysize = keywords.get('ysize',512)
             plt.write_image(xsize, ysize, fname)
     else:
-        plt.show()
+        if show:
+            plt.show()
 
     return plt
 
@@ -124,7 +126,9 @@ def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
 
     pkeywords = {}
     if 'color' in keywords:
-        pkeywords['color'] = keywords['color']
+        color = keywords['color']
+        if color is not None:
+            pkeywords['color'] = color
 
     ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize, 
                          **pkeywords)
@@ -159,6 +163,119 @@ def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
         plt.show()
 
     return plt
+
+def bwhiskers(xin, yin, uin, vin, 
+              scale=1.0, 
+              file=None,
+              xsize=512,
+              ysize=512,
+              show=None, 
+              plt=None, 
+              **plotting_keywords):
+    """
+    Name:
+        bwhiskers
+    Calling Sequence:
+        whiskers(plt, x, y, u, v, scale=1, plt=None, **plotting_keywords)
+    Plotting Context:
+        biggles.  Make whiskers using matplotlib use the mwhiskers function
+            Add them to the entered plot object, otherwise create a
+            new plot object and display the plot (or save to a file).
+
+    Purpose:
+        Using biggles, create lines centered a the input x,y positions, with
+        length 
+            sqrt(u**2 + v**2) 
+        and angle 
+            arctan(v,u)
+
+    Inputs:
+        x,y: The x,y positions for the midpoint of each whisker.
+        u,v: The vectors to draw.  You can create these vectors from
+            shears, or polarizations, using the polar2whisker function.
+    Optional Inputs:
+        plt: A biggles plot object.  If not sent, a FramedPlot() instance 
+            is created.
+        show: Show the plot in a window.  
+        
+            If this keyword is not sent, the plot will only be shown in a
+            window if these conditions hold
+
+                1) The file keyword is not sent.
+                2) A plt object is not sent.  If a plot object is
+                    entered it is assumed you only want to add the
+                    whiskers to the existing object but not show it.
+
+        file: A filename to write the image, should be .eps or .png
+        xsize, ysize: Keywords indicating the size of a png file in x and y.
+            Defaults are each 512.
+
+        scale: A scale to multiply the length of each whisker.  Default 1.
+        **plotting keywords:  keywords to be used when creating each
+            whisker.  Each whisker is represented by a biggles Curve()
+            object.
+
+    Outputs:
+        The biggles plot instance.
+
+    """
+
+    if show is None:
+        if file is None and plt is None:
+            show = True
+
+    import biggles
+    if plt is None:
+        plt = biggles.FramedPlot()
+
+    if 'xrange' in plotting_keywords:
+        plt.xrange = plotting_keywords['xrange']
+    if 'yrange' in plotting_keywords:
+        plt.yrange = plotting_keywords['yrange']
+
+    if 'xlabel' in plotting_keywords:
+        plt.xlabel = plotting_keywords['xlabel']
+    if 'ylabel' in plotting_keywords:
+        plt.ylabel = plotting_keywords['ylabel']
+
+    if 'title' in plotting_keywords:
+        plt.title=plotting_keywords['title']
+
+    if 'aspect_ratio' in plotting_keywords:
+        plt.aspect_ratio =plotting_keywords['aspect_ratio']
+ 
+
+    x = numpy.array(xin, copy=False, ndmin=1)
+    y = numpy.array(yin, copy=False, ndmin=1)
+    u = numpy.array(uin, copy=False, ndmin=1)
+    v = numpy.array(vin, copy=False, ndmin=1)
+
+    if x.size != y.size or x.size != u.size or x.size != v.size:
+        raise ValueError("Sizes don't match: %s %s %s %s\n" % (x.size,y.size,u.size,v.size))
+
+    for i in range(x.size):
+        # create the line to draw.
+        xvals = x[i] + numpy.array([ -u[i]/2.0, u[i]/2.0], dtype='f4')*scale
+        yvals = y[i] + numpy.array([ -v[i]/2.0, v[i]/2.0], dtype='f4')*scale
+
+        c = biggles.Curve(xvals, yvals, **plotting_keywords)
+        plt.add(c)
+
+    if file is not None:
+        if file.find('.eps') != -1 or file.find('.ps') != -1:
+            plt.write_eps(file)
+        else:
+            if xsize is None:
+                xsize=512
+            if ysize is None:
+                ysize=512
+            plt.write_image(xsize, ysize, file)
+    else:
+        if show:
+            plt.show()
+
+    return plt
+
 
 
 # matplotlib related routines
@@ -212,14 +329,23 @@ def set_minor_ticks(ax, xloc=None, yloc=None):
     ax.yaxis.set_minor_locator(ml(yloc))
 
 
-def whiskers(plt, xin, yin, uin, vin, 
-             scale=1.0, color='black', linewidth=0.5, **plotting_keywords):
+def mwhiskers(plt, xin, yin, uin, vin, 
+              scale=1.0, linewidth=0.5, **plotting_keywords):
     """
+    Name:
+        mwhiskers
+    Calling Sequence:
+        whiskers(plt, x, y, u, v, scale=1, **plotting_keywords)
+    Plotting Context:
+        matplotlib.  Do make whiskers using biggles use the bwhiskers function
 
-    Draw lines centered a the input x,y positions, with length 
-        sqrt(u**2 + v**2) 
-    and angle 
-        arctan(v,u)
+    Purpose:
+
+        Using matplotlib, draw lines centered a the input x,y positions, with
+        length 
+            sqrt(u**2 + v**2) 
+        and angle 
+            arctan(v,u)
 
     plt could be an axes instance
         ax = pyplot.subplot(1,2,1)
