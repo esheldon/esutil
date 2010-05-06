@@ -137,6 +137,7 @@ def get_python_version(numerical=False):
 
 # imports are the ony things that will have to be converted for py3k
 # other than extension modules
+import algorithm
 import xmltools
 import ostools
 import misc
