@@ -553,7 +553,7 @@ class Recfile(object):
 
         return result
 
-    def get_memmap(self, mode='r', view=None, header=False):
+    def get_memmap(self, view=None, header=False):
 
         if self.delim is not None:
             raise ValueError("Cannot memory map ascii files")
@@ -565,7 +565,7 @@ class Recfile(object):
         shape = (self.nrows,)
 
         result = numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
-                              mode=mode, offset=self.fobj.tell())
+                              mode=self.fobj.mode, offset=self.fobj.tell())
         if view is not None:
             result = result.view(view)
 

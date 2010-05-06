@@ -1375,8 +1375,9 @@ def randind(nmax, nrand):
     Calling Sequence:
         ind = randind(nmax, nrand)
     Purpose:
-        Return nrand random indices, with replacement, in the open 
-        range [0,nmax)
+        Generate random indices, with replacement, in the open interval
+        [0,nmax)
+
     """
     
     if nmax > (2**32-1):
@@ -1390,3 +1391,5 @@ def randind(nmax, nrand):
     ind[:] = arrscl( rnd, 0, nmax-1, arrmin=0.0, arrmax=1.0 )
 
     return ind
+
+

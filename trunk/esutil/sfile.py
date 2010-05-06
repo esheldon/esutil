@@ -523,7 +523,7 @@ class SFile(object):
                             dtype=self.dtype, delim=self.delim)
         return robj.get_subset(rows=rows, fields=fields, columns=columns)
 
-    def get_memmap(self, mode='r', view=None, header=False):
+    def get_memmap(self, view=None, header=False):
 
         if self.delim is not None:
             raise ValueError("Cannot memory map ascii files")
@@ -538,7 +538,7 @@ class SFile(object):
             shape = (self.size,)
 
         result = numpy.memmap(self.fobj, dtype=self.dtype, shape=shape, 
-                              mode=mode, offset=self.fobj.tell())
+                              mode=self.fobj.mode, offset=self.fobj.tell())
         if view is not None:
             result = result.view(view)
         if header:
