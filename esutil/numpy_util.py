@@ -406,6 +406,9 @@ def combine_arrlist(arrlist, keep=False):
     if not isinstance(arrlist,list):
         raise RuntimeError('Input must be a list of arrays')
 
+    if len(arrlist) == 1:
+        return arrlist[0]
+
     isarray = isinstance(arrlist[0], numpy.ndarray)
     isrec = isinstance(arrlist[0], numpy.recarray)
         
@@ -413,6 +416,7 @@ def combine_arrlist(arrlist, keep=False):
         mess = 'Input must be a list of arrays or recarrays. Found %s' % \
                 type(arrlist[0])
         raise RuntimeError(mess)
+
 
     # loop and get total number of entries
     counts=0
