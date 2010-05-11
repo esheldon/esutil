@@ -94,136 +94,7 @@
 #include <typeinfo>
 #include <map>
 #include <stdint.h>
-//#include "TypeInfo.h"
 #include "numpy/arrayobject.h"
-
-
-
-/* A helper class to convert C++ types to NumPy type numbers */
-class NumpyTypeInfo {
-    public:
-        NumpyTypeInfo();
-        ~NumpyTypeInfo() {};
-        void init();		
-
-		int getid(const char* name) {
-
-			if (numpy_id_map.count(name) > 0) {
-				return numpy_id_map[name];
-			} else {
-				std::stringstream err;
-				err<<"NumpyTypeInfo: unsupported type: '"<<name<<"'\n";
-				throw err.str().c_str();
-			}
-		}
-        // public, static member data.  Static members can be
-        // created once and shared by all instances.
-		static std::map<const char*,int> numpy_id_map;
-};
-// this static data must be re-declared here
-std::map<const char*,int> NumpyTypeInfo::numpy_id_map;
-
-NumpyTypeInfo::NumpyTypeInfo() {
-	// DONT FORGET THIS!!!!
-    import_array();
-    init();
-}
-
-void NumpyTypeInfo::init() {
-    // static class members, only create once and shared by all
-    // instances
-    if (numpy_id_map.empty()) {
-
-        const char* tname;
-
-		// the following also cover the standard types as they are just a
-		// re-naming of them to platform independent, length specified type
-		// names
-
-		// in other words, these are also covered by the npy_* types
-		//
-        //   char
-        //   unsigned char
-        //   short
-        //   unsigned short
-        //   int
-        //   unsigned int
-        //   long
-        //   unsigned long
-        //   long long
-        //   unsigned long long
-        //   float
-        //   double
-		//
-		//   This means you can do this and it will work
-		//
-		//       name = typeid(int).name();
-		//       id = info.getid(name);
-
-		//   even though we didn't explicitly define that below.  It may not be
-		//   the same as npy_int32 because the size of int is platform
-		//   dependent.
-        
-        tname = typeid(npy_int8).name();
-        numpy_id_map[tname] = NPY_INT8;
-        tname = typeid(npy_uint8).name();
-        numpy_id_map[tname] = NPY_UINT8;
-
-
-        tname = typeid(npy_int16).name();
-        numpy_id_map[tname] = NPY_INT16;
-        tname = typeid(npy_uint16).name();
-        numpy_id_map[tname] = NPY_UINT16;
-
-
-        tname = typeid(npy_int32).name();
-        numpy_id_map[tname] = NPY_INT32;
-        tname = typeid(npy_uint32).name();
-        numpy_id_map[tname] = NPY_UINT32;
-
-
-        tname = typeid(npy_int64).name();
-        numpy_id_map[tname] = NPY_INT64;
-        tname = typeid(npy_uint64).name();
-        numpy_id_map[tname] = NPY_UINT64;
-
-
-        tname = typeid(npy_float32).name();
-        numpy_id_map[tname] = NPY_FLOAT32;
-
-        tname = typeid(npy_float64).name();
-        numpy_id_map[tname] = NPY_FLOAT64;
-
-		// On OS X 10.6 these can have different names
-
-
-        tname = typeid(int8_t).name();
-        numpy_id_map[tname] = NPY_INT8;
-        tname = typeid(uint8_t).name();
-        numpy_id_map[tname] = NPY_UINT8;
-
-
-        tname = typeid(int16_t).name();
-        numpy_id_map[tname] = NPY_INT16;
-        tname = typeid(uint16_t).name();
-        numpy_id_map[tname] = NPY_UINT16;
-
-
-        tname = typeid(int32_t).name();
-        numpy_id_map[tname] = NPY_INT32;
-        tname = typeid(uint32_t).name();
-        numpy_id_map[tname] = NPY_UINT32;
-
-
-        tname = typeid(int64_t).name();
-        numpy_id_map[tname] = NPY_INT64;
-        tname = typeid(uint64_t).name();
-        numpy_id_map[tname] = NPY_UINT64;
-
-
-
-    }
-}
 
 
 
@@ -321,8 +192,11 @@ template <class T> class NumpyVector {
 	
 	private:
 
+        // This fills in the static type map if it doesn't exist
+        void init_type_info();
+
         // private method to initialize type number and name
-        void SetType() throw (const char* );
+        void set_type() throw (const char* );
 
 		const char* mTypeName;
 		int mTypeNum;
@@ -332,15 +206,20 @@ template <class T> class NumpyVector {
 
 		PyObject* mArray;
 
-		NumpyTypeInfo mNumpyTypeInfo;
+		static std::map<const char*,int> mNumpyIdMap;
 };
+
+// this static data must be re-declared here
+template <class T>
+std::map<const char*,int> NumpyVector<T>::mNumpyIdMap;
+
 
 template <class T>
 NumpyVector<T>::NumpyVector()  throw (const char *) {
 	// DONT FORGET THIS!!!!
 	import_array();
 
-	mNumpyTypeInfo.init();
+    init_type_info();
 
 	// don't forget to initialize
 	mArray = NULL;
@@ -349,7 +228,7 @@ NumpyVector<T>::NumpyVector()  throw (const char *) {
     mStride=0;
 
     // Initialize internal type info
-	SetType();
+	set_type();
 }
 
 
@@ -358,7 +237,7 @@ NumpyVector<T>::NumpyVector(PyObject* obj)  throw (const char *) {
 	// DONT FORGET THIS!!!!
 	import_array();
 
-	mNumpyTypeInfo.init();
+    init_type_info();
 
 	// don't forget to initialize
 	mArray = NULL;
@@ -367,7 +246,7 @@ NumpyVector<T>::NumpyVector(PyObject* obj)  throw (const char *) {
     mStride=0;
 
     // Initialize internal type info
-	SetType();
+	set_type();
     
 	// Get the data.  This may or may not make a copy.
 	init(obj);
@@ -380,7 +259,7 @@ NumpyVector<T>::NumpyVector(npy_intp size) throw (const char *) {
 	// DONT FORGET THIS!!!!
 	import_array();
 
-	mNumpyTypeInfo.init();
+    init_type_info();
 
 	// don't forget to initialize
 	mArray = NULL;
@@ -389,7 +268,7 @@ NumpyVector<T>::NumpyVector(npy_intp size) throw (const char *) {
     mStride=0;
 
     // Initialize internal type info
-    SetType();
+    set_type();
 
     // create a new array from the size and type info
 	init(size);
@@ -454,8 +333,10 @@ void NumpyVector<T>::init(PyObject* obj)  throw (const char *) {
         if (descr == NULL) {
             throw "could not create array descriptor";
         }
-        // This will steal a reference to descr, so we don't need to decref
-        // descr as long as we decref the array!
+
+        // This will steal a reference to descr, and always returns a new
+        // reference for array.  We don't need to decref descr as long as we
+        // decref the array
         mArray = PyArray_CheckFromAny(
                 obj, descr, min_depth, max_depth, requirements, NULL);
 
@@ -545,23 +426,117 @@ T* NumpyVector<T>::ptr(npy_intp index) throw (const char *) {
 
 
 template <class T>
-void NumpyVector<T>::SetType() throw (const char *) {
+void NumpyVector<T>::set_type() throw (const char *) {
 
-    const char *tname = typeid(T).name();
-
-	mTypeNum = mNumpyTypeInfo.getid(tname);
-	mTypeName = tname;
-
-	/*
-	if (mNumpyTypeInfo.id.count(tname) > 0) {
-        mTypeName = tname;
-        mTypeNum = mNumpyTypeInfo.id[tname];
+    const char *name = typeid(T).name();
+    if (mNumpyIdMap.count(name) > 0) {
+        mTypeNum = mNumpyIdMap[name];
     } else {
         std::stringstream err;
-        err<<"unsupported type: "<<mTypeName<<"\n";
+        err<<"NumpyArray: unsupported type: '"<<name<<"'\n";
         throw err.str().c_str();
     }
-	*/
+
+	mTypeName = name;
+
+}
+
+
+template <class T>
+void NumpyVector<T>::init_type_info() {
+    // static class members, only create once and shared by all
+    // instances
+    if (mNumpyIdMap.empty()) {
+
+        const char* tname;
+
+		// the following also cover the standard types as they are just a
+		// re-naming of them to platform independent, length specified type
+		// names
+
+		// in other words, these are also covered by the npy_* types
+		//
+        //   char
+        //   unsigned char
+        //   short
+        //   unsigned short
+        //   int
+        //   unsigned int
+        //   long
+        //   unsigned long
+        //   long long
+        //   unsigned long long
+        //   float
+        //   double
+		//
+		//   This means you can do this and it will work
+		//
+		//       name = typeid(int).name();
+		//       id = info.getid(name);
+
+		//   even though we didn't explicitly define that below.  It may not be
+		//   the same as npy_int32 because the size of int is platform
+		//   dependent.
+        
+        tname = typeid(npy_int8).name();
+        mNumpyIdMap[tname] = NPY_INT8;
+        tname = typeid(npy_uint8).name();
+        mNumpyIdMap[tname] = NPY_UINT8;
+
+
+        tname = typeid(npy_int16).name();
+        mNumpyIdMap[tname] = NPY_INT16;
+        tname = typeid(npy_uint16).name();
+        mNumpyIdMap[tname] = NPY_UINT16;
+
+
+        tname = typeid(npy_int32).name();
+        mNumpyIdMap[tname] = NPY_INT32;
+        tname = typeid(npy_uint32).name();
+        mNumpyIdMap[tname] = NPY_UINT32;
+
+
+        tname = typeid(npy_int64).name();
+        mNumpyIdMap[tname] = NPY_INT64;
+        tname = typeid(npy_uint64).name();
+        mNumpyIdMap[tname] = NPY_UINT64;
+
+
+        tname = typeid(npy_float32).name();
+        mNumpyIdMap[tname] = NPY_FLOAT32;
+
+        tname = typeid(npy_float64).name();
+        mNumpyIdMap[tname] = NPY_FLOAT64;
+
+		// On OS X 10.6 these can have different names
+
+
+        tname = typeid(int8_t).name();
+        mNumpyIdMap[tname] = NPY_INT8;
+        tname = typeid(uint8_t).name();
+        mNumpyIdMap[tname] = NPY_UINT8;
+
+
+        tname = typeid(int16_t).name();
+        mNumpyIdMap[tname] = NPY_INT16;
+        tname = typeid(uint16_t).name();
+        mNumpyIdMap[tname] = NPY_UINT16;
+
+
+        tname = typeid(int32_t).name();
+        mNumpyIdMap[tname] = NPY_INT32;
+        tname = typeid(uint32_t).name();
+        mNumpyIdMap[tname] = NPY_UINT32;
+
+
+        tname = typeid(int64_t).name();
+        mNumpyIdMap[tname] = NPY_INT64;
+        tname = typeid(uint64_t).name();
+        mNumpyIdMap[tname] = NPY_UINT64;
+
+
+
+    }
 }
 
 
