@@ -1372,22 +1372,29 @@ def splitarray(nper, var_input):
 
     return split_list
 
-def randind(nmax, nrand):
+def randind(nmax, nrand, dtype=None):
     """
     Name:
         randind
     Calling Sequence:
-        ind = randind(nmax, nrand)
+        ind = randind(nmax, nrand, dtype=)
     Purpose:
         Generate random indices, with replacement, in the open interval
         [0,nmax)
+    Inputs:
+        nmax: Indices will be generated to nmax-1
+        nrand: Number of randoms to create.
+    Optional Inputs:
+        dtype:  If not sent, will be unsigned 8-byte integer if
+            nmax > 2**32-1 else will be unsigned 4-byte.
 
     """
     
-    if nmax > (2**32-1):
-        dtype = 'u8'
-    else:
-        dtype = 'u4'
+    if dtype is None:
+        if nmax > (2**32-1):
+            dtype = 'u8'
+        else:
+            dtype = 'u4'
 
     ind=numpy.zeros(nrand,dtype=dtype)
 
