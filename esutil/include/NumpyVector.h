@@ -9,7 +9,7 @@
  * This is a header-only template class.  Simply include it and use.
  *
  * Examples:
- * #include "NumpyVector.h"
+ *    #include "NumpyVector.h"
  *
  *    // creating a new int vector of size 100.  Internally this is a
  *    // PyArrayObject

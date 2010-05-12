@@ -5,12 +5,12 @@
  * The purpose of this class is to handle the reference counting
  * and to simplify creation of arrays from input descriptors.
  *
- * For explicitly types vectors, use the NumpyVector class.
+ * For explicitly typed vectors, use the NumpyVector class.
  *
  * This is a header-only class.  Simply include it and use.
  *
  * Examples:
- * #include "NumpyVoidVector.h"
+ *    #include "NumpyVoidVector.h"
  *
  *    // creating a new vector of any type from a PyObject*
  *    NumpyVoidVector vec(obj);
