@@ -176,7 +176,7 @@ class QGauss:
 
         expected = 1.0
 
-        ival = self.integrate_func(xrange, self.gaussfunc)
+        ival = self.integrate_func(xrange, self.gaussfunc, npts=npts)
 
         stdout.write("Expected value: %s\n" % expected)
         stdout.write("Got value: %s\n" % ival)

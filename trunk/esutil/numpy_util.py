@@ -1157,9 +1157,10 @@ def match(arr1input, arr2input):
         ind1,ind2 = match(arr1, arr2)
 
     PURPOSE:
-        match two numpy arrays.  Return the indices of the matches or [-1] if
-        no matches are found.  This means arr1[ind1] == arr2[ind2] is true for
-        all corresponding pairs. Arrays must contain only unique elements
+        match two numpy arrays.  Return the indices of the matches or empty
+        arrays if no matches are found.  This means arr1[ind1] == arr2[ind2] is
+        true for all corresponding pairs. Arrays must contain only unique
+        elements
 
     METHOD:
         This is the "sort" method as borrowed from the Goddard idl astronomy
@@ -1186,13 +1187,13 @@ def match(arr1input, arr2input):
             if sub2.size > 0:
                 sub1 = numpy.array([0], dtype=dtype)
             else:
-                sub1 = numpy.array([-1], dtype=dtype)
+                sub1 = numpy.array([], dtype=dtype)
         else:
             sub1, = numpy.where(arr1 == arr2[0])
             if sub1.size > 0:
                 sub2 = numpy.array([0], dtype=dtype)
             else:
-                sub2 = numpy.array([-1], dtype=dtype)
+                sub2 = numpy.array([], dtype=dtype)
 
         return sub1, sub2
 
@@ -1221,8 +1222,8 @@ def match(arr1input, arr2input):
     firstdup, = numpy.where((tmp == numpy.roll(tmp,-1)) &
                             (vec != numpy.roll(vec,-1)) )
     if firstdup.size == 0:
-        sub1 = numpy.array([-1], dtype=dtype)
-        sub2 = numpy.array([-1], dtype=dtype)
+        sub1 = numpy.array([], dtype=dtype)
+        sub2 = numpy.array([], dtype=dtype)
         return sub1, sub2
 
     # both duplicate values...?

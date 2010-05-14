@@ -331,6 +331,8 @@ def read_fits(fobj, **keywords):
     else:
         d = pyfits.getdata(fobj, **keywords)
 
+    d=d.view(view)
+
     if lower:
         d.dtype.names = [n.lower() for n in d.dtype.names]
     elif upper:
@@ -342,7 +344,6 @@ def read_fits(fobj, **keywords):
     if fields is not None:
         d = numpy_util.extract_fields(d, fields)
 
-    d=d.view(view)
 
     if ensure_native:
         numpy_util.to_native(d, inplace=True)
