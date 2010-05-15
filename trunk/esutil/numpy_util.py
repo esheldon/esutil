@@ -1201,6 +1201,9 @@ def match(arr1input, arr2input):
 
     REVISION HISTORY:
         Created 2009, Erin Sheldon, NYU.
+        Make return arrays empty when no matches are found, as opposed
+            to [-1]. This way one can just check match.size > 0
+            2010-05-14
     """
 
     arr1 = numpy.array(arr1input, ndmin=1, copy=False)
@@ -1276,27 +1279,27 @@ def match(arr1input, arr2input):
 
 def dict2array(d, sort=False, keys=None):
     """
-    NAME:
+    Name:
       dict2array()
 
-    CALLING SEQUENCE:
+    Calling Sequence:
       arr = dict2array(dict, sort=False, keys=None)
 
-    PURPOSE:
+    Purpose:
       Convert a dictionary to an array with fields (recarray, structured
       array).  This works for simple types e.g.  strings, integers, floating
       points.
 
-    KEYWORDS:
+    Keywords:
         keys: provide a sequence of keys to copy.  This can be used to order
             the fields (standard dictionary keys are unordered) or copy only a
             subset of keys. 
         sort: Sort the keys.  
 
-    COMMENTS:
+    Comments:
         In python >= 3.1 dictionaries can be ordered.
 
-    REVISION HISTORY:
+    Revision History:
         late 2009 created.  Erin Sheldon, BNL
 
     """
