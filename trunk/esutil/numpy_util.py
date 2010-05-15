@@ -433,6 +433,9 @@ def combine_arrlist(arrlist, keep=False):
     if not isinstance(arrlist,list):
         raise RuntimeError('Input must be a list of arrays')
 
+    if len(arrlist) == 0:
+        return numpy.zeros(0,dtype='i8')
+
     if len(arrlist) == 1:
         return arrlist[0]
 
