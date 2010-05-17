@@ -108,6 +108,15 @@ def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
               xrange=None,
               yrange=None,
               color='black',
+              xlabel=None, 
+              ylabel=None, 
+              title=None,
+              file=None, 
+              xsize=None, 
+              ysize=None,
+              aspect_ratio=None,
+              show=True,
+              plt=None)
 
     """
 
@@ -160,7 +169,9 @@ def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
             ysize = keywords.get('ysize',512)
             plt.write_image(xsize, ysize, fname)
     else:
-        plt.show()
+        show = keywords.get('show',True)
+        if show:
+            plt.show()
 
     return plt
 
@@ -251,7 +262,8 @@ def bwhiskers(xin, yin, uin, vin,
     v = numpy.array(vin, copy=False, ndmin=1)
 
     if x.size != y.size or x.size != u.size or x.size != v.size:
-        raise ValueError("Sizes don't match: %s %s %s %s\n" % (x.size,y.size,u.size,v.size))
+        raise ValueError("Sizes don't match: "
+                         "%s %s %s %s\n" % (x.size,y.size,u.size,v.size))
 
     for i in range(x.size):
         # create the line to draw.
@@ -371,14 +383,16 @@ def mwhiskers(plt, xin, yin, uin, vin,
         plt.plot(xvals, yvals, color=color, linewidth=linewidth, **plotting_keywords) 
 
 
-def polar2whisker(e1, e2, angle=False):
+def polar2whisker(e1, e2, angle=False, degrees=False):
     if not have_numpy:
         raise ImportError("numpy is not available")
 
     etot = numpy.sqrt( e1**2 + e2**2 )
-    posangle = 0.5*numpy.arctan2(e2, e1)*180./numpy.pi
+    posangle = 0.5*numpy.arctan2(e2, e1)
 
     if angle:
+        if degrees:
+            posangle *= 180./numpy.pi
         return etot, posangle
 
     # x component of the "vector" version
