@@ -83,10 +83,10 @@ Classes
             data = r[field_names][rowlist] # subset of rows and columns
 
         read(rows=, fields=):
-            Returns the data in a NumPy array.  Specific rows and fields 
-            of the file can be specified with the keywords.  Rows must be
-            sorted and unique.  Fields must be unique but can be in any
-            order.
+            Returns the data in a NumPy array.  Specific rows and fields of the
+            file can be specified with the keywords.  Fields must be unique but
+            can be in any order.
+
         write(numpy_array):
             Write the input numpy array to the file.  The array must have
             field names defined.
