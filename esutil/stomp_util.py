@@ -76,7 +76,8 @@ def in_window(stomp_map,
         i=0
         while i < x1.size:
             ang.SetUnitSphereCoordinates(x1[i],x2[i],x3[i])
-            iw[i] = stomp_map.FindLocation(ang)
+            #iw[i] = stomp_map.FindLocation(ang)
+            iw[i] = stomp_map.Contains(ang)
             del ang
             i += 1
     else:
@@ -85,7 +86,8 @@ def in_window(stomp_map,
         i=0
         while i < x1.size:
             ang.Set(x1[i],x2[i],stomp_system)
-            iw[i] = stomp_map.FindLocation(ang)
+            #iw[i] = stomp_map.FindLocation(ang)
+            iw[i] = stomp_map.Contains(ang)
             i+=1
 
     return iw 
@@ -241,7 +243,8 @@ def test_speed(create_each_time=False, explicit=False):
         while i < ra.size:
             ang = stomp.AngularCoordinate(ra[i], dec[i], 
                                           stomp.AngularCoordinate.Equatorial)
-            iw[i] = stomp_map.FindLocation(ang)
+            #iw[i] = stomp_map.FindLocation(ang)
+            iw[i] = stomp_map.Contains(ang)
             del ang
             i += 1
     else:
@@ -252,13 +255,15 @@ def test_speed(create_each_time=False, explicit=False):
         if explicit:
             while i < ra.size:
                 ang.SetEquatorialCoordinates(ra[i], dec[i])
-                iw[i] = stomp_map.FindLocation(ang)
+                #iw[i] = stomp_map.FindLocation(ang)
+                iw[i] = stomp_map.Contains(ang)
                 i += 1
         else:
             system=stomp.AngularCoordinate.Equatorial
             while i < ra.size:
                 ang.Set(ra[i], dec[i],system)
-                iw[i] = stomp_map.FindLocation(ang)
+                #iw[i] = stomp_map.FindLocation(ang)
+                iw[i] = stomp_map.Contains(ang)
                 i += 1
 
 
