@@ -371,8 +371,8 @@ void NumpyVector<T>::init(npy_intp size)  throw (const char *) {
 	Py_XDECREF(mArray);
 	mSize=0;
 
-	if (size < 1)  {
-		throw "size must be >= 1";
+	if (size < 0)  {
+		throw "size must be >= 0";
 	}
 
 	// Create output flags array

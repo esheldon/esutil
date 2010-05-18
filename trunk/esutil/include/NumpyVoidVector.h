@@ -324,8 +324,8 @@ class NumpyVoidVector {
             // clear any existing array
             Py_XDECREF(mArray);
 
-            if (size < 1)  {
-                throw "size must be >= 1";
+            if (size < 0)  {
+                throw "size must be >= 0";
             }
 
             // We need to generate a PyArray_Descr* from this
