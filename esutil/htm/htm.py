@@ -135,9 +135,8 @@ class HTM(htmc.HTMC):
                 so that points in list one and list two at the same index are
                 matches.
                 
-
-                If no matches are found, or the results were written to a
-                file, then a tuple of None,None,None is returned.
+                If you write the results to a file, the returned value is
+                simply the match count.
 
         
         Restrictions:

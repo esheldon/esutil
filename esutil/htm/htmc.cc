@@ -283,12 +283,13 @@ PyObject* HTMC::cmatch(
 	// This will hold the tuple of match1 and match2 and possibly
 	// d12
 
-	PyObject* output_tuple = PyTuple_New(3);
 
-	if (ntotal > 0 && fptr == NULL) {
+	if (fptr == NULL) {
 
-		// copy out data only if there were matches 
-		// and we were not writing to a file
+        // If we are not writing to a file, we *always* return arrays, even if
+        // they are zero size
+
+        PyObject* output_tuple = PyTuple_New(3);
 
 		NumpyVector<int64_t> m1out(ntotal);
 		NumpyVector<int64_t> m2out(ntotal);
@@ -304,30 +305,19 @@ PyObject* HTMC::cmatch(
 		PyTuple_SetItem(output_tuple, 1, m2out.getref());
 		PyTuple_SetItem(output_tuple, 2, d12out.getref());
 
+        return output_tuple;
+
 	} else {
 
-		if (ntotal > 0 && fptr != NULL) {
+        rewind(fptr);
+        fwrite(&ntotal, sizeof(int64_t), 1, fptr);
+        fflush(fptr);
+        fclose(fptr);
 
-			/* if we found some matches and were writing to a file, write out
-			 * the count to the front of the file and close it */
-
-			rewind(fptr);
-			fwrite(&ntotal, sizeof(int64_t), 1, fptr);
-			fflush(fptr);
-			fclose(fptr);
-		} 
-
-		// No results, return tuple of Py_None
-		Py_INCREF(Py_None);
-		PyTuple_SetItem(output_tuple, 0, Py_None);
-		Py_INCREF(Py_None);
-		PyTuple_SetItem(output_tuple, 1, Py_None);
-		Py_INCREF(Py_None);
-		PyTuple_SetItem(output_tuple, 2, Py_None);
+        return PyLong_FromLongLong((long long) ntotal);
 	}
 
 
-	return output_tuple;
 
 
 }
