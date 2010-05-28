@@ -14,42 +14,64 @@ try:
 except:
     have_numpy=False
 
+INSIDE_MAP=1
+FIRST_QUADRANT_OK=2
+SECOND_QUADRANT_OK=4
+THIRD_QUADRANT_OK=8
+FOURTH_QUADRANT_OK=16
+
 
 
 
 def in_window(stomp_map, 
-              ra=None, dec=None,
-              clambda=None, ceta=None, 
-              x1=None, x2=None, x3=None,
+              ra=None, 
+              dec=None,
+              clambda=None, 
+              ceta=None, 
+              x1=None, 
+              x2=None, 
+              x3=None,
+              radius=None,
               system=None):
+    """
+    Module:
+        stomp_util
+    Name:
+        in_window
+    Purpose:
+        Check if points are contained within the input stomp map.
+        If radius= is sent, also check against edges and return a
+        tuple (inwindow,edgeflags).
+
+    """
 
     if ra is not None:
         if dec is None:
             raise ValueError("Send both ra and dec")
 
-        x1=numpy.array(ra, ndmin=1, copy=False)
-        x2=numpy.array(dec, ndmin=1, copy=False)
+        x1=numpy.array(ra, ndmin=1, copy=False, dtype='f8')
+        x2=numpy.array(dec, ndmin=1, copy=False, dtype='f8')
         system = 'eq'
     elif clambda is not None:
         if ceta is None:
             raise ValueError("Send both clambda and ceta")
 
-        x1=numpy.array(ra, ndmin=1, copy=False)
-        x2=numpy.array(dec, ndmin=1, copy=False)
+        x1=numpy.array(ra, ndmin=1, copy=False, dtype='f8')
+        x2=numpy.array(dec, ndmin=1, copy=False, dtype='f8')
         system = 'survey'
     elif b is not None:
         if l is None:
             raise ValueError("Send both l and b")
-        x1=numpy.array(l, ndmin=1, copy=False)
-        x2=numpy.array(b, ndmin=1, copy=False)
+        x1=numpy.array(l, ndmin=1, copy=False, dtype='f8')
+        x2=numpy.array(b, ndmin=1, copy=False, dtype='f8')
         system = 'gal'
     elif x1 is not None:
         if x2 is None:
             raise ValueError("Send both x1 and x2 (possibly x3)")
-        x1=numpy.array(x1, ndmin=1, copy=False)
-        x2=numpy.array(x2, ndmin=1, copy=False)
+        x1=numpy.array(x1, ndmin=1, copy=False, dtype='f8')
+        x2=numpy.array(x2, ndmin=1, copy=False, dtype='f8')
         if x3 is not None:
-            x3=numpy.array(x3, ndmin=1, copy=False)
+            x3=numpy.array(x3, ndmin=1, copy=False, dtype='f8')
             system = 'sphere'
         else:
             if system is None:
@@ -67,28 +89,84 @@ def in_window(stomp_map,
             raise ValueError("all coords must be same size")
         system='sphere'
 
+    nrad=0
+    if radius is not None:
+        rad = numpy.array(radius,ndmin=1,copy=False,dtype='f8')
+        if rad.size == 1:
+            nrad = 1
+            thisrad = rad[0]
+        elif rad.size == x1.size:
+            nrad = x1.size
+        else:
+            raise ValueError("radius must be size 1 or same size as coords")
+
 
     system=system.lower()
+    stomp_system = getsystem(system)
 
-    iw = numpy.zeros(x1.size,dtype=numpy.bool_)
-    ang = stomp.AngularCoordinate()
     if system == 'unitsphere' or system == 'sphere':
-        i=0
-        while i < x1.size:
-            ang.SetUnitSphereCoordinates(x1[i],x2[i],x3[i])
-            iw[i] = stomp_map.Contains(ang)
-            del ang
-            i += 1
+        # significantly faster to use SetUnitSphereCoordinates
+        # so we will make separate code branch for that
+        dosphere=True
     else:
-        ang = stomp.AngularCoordinate()
-        stomp_system = getsystem(system)
-        i=0
-        while i < x1.size:
-            ang.Set(x1[i],x2[i],stomp_system)
-            iw[i] = stomp_map.Contains(ang)
-            i+=1
+        dosphere=False
 
-    return iw 
+    maskflags = numpy.zeros(x1.size, dtype='i1')
+    ang = stomp.AngularCoordinate()
+    for i in xrange(x1.size):
+        if dosphere:
+            ang.SetUnitSphereCoordinates(x1[i],x2[i],x3[i])
+        else:
+            ang.Set(x1[i],x2[i],stomp_system)
+
+        is_in_win = stomp_map.Contains(ang)
+        if is_in_win:
+            maskflags[i] += INSIDE_MAP
+
+            # If radius was sent and we are inside the map,
+            # then do a full quadrant search
+            if nrad > 0:
+                if nrad > 1:
+                    thisrad=rad[i]
+                maskflags[i] += quad_check(stomp_map, ang, thisrad, stomp_system)
+
+
+    return maskflags
+
+def quad_check(stomp_map, ang, rad, system, res=2048):
+    flags = 0
+
+    angle1=0.0
+    angle2=90.0
+    wedge_bound=stomp.WedgeBound(ang, rad, angle1, angle2, system)
+    mw = stomp.Map(wedge_bound, 1.0, res)
+    if stomp_map.Contains(mw):
+        flags += FIRST_QUADRANT_OK
+
+    angle1=90.0
+    angle2=180.0
+    wedge_bound=stomp.WedgeBound(ang, rad, angle1, angle2, system)
+    mw = stomp.Map(wedge_bound, 1.0, res)
+    if stomp_map.Contains(mw):
+        flags += SECOND_QUADRANT_OK
+
+    angle1=180.0
+    angle2=270.0
+    wedge_bound=stomp.WedgeBound(ang, rad, angle1, angle2, system)
+    mw = stomp.Map(wedge_bound, 1.0, res)
+    if stomp_map.Contains(mw):
+        flags += THIRD_QUADRANT_OK
+
+    angle1=270.0
+    angle2=360.0
+    wedge_bound=stomp.WedgeBound(ang, rad, angle1, angle2, system)
+    mw = stomp.Map(wedge_bound, 1.0, res)
+    if stomp_map.Contains(mw):
+        flags += FOURTH_QUADRANT_OK
+
+    return flags
+
+
 
 
 def getsystem(system):
