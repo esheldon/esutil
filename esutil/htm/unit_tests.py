@@ -124,7 +124,7 @@ def test():
     dec2 = numpy.array( [24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])
 
     fname='/tmp/test.bin'
-    m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,file=fname,maxmatch=0)
+    nmatch = h.match(ra1,dec1,ra2,dec2,two,file=fname,maxmatch=0)
 
     res = h.read(fname)
 

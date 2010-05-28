@@ -450,34 +450,6 @@ void NumpyVector<T>::init_type_info() {
 
         const char* tname;
 
-		// the following also cover the standard types as they are just a
-		// re-naming of them to platform independent, length specified type
-		// names
-
-		// in other words, these are also covered by the npy_* types
-		//
-        //   char
-        //   unsigned char
-        //   short
-        //   unsigned short
-        //   int
-        //   unsigned int
-        //   long
-        //   unsigned long
-        //   long long
-        //   unsigned long long
-        //   float
-        //   double
-		//
-		//   This means you can do this and it will work
-		//
-		//       name = typeid(int).name();
-		//       id = info.getid(name);
-
-		//   even though we didn't explicitly define that below.  It may not be
-		//   the same as npy_int32 because the size of int is platform
-		//   dependent.
-        
         tname = typeid(npy_int8).name();
         mNumpyIdMap[tname] = NPY_INT8;
         tname = typeid(npy_uint8).name();
@@ -508,9 +480,36 @@ void NumpyVector<T>::init_type_info() {
         tname = typeid(npy_float64).name();
         mNumpyIdMap[tname] = NPY_FLOAT64;
 
-		// On OS X 10.6 these can have different names
+
+		// On OS X 10.6 these can have different names than above
+        tname = typeid(short).name();
+        mNumpyIdMap[tname] = NPY_SHORT;
+        tname = typeid(unsigned short).name();
+        mNumpyIdMap[tname] = NPY_USHORT;
+
+        tname = typeid(int).name();
+        mNumpyIdMap[tname] = NPY_INT;
+        tname = typeid(unsigned int).name();
+        mNumpyIdMap[tname] = NPY_UINT;
+
+        tname = typeid(long).name();
+        mNumpyIdMap[tname] = NPY_LONG;
+        tname = typeid(unsigned long).name();
+        mNumpyIdMap[tname] = NPY_ULONG;
+
+        tname = typeid(long long).name();
+        mNumpyIdMap[tname] = NPY_LONGLONG;
+        tname = typeid(unsigned long long).name();
+        mNumpyIdMap[tname] = NPY_ULONGLONG;
 
 
+        tname = typeid(float).name();
+        mNumpyIdMap[tname] = NPY_FLOAT;
+        tname = typeid(double).name();
+        mNumpyIdMap[tname] = NPY_DOUBLE;
+
+
+        // And these can *also* have different names
         tname = typeid(int8_t).name();
         mNumpyIdMap[tname] = NPY_INT8;
         tname = typeid(uint8_t).name();
@@ -533,7 +532,6 @@ void NumpyVector<T>::init_type_info() {
         mNumpyIdMap[tname] = NPY_INT64;
         tname = typeid(uint64_t).name();
         mNumpyIdMap[tname] = NPY_UINT64;
-
 
 
     }
