@@ -7,7 +7,7 @@ Classes
     
     A class for reading and writing structred numpy arrays to and from
     files.  Structured arrays are also known as recarrays or arrays with
-    fields.  
+    fields.  Both binary and ascii are supported.
 
     This class addresses limitations of memmap class, which cannot 
     read individual columns from a file without reading the whole file.
@@ -15,8 +15,9 @@ Classes
     Instantiate a new Recfile class
         For writing:
             import recfile
-            r = recfile.Open(file/fileobj, mode="r", delim=None, 
+            r = recfile.Open(file/fileobj, mode="w", delim=None, 
                              padnull=False, ignorenull=False, verbose=False)
+            for updating use mode="r+"
         For reading:
             import recfile
             r = recfile.Open(file/fileobj, delim=None, dtype=None, 
@@ -168,7 +169,7 @@ Unit Tests:
 
 Modification history:
     Created: 2008-07-18, Erin Sheldon
-    Wrapper class Recfile added.  This is not returned by Open.  Support
+    Wrapper class Recfile added.  This is returned by Open.  Support
         for [ ] style reading notation. 2009-11-20, ESS, BNL
     Added simple slicing for ASCII.  2010-02-18, Erin Sheldon, BNL
 

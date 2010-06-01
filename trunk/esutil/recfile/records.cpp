@@ -1,43 +1,5 @@
 #include "records.hpp"
 
-/*
-Records::Records() throw (const char*)
-{
-	InitializeVariables();
-	import_array();
-}
-
-Records::Records(
-		PyObject* file_obj, 
-		const char* mode, 
-		PyObject* delim_obj)
-	throw (const char *)
-{
-	Open(file_obj, mode, delim_obj);
-	import_array();
-}
-
-PyObject* Records::Open(
-		PyObject* file_obj, 
-		const char* mode, 
-		PyObject* delim_obj) throw (const char*)
-{
-	PyObject* ret=NULL;
-	ret = Py_None;
-	Py_INCREF(Py_None);
-
-	InitializeVariables();
-
-	mMode=mode;
-	GetFptr(file_obj, mMode.c_str());
-	ProcessDelim(delim_obj);
-	SetFileType();
-
-	return ret;
-}
-
-*/
-
 Records::Records(PyObject* fileobj, 
 		const char* mode,
 		PyObject* delimobj, 
