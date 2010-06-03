@@ -654,8 +654,10 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
 
     REVISION HISTORY:
       Converted from IDL: 2006-10-23. Erin Sheldon, NYU
+      Minor bug fix to error messaging: 2010-05-28. Brian Gerke, SLAC
 
     """
+    from sys import stdout, stderr
     arr = numpy.array(arrin, ndmin=1, copy=False)
 
     index = numpy.arange( arr.size )
@@ -665,16 +667,16 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
         s = arr[index].std()
 
         if verbose:
-            sys.stdout.write('iter %s\tnuse: %s\tmean %s\tstdev %s\n' % \
-                (i+1, index.size,m,s))
+            stdout.write('iter %s\tnuse: %s\tmean %s\tstdev %s\n' % \
+                             (i+1, index.size,m,s))
 
         clip = nsig*s
 
         w, = numpy.where( (numpy.abs(arr[index]) - m) < clip )
 
         if w.size == 0:
-            sys.stderr.write("nsig too small. Everything clipped on "
-                             "iteration %d\n" % i+1)
+            stderr.write("nsig too small. Everything clipped on "
+                         "iteration %d\n" % (i+1))
             return m,s
 
         index = index[w]
