@@ -1440,8 +1440,17 @@ def randind(nmax, nrand, dtype=None):
 
 def random_subset(ntot, nrand):
     """
-    Return a random selection of indices in [0,n) of
-    size N
+    Name:
+        random_subset
+    Calling Sequence:
+        ind = random_subset(ntot, nrand)
+    Purpose:
+        Return a random selection of indices in [0,ntot) of
+        size nrand
+    Inputs:
+        ntot: range to draw from is [0,ntot)
+        nrand: Number of randoms to create.
+
     """
 
     if nrand > ntot:
