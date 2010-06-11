@@ -1438,7 +1438,7 @@ def randind(nmax, nrand, dtype=None):
     return ind
 
 
-def randind_subset(ntot, nrand):
+def random_subset(ntot, nrand):
     """
     Return a random selection of indices in [0,n) of
     size N
