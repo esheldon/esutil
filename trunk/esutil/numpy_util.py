@@ -1438,3 +1438,17 @@ def randind(nmax, nrand, dtype=None):
     return ind
 
 
+def randind_subset(ntot, nrand):
+    """
+    Return a random selection of indices in [0,n) of
+    size N
+    """
+
+    if nrand > ntot:
+        raise ValueError("number of requestedr randoms must be "
+                         "<= ntot")
+    # generate ntot random numbers, sort and return
+    # the first nrand
+    r=numpy.random.random(ntot)
+    s=r.argsort()
+    return s[0:nrand]
