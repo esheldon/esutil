@@ -72,7 +72,7 @@ class HTM(htmc.HTMC):
         Inputs:
             ra1,dec1,ra2,dec2: 
                 ra,dec lists in degrees.  Can be scalars or arrays but require
-                len(ra) == len(dec) in each set.
+                size(ra) == size(dec) in each set.
 
           radius: 
               The search radius in degrees.  May be a scalar or an array same
@@ -182,12 +182,14 @@ class HTM(htmc.HTMC):
             SWIG Wrapper and matching code working 2010-03-03, 
                 Erin Sheldon, BNL.
             2010-03-19: Default to maxmatch=1, return the closest match.
+            2010-06-16: Fixed bug that disallowed scalar inputs.  -BFG
 
 
         """
 
-        if (len(ra1) != len(dec1)) or (len(ra2) != len(dec2)):
-            raise ValueError("require len(ra)==len(dec) for "
+        if ((numpy.size(ra1) != numpy.size(dec1)) or 
+            (numpy.size(ra2) != numpy.size(dec2))):
+            raise ValueError("require size(ra)==size(dec) for "
                              "both sets of inputs")
 
         if htmid2 is None:
