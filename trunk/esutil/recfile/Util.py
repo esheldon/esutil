@@ -9,7 +9,7 @@ import pprint
 
 
 def Open(fileobj, mode="r", delim=None, dtype=None, 
-         nrows=-9999, offset=0, 
+         nrows=-9999, offset=None, skiplines=None,
          padnull=False, ignorenull=False, verbose=False):
     """
     Instantiate a new Recfile class
@@ -21,7 +21,8 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
         For reading:
             import recfile
             r = recfile.Open(file/fileobj, delim=None, dtype=None, 
-                             nrows=-9999, offset=0, verbose=False)
+                             nrows=-9999, offset=0, skiplines=0,
+                             verbose=False)
             # Arguments can all be given as keywords except the file
 
         Inputs:
@@ -156,7 +157,7 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
     """
     # make sure it's a dtype and not just a descr
     return Recfile(fileobj, mode=mode, delim=delim, dtype=dtype, 
-                   nrows=nrows, offset=offset, 
+                   nrows=nrows, offset=offset, skiplines=skiplines,
                    padnull=padnull, ignorenull=ignorenull, 
                    verbose=verbose)
 
@@ -172,7 +173,8 @@ class Recfile(object):
         For reading:
             import recfile
             r = recfile.Open(file/fileobj, delim=None, dtype=None, 
-                             nrows=-9999, offset=0, verbose=False)
+                             nrows=-9999, offset=0, skiplines=0,
+                             verbose=False)
             # Arguments can all be given as keywords except the file
 
         Inputs:
@@ -305,18 +307,18 @@ class Recfile(object):
 
 
     def __init__(self, fobj=None, mode="r", delim=None, dtype=None, 
-                 nrows=-9999, offset=0, 
+                 nrows=-9999, offset=None, skiplines=None,
                  padnull=False, ignorenull=False, verbose=False):
 
         # an alias
         self.Read = self.read
         self.Write = self.write
         self.open(fobj, mode=mode, delim=delim, dtype=dtype, 
-                  nrows=nrows, offset=offset, 
+                  nrows=nrows, offset=offset, skiplines=skiplines,
                   padnull=padnull, ignorenull=ignorenull, verbose=verbose)
 
     def open(self, fobj, mode='r', delim=None, dtype=None, 
-             nrows=-9999, offset=0, 
+             nrows=-9999, offset=None, skiplines=None,
              padnull=False, ignorenull=False, verbose=False):
 
         self.verbose=verbose
@@ -325,6 +327,18 @@ class Recfile(object):
         self.padnull=padnull
         self.ignorenull=ignorenull
         self.delim = delim
+        self.skiplines=skiplines
+        self.offset=offset
+
+        if self.skiplines is None:
+            self.skiplines = 0
+        if self.offset is None:
+            self.offset = 0
+
+        if self.delim is not None and self.delim != "":
+            self.is_ascii = True
+        else:
+            self.is_ascii = False
 
         if fobj is None:
             return
@@ -359,13 +373,26 @@ class Recfile(object):
             self.dtype = numpy.dtype(dtype)
 
             # we only pay attention to the offset when mode is 'r' or 'r+'
-            if offset < 0:
-                offset=0
-            self.offset=offset
-            # go to the offset position in the file
-            if self.offset > 0:
-                self.fobj.seek(offset)
             
+            if self.is_ascii:
+                # for ascii we can skip lines, e.g. for a header
+                # this takes precedence over offset
+                if self.skiplines > 0:
+                    self.nrows -= self.skiplines
+                    for i in xrange(self.skiplines):
+                        tmp = self.fobj.readline()
+
+                    # now, we override any existing offset to our
+                    # position after skipping lines
+                    self.offset = self.fobj.tell()
+
+
+            if self.offset < 0:
+                self.offset=0
+            # go to the offset position in the file
+            if self.fobj.tell() != self.offset:
+                self.fobj.seek(offset)
+
             if nrows is None or nrows < 0:
                 self.nrows = self.get_nrows()
             else:
@@ -374,17 +401,21 @@ class Recfile(object):
         
     def get_nrows(self):
         if self.delim != "" and self.delim is not None:
-            raise ValueError("You must enter nrows >=0 for ascii")
+            # for ascii this can be slow
+            nrows = 0
+            for line in self.fobj:
+                nrows += 1
+            self.fobj.seek(self.offset)
+        else:
+            # For binary, try to figure out the number of rows based on
+            # the number of bytes
 
-        # For binary, try to figure out the number of rows based on
-        # the number of bytes
-
-        rowsize=self.dtype.itemsize
-        # go to end
-        self.fobj.seek(0,2)
-        datasize = self.fobj.tell() - self.offset
-        nrows = datasize/rowsize
-        self.fobj.seek(self.offset)
+            rowsize=self.dtype.itemsize
+            # go to end
+            self.fobj.seek(0,2)
+            datasize = self.fobj.tell() - self.offset
+            nrows = datasize/rowsize
+            self.fobj.seek(self.offset)
 
         return nrows
 
