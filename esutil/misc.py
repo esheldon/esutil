@@ -26,6 +26,8 @@ try:
 except:
     have_numpy=False
 
+import pydoc
+
 
 def colprint(*args, **keys):
     """
@@ -36,7 +38,7 @@ def colprint(*args, **keys):
         same length.
     Calling Sequence:
         colprint(var1, var2, ..., nlines=all, sep=' ', format=None, 
-                 names=None, nformat=None, file=None)
+                 names=None, nformat=None, file=None, page=False)
 
     Inputs:
         A set of python objects.  Each must be a sequence or array and all must
@@ -49,7 +51,7 @@ def colprint(*args, **keys):
             Separator, default is ' '
         file:  
             A file path or file object.  Default is to print to standard
-            output.
+            output. Ignored if paging.
 
         format: 
             A format string to apply to every argument.  E.g. format='%15s'
@@ -63,6 +65,8 @@ def colprint(*args, **keys):
             A Format to apply to the names.  By default, the same format used
             for the arguments is tried.  If formatting fails, a simple '%s' is
             used for the names.
+
+        page: If True, run the output through a pager.
 
     Revision History:
         Create: 2010-04-05, Erin Sheldon, BNL
@@ -86,12 +90,16 @@ def colprint(*args, **keys):
     # what separator should be used?
     sep = keys.get('sep',' ')
 
-    # should we print to a file?
-    f = keys.get('file', stdout)
-    if isinstance(f, file):
-        fobj = f
-    else:
-        fobj = open(f,'w')
+    # should we page the results?
+    page = keys.get('page', False)
+
+    if not page:
+        # should we print to a file?
+        f = keys.get('file', stdout)
+        if isinstance(f, file):
+            fobj = f
+        else:
+            fobj = open(f,'w')
 
     # make sure all the arguments are the same length.
     for i in range(nargs):
@@ -103,6 +111,9 @@ def colprint(*args, **keys):
             e="argument %s has non-matching length.  %s instead of %s" \
                     % (i+1, l, n1)
             raise ValueError(e)
+
+    # if we are paging, we will store the lines, otherwise this won't be used
+    lines = []
 
     # print a header
     names = keys.get('names',None)
@@ -125,13 +136,19 @@ def colprint(*args, **keys):
                 fmt='%s'
             nformat=[fmt]*nnames
 
-        nformat = sep.join(nformat) + '\n'
+        nformat = sep.join(nformat)
         try:
-            fobj.write(nformat % tuple(names))
+            line = nformat % tuple(names)
         except:
             nformat = ['%s']*nnames
-            nformat = sep.join(nformat) + '\n'
-            fobj.write(nformat % tuple(names))
+            nformat = sep.join(nformat)
+            line = nformat % tuple(names)
+
+        if page:
+            lines.append(line)
+        else:
+            fobj.write(line)
+            fobj.write('\n')
 
 
     # format for columns.  Same is used for all.
@@ -153,12 +170,20 @@ def colprint(*args, **keys):
 
         line = format % data
         line = line.replace('\n','')
-        fobj.write(line)
-        fobj.write("\n")
 
-    # close if this is not stdout
-    if fobj != stdout:
-        fobj.close()
+        if page:
+            lines.append(line)
+        else:
+            fobj.write(line)
+            fobj.write('\n')
+
+    if page:
+        lines = '\n'.join(lines)
+        pydoc.pager(lines)
+    else:
+        # close if this is not stdout
+        if fobj != stdout:
+            fobj.close()
 
 
 def ptime(seconds, fobj=None, format='%s\n'):
