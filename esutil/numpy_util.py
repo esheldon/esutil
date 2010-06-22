@@ -304,7 +304,10 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
 
     return lines
 
-def aprint(arr, fields=None, nlines=None, format=None):
+def aprint(arr, fields=None, nlines=None, format=None, page=False):
+    """
+    Use colprint to print the structure.  Need to doc
+    """
     if fields is None:
         fields = arr.dtype.names
 
@@ -312,13 +315,12 @@ def aprint(arr, fields=None, nlines=None, format=None):
 
     colprint =esutil.misc.colprint
 
-    command = 'colprint('
     arglist=[]
     for i in range(len(fields)):
         arglist.append('ftup[%s]' % i)
 
     arglist = ', '.join(arglist)
-    command = 'colprint('+arglist+', nlines=nlines,format=format,names=fields)'
+    command = 'colprint('+arglist+', nlines=nlines,format=format,names=fields, page=page)'
     eval(command)
 
 
