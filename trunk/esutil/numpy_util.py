@@ -175,7 +175,7 @@ def ahelp(array, recurse=False, pretty=True, index=0, page=False):
             the name is longer than 15 characters.  Nicer for the eye, but
             harder for a machine to parse.  Also, strings are surrounded
             by quotes 'string'.  Default is True.
-        page: If True, run the output through a pager (not yet implemented).
+        page: If True, run the output through a pager.
 
     Example:
         ahelp(a)
