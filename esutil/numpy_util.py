@@ -7,8 +7,9 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         is designed to be similar to help, struct, /str in IDL. 
 
 
-    aprint(arr, fields=None, nlines=None, format=None)
-        Print fields from the array in columns.
+    aprint(array, fancy=False, page=False, nlines=ALL, fields=ALL, file=None)
+        Print fields from the array in columns, optionally send to a pager or
+        file.  If fancy=False, more keywords are available.
 
     arrscl(arr, minval, maxval, arrmin=None, arrmax=None)
         Rescale the range of an array to be between minval and maxval.
@@ -144,6 +145,7 @@ from sys import stdout, stderr
 import copy
 import stat
 import esutil
+import pydoc
 
 try:
     import numpy
@@ -304,10 +306,11 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
 
     return lines
 
-def aprint(arr, fields=None, nlines=None, format=None, page=False):
+def aprint_old(arr, fields=None, nlines=None, format=None, page=False):
     """
-    Use colprint to print the structure.  Need to doc
+    Print the input structure.  Need to doc
     """
+
     if fields is None:
         fields = arr.dtype.names
 
@@ -322,6 +325,240 @@ def aprint(arr, fields=None, nlines=None, format=None, page=False):
     arglist = ', '.join(arglist)
     command = 'colprint('+arglist+', nlines=nlines,format=format,names=fields, page=page)'
     eval(command)
+
+def aprint(array, **keys):
+    """
+    Name:
+      aprint
+
+    Purpose:
+
+        Print out the rows and columns of the array with fields, aka structure
+        or records.  The focus is on visualizing the data rather than speed or
+        efficient file output.
+        
+        Optionally results can be sent to a pager or file.  
+        
+        By default, the columns are printed in a simple, machine readable
+        format, but if fancy=True a more visually appealing format is used.
+
+        Subsets of the fields can be chosen.  Also, printing can be 
+        restricted to the top N lines.
+
+        If not fancy printing, the user has more control over the format.
+
+    Calling Sequence:
+        aprint(array, fancy=False, page=False, nlines=ALL, fields=ALL, 
+               file=None)
+
+        For fancy=True, you can also specify a title.
+
+        If fancy is not True, more keywords are available
+            names=use_field_names, sep=' ', format=, names=field_names, nformat=None
+    
+    Inputs:
+        array: A numpy array with fields.
+
+    Keywords:
+        fancy: 
+            If True, print with a visually appealing, but less machine readable
+            format
+        page: 
+            If True, send results to a pager.
+        file: 
+            Send results to this file rather than standard output. 
+        nlines: 
+            Print only the top N lines.  Default is to print all.
+        fields: 
+            Only print a subset of the fields.
+
+        # keywords available only when fancy=True
+        title:
+            A title to place above the printout.
+
+        # keywords available when fancy=False
+        format: 
+            A format string to apply to every argument.  E.g. format='%15s'
+            Since every arg gets the same format, only %s type formats should
+            be used unless the types are homogeneous.
+        sep: 
+            Separator, default is ' '
+        names: 
+            A list of names for each argument.  There must be an entry for
+            each argument. The names are printed above each column.
+        nformat:
+            A Format to apply to the names.  By default, the same format used
+            for the arguments is tried.  If formatting fails, a simple '%s' is
+            used for the names.
+
+
+    Example:
+
+
+
+    """
+
+    # if fancy, use the fancy array printer
+    fancy = keys.get('fancy', False)
+
+    if not fancy:
+        # use colprint
+        fields = keys.get('fields', array.dtype.names)
+        if 'names' not in keys:
+            keys['names'] = fields
+        names = keys.get('names',fields)
+        if len(names) != len(fields):
+            raise ValueError("names= keyword must be same lenght as number of fields")
+
+        ftup = split_fields(array, fields=fields)
+
+        colprint = esutil.misc.colprint
+
+        arglist=[]
+        for i in range(len(fields)):
+            arglist.append('ftup[%s]' % i)
+
+        arglist = ', '.join(arglist)
+        command = 'colprint('+arglist+', **keys)'
+        eval(command)
+
+    else:
+        # fancy printing, more memory usage and not good for machine reading
+        center_text = esutil.misc.center_text
+        title = keys.get('title', None)
+        page = keys.get('page',False)
+
+        if not page:
+            # should we print to a file?
+            f = keys.get('file', stdout)
+            if isinstance(f, file):
+                fobj = f
+            else:
+                fobj = open(f,'w')
+
+        # if we are paging, we will store the lines, otherwise this won't be used
+        lines = []
+
+        fields = keys.get('fields', array.dtype.names)
+        nlines = keys.get('nlines', array.size)
+
+        max_lens = {}
+        for name in fields:
+            max_lens[name] = len(name)
+
+        # first pass through data to get lenghts
+        for i in xrange(nlines):
+            for name in fields:
+                max_lens[name] = max(max_lens[name], len(str(array[name][i])))
+
+        forms = {}
+        separator = ''
+        i=0
+        ntot = len(fields)
+        for name in fields:
+            if isinstance(array[name][0], numpy.string_):
+                forms[name]    = ' %-'+str(max_lens[name])+'s '
+            else:
+                forms[name]    = ' %'+str(max_lens[name])+'s '
+
+            pad = 2
+            if i == (ntot-1):
+                pad=1
+            this_sep = '%s' % '-'*(max_lens[name]+pad)
+
+            if i > 0:
+                forms[name] = '|' + forms[name]
+                this_sep = '+' + this_sep
+            separator += this_sep
+            i+=1
+
+        header = ''
+        for n in fields:
+            header += forms[n] % center_text(n,max_lens[n])
+
+        if title is not None:
+            title = center_text(title, len(header))
+
+        if page:
+            if title is not None:
+                lines.append(title)
+            lines.append(header)
+            lines.append(separator)
+
+        else:
+            if title is not None:
+                fobj.write(title)
+                fobj.write('\n')
+
+            fobj.write(header)
+            fobj.write('\n')
+
+            fobj.write(separator)
+            fobj.write('\n')
+
+        for i in xrange(nlines):
+            line = ''
+            for name in fields:
+                if page:
+                    line += forms[name] % array[name][i]
+                else:
+                    fobj.write(forms[name] % array[name][i])
+            if page:
+                lines.append(line)
+            else:
+                fobj.write('\n')
+
+        if page:
+            lines = '\n'.join(lines)
+            pydoc.pager(lines)
+        else:
+            # close if this is not stdout
+            if fobj != stdout:
+                fobj.close()
+
+
+
+
+def aprint_fancy(res, **keys):
+    """
+    Name:
+      aprint_fancy
+
+    Purpose:
+        Print out a formatted description of the input array.   If the array
+        has fields, individual descriptions are printed for each field.  This
+        is designed to be similar to help, struct, /str in IDL. 
+
+    Calling Sequence:
+        ahelp(array, recurse=False, pretty=True, page=False)
+    
+    Inputs:
+        array: A numpy array.
+
+    Optional Inputs:
+        recurse: for sub-arrays with fields, print out a full description. 
+            default is False.
+        pretty:  If True, split field descriptions onto multiple lines if
+            the name is longer than 15 characters.  Nicer for the eye, but
+            harder for a machine to parse.  Also, strings are surrounded
+            by quotes 'string'.  Default is True.
+        page: If True, run the output through a pager.
+
+    Example:
+        ahelp(a)
+        size: 1147506  nfields: 27  type: records
+          run                >i4  1933
+          rerun              |S3  '157'
+          camcol             >i2  1
+          field              >i4  11
+          mjd                >i4  51886
+          tai                >f8  array[5]
+          ra                 >f8  102.905870701
+          dec                >f8  -1.05070432844
+
+
+    """
+
 
 
 def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
