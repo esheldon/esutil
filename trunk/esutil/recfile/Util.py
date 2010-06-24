@@ -10,13 +10,17 @@ import pprint
 
 def Open(fileobj, mode="r", delim=None, dtype=None, 
          nrows=-9999, offset=None, skiplines=None,
-         padnull=False, ignorenull=False, verbose=False):
+         padnull=False, ignorenull=False, 
+         bracket_arrays=False,
+         verbose=False):
     """
     Instantiate a new Recfile class
         For writing:
             import recfile
             r = recfile.Open(file/fileobj, mode="w", delim=None, 
-                             padnull=False, ignorenull=False, verbose=False)
+                             padnull=False, ignorenull=False, 
+                             bracket_arrays=False,
+                             verbose=False)
             for updating use mode="r+"
         For reading:
             import recfile
@@ -55,6 +59,11 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
                 strings. Note this will not result in fixed length data so
                 you cannot read it back in using recfile. Useful for 
                 programs that don't understand nulls, like sqlite databases.
+            bracket_arrays: 
+                If True and writing ascii, arrays are written thus: 
+                    {el1,el2,....}
+                Currently the delimiter is forced to be a comma because the
+                authors were implementing postgres input files.
 
     Useful Recfile Class Methods:
 
@@ -159,6 +168,7 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
     return Recfile(fileobj, mode=mode, delim=delim, dtype=dtype, 
                    nrows=nrows, offset=offset, skiplines=skiplines,
                    padnull=padnull, ignorenull=ignorenull, 
+                   bracket_arrays=bracket_arrays,
                    verbose=verbose)
 
 
@@ -207,6 +217,11 @@ class Recfile(object):
                 strings. Note this will not result in fixed length data so
                 you cannot read it back in using recfile. Useful for 
                 programs that don't understand nulls, like sqlite databases.
+            bracket_arrays: 
+                If True and writing ascii, arrays are written thus: 
+                    {el1,el2,....}
+                Currently the delimiter is forced to be a comma because the
+                authors were implementing postgres input files.
 
     Useful Recfile Class Methods:
 
@@ -308,20 +323,28 @@ class Recfile(object):
 
     def __init__(self, fobj=None, mode="r", delim=None, dtype=None, 
                  nrows=-9999, offset=None, skiplines=None,
-                 padnull=False, ignorenull=False, verbose=False):
+                 padnull=False, ignorenull=False, 
+                 bracket_arrays=False,
+                 verbose=False):
 
         # an alias
         self.Read = self.read
         self.Write = self.write
         self.open(fobj, mode=mode, delim=delim, dtype=dtype, 
                   nrows=nrows, offset=offset, skiplines=skiplines,
-                  padnull=padnull, ignorenull=ignorenull, verbose=verbose)
+                  padnull=padnull, ignorenull=ignorenull, 
+                  bracket_arrays=bracket_arrays,
+                  verbose=verbose)
 
     def open(self, fobj, mode='r', delim=None, dtype=None, 
              nrows=-9999, offset=None, skiplines=None,
-             padnull=False, ignorenull=False, verbose=False):
+             padnull=False, ignorenull=False, 
+             bracket_arrays=False,
+             verbose=False):
 
         self.verbose=verbose
+
+        self.bracket_arrays=bracket_arrays
 
         self.close()
         self.padnull=padnull
@@ -507,7 +530,8 @@ class Recfile(object):
                             (data.size,pprint.pformat(data.dtype.descr)))
         if (self.delim is not None):
             # let recfile deal with ascii writing
-            r = records.Records(self.fobj, mode='u', delim=self.delim)
+            r = records.Records(self.fobj, mode='u', delim=self.delim, 
+                                bracket_arrays=self.bracket_arrays)
             dataview = data.view(numpy.ndarray) 
             r.Write(dataview, padnull=self.padnull, ignorenull=self.ignorenull)
         else:
