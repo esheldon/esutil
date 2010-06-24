@@ -93,7 +93,8 @@ Modification history:
 				const char* mode, // mode won't be used if file is object
 				PyObject* delim=NULL, 
 				PyObject* dtype=NULL,
-				long long nrows=-9999) throw (const char *);
+				long long nrows=-9999,
+                int bracket_arrays=0) throw (const char *);
 
         ~Records();
 
@@ -334,6 +335,9 @@ Modification history:
 
 		// Delimiter for ascii files
 		string mDelim;
+        // this can be different when bracket_arrays is sent
+        // since we demand commas there
+        string mArrayDelim;
 
 		// Reading as binary or ascii?
 		bool mReadAsWhitespace;                                //---
@@ -384,6 +388,7 @@ Modification history:
 		static const int BINARY_FILE = 0;
 		static const int ASCII_FILE = 1;
 
+        int mBracketArrays;
 
 		static const bool mDebug=false;
 		//static const bool mDebug=true;
