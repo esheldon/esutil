@@ -236,6 +236,7 @@ Modification history:
 		void WriteAllAsBinary();
 		void WriteRows();
 		void WriteField(long long fnum);
+        void WriteArrayFieldWithBrackets(long long fnum);
 		void WriteNumberAsAscii(char* buffer, long long type);
 		void WriteStringAsAscii(long long fnum);
 
@@ -258,6 +259,8 @@ Modification history:
 				vector<long long>& offsets,
 				vector<long long>& sizes,
 				vector<long long>& nel,
+                vector<long long>& ndim,
+                vector<vector<long long> >& dims,
 				vector<long long>& typenums,
 				long long& rowsize);
 
@@ -272,6 +275,8 @@ Modification history:
 				vector<long long>& offsets,
 				vector<long long>& sizes,
 				vector<long long>& nel,
+                vector<long long>& ndim,
+                vector<vector<long long> >& dims,
 				vector<long long>& typenums);
 
 
@@ -357,6 +362,8 @@ Modification history:
         vector<long long> mOffsets;   // offsets of each field in each row
         vector<long long> mSizes;     // size of each field in each row
 		vector<long long> mNel;       // number of elements in this field
+        vector<long long> mNDim;      // ndim for each field
+        vector<vector<long long> > mDims;      // a dims array
 		vector<long long> mTypeNums;  // type numbers for each field
         long long mRowSize;           // total size of each row
         vector<long long> mKeep; // boolean, tells if we are keeping each field

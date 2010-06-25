@@ -616,6 +616,8 @@ PyObject* Records::Write(
 			mOffsets,
 			mSizes,
 			mNel,
+            mNDim,
+            mDims,
 			mTypeNums,
 			mRowSize);
 
@@ -721,6 +723,51 @@ void Records::WriteField(long long fnum)
 	}
 
 }
+
+void Records::WriteArrayFieldWithBrackets(long long fnum) 
+{
+
+	long long nel=mNel[fnum];
+	long long elsize = mSizes[fnum]/nel;
+	long long type_num = mTypeNums[fnum];
+
+    if (mBracketArrays && nel > 1) {
+        fprintf(mFptr,"{");
+    }
+
+	for (long long el=0; el<nel; el++) {
+
+		if (type_num == NPY_STRING) {
+			WriteStringAsAscii(fnum);
+		} else {
+			WriteNumberAsAscii(mData, type_num);
+		}
+
+		// Add a delimiter between elements
+		if (el < (nel-1) ) {
+            if (nel > 1) {
+                fprintf(mFptr, "%s", mArrayDelim.c_str());
+            } else {
+                fprintf(mFptr, "%s", mDelim.c_str());
+            }
+		}
+
+		mData += elsize;
+
+	}
+
+    if (mBracketArrays && nel > 1) {
+        fprintf(mFptr,"}");
+    }
+
+	// Also will add a delim after the field
+	if ( fnum < (mNfields-1) ) {
+		fprintf(mFptr, "%s", mDelim.c_str());
+	}
+
+}
+
+
 
 /*
 void Records::WriteField(long long fnum) 
@@ -983,6 +1030,8 @@ void Records::ProcessDescr(PyObject* descr)
 			mOffsets,
 			mSizes,
 			mNel,
+            mNDim,
+            mDims,
 			mTypeNums,
 			mRowSize);
 
@@ -1191,7 +1240,7 @@ PyObject* Records::FieldDescriptorAsTuple(PyArray_Descr* fdescr, const char* nam
 		nel = fdescr->elsize/fdescr->subarray->base->elsize;
 
 		// Need to incref this because the PyTuple_SetItem will
-		// steal a referenc
+		// steal a reference
 		shape = fdescr->subarray->shape;
 		tupsize=3;
 	} else {
@@ -1231,6 +1280,14 @@ PyObject* Records::FieldDescriptorAsTuple(PyArray_Descr* fdescr, const char* nam
 				2,
 				shape);
 		Py_XINCREF(shape);
+        /*
+        if (shape == NULL) {
+            cout<<"shape is NULL\n";
+        } else {
+            cout<<"Is shape a tuple?"<<"\n";fflush(stdout);
+            cout<<"    "<<PyTuple_Check(shape)<<"\n";fflush(stdout);
+        } 
+        */
 	}
 
 	if (mDebug) {
@@ -1422,12 +1479,14 @@ void Records::CopyFieldInfo(
 		vector<long long>& offsets,
 		vector<long long>& sizes,
 		vector<long long>& nel,
+		vector<long long>& ndim,
+		vector<vector<long long> >& dims,
 		vector<long long>& typenums,
 		long long& rowsize)
 {
 	if (mDebug) DebugOut("Copying field info");
 	CopyDescrOrderedNames(descr, names);
-	CopyDescrOrderedOffsets(descr, names, offsets, sizes, nel, typenums);
+	CopyDescrOrderedOffsets(descr, names, offsets, sizes, nel, ndim, dims, typenums);
 	rowsize = descr->elsize;
 }
 
@@ -1453,16 +1512,16 @@ void Records::CopyDescrOrderedOffsets(
 		vector<long long>& offsets,
 		vector<long long>& sizes,
 		vector<long long>& nel,
+		vector<long long>& ndim,
+		vector<vector<long long> >& dims,
 		vector<long long>& typenums)
 {
-	offsets.clear();
-	offsets.resize(names.size(), -1);
-	sizes.clear();
-	sizes.resize(names.size(), -1);
-	typenums.clear();
-	typenums.resize(names.size(), -1);
-	nel.clear();
-	nel.resize(names.size(), -1);
+	offsets.assign(names.size(), -1);
+	sizes.assign(names.size(), -1);
+	typenums.assign(names.size(), -1);
+	nel.assign(names.size(), -1);
+	ndim.assign(names.size(), -1);
+	dims.resize(names.size());
 
 	// Get the offsets, ordered with names
 	PyArray_Descr *fdescr, *title;
@@ -1479,18 +1538,53 @@ void Records::CopyDescrOrderedOffsets(
 			if (!PyArg_ParseTuple(item, "Ol|O", &fdescr, &offset, &title)) {
 				if (mDebug) 
 				{cout<<"Field: "<<names[i]<<" not right format"<<endl;}
-			}
-			else {
+			} else {
 				offsets[i] = offset;
 				sizes[i] = fdescr->elsize;
 				typenums[i] = fdescr->type_num;
 				if (fdescr->subarray != NULL) {
+                    cout<<"subarray is not NULL for '"<<names[i]<<"'\n";
 					// Here we are implicitly only allowing subarrays
 					// if basic numbers or strings
 					nel[i] = sizes[i]/fdescr->subarray->base->elsize;
 					typenums[i] = fdescr->subarray->base->type_num;
+
+                    // default 0
+                    ndim[i] = 0;
+                    dims[i].resize(0);
+                    /*
+                    // get dimensions from the ->shape tuple
+
+                    if (fdescr->subarray->base->subarray != NULL) {
+                        cout<<"sub subarray is not NULL\n";
+                    }
+                    
+                    //PyObject* tmp = PyTuple_GetItem(fdescr->subarray->shape, 0);
+                    //cout<<"Long check: "<<PyInt_Check(tmp)<<"\n";
+                    //cout<<"Int check: "<<PyLong_Check(tmp)<<"\n";
+                    fflush(stdout);
+                    if (PyTuple_Check(fdescr->subarray->shape)) {
+                        cout<<"  Tuple found for shape\n";fflush(stdout);
+                        npy_intp tndim = PyTuple_Size(fdescr->subarray->shape);
+                        cout<<"  tndim: "<<tndim<<"\n";fflush(stdout);
+                        if (tndim > 1) {
+                            ndim[i] = tndim;
+
+                            cout<<"  ndim: "<<ndim[i]<<"\n";fflush(stdout);
+                            dims[i].resize(ndim[i]);
+                            for (npy_intp ii=0; i<ndim[i]; ii++) {
+                                // borrowed ref
+                                PyObject* tmp = PyTuple_GetItem(fdescr->subarray->shape, ii);
+                                dims[i][ii] = PyInt_AsLong(tmp);
+                                cout<<"    dim: "<<dims[i][ii]<<"\n";fflush(stdout);
+                            }
+                        }
+                    }
+                    */
 				} else {
 					nel[i] = 1;
+                    ndim[i] = 0;
+                    dims[i].resize(0);
 				}
 				if (mDebug) {
 					cout<<"  Offset("<<names[i]<<"): "<<offset<<endl;
