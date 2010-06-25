@@ -237,6 +237,7 @@ Modification history:
 		void WriteRows();
 		void WriteField(long long fnum);
         void WriteArrayFieldWithBrackets(long long fnum);
+        void _WriteArrayWithBrackets(long long fnum, long long dim);
 		void WriteNumberAsAscii(char* buffer, long long type);
 		void WriteStringAsAscii(long long fnum);
 
@@ -253,32 +254,9 @@ Modification history:
 
 		long long SequenceCheck(PyObject* obj);
 
-		void CopyFieldInfo(
-				PyArray_Descr* descr, 
-				vector<string>& names, 
-				vector<long long>& offsets,
-				vector<long long>& sizes,
-				vector<long long>& nel,
-                vector<long long>& ndim,
-                vector<vector<long long> >& dims,
-				vector<long long>& typenums,
-				long long& rowsize);
-
-
-		void CopyDescrOrderedNames(
-				PyArray_Descr* descr, 
-				vector<string>& names);
-
-		void CopyDescrOrderedOffsets(
-				PyArray_Descr* descr, 
-				vector<string>& names,
-				vector<long long>& offsets,
-				vector<long long>& sizes,
-				vector<long long>& nel,
-                vector<long long>& ndim,
-                vector<vector<long long> >& dims,
-				vector<long long>& typenums);
-
+		void CopyFieldInfo(PyArray_Descr* descr);
+		void CopyDescrOrderedNames(PyArray_Descr* descr);
+		void CopyDescrOrderedOffsets(PyArray_Descr* descr);
 
 		// Must decref this arr no matter what. Use Py_XDECREF in case it
 		// is NULL
@@ -362,7 +340,7 @@ Modification history:
         vector<long long> mOffsets;   // offsets of each field in each row
         vector<long long> mSizes;     // size of each field in each row
 		vector<long long> mNel;       // number of elements in this field
-        vector<long long> mNDim;      // ndim for each field
+        vector<long long> mNdim;      // ndim for each field
         vector<vector<long long> > mDims;      // a dims array
 		vector<long long> mTypeNums;  // type numbers for each field
         long long mRowSize;           // total size of each row
