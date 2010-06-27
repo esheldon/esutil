@@ -5,6 +5,13 @@ from sys import stdout
 try:
     import stomp
     have_stomp=True
+
+    INSIDE_MAP=stomp.cvar.Map_INSIDE_MAP
+    FIRST_QUADRANT_OK=stomp.cvar.Map_FIRST_QUADRANT_OK
+    SECOND_QUADRANT_OK=stomp.cvar.Map_SECOND_QUADRANT_OK
+    THIRD_QUADRANT_OK=stomp.cvar.Map_THIRD_QUADRANT_OK
+    FOURTH_QUADRANT_OK=stomp.cvar.Map_FOURTH_QUADRANT_OK
+
 except:
     have_stomp=False
 
@@ -13,14 +20,6 @@ try:
     have_numpy=True
 except:
     have_numpy=False
-
-INSIDE_MAP=1
-FIRST_QUADRANT_OK=2
-SECOND_QUADRANT_OK=4
-THIRD_QUADRANT_OK=8
-FOURTH_QUADRANT_OK=16
-
-
 
 
 def in_window(stomp_map, 
