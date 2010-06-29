@@ -706,9 +706,9 @@ void Records::WriteArrayFieldWithBrackets(long long fnum)
     // [3,2,4]
     // {{{0.976173,0.220988,0.207728,0.150891},{0.77637,0.405874,0.817494,0.0382292}},{{0.295267,0.0950662,0.629128,0.584864},{0.331606,0.749993,0.848343,0.430986}},{{0.379886,0.483621,0.280487,0.732344},{0.975598,0.518987,0.75701,0.274867}}}
 
-	long long nel=mNel[fnum];
-	long long elsize = mSizes[fnum]/nel;
-	long long type_num = mTypeNums[fnum];
+	//long long nel=mNel[fnum];
+	//long long elsize = mSizes[fnum]/nel;
+	//long long type_num = mTypeNums[fnum];
 
     // Begin with the first dimension
     _WriteArrayWithBrackets(fnum, 0);
