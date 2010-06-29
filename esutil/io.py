@@ -255,6 +255,10 @@ def write(fobj, data, **keywords):
         FITS
             Flexible Image Transport System
             NOTE: requires the patched version of pyfits that comes with esutil.
+        JSON
+            JavaScript Object Notation.  Less flexible than XML but more useful
+            in most practical situations such as storing inhomogeneous data in
+            a portable way. 
     """
 
     # a scalar was input
@@ -263,6 +267,8 @@ def write(fobj, data, **keywords):
     # pick the right reader based on type
     if type == 'fits':
         write_fits(fobj, data, **keywords)
+    elif type == 'json':
+        json_util.write(data, fobj)
     else:
         raise ValueError("Need to implement writing file type: %s\n" % type)
 
