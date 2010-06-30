@@ -12,8 +12,8 @@ Purpose:
     The power of this code comes from two unique features of the RECFILE
     package: 
         
-        1) The recfile package understands the structure of arrays with
-        fields, aka recarrays or structured arrays.  Unlike the memmap class
+        1) The recfile package understands the structure of recarrays and can
+        efficientlly read subsets of rows and columns. Unlike the memmap class
         distributed with numpy, individual fields from these types of arrays
         can be read without reading the whole file into memory.  This is
         accomplished using a C++ class linked to python.
@@ -24,15 +24,6 @@ Purpose:
 
     Another nice feature not supported by the format module of numpy is the
     ability to append data to the file.
-
-    Although the non-memory map functiontionality looks very much like a memory
-    map, the underlying class is *not* true memory map.  It does not support
-    writing data in place in the file, only writing new files or appending.
-
-
-    Note, a memory map is actually used when appropriate, e.g. for binary files
-    when no sub-fields are being selected.  Also, you can use the get_memmap
-    method of the SFile class to get a memmap to the underlying data.
 
 
 Convenience functions:
