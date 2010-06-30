@@ -44,11 +44,10 @@
             -180,180.  If a shift is entered, return the new value
             lon-shift such that the range is still [0,360)
             
-        shiftra
-            shift right ascension.  By default wrap the coordinate to
-            -180,180 such that if ra > 180, ra->ra-360.
+        shiftra:
+            shift right ascension.  This just calls shiftlon
 
-        radec2aitoff
+        radec2aitoff:
             Convert ra,dec to aitoff coordinates.
 
         dec_parse(decstring)
