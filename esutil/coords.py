@@ -39,6 +39,11 @@
                     z = cos(pi/2-dec)
 
 
+        shiftlon:
+            shift the input longitude.  By default wrap the coordinate to
+            -180,180.  If a shift is entered, return the new value
+            lon-shift such that the range is still [0,360)
+            
         shiftra
             shift right ascension.  By default wrap the coordinate to
             -180,180 such that if ra > 180, ra->ra-360.
@@ -52,6 +57,10 @@
         ra_parse(decstring)
             parse a colon separated string representing right ascension ito
             degrees.
+
+        randsphere(numrand, system='lonlat'):
+            Generate random points on the sphere.  By default lon,lat are
+            returned.  If system='xyz' then x,y,z are returned.
 
 """
 license="""
@@ -395,7 +404,16 @@ def _xyz2thetaphi(x,y,z):
 
 def eq2xyz(ra, dec, dtype='f8'):
     """
-    This is same as stomp
+    Name:
+        eq2xyz
+    Purpose:
+        Convert equatorial coordinates RA and DEC to x,y,z on
+        the unit sphere
+    Calling Sequence:
+        x,y,z = eq2xyz(ra,dec)
+
+    Notes:
+        This follows the same convention as the STOMP package.
     """
 
     theta = numpy.array(ra, ndmin=1, copy=False, dtype=dtype)
@@ -789,17 +807,98 @@ def fitsheader2dict(hdr, ext=0):
 
 
 
-def shiftra(ra_input, shift=0.0, wrap=True):
+def shiftlon(lon_input, shift=None, wrap=True):
     """
-    shift right ascension, by default wrapping the coordinate
-    """
-    ra = numpy.array(ra_input, ndmin=1, copy=True, dtype='f8')
-    if wrap:
-        w,=where(ra > 180)
-        if w.size > 0:
-            ra[w] -= 360
+    Name:
+        shiftlon
+    Calling Sequence:
+        newlon = shiftlon(longitude, wrap=True, shift=0.0)
 
-    return ra
+    Purpose:
+
+        Shift the value of a longitude.  By default, the value is "wrapped" to
+        be [-180,180] instead of [0,360]
+
+        If the shift keyword is sent, then the longitude is simply shifted by
+        the input value and then constrained to be again on the [0,360) range.
+    
+    Input:
+        A longitude or array of longitudes on the range [0,360)
+
+    Keywords:
+        shift: 
+            If shift is sent, then lon-shift is returned, constrained to still
+            be on [0,360).
+        
+        wrap: 
+            If shift is not sent, and wrap is True, wrap the range to
+            [-180,180]
+
+    """
+    lon = numpy.array(lon_input, ndmin=1, copy=True, dtype='f8')
+
+    if shift is not None:
+        negshift = False
+        if shift < 0:
+            negshift=True
+
+        abs_shift = abs(shift)
+
+        # make sure in range [0,360)
+        abs_shift = abs_shift % 360.0
+
+        if negshift:
+            lon += abs_shift
+
+            w, = numpy.where(lon > 360.0)
+            if w.size > 0:
+                lon[w] -= 360.0
+        else:
+            lon -= abs_shift
+
+            w, = numpy.where(lon < 0.0)
+            if w.size > 0:
+                lon[w] += 360.0
+
+    elif wrap:
+        w,=where(lon > 180)
+        if w.size > 0:
+            lon[w] -= 360
+
+    return lon
+
+
+
+def shiftra(ra, shift=None, wrap=True):
+    """
+    Name:
+        shiftra
+    Calling Sequence:
+        newra = shiftra(ra, wrap=True, shift=0.0)
+
+    Purpose:
+
+        Shift the value of a longitude RA.  By default, the value is "wrapped"
+        to be [-180,180] instead of [0,360]
+
+        If the shift keyword is sent, then the longitude is simply shifted by
+        the input value and then constrained to be again on the [0,360) range.
+    
+    Input:
+        ra or any other longitude on the range [0,360)
+
+    Keywords:
+        shift: 
+
+            If shift is sent, then ra-shift is returned, constrained to still
+            be on [0,360).
+        
+        wrap: 
+            If shift is not sent, and wrap is True, wrap the range to
+            [-180,180]
+
+    """
+    return shiftlon(ra, shift=None, wrap=True)
 
 
 def radec2aitoff(ra, dec):
@@ -843,4 +942,52 @@ def radec2aitoff(ra, dec):
     """
 
     return x,y
+
+def randsphere(num, system='lonlat'):
+    """
+    Name:
+        randsphere
+    Purpose:
+        Generate random points all over the sphere
+
+    Calling Sequence:
+        lon, lat = randsphere(num, system='lonlat')
+
+    Inputs:
+        num: The number of randoms to generate
+    Keywords:
+        system: Default is 'lonlat' for longitude
+            and latitude system.  Can also be 'xyz'.
+
+    Outputs:
+        longitude on [0,360) and ,latitude on [-90,90)
+        or x,y,z for system='xyz'
+
+        lon,lat = randsphere(2000)
+        x,y,z = randsphere(2000, system='xyz')
+
+    """
+
+    # longitude [0,360)
+    lon = numpy.random.random(num)*360.0
+
+    # number [-1,1)
+    v = numpy.random.random(num)
+    v *= 2
+    v -= 1
+
+    # Now this generates on [0,pi)
+    lat = numpy.arccos(v)
+
+    # convert to degrees
+    numpy.rad2deg(lat,lat)
+    # now in range [-90,90.0)
+    lat -= 90.0
+    
+    if system == 'xyz':
+        x,y,z = eq2xyz(lon, lat)
+        return x,y,z
+    else:
+        return lon, lat
+
 
