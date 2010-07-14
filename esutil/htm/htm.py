@@ -222,6 +222,193 @@ class HTM(htmc.HTMC):
                            maxmatch,
                            file)
 
+
+
+    def cylmatch(self, ra1, dec1, z1, ra2, dec2, z2, 
+                 radius = 1/3600., dz = 0.5,  
+                 maxmatch = 10, 
+                 unique=False, nkeep=1, 
+                 **kw):
+
+        '''
+        Class:
+           HTM
+
+        Method Name:
+           cylmatch
+
+        Purpose:
+        Perform cylindrical RA-Dec matching of two catalogs (called cat1 and 
+        cat2 in this document) by finding the 
+        nearest N neighbors within a fixed search aperture and within a fixed
+        window in some arbitrary third parameter (called z for the purposes
+        of this document).  The M closest neighbors in the z direction are 
+        returned (with M <= N)
+
+        Syntax:
+
+        matchind, adist, zdist = cylmatch(ra1, dec1, z1, ra2, dec2, z2,
+                                          radius = 1/3600., dz = 0.5, 
+                                          maxmatch = 10, 
+                                          unique=False, nkeep=1, 
+                                          **kw)
+
+        Inputs:
+
+        ra1, dec1, z1: RA, Dec and z values for the first catalog
+        ra2, dec2, z2: As above for the second catalog.
+
+        Keywords:
+
+
+        maxmatch: Maximum number of neighbors to find within the search radius.
+
+        nkeep: Number of matches to keep (and return) for each object in cat1 
+               (M in the summary description above). If the number of matches 
+               is less than nkeep then the rest of the  output arrays will be 
+               filled with the bad value -999.  nkeep is automatically set to 
+               1 and ignored if unique = True.
+
+        radius: angular radius of search aperture.  Can either be a scalar 
+                or an array of values the same length as cat1.
+
+        dz: half-length of the search cylinder.  Can either be a scalar or
+            an array of values the same length as cat1.
+
+        unique: if this is True, the matching is done uniquely--i.e., members 
+                of catalog 2 are excluded from future matching once they are 
+                matched 
+                to something in catalog 1 (the matching proceeds by stepping
+                through catalog 1 in the order in which it is passed to cylmatch).
+
+
+
+
+        **kw: keyword arguments passed through to htm.match. 
+
+
+        Returns:
+
+        matchind: An LIST of arrays containing indices of the 
+                  matches in cat2 for each element of cat1, with a maximum
+                  of nkeep matches returned per element.
+
+        adist: angular distance to each of these matches
+
+        zdist = distance to each of these matches in the z dimension.  
+
+
+        Revision History:
+
+        Written by Brian F. Gerke at SLAC in May-June 2010.
+        Added to HTM class in July 2010.
+
+        '''
+
+        npts = numpy.size(ra1)
+        npts2 = numpy.size(ra2)
+        #check input
+        if ((numpy.size(dec1) != npts) | (numpy.size(dec2) != npts2) | \
+                (numpy.size(z1) != npts) | (numpy.size(z2) != npts2)):
+            print npts, numpy.size(ra1), numpy.size(dec1), numpy.size(z1)
+            print npts2, numpy.size(ra2), numpy.size(dec2), numpy.size(z2)
+            raise ValueError('RA Dec and z input arrays to cylmatch must' 
+                             ' have the same length for each catalog.')
+        if (numpy.size(dz) > 1) & (numpy.size(dz) < npts):
+            raise ValueError('dz must either be a scalar or have the '
+                             'same length as the input arrays in cylmatch.')
+
+        if unique: 
+            nkeep = 1
+
+
+
+        #Match up catalogs on the sky.
+        m1, m2, d12 = self.match(ra1, dec1, 
+                                 ra2, dec2, radius,
+                                 maxmatch = maxmatch, **kw)
+
+
+        #Now limit to matches that are within +/- dz of each object
+
+        if numpy.size(dz) == 1:
+
+            w, = numpy.where((z2[m2] > (z1[m1] - dz)) &
+                          (z2[m2] < (z1[m1] + dz)))
+
+        else:
+
+            w, = numpy.where((z2[m2] > (z1[m1] - dz[m1])) &
+                          (z2[m2] < (z1[m1] + dz[m1])))
+
+
+        m1=m1[w]
+        m2=m2[w]
+        d12=d12[w]
+
+        #Now in the case of multiple matches, take the one with the minimum
+        #difference in magnitude.
+
+        matchindex = []
+        angdist = []
+        zdist = []
+
+        flag_matched = numpy.zeros(numpy.size(ra2), dtype='i4') #for ensuring unique matching
+
+        j1=numpy.searchsorted(m1,numpy.arange(npts),'left') #j1 and j2 are the start and end indices for each unique value of m1
+        j2=numpy.searchsorted(m1,numpy.arange(npts),'right')
+
+        for i in range(npts):
+
+            if j1[i] == j2[i]: 
+
+                #First, check to see if the ith object got a match at all...
+                #If so, check and see if the best match has already been used
+                if (j1[i] != i) or ((flag_matched[m2[j1[i]]] == 1) and unique):
+                    matchis = numpy.array([],dtype='i4')
+                    angdists = numpy.array([])
+                    zdiff = numpy.array([])
+                else:
+                    #if there's a good match, save it.
+                    matchis = numpy.array(m2[[j1[i]]])
+                    angdists = numpy.array(d12[[j1[i]]])
+                    zdiff = numpy.array([(z1[m1[j1[i]]] - 
+                                       z2[m2[j1[i]]])])
+                    flag_matched[m2[j1[i]]] = 1
+            else:
+                #compute difference in z-direction for the different matches.
+                zdiff = numpy.abs(z2[m2[j1[i]:j2[i]]] - \
+                                   z1[m1[j1[i]:j2[i]]])
+
+                angdists = d12[j1[i]:j2[i]]
+                matchis = m2[j1[i]:j2[i]]
+
+                #Remove objects that have already been used
+                if unique: 
+                    zdiff = zdiff[where(flag_matched[m2[j1[i]:j2[i]]] == 0)]
+
+                #If none remains, there's no match
+                if len(zdiff) > 0:
+                    # sort matches by distance in z direction
+                    isort = zdiff.argsort()
+                    angdists = angdists[isort]
+                    zdiff = zdiff[isort]
+                    matchis = matchis[isort]
+                    flag_matched[m2[j1[i]]+isort[0]] = 1
+
+
+
+
+            matchindex.append(matchis[0:nkeep])
+            angdist.append(angdists[0:nkeep])
+            zdist.append(zdiff[0:nkeep])
+
+
+
+
+        return(matchindex, angdist, zdist)
+    
+
     def read(self, filename, verbose=False):
         """
         Class:
