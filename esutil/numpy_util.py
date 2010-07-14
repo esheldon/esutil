@@ -1700,3 +1700,348 @@ def random_subset(ntot, nrand):
     r=numpy.random.random(ntot)
     s=r.argsort()
     return s[0:nrand]
+
+
+class ArrayWriter:
+    """
+    Class:
+        ArrayWriter
+    Purpose:
+
+        A python class to write numpy arrays as ascii data.  recarrays are
+        written in columns.  Can also do a "fancy" print of the array which is
+        easy on the eyes but not good for machine reading.
+
+        This is much slower than using the recfile package, but as it
+        is python only it is more flexible.
+
+    Constructor:
+        aw = ArrayWriter(file=None, 
+                         delim=',', 
+                         array_delim=',',
+                         bracket_arrays=False,
+                         fancy=False,
+                         page=False)
+
+    Inputs:
+        file:
+            File name or file object to use for printing.
+        delim: 
+            The delimiter between fields.
+        array_delim: 
+            The delimiter between sub-array elements.
+        bracket_arrays:  
+            
+            Put brackets in place to delineate dimensional boundies.  e.g.
+            {{a,b,c},{d,e,f}}
+
+            Note if fancy=True, brackets are always used.
+
+        fancy:  
+            If True, use a fancy printing scheme instead of the simple machine
+            readable format that is default.  The delim keyword is ignored and
+            arrays are always bracketed.
+        page:
+            If True, send the output to a pager.
+
+    Examples:
+        aw = ArrayWriter()
+        aw.write(arr)
+
+        # if fancy=True, can sent a title to place above the printout
+        aw = ArrayWriter(fancy=True)
+        aw.write(array, title='My Table')
+
+
+    """
+
+    def __init__(self, **keys):
+        self.open(**keys)
+
+    def open(self,**keys):
+
+        self._delim = keys.get('delim',',')
+        self._array_delim = keys.get('array_delim',',')
+        self._fancy=keys.get('fancy',False)
+
+        # we only will page if fancy is set
+        if self._fancy:
+            self._page=keys.get('page',False)
+            self._bracket_arrays=True
+        else:
+            self._page=False
+            self._bracket_arrays = keys.get('bracket_arrays',False)
+
+        self._fobj=None
+        self._close_the_fobj = False
+
+        # Only load a file object if page is False
+        # which in turn can only be true if fancy
+        # is also True
+        if not self._page:
+            fobj = keys.get('file',stdout)
+
+            if isinstance(fobj,file):
+                self._fobj = fobj
+            else:
+                self._close_the_fobj=True
+                fname = os.path.expanduser(fobj)
+                fname = os.path.expandvars(fname)
+                self._fobj = open(fname,'w')
+
+
+    def write(self, arrin, **keys):
+        """
+        Class:
+            ArrayWriter
+        Name:
+            write
+        Calling Sequence:
+            aw=ArrayWriter(**keywords)
+            aw.write(array, **keywords)
+        Purpose:
+            Write an array.
+        
+        Inputs:
+            array: 
+                The array to write
+            nlines: 
+                The number of lines to write
+            fields: 
+                Only print a subset of the fields.
+
+            title:
+                A title to place above the printout during fancy printing.
+            trailer:
+                Text to print after the array data.
+
+            altnames: 
+                A list of names for each argument.  There must be an entry for
+                each argument. The names are printed above each column when
+                doing fancy printing.
+
+
+        """
+        if self._fancy:
+            self.fancy_write(arrin, **keys)
+            return
+
+        arr=arrin.view(numpy.ndarray)
+
+        nlines = keys.get('nlines', arr.size)
+        names = keys.get('fields', arr.dtype.names)
+        if names is None:
+            # simple arrays are easy
+            arr.tofile(self._fobj, sep='\n')
+            return
+        
+        nnames = len(names)
+
+        # we have fields
+        for i in xrange(arr.size):
+            iname=0
+            for n in names:
+                data = arr[n][i]
+                if data.ndim > 0:
+                    self.write_array(data)
+                else:
+                    self._fobj.write(str(data))
+
+                if iname < (nnames-1):
+                    self._fobj.write(self._delim)
+                else:
+                    self._fobj.write('\n')
+                iname += 1
+
+        
+    def fancy_write(self, arrin, **keys):
+        array=arrin.view(numpy.ndarray)
+
+        title = keys.get('title', None)
+
+        # if we are paging, we will store the lines, otherwise this won't be used
+        lines = []
+
+        fields = keys.get('fields', array.dtype.names)
+        printnames = keys.get('altnames', fields)
+
+        if len(fields) != len(printnames):
+            raise ValueError("altnames must correspond directly to the fields "
+                             "being printed")
+
+        nlines = keys.get('nlines', array.size)
+ 
+        max_lens = {}
+        for name in fields:
+            max_lens[name] = len(name)
+
+
+        # first pass through data to get lengths
+
+        # for array fields
+        astr = ArrayStringifier(delim=self._array_delim,
+                                brackets=self._bracket_arrays)
+        for i in xrange(nlines):
+            for name in fields:
+                if array[name][i].ndim > 0:
+                    strval=astr.stringify(array[name][i])
+                    max_lens[name] = max(max_lens[name], len(strval))
+                else:
+                    max_lens[name] = max(max_lens[name], len(str(array[name][i])))
+
+        # now create the forms for writing each field
+        forms = {}
+        separator = ''
+        i=0
+        ntot = len(fields)
+        for name in fields:
+            if isinstance(array[name][0], numpy.string_)  \
+                    or (array[name][0].ndim > 0):
+                forms[name]    = ' %-'+str(max_lens[name])+'s '
+            else:
+                forms[name]    = ' %'+str(max_lens[name])+'s '
+
+            pad = 2
+            if i == (ntot-1):
+                pad=1
+            this_sep = '%s' % '-'*(max_lens[name]+pad)
+
+            if i > 0:
+                forms[name] = '|' + forms[name]
+                this_sep = '+' + this_sep
+            separator += this_sep
+            i+=1
+
+        # possible header and title
+        header = ''
+        for i in xrange(len(fields)): 
+            n=fields[i]
+            pname=printnames[i]
+            header += forms[n] % center_text(pname,max_lens[n])
+
+        if title is not None:
+            title = center_text(title, len(header))
+
+        if self._page:
+            if title is not None:
+                lines.append(title)
+            lines.append(header)
+            lines.append(separator)
+
+        else:
+            if title is not None:
+                self._fobj.write(title)
+                self._fobj.write('\n')
+
+            self._fobj.write(header)
+            self._fobj.write('\n')
+
+            self._fobj.write(separator)
+            self._fobj.write('\n')
+
+        for i in xrange(nlines):
+            line = ''
+            for name in fields:
+                val = array[name][i]
+
+                if val.ndim > 0:
+                    val = astr.stringify(val)
+
+                if self._page:
+                    line += forms[name] % val
+                else:
+                    self._fobj.write(forms[name] % val)
+
+            if self._page:
+                lines.append(line)
+            else:
+                self._fobj.write('\n')
+
+        trailer=keys.get('trailer',None)
+        if trailer is not None:
+            if self._page:
+                lines.append(trailer)
+            else:
+                self._fobj.write(trailer)
+                self._fobj.write('\n')
+
+        if self._page:
+            lines = '\n'.join(lines)
+            pydoc.pager(lines)
+
+
+
+    def write_array(self, arr):
+        """
+        Write a simple array, possibly with brackets indicating the dimensions.
+        """
+        if self._bracket_arrays:
+            self._fobj.write('{')
+
+        i=0
+
+        dimsize=arr.shape[0]
+
+        for a in arr:
+            if a.ndim > 0:
+                self.write_array(a)
+            else:
+                self._fobj.write(str(a))
+        
+            if i < (dimsize-1):
+                self._fobj.write(',')
+            i+=1
+
+        if self._bracket_arrays:
+            self._fobj.write('}')
+
+
+    def close(self):
+        if self._close_the_fobj:
+            self._fobj.close()
+
+    def __del__(self):
+        if self._close_the_fobj:
+            self._fobj.close()
+
+class ArrayStringifier:
+    """
+    Stringify a simple array using a delimiter and
+    possibly brackets
+    """
+    def __init__(self, delim=',', brackets=False):
+        self._delim=delim
+        self._brackets=brackets
+        self._values=[]
+
+    def stringify(self, arr):
+        self._values=[]
+        if arr.dtype.names is not None:
+            raise ValueError("array must be simple, not structured")
+        self._process(arr)
+        return ''.join(self._values)
+    
+    def _process(self, arr):
+
+        if self._brackets:
+            self._values.append('{')
+
+        i=0
+
+        dimsize=arr.shape[0]
+
+        for a in arr:
+            if a.ndim > 0:
+                self._process(a)
+            else:
+                self._values.append(str(a))
+        
+            if i < (dimsize-1):
+                self._values.append(self._delim)
+            i+=1
+
+        if self._brackets:
+            self._values.append('}')
+
+
+
