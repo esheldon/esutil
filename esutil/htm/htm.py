@@ -225,8 +225,8 @@ class HTM(htmc.HTMC):
 
 
     def cylmatch(self, ra1, dec1, z1, ra2, dec2, z2, 
-                 radius = 1/3600., dz = 0.5,  
-                 maxmatch = 10, 
+                 radius, dz,  
+                 maxmatch = 1, 
                  unique=False, nkeep=1, 
                  **kw):
 
@@ -248,38 +248,42 @@ class HTM(htmc.HTMC):
         Syntax:
 
         matchind, adist, zdist = cylmatch(ra1, dec1, z1, ra2, dec2, z2,
-                                          radius = 1/3600., dz = 0.5, 
-                                          maxmatch = 10, 
+                                          radius, dz, 
+                                          maxmatch = 1, 
                                           unique=False, nkeep=1, 
                                           **kw)
 
         Inputs:
 
-        ra1, dec1, z1: RA, Dec and z values for the first catalog
-        ra2, dec2, z2: As above for the second catalog.
+          ra1, dec1, z1: RA, Dec and z values for the first catalog
+
+          ra2, dec2, z2: As above for the second catalog.
+
+          radius: angular radius of search aperture.  Can either be a scalar 
+                  or an array of values the same length as cat1.
+
+          dz: half-length of the search cylinder.  Can either be a scalar or
+              an array of values the same length as cat1.
+
 
         Keywords:
 
+          maxmatch: Maximum number of neighbors to find within the search 
+                    radius.
 
-        maxmatch: Maximum number of neighbors to find within the search radius.
+          nkeep: Number of matches to keep (and return) for each object in cat1 
+                 (M in the summary description above). If the number of matches 
+                 is less than nkeep then the rest of the  output arrays will be 
+                 filled with the bad value -999.  nkeep is automatically set to 
+                 1 and ignored if unique = True.
 
-        nkeep: Number of matches to keep (and return) for each object in cat1 
-               (M in the summary description above). If the number of matches 
-               is less than nkeep then the rest of the  output arrays will be 
-               filled with the bad value -999.  nkeep is automatically set to 
-               1 and ignored if unique = True.
 
-        radius: angular radius of search aperture.  Can either be a scalar 
-                or an array of values the same length as cat1.
 
-        dz: half-length of the search cylinder.  Can either be a scalar or
-            an array of values the same length as cat1.
-
-        unique: if this is True, the matching is done uniquely--i.e., members 
-                of catalog 2 are excluded from future matching once they are 
-                matched 
-                to something in catalog 1 (the matching proceeds by stepping
-                through catalog 1 in the order in which it is passed to cylmatch).
+          unique: if this is True, the matching is done uniquely--i.e., members 
+                  of catalog 2 are excluded from future matching once they are 
+                  matched to something in catalog 1 (the matching proceeds by 
+                  stepping through catalog 1 in the order in which it is 
+                  passed to cylmatch).
 
 
 
