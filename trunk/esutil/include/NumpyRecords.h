@@ -48,7 +48,7 @@
  *
  *     // because of bounds checking, the above can be slow.  This is a faster
  *     // way to iterate over all rows: get a pointer to a field 
- *     // in the first row and iterate over all rows.
+ *     // in the first row and use itemsize to move to the next row.
  *
  *     // this points to "x" in row 0
  *     double* xptr = (double *) rec.ptr("x");
