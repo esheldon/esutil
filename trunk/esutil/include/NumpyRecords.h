@@ -7,7 +7,10 @@
  *
  * NOTE: sub-arrays are not yet supported.
  *
- * Examples: #include "NumpyRecords.h"
+ * Examples: 
+ *
+ *     // This is a header-only class, just include it
+ *     #include "NumpyRecords.h"
  *
  *     // initialize from an array with fields.
  *     // let's assume this array has a 4-byte integer field and
