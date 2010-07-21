@@ -66,7 +66,7 @@
  *     // you can also just get a pointer to the beginning of the entire array and
  *     // then use the strides and itemsize to access various fields
  *
- *     void* ptr = rec.ptr();
+ *     char* ptr = rec.ptr();
  *     npy_intp itemsize = rec.itemsize();
  *     npy_intp istrides = rec.strides("id");
  *     npy_intp xstrides = rec.strides("x");
@@ -171,37 +171,38 @@ class NumpyRecords {
         //
 
         // get a pointer
-        void* ptr() {
-            return this->_data;
+        char* ptr() {
+            return (char*) this->_data;
         }
 
         // return a pointer to the field in the first row.  Make sure you use
         // the strides and itemsize to properly access other rows!
-        void* ptr(const char* cname) throw (const char*) {
+        char* ptr(const char* cname) throw (const char*) {
             std::string name=cname;
             return ptr(name);
         }
-        void* ptr(std::string& name) {
+        char* ptr(std::string& name) {
             check_name(name);
 
             npy_intp fi = this->_nmap[name];
-            return NULL;
-
-            return this->_data + this->_strides[fi];
+            char* data = (char*) this->_data;
+            return data + this->_strides[fi];
         }
 
 
         // return a pointer to the field and row
-        void* ptr(const char* cname, npy_intp row) throw (const char*) {
+        char* ptr(const char* cname, npy_intp row) throw (const char*) {
             std::string name=cname;
             return ptr(name,row);
         }
-        void* ptr(std::string& name, npy_intp row) throw (const char*) {
+        char* ptr(std::string& name, npy_intp row) throw (const char*) {
             check_name(name);
             check_row(row);
             npy_intp fi = this->_nmap[name];
 
-            return this->_data + row*this->_itemsize + this->_strides[fi];
+            char* data = (char*) this->_data;
+
+            return data + row*this->_itemsize + this->_strides[fi];
         }
 
 
