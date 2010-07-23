@@ -447,91 +447,91 @@ htmInterface::doHull() {
 void 
 htmInterface::setPolyCorner(SpatialVector &v) {
 
-  size_t i,len = polyCorners_.length();
-  // test for already existing points
-  for(i = 0; i < len; i++)
-    if(v == polyCorners_[i].c_)return;
-
-  if(len < 2) {
-    // just append first two points.
-    len = polyCorners_.insert(1);
-    polyCorners_[len-1].c_ = v;
-  } else if (len == 2) {
-    // first polygon: triangle. set correct orientation.
-    if( (polyCorners_[0].c_ ^ polyCorners_[1].c_)*v > 0 ) {
-      polyCorners_.insert(1);
-      polyCorners_[2].c_ = v;
-    } else if( (polyCorners_[0].c_ ^ polyCorners_[1].c_)*v < 0 ) {
-      polyCorners_.insert(1,1);
-      polyCorners_[1].c_ = v;
-    }
-  } else {
-    //
-    // Now we set the flags for the existing polygon.
-    // if the new point is inside (i.e. to the left) of 
-    // the half-sphere defined by the points polyCorners_[i],[i+1]
-    // we set polyCorners_[i].inside_ to true.
-    //
-    // if it is outside, and the previous side was also outside,
-    // set the replace_ flag to true(this corner will be dropped)
-    // (be careful on the edges - that's the trackoutside flag)
-
-    bool polyTrackOutside = false;
-    for(i = 0 ; i < len; i++) {
-      polyCorners_[i].replace_ = false;
-      polyCorners_[i].inside_  = false;
-
-      // test if new point is inside the constraint given by a,b
-      if( (polyCorners_[i].c_ ^ polyCorners_[i+1==len ? 0 : i+1].c_)*v > 0 ) {
-	polyCorners_[i].inside_ = true;
-	polyTrackOutside = false;
-      } else {
-	if(polyTrackOutside)
-	  polyCorners_[i].replace_ = true;
-	polyTrackOutside = true;
-      }
-    }
-    if(polyTrackOutside && !polyCorners_[0].inside_)
-      polyCorners_[0].replace_ = true;
-
-#ifdef DIAG
+    size_t i,len = polyCorners_.length();
+    // test for already existing points
     for(i = 0; i < len; i++)
-      cerr << i << " : " 
-	   << (polyCorners_[i].replace_ ? "replace" : "keep   ")
-	   << (polyCorners_[i].inside_ ? "inside  : " : "outside : ")
-	   << polyCorners_[i].c_ << "\n";
-#endif
-    // now delete all corners that have the 'replace' flag set
-    i = 0;
-    while(i < len) {
-      if(polyCorners_[i].replace_) {
-	polyCorners_.remove(i); // remove returns new length
-	len--;
-      } else i++;
-    }
+        if(v == polyCorners_[i].c_)return;
 
-    // now find first corner that is not inside (there is only one)
-    // and insert the point after that.
-    // if all points are inside we did nothing...
+    if(len < 2) {
+        // just append first two points.
+        len = polyCorners_.insert(1);
+        polyCorners_[len-1].c_ = v;
+    } else if (len == 2) {
+        // first polygon: triangle. set correct orientation.
+        if( (polyCorners_[0].c_ ^ polyCorners_[1].c_)*v > 0 ) {
+            polyCorners_.insert(1);
+            polyCorners_[2].c_ = v;
+        } else if( (polyCorners_[0].c_ ^ polyCorners_[1].c_)*v < 0 ) {
+            polyCorners_.insert(1,1);
+            polyCorners_[1].c_ = v;
+        }
+    } else {
+        //
+        // Now we set the flags for the existing polygon.
+        // if the new point is inside (i.e. to the left) of 
+        // the half-sphere defined by the points polyCorners_[i],[i+1]
+        // we set polyCorners_[i].inside_ to true.
+        //
+        // if it is outside, and the previous side was also outside,
+        // set the replace_ flag to true(this corner will be dropped)
+        // (be careful on the edges - that's the trackoutside flag)
 
-    for(i = 0; i < len; i++) {
-      if(!polyCorners_[i].inside_) {
+        bool polyTrackOutside = false;
+        for(i = 0 ; i < len; i++) {
+            polyCorners_[i].replace_ = false;
+            polyCorners_[i].inside_  = false;
+
+            // test if new point is inside the constraint given by a,b
+            if( (polyCorners_[i].c_ ^ polyCorners_[i+1==len ? 0 : i+1].c_)*v > 0 ) {
+                polyCorners_[i].inside_ = true;
+                polyTrackOutside = false;
+            } else {
+                if(polyTrackOutside)
+                    polyCorners_[i].replace_ = true;
+                polyTrackOutside = true;
+            }
+        }
+        if(polyTrackOutside && !polyCorners_[0].inside_)
+            polyCorners_[0].replace_ = true;
+
 #ifdef DIAG
-	cerr << "QL: Insert after " << i << " length = " << len << "\n";
+        for(i = 0; i < len; i++)
+            cerr << i << " : " 
+                << (polyCorners_[i].replace_ ? "replace" : "keep   ")
+                << (polyCorners_[i].inside_ ? "inside  : " : "outside : ")
+                << polyCorners_[i].c_ << "\n";
 #endif
-	if(i == len-1) // append if last
-	  polyCorners_.insert(1);
-	else
-	  polyCorners_.insert(1,len-i-1);
-	polyCorners_[i+1].c_ = v;
-	break;
-      }
-    }
-  }
+        // now delete all corners that have the 'replace' flag set
+        i = 0;
+        while(i < len) {
+            if(polyCorners_[i].replace_) {
+                polyCorners_.remove(i); // remove returns new length
+                len--;
+            } else i++;
+        }
+
+        // now find first corner that is not inside (there is only one)
+        // and insert the point after that.
+        // if all points are inside we did nothing...
+
+        for(i = 0; i < len; i++) {
+            if(!polyCorners_[i].inside_) {
 #ifdef DIAG
-  cerr << "QL: Polygon: now " << polyCorners_.length() << "\n";
-  for(i = 0; i < polyCorners_.length(); i++)
-    cerr << polyCorners_[i].c_ << "\n";
+                cerr << "QL: Insert after " << i << " length = " << len << "\n";
+#endif
+                if(i == len-1) // append if last
+                    polyCorners_.insert(1);
+                else
+                    polyCorners_.insert(1,len-i-1);
+                polyCorners_[i+1].c_ = v;
+                break;
+            }
+        }
+    }
+#ifdef DIAG
+    cerr << "QL: Polygon: now " << polyCorners_.length() << "\n";
+    for(i = 0; i < polyCorners_.length(); i++)
+        cerr << polyCorners_[i].c_ << "\n";
 #endif
 }
 
