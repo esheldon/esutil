@@ -1677,7 +1677,7 @@ def randind(nmax, nrand, dtype=None):
     return ind
 
 
-def random_subset(ntot, nrand):
+def random_subset(ntot, nrand, old=False, verbose=False):
     """
     Name:
         random_subset
@@ -1695,11 +1695,38 @@ def random_subset(ntot, nrand):
     if nrand > ntot:
         raise ValueError("number of requestedr randoms must be "
                          "<= ntot")
-    # generate ntot random numbers, sort and return
-    # the first nrand
-    r=numpy.random.random(ntot)
-    s=r.argsort()
-    return s[0:nrand]
+
+    if not old:
+        if ntot > (2**32-1):
+            dtype = 'u8'
+        else:
+            dtype = 'u4'
+
+        r = numpy.zeros(nrand, dtype=dtype)
+        nkeep = 0
+        while nkeep < nrand:
+            # generate enough randoms to meet our needs
+            tmp = numpy.random.randint(0, ntot, nrand-nkeep)
+            r[nkeep:nrand] = tmp
+
+            # now make sure they are unique
+            newr = numpy.unique1d(r)
+            nkeep = newr.size
+            if nkeep != nrand:
+                r[0:nkeep] = newr
+
+            if verbose:
+                stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
+
+        return r
+
+    else:
+
+        # generate ntot random numbers, sort and return
+        # the first nrand
+        r=numpy.random.random(ntot)
+        s=r.argsort()
+        return s[0:nrand]
 
 
 class ArrayWriter:
