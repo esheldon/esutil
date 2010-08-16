@@ -47,7 +47,8 @@ import os
 
 import os
 import sys
-from sys import stdout
+from sys import stdout, stderr
+import subprocess
 
 class DirStack(object):
     """
@@ -219,4 +220,136 @@ def expand_path(filename):
 
 # synonym
 expand_filename=expand_path
+
+
+def exec_process(command, 
+                 timeout=None, 
+                 poll=1,
+                 stdout_file=subprocess.PIPE, 
+                 stderr_file=subprocess.PIPE, 
+                 shell=True,
+                 verbose=False):
+    """
+    Name:
+        exec_process
+    Purpose:
+        Execute a command on the operating system with a possible timeout in
+        seconds
+    
+    Calling Sequence:
+
+        exit_status, stdout_returned, stderr_returned = \
+           execute_command(command, 
+                           timeout=None, 
+                           poll=1,
+                           stdout=subprocess.PIPE, 
+                           stderr=subprocess.PIPE, 
+                           shell=True,
+                           verbose=False)
+    Inputs:
+        command: A command to run.
+
+    Keywords:
+        timeout: 
+            If this argument is sent, the process will be killed if it runs for
+            longer than timeout seconds.
+        poll:
+            How often to poll the process while waiting for a timeout.  Default
+            is 1.
+        verbose:
+            print the command.
+
+    The rest of the keywords are subprocess.Popen keywords, see docs for
+    that module.
+
+    """
+
+
+    # the user can send file names, PIPE, or a file object
+    if isinstance(stdout_file, str):
+        stdout_fileobj = open(stdout_file, 'w')
+    else:
+        stdout_fileobj=stdout_file
+
+    if isinstance(stderr_file, str):
+        stderr_fileobj = open(stderr_file, 'w')
+    else:
+        stderr_fileobj = stderr_file
+
+
+    # if a list was entered, convert to a string.  Also print the command
+    # if requested
+    if verbose:
+        stdout.write('Executing command: \n')
+    if isinstance(command, list):
+        cmd = ' '.join(command)
+        if verbose:
+            stdout.write(command[0] + '    \\\n')
+            for c in command[1:]:
+                stdout.write('    '+c+'    \\\n')
+        #print 'actual cmd:',cmd
+    else:
+        cmd=command
+        if verbose:
+            stdout.write('%s\n' % cmd)
+
+
+
+    stdout.flush()
+    stderr.flush()
+    pobj = subprocess.Popen(cmd, 
+                            stdout=stdout_fileobj, 
+                            stderr=stderr_fileobj, 
+                            shell=shell)
+
+    if timeout is not None:
+        exit_status, stdout_ret, stderr_ret = _poll_subprocess(pobj, timeout, poll)
+    else:
+        # this just waits for the process to end
+        stdout_ret, stderr_ret = pobj.communicate()
+        # this is not set until we call pobj.communicate()
+        exit_status = pobj.returncode
+
+    # If they were opened files, close them
+    if isinstance(stdout_fileobj, file):
+        stdout_fileobj.close()
+    if isinstance(stderr_fileobj, file):
+        stderr_fileobj.close()
+
+    return exit_status, stdout_ret, stderr_ret
+
+def _poll_subprocess(pobj, timeout, poll):
+    import time
+
+    if poll < 0.1:
+        poll = 0.1
+    if timeout < 0:
+        timeout = poll
+
+    tm0 = time.time()
+    while 1:
+        time.sleep(poll)
+
+        exit_status = pobj.poll()
+        if exit_status is not None:
+            break
+        tm = time.time()-tm0
+        if tm > timeout:
+            break
+
+
+    # exit status will not be None upon completion.  If we passed
+    # the timeout we want to kill the process.
+    if exit_status is None:
+        stdout.write("Process is taking longer than %s seconds.  "
+                     "Ending process\n" % timeout)
+        os.kill(pobj.pid, signal.SIGTERM)
+        exit_status = 1024
+        stdout_ret, stderr_ret = None, None
+    else:
+        stdout_ret, stderr_ret = pobj.communicate()
+
+    return exit_status, stdout_ret, stderr_ret
+
+
 
