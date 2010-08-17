@@ -145,6 +145,7 @@ from sys import stdout, stderr
 import copy
 import stat
 import esutil
+import esutil as eu
 import pydoc
 
 try:
@@ -424,7 +425,6 @@ def aprint(array, **keys):
 
     else:
         # fancy printing, more memory usage and not good for machine reading
-        center_text = esutil.misc.center_text
         title = keys.get('title', None)
         page = keys.get('page',False)
 
@@ -474,10 +474,10 @@ def aprint(array, **keys):
 
         header = ''
         for n in fields:
-            header += forms[n] % center_text(n,max_lens[n])
+            header += forms[n] % eu.misc.center_text(n,max_lens[n])
 
         if title is not None:
-            title = center_text(title, len(header))
+            title = eu.misc.center_text(title, len(header))
 
         if page:
             if title is not None:
@@ -1744,8 +1744,8 @@ class ArrayWriter:
 
     Constructor:
         aw = ArrayWriter(file=None, 
-                         delim=',', 
-                         array_delim=',',
+                         delim=' ', 
+                         array_delim=' ',
                          bracket_arrays=False,
                          fancy=False,
                          page=False)
@@ -1762,7 +1762,9 @@ class ArrayWriter:
             Put brackets in place to delineate dimensional boundies.  e.g.
             {{a,b,c},{d,e,f}}
 
-            Note if fancy=True, brackets are always used.
+            Notes: if fancy=True, brackets are always used.
+                   If fancy=True, the default array_delim is ',' instead
+                   of ' '
 
         fancy:  
             If True, use a fancy printing scheme instead of the simple machine
@@ -1787,8 +1789,7 @@ class ArrayWriter:
 
     def open(self,**keys):
 
-        self._delim = keys.get('delim',',')
-        self._array_delim = keys.get('array_delim',',')
+        self._delim = keys.get('delim',' ')
         self._fancy=keys.get('fancy',False)
 
         # we only will page if fancy is set
@@ -1798,6 +1799,15 @@ class ArrayWriter:
         else:
             self._page=False
             self._bracket_arrays = keys.get('bracket_arrays',False)
+
+        if not 'array_delim' in keys:
+            if self._bracket_arrays:
+                # default to commas in arrays when we are bracketing
+                self._array_delim = ','
+            else:
+                self._array_delim = self._delim
+        else:
+            self._array_delim = keys['array_delim']
 
         self._fobj=None
         self._close_the_fobj = False
@@ -1839,6 +1849,9 @@ class ArrayWriter:
 
             title:
                 A title to place above the printout during fancy printing.
+            header:
+                If True, write a header with the column names  in the first line.
+
             trailer:
                 Text to print after the array data.
 
@@ -1849,28 +1862,53 @@ class ArrayWriter:
 
 
         """
+
         if self._fancy:
             self.fancy_write(arrin, **keys)
             return
 
         arr=arrin.view(numpy.ndarray)
+        allnames = arr.dtype.names
 
-        nlines = keys.get('nlines', arr.size)
-        names = keys.get('fields', arr.dtype.names)
-        if names is None:
+        if allnames is None:
             # simple arrays are easy
             arr.tofile(self._fobj, sep='\n')
             return
+
+        nall = len(allnames)
+
+        nlines = keys.get('nlines', arr.size)
+        names_in = keys.get('fields', allnames)
+        doheader = keys.get('header',False)
+
+        if esutil.misc.isstring(names_in[0]):
+            names = names_in
+        else:
+            names = []
+            for ni in names_in:
+                if ni > nall:
+                    raise ValueError("Field index out of range: %s" % ni)
+                names.append(allnames[ni])
         
         nnames = len(names)
 
+        if doheader:
+            header = self._delim.join(names)
+            self._fobj.write(header)
+            self._fobj.write('\n')
+
         # we have fields
+        astr = ArrayStringifier(delim=self._array_delim,
+                                brackets=self._bracket_arrays)
+
         for i in xrange(arr.size):
             iname=0
             for n in names:
+
                 data = arr[n][i]
                 if data.ndim > 0:
-                    self.write_array(data)
+                    strval=astr.stringify(data)
+                    self._fobj.write(strval)
                 else:
                     self._fobj.write(str(data))
 
@@ -1880,6 +1918,9 @@ class ArrayWriter:
                     self._fobj.write('\n')
                 iname += 1
 
+            if i == (nlines-1):
+                break
+        self._fobj.flush()
         
     def fancy_write(self, arrin, **keys):
         array=arrin.view(numpy.ndarray)
@@ -1944,10 +1985,10 @@ class ArrayWriter:
         for i in xrange(len(fields)): 
             n=fields[i]
             pname=printnames[i]
-            header += forms[n] % center_text(pname,max_lens[n])
+            header += forms[n] % eu.misc.center_text(pname,max_lens[n])
 
         if title is not None:
-            title = center_text(title, len(header))
+            title = eu.misc.center_text(title, len(header))
 
         if self._page:
             if title is not None:
