@@ -307,25 +307,6 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
 
     return lines
 
-def aprint_old(arr, fields=None, nlines=None, format=None, page=False):
-    """
-    Print the input structure.  Need to doc
-    """
-
-    if fields is None:
-        fields = arr.dtype.names
-
-    ftup = split_fields(arr, fields=fields)
-
-    colprint =esutil.misc.colprint
-
-    arglist=[]
-    for i in range(len(fields)):
-        arglist.append('ftup[%s]' % i)
-
-    arglist = ', '.join(arglist)
-    command = 'colprint('+arglist+', nlines=nlines,format=format,names=fields, page=page)'
-    eval(command)
 
 def aprint(array, **keys):
     """
@@ -349,13 +330,7 @@ def aprint(array, **keys):
         If not fancy printing, the user has more control over the format.
 
     Calling Sequence:
-        aprint(array, fancy=False, page=False, nlines=ALL, fields=ALL, 
-               file=None)
-
-        For fancy=True, you can also specify a title.
-
-        If fancy is not True, more keywords are available
-            names=use_field_names, sep=' ', format=, names=field_names, nformat=None
+        aprint(array, **keywords)
     
     Inputs:
         array: A numpy array with fields.
@@ -370,194 +345,97 @@ def aprint(array, **keys):
             Send results to this file rather than standard output. 
         nlines: 
             Print only the top N lines.  Default is to print all.
-        fields: 
+        fields or columns: 
             Only print a subset of the fields.
 
-        # keywords available only when fancy=True
-        title:
-            A title to place above the printout.
 
-        # keywords available when fancy=False
+        header:
+                Write a header.  If the input is a string, it is written as the
+                header followed by a new line.  If it is boolean True, a header
+                is generated with the column names.  For fancy printing there
+                is always a header.
+
+        trailer:
+            Text to print after the array data.
+
         format: 
             A format string to apply to every argument.  E.g. format='%15s'
             Since every arg gets the same format, only %s type formats should
             be used unless the types are homogeneous.
-        sep: 
-            Separator, default is ' '
-        names: 
-            A list of names for each argument.  There must be an entry for
-            each argument. The names are printed above each column.
+        delim or sep: 
+            The delimiter between fields.
+        array_delim: 
+            The delimiter between sub-array elements.
+        bracket_arrays:  
+            
+            Put brackets in place to delineate dimensional boundies.  e.g.
+            {{a,b,c},{d,e,f}}
+
+            Notes: if fancy=True, brackets are always used.
+                   If fancy=True, the default array_delim is ',' instead
+                   of ' '
+
+
+        altnames: 
+            An alternative list of names for each field when printing a header
+            of field names.  There must be an entry for each field to be
+            printed.
+
         nformat:
             A Format to apply to the names.  By default, the same format used
             for the arguments is tried.  If formatting fails, a simple '%s' is
             used for the names.
 
+        title:
+            A title to place above the printout when using fancy printing.
 
-    Example:
+    Examples:
 
+        # simple column printing as CSV
+        >>> aprint(arr, delim=',')
+        1383.91540527,200.237106323,0.266301675406
+        802.613586426,249.544662476,0.921706936925
+        968.170288086,206.072280884,0.702349236707
+        ...
 
+        # Add some simple formatting and header with field
+        # names
+        >>> aprint(arr, header=True,format='%15s')
+                      x               y          sigma0
+          1383.91540527   200.237106323  0.266301675406
+          802.613586426   249.544662476  0.921706936925
+          968.170288086   206.072280884  0.702349236707
+          1392.78076172   203.387145996  0.140207546039
+          286.160888672   203.858230591  0.662831780399
+          1399.84436035   205.773635864  0.131057799416
+           730.80657959   214.152862549  0.872058593857
+          379.738677979   207.252319336  0.626150666221
+          1408.07873535   208.487594604  0.135600258469
+          1729.27612305   209.312911987  0.626632451812
 
-    """
-
-    # if fancy, use the fancy array printer
-    fancy = keys.get('fancy', False)
-
-    if not fancy:
-        # use colprint
-        fields = keys.get('fields', array.dtype.names)
-        if 'names' not in keys:
-            keys['names'] = fields
-        names = keys.get('names',fields)
-        if len(names) != len(fields):
-            raise ValueError("names= keyword must be same lenght as number of fields")
-
-        ftup = split_fields(array, fields=fields)
-
-        colprint = esutil.misc.colprint
-
-        arglist=[]
-        for i in range(len(fields)):
-            arglist.append('ftup[%s]' % i)
-
-        arglist = ', '.join(arglist)
-        command = 'colprint('+arglist+', **keys)'
-        eval(command)
-
-    else:
-        # fancy printing, more memory usage and not good for machine reading
-        title = keys.get('title', None)
-        page = keys.get('page',False)
-
-        if not page:
-            # should we print to a file?
-            f = keys.get('file', stdout)
-            if isinstance(f, file):
-                fobj = f
-            else:
-                fobj = open(f,'w')
-
-        # if we are paging, we will store the lines, otherwise this won't be used
-        lines = []
-
-        fields = keys.get('fields', array.dtype.names)
-        nlines = keys.get('nlines', array.size)
-
-        max_lens = {}
-        for name in fields:
-            max_lens[name] = len(name)
-
-        # first pass through data to get lenghts
-        for i in xrange(nlines):
-            for name in fields:
-                max_lens[name] = max(max_lens[name], len(str(array[name][i])))
-
-        forms = {}
-        separator = ''
-        i=0
-        ntot = len(fields)
-        for name in fields:
-            if isinstance(array[name][0], numpy.string_):
-                forms[name]    = ' %-'+str(max_lens[name])+'s '
-            else:
-                forms[name]    = ' %'+str(max_lens[name])+'s '
-
-            pad = 2
-            if i == (ntot-1):
-                pad=1
-            this_sep = '%s' % '-'*(max_lens[name]+pad)
-
-            if i > 0:
-                forms[name] = '|' + forms[name]
-                this_sep = '+' + this_sep
-            separator += this_sep
-            i+=1
-
-        header = ''
-        for n in fields:
-            header += forms[n] % eu.misc.center_text(n,max_lens[n])
-
-        if title is not None:
-            title = eu.misc.center_text(title, len(header))
-
-        if page:
-            if title is not None:
-                lines.append(title)
-            lines.append(header)
-            lines.append(separator)
-
-        else:
-            if title is not None:
-                fobj.write(title)
-                fobj.write('\n')
-
-            fobj.write(header)
-            fobj.write('\n')
-
-            fobj.write(separator)
-            fobj.write('\n')
-
-        for i in xrange(nlines):
-            line = ''
-            for name in fields:
-                if page:
-                    line += forms[name] % array[name][i]
-                else:
-                    fobj.write(forms[name] % array[name][i])
-            if page:
-                lines.append(line)
-            else:
-                fobj.write('\n')
-
-        if page:
-            lines = '\n'.join(lines)
-            pydoc.pager(lines)
-        else:
-            # close if this is not stdout
-            if fobj != stdout:
-                fobj.close()
-
-
-
-
-def aprint_fancy(res, **keys):
-    """
-    Name:
-      aprint_fancy
-
-    Purpose:
-        Print out a formatted description of the input array.   If the array
-        has fields, individual descriptions are printed for each field.  This
-        is designed to be similar to help, struct, /str in IDL. 
-
-    Calling Sequence:
-        ahelp(array, recurse=False, pretty=True, page=False)
-    
-    Inputs:
-        array: A numpy array.
-
-    Optional Inputs:
-        recurse: for sub-arrays with fields, print out a full description. 
-            default is False.
-        pretty:  If True, split field descriptions onto multiple lines if
-            the name is longer than 15 characters.  Nicer for the eye, but
-            harder for a machine to parse.  Also, strings are surrounded
-            by quotes 'string'.  Default is True.
-        page: If True, run the output through a pager.
-
-    Example:
-        ahelp(a)
-        size: 1147506  nfields: 27  type: records
-          run                >i4  1933
-          rerun              |S3  '157'
-          camcol             >i2  1
-          field              >i4  11
-          mjd                >i4  51886
-          tai                >f8  array[5]
-          ra                 >f8  102.905870701
-          dec                >f8  -1.05070432844
+        # fancy printing with a title
+        >>> aprint(arr, title='My Data',fancy=True)
+                            My Data                     
+               x       |       y       |     sigma0     
+        ---------------+---------------+---------------
+         1383.91540527 | 200.237106323 | 0.266301675406 
+         802.613586426 | 249.544662476 | 0.921706936925 
+         968.170288086 | 206.072280884 | 0.702349236707 
+         ...
 
 
     """
+
+    if 'sep' in keys:
+        if 'delim' not in keys:
+            keys['delim'] = keys['sep']
+
+    aw = ArrayWriter(**keys)
+    aw.write(array, **keys)
+
+    return
+
+
 
 
 
@@ -1769,47 +1647,91 @@ class ArrayWriter:
         fancy:  
             If True, use a fancy printing scheme instead of the simple machine
             readable format that is default.  The delim keyword is ignored and
-            arrays are always bracketed.
+            arrays are always bracketed.  fancy can also be specified while
+            calling the write() method.
         page:
             If True, send the output to a pager.
 
-    Examples:
-        aw = ArrayWriter()
-        aw.write(arr)
 
-        # if fancy=True, can sent a title to place above the printout
-        aw = ArrayWriter(fancy=True)
-        aw.write(array, title='My Table')
+    Examples:
+
+        # simple column printing as CSV
+        >>> aw = ArrayWriter(delim=',')
+        >>> aw.write(arr)
+        1383.91540527,200.237106323,0.266301675406
+        802.613586426,249.544662476,0.921706936925
+        968.170288086,206.072280884,0.702349236707
+        ...
+
+        # Add some simple formatting and header with field
+        # names (see the write() method for possible keywords)
+        >>> aw = ArrayWriter()
+        >>> aw.write(arr, header=True, format='%15s')
+                      x               y          sigma0
+          1383.91540527   200.237106323  0.266301675406
+          802.613586426   249.544662476  0.921706936925
+          968.170288086   206.072280884  0.702349236707
+          1392.78076172   203.387145996  0.140207546039
+          286.160888672   203.858230591  0.662831780399
+          1399.84436035   205.773635864  0.131057799416
+           730.80657959   214.152862549  0.872058593857
+          379.738677979   207.252319336  0.626150666221
+          1408.07873535   208.487594604  0.135600258469
+          1729.27612305   209.312911987  0.626632451812
+
+        # fancy printing with a title.  fancy can be
+        # specified on construction or write()
+        >>> aw = ArrayWriter(fancy=True)
+        >>> aw.write(arr1, title='My Data')
+                            My Data                     
+               x       |       y       |     sigma0     
+        ---------------+---------------+---------------
+         1383.91540527 | 200.237106323 | 0.266301675406 
+         802.613586426 | 249.544662476 | 0.921706936925 
+         968.170288086 | 206.072280884 | 0.702349236707 
+         ...
+
 
 
     """
 
     def __init__(self, **keys):
+        self.set_defaults()
         self.open(**keys)
 
-    def open(self,**keys):
+    def set_defaults(self):
+        self._delim = ' '
+        self._array_delim = ' '
+        self._bracket_arrays=False
 
-        self._delim = keys.get('delim',' ')
-        self._fancy=keys.get('fancy',False)
+        self._fobj = stdout
+        self._close_the_fobj = False
 
-        # we only will page if fancy is set
+        self._page=False
+        self._fancy=False
+
+    def set_keywords(self, **keys):
+        self._delim = keys.get('delim',self._delim)
+        self._page = keys.get('page',self._page)
+
+        self._fancy=keys.get('fancy',self._fancy)
         if self._fancy:
-            self._page=keys.get('page',False)
             self._bracket_arrays=True
         else:
-            self._page=False
-            self._bracket_arrays = keys.get('bracket_arrays',False)
+            self._bracket_arrays = keys.get('bracket_arrays',
+                                            self._bracket_arrays)
 
         if not 'array_delim' in keys:
             if self._bracket_arrays:
                 # default to commas in arrays when we are bracketing
                 self._array_delim = ','
-            else:
-                self._array_delim = self._delim
         else:
             self._array_delim = keys['array_delim']
 
-        self._fobj=None
+    def open(self,**keys):
+
+        self.set_keywords(**keys)
+
         self._close_the_fobj = False
 
         # Only load a file object if page is False
@@ -1827,7 +1749,7 @@ class ArrayWriter:
                 self._fobj = open(fname,'w')
 
 
-    def write(self, arrin, **keys):
+    def write(self, arr, **keys):
         """
         Class:
             ArrayWriter
@@ -1842,15 +1764,22 @@ class ArrayWriter:
         Inputs:
             array: 
                 The array to write
+        Keywords:
+
+            NOTE: All the keywords for the constructor can also be sent to the
+            write() method, but note that constructor keywords will "stick".
+
             nlines: 
                 The number of lines to write
-            fields: 
+            fields or columns: 
                 Only print a subset of the fields.
 
-            title:
-                A title to place above the printout during fancy printing.
             header:
-                If True, write a header with the column names  in the first line.
+                Write a header.  If the input is a string, it is written as the
+                header followed by a new line.  If it is boolean True, a header
+                is generated with the column names.  For fancy printing there
+                is always a header.
+
 
             trailer:
                 Text to print after the array data.
@@ -1860,12 +1789,31 @@ class ArrayWriter:
                 each argument. The names are printed above each column when
                 doing fancy printing.
 
+            format: 
+                A format string to apply to every argument.  E.g. format='%15s'
+                Since every arg gets the same format, only %s type formats should
+                be used unless the types are homogeneous.
+
+            title:
+                A title to place above the printout when using fancy printing.
+
+        
+
 
         """
+        
+        self.set_keywords(**keys)
 
         if self._fancy:
-            self.fancy_write(arrin, **keys)
+            self.fancy_write(arr, **keys)
+        else:
+            self.simple_write(arr, **keys)
             return
+
+    def simple_write(self, arrin, **keys):
+
+        # if we are paging, we will store the lines, otherwise this won't be used
+        lines = []
 
         arr=arrin.view(numpy.ndarray)
         allnames = arr.dtype.names
@@ -1878,8 +1826,19 @@ class ArrayWriter:
         nall = len(allnames)
 
         nlines = keys.get('nlines', arr.size)
-        names_in = keys.get('fields', allnames)
-        doheader = keys.get('header',False)
+        if 'fields' in keys:
+            names_in = keys['fields']
+        elif 'columns' in keys:
+            names_in = keys['columns']
+        else:
+            names_in = allnames
+        header = keys.get('header',False)
+        trailer = keys.get('trailer',None)
+
+        altnames = keys.get('altnames',None)
+
+        format = keys.get('format',None)
+
 
         if esutil.misc.isstring(names_in[0]):
             names = names_in
@@ -1892,35 +1851,73 @@ class ArrayWriter:
         
         nnames = len(names)
 
-        if doheader:
-            header = self._delim.join(names)
-            self._fobj.write(header)
-            self._fobj.write('\n')
+        if header == True or esutil.misc.isstring(header):
+            if header==True:
+                # create a header from the names
+                if altnames is not None:
+                    if len(altnames) != nnames:
+                        raise ValueError("altnames must be same length as fields "
+                                         "to print")
+                    header = copy.copy(altnames)
+                else:
+                    header = copy.copy(names)
+                if format is not None:
+                    header = [format % n for n in header]
+                header = self._delim.join(header)
+
+            if self._page:
+                lines.append(header)
+            else:
+                self._fobj.write(header)
+                self._fobj.write('\n')
 
         # we have fields
         astr = ArrayStringifier(delim=self._array_delim,
                                 brackets=self._bracket_arrays)
 
         for i in xrange(arr.size):
+            line=''
             iname=0
             for n in names:
 
                 data = arr[n][i]
                 if data.ndim > 0:
                     strval=astr.stringify(data)
-                    self._fobj.write(strval)
+                    if format is not None:
+                        strval = format % strval
                 else:
-                    self._fobj.write(str(data))
+                    if format is not None:
+                        strval = format % data
+                    else:
+                        strval = str(data)
 
+                line += strval
+                    
                 if iname < (nnames-1):
-                    self._fobj.write(self._delim)
-                else:
-                    self._fobj.write('\n')
+                    line += self._delim
                 iname += 1
+            if self._page:
+                lines.append(line)
+            else:
+                self._fobj.write(line)
+                self._fobj.write('\n')
 
             if i == (nlines-1):
                 break
-        self._fobj.flush()
+
+        if trailer is not None:
+            if self._page:
+                lines.append(trailer)
+            else:
+                self._fobj.write(trailer)
+                self._fobj.write('\n')
+
+
+        if self._page:
+            lines = '\n'.join(lines)
+            pydoc.pager(lines)
+        else:
+            self._fobj.flush()
         
     def fancy_write(self, arrin, **keys):
         array=arrin.view(numpy.ndarray)
@@ -1930,7 +1927,13 @@ class ArrayWriter:
         # if we are paging, we will store the lines, otherwise this won't be used
         lines = []
 
-        fields = keys.get('fields', array.dtype.names)
+        if 'fields' in keys:
+            fields = keys['fields']
+        elif 'columns' in keys:
+            fields = keys['columns']
+        else:
+            fields = array.dtype.names
+
         printnames = keys.get('altnames', fields)
 
         if len(fields) != len(printnames):
@@ -2036,6 +2039,8 @@ class ArrayWriter:
         if self._page:
             lines = '\n'.join(lines)
             pydoc.pager(lines)
+        else:
+            self._fobj.flush()
 
 
 
