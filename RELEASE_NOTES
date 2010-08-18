@@ -1,3 +1,36 @@
+v0.4.1 (2010-08-18)
+----------------------------------------------------------------------
+
+New files:
+    esutil/include/NumpyRecords.h: A header only class for working
+        with record arrays in C++.  (ESS)
+    esutil/include/NumpyVoidVector.h: A header only class for
+        working with numpy vectors in C++.  Unlike NumpyVector.h,
+        which is a template class, the type is determined at
+        runtime.
+    esutil/algorithm.py: New module to hold algorithms.  Currently
+        just playing with sorting algorithms.
+
+Modifications:
+
+    esutil/numpy_util: 
+        * Improvements to ArrayWriter, which is now used for 
+          aprint() (ESS)
+        * Added random_subset() function.
+    esutil/htm/htm.py: cylmatch added (BG)
+    esutil/coords.py:  Added shiftlon to shift a longitutde coordinate,
+        also shiftra which is an alias for shiftlon.
+    esutil/io.py:  write() now supports json.
+    esutil/stomp_util.py: in_window() can run map.Contains() as well
+        as quadrant checking if radius is set (calls quad_check)
+    esutil/plotting.py: Added convenience function bscatter() which
+        uses biggles as plotting engine.
+
+Other:
+Moved exec_process from misc.py to ostools.py
+
+
+
 ----------------------------------------------------------------------
 v0.4.0 (2010-04-23)  Lots of major changes and additions.
 
