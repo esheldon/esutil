@@ -897,7 +897,7 @@ def shiftra(ra, shift=None, wrap=True):
             [-180,180]
 
     """
-    return shiftlon(ra, shift=None, wrap=True)
+    return shiftlon(ra, shift=shift, wrap=wrap)
 
 
 
