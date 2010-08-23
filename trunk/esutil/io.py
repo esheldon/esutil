@@ -255,6 +255,12 @@ def write(fobj, data, **keywords):
         FITS
             Flexible Image Transport System
             NOTE: requires the patched version of pyfits that comes with esutil.
+        REC
+            Simple ascii header followed by data in binary or text form. These
+            files can be written/read using the esutil.sfile module.  Supports
+            writing in faster native byte ordering for binary data and
+            writing/reading of recarrays (numpy arrays with fields) to ascii
+            and binary.  Supports reading sub-selections of rows and columns.
         JSON
             JavaScript Object Notation.  Less flexible than XML but more useful
             in most practical situations such as storing inhomogeneous data in
@@ -269,6 +275,8 @@ def write(fobj, data, **keywords):
         write_fits(fobj, data, **keywords)
     elif type == 'json':
         json_util.write(data, fobj)
+    elif type == 'rec':
+        write_rec(fobj, data, **keywords)
     else:
         raise ValueError("Need to implement writing file type: %s\n" % type)
 
@@ -381,6 +389,10 @@ def write_fits(fobj, data, **keys):
 
 
     pyfits.writeto(fobj, data, **keys)
+
+def write_rec(fobj, data, **keys):
+    sfile.write(data, fobj, **keys)
+
 
 
 def read_rec(fobj, **keywords):
