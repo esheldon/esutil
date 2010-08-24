@@ -1020,8 +1020,7 @@ class SFile(object):
 
 
 
-def write(array, outfile, header=None, delim=None, 
-          padnull=False, ignorenull=False, append=False, verbose=False):
+def write(array, outfile, **keys):
     """
     Name:
         sfile.write()
@@ -1106,6 +1105,12 @@ def write(array, outfile, header=None, delim=None,
     """
 
 
+    header = keys.get('header',None)
+    delim  = keys.get('delim',None)
+    padnull = keys.get('padnull',False)
+    ignorenull = keys.get('ignorenull',False)
+    append = keys.get('append',False)
+    verbose = keys.get('verbose',False)
 
     #def write(array, outfile, header=None, delim=None, 
     #      padnull=False, ignorenull=False, append=False):
@@ -1122,8 +1127,7 @@ def write(array, outfile, header=None, delim=None,
 
     return
 
-def read(infile, rows=None, fields=None, columns=None, 
-         header=False, view=None, memmap=False, verbose=False):
+def read(infile, **keys):
     """
     sfile.read()
 
@@ -1169,8 +1173,13 @@ def read(infile, rows=None, fields=None, columns=None,
         Switched over to new header format.  2009-10-38, Erin Sheldon, BNL.
     """
 
-    #def read(infile, rows=None, fields=None, columns=None, norecfile=False,
-    #         header=False, view=None, memmap=False):
+    rows = keys.get('rows',None)
+    fields = keys.get('fields',None)
+    columns = keys.get('columns',None)
+    header = keys.get('header',False)
+    view = keys.get('view',None)
+    memmap = keys.get('memmap',False)
+    verbose = keys.get('verbose',False)
 
     sf = SFile(infile, verbose=verbose)
     if memmap:
