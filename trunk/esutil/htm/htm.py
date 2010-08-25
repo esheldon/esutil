@@ -259,8 +259,9 @@ class HTM(htmc.HTMC):
             ra1, dec1, z1: RA, Dec and z values for the first catalog
             ra2, dec2, z2: As above for the second catalog.
 
-          radius: angular radius of search aperture.  Can either be a scalar 
-                  or an array of values the same length as cat1.
+          radius: angular radius of search aperture in degrees.  
+                  Can either be a scalar or an array of values the 
+                  same length as cat1.
 
           dz: half-length of the search cylinder.  Can either be a scalar or
               an array of values the same length as cat1.
@@ -279,9 +280,10 @@ class HTM(htmc.HTMC):
                 1 and ignored if unique = True.
 
             radius: 
-                angular radius of search aperture.  Can either be a scalar or
-                an array of values the same length as cat1.
-            dz: half-length of the search cylinder.  Can either be a scalar or
+                angular radius of search aperture in degrees.  Can either be a 
+                scalar or an array of values the same length as cat1.
+            dz: 
+                half-length of the search cylinder.  Can either be a scalar or
                 an array of values the same length as cat1.
 
             unique: 
