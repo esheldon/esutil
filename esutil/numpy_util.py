@@ -1725,6 +1725,9 @@ class ArrayWriter:
             if self._bracket_arrays:
                 # default to commas in arrays when we are bracketing
                 self._array_delim = ','
+            else:
+                # otherwise use the same as delim
+                self._array_delim = self._delim
         else:
             self._array_delim = keys['array_delim']
 
