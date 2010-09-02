@@ -1124,7 +1124,7 @@ def write(array, outfile, **keys):
     sf=SFile(outfile, mode=mode, delim=delim, 
              padnull=padnull, ignorenull=ignorenull, verbose=verbose)
     sf.write(array, header=header)
-
+    sf.close()
     return
 
 def read(infile, **keys):
