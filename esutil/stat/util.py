@@ -626,7 +626,8 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
 
 
 
-def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
+def sigma_clip(arrin, niter=4, nsig=4, extra={}, 
+               verbose=False, silent=False):
     """
     NAME:
       sigma_clip()
@@ -655,6 +656,7 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
     REVISION HISTORY:
       Converted from IDL: 2006-10-23. Erin Sheldon, NYU
       Minor bug fix to error messaging: 2010-05-28. Brian Gerke, SLAC
+      Added silent keyword, to shut off error messages.  BFG 2010-09-13
 
     """
     from sys import stdout, stderr
@@ -674,7 +676,7 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={}, verbose=False):
 
         w, = numpy.where( (numpy.abs(arr[index]) - m) < clip )
 
-        if w.size == 0:
+        if (w.size == 0) and (not silent):
             stderr.write("nsig too small. Everything clipped on "
                          "iteration %d\n" % (i+1))
             return m,s
