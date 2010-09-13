@@ -226,7 +226,7 @@ class HTM(htmc.HTMC):
 
     def cylmatch(self, ra1, dec1, z1, ra2, dec2, z2, 
                  radius, dz,  
-                 maxmatch = 1, 
+                 maxmatch = 50, 
                  unique=False, nkeep=1, 
                  **kw):
 
@@ -250,7 +250,7 @@ class HTM(htmc.HTMC):
 
             matchind, adist, zdist = cylmatch(ra1, dec1, z1, ra2, dec2, z2,
                                               radius., dz, 
-                                              maxmatch = 1, 
+                                              maxmatch = 50, 
                                               unique=False, nkeep=1, 
                                               **kw)
 
@@ -270,14 +270,22 @@ class HTM(htmc.HTMC):
         Keywords:
 
             maxmatch: 
-                Maximum number of neighbors to find within the search radius.
+                Maximum number of neighbors to find within the
+                search radius.  Note that this maximum is applied to
+                the *total* number of matches within the search
+                aperture, before applying the cut in the z parameter.
+                Therefore, one wants this to be something reasonably
+                large (much larger than nkeep) to ensure that matches
+                within the dz cut are included.  However, larger
+                values of magmatch may create memory issues for very
+                large catalogs.  Default value: 10.
 
             nkeep: 
                 Number of matches to keep (and return) for each object in cat1
                 (M in the summary description above). If the number of matches
                 is less than nkeep then the rest of the  output arrays will be
                 filled with the bad value -999.  nkeep is automatically set to
-                1 and ignored if unique = True.
+                1 and ignored if unique = True. Default value: 1.
 
             radius: 
                 angular radius of search aperture in degrees.  Can either be a 
@@ -305,9 +313,12 @@ class HTM(htmc.HTMC):
             each element of cat1, with a maximum of nkeep matches returned per
             element.
 
-        adist: angular distance to each of these matches
+        adist: 
+            angular distance to each of these matches
 
-        zdist = distance to each of these matches in the z dimension.  
+        zdist: 
+            distance to each of these matches in the z dimension 
+            (catalog 1 minus catalog 2).  
 
 
         Revision History:
@@ -334,12 +345,12 @@ class HTM(htmc.HTMC):
             nkeep = 1
 
 
-
+        
         #Match up catalogs on the sky.
         m1, m2, d12 = self.match(ra1, dec1, 
                                  ra2, dec2, radius,
                                  maxmatch = maxmatch, **kw)
-
+        
 
         #Now limit to matches that are within +/- dz of each object
 
