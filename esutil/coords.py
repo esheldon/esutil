@@ -38,6 +38,12 @@
                     y = sin(pi/2-dec)*sin(ra)
                     z = cos(pi/2-dec)
 
+        xyz2eq: 
+            inverse of eq2xyz
+
+        sphdist:
+            Calculate the arc length between two sets of points on the sphere.
+            Currently only takes ra,dec.
 
         shiftlon:
             shift the input longitude.  By default wrap the coordinate to
@@ -448,11 +454,29 @@ def xyz2eq(xin,yin,zin):
 # Not good for lensing, we also need the angle in the ra-dec or whatever
 # coords
 def sphdist(ra1, dec1, ra2, dec2):
+    """
+    Name:
+        sphdist
+    Purpose:
+        Get the arc length between two points on the unit sphere
+    Calling Sequence:
+        d = sphdist(ra1,dec1,ra2,dec2)
+    Inputs:
+        ra1,dec1,ra2,dec2: Scalars or arrays in degrees.  Must be
+            the same length
+    """
     
     x1,y1,z1 = eq2xyz(ra1, dec1)
     x2,y2,z2 = eq2xyz(ra2, dec2)
 
     costheta = x1*x2 + y1*y2 + z1*z2
+    w,=where(costheta > 1.0)
+    if w.size > 0:
+        costheta[w] = 1.0
+
+    w,=where(costheta < -1.0)
+    if w.size > 0:
+        costheta[w] = -1.0
     theta = arccos(costheta)
 
     return theta
