@@ -8,6 +8,23 @@ import esutil
 
 # biggles plotting routines.  mostly convenience functions for interactive work
 
+def bbox(x0, x1, y0, y1, **keys):
+    """
+    Name:
+        bbox
+    Purpose:
+        Return a biggles Curve representing a box.
+    Usage:
+        box = bbox(minx,maxx,miny,maxy)
+        plt.add( box )
+        plt.show()
+    """
+    import biggles
+    bx = numpy.array( [x0,x0,x1,x1,x0], dtype='f8' )
+    by = numpy.array( [y0,y1,y1,y0,y0], dtype='f8' )
+
+    return biggles.Curve(bx, by, **keys)
+
 def bscatter(x, y, show=True, plt=None, **keywords):
     """
     Name:
@@ -421,3 +438,44 @@ def plotrand(x, y, marker, frac=0.1, plt=None, backend=None, params=None, **keys
     plt.plot(x[ind],y[ind],marker,**keys)
 
     return plt
+
+def transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys, **keys):
+    """
+    Name:
+        transform_box
+    Purpose:
+        Transform the box specified in system1 to system2.  npts points will be
+        used to represent each line segment, and these will be transformed
+        to the new system.
+
+    Calling Sequence:
+        bx, by = transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys,
+                               npts=40)
+
+        plt = biggles.FramedPlot()
+        plt.add( biggles.Curve(bx, by, color='red') )
+        plt.show()
+    """
+
+    npts = keys.get('npts',40)
+    blon = numpy.zeros( 4*npts, dtype='f8' )
+    blat = numpy.zeros( 4*npts, dtype='f8' )
+
+    blon[0:npts] = lonmin
+    blat[0:npts] = esutil.numpy_util.arrscl(numpy.arange(npts), latmin, latmax)
+
+    blon[npts:2*npts] = esutil.numpy_util.arrscl(numpy.arange(npts), lonmin, lonmax)
+    blat[npts:2*npts] = latmax
+
+    blon[2*npts:3*npts] = lonmax
+    blat[2*npts:3*npts] = esutil.numpy_util.arrscl(numpy.arange(npts), latmax, latmin)
+
+    blon[3*npts:4*npts] = esutil.numpy_util.arrscl(numpy.arange(npts), lonmax, lonmin)
+    blat[3*npts:4*npts] = latmin
+
+    if fromsys == 'eq' and tosys in ['survey','sdss']:
+        return esutil.coords.eq2sdss(blon,blat)
+    if fromsys in ['survey','sdss'] and tosys == 'eq':
+        return esutil.coords.sdss2eq(blon,blat)
+    else:
+        raise ValueError("dont' yet support '%s' to '%s'" % (fromsys,tosys))

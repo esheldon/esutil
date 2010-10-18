@@ -68,6 +68,14 @@ class HTM(htmc.HTMC):
                                 minid=None,
                                 maxid=None,
                                 file=None)
+
+              To speed up successive calls with the same ra2,dec2, you
+              can use:
+                  htmrev2,minid,maxid = h.match_prepare(ra2,dec2)
+              Then
+                  m1,m2,e12 = h.match(ra1,dec1,ra2,dec2,radius,
+                                      htmrev2=htmrev2,minid=minid,maxid=maxid)
+
         
         Inputs:
             ra1,dec1,ra2,dec2: 
@@ -192,22 +200,23 @@ class HTM(htmc.HTMC):
             raise ValueError("require size(ra)==size(dec) for "
                              "both sets of inputs")
 
-        if htmid2 is None:
-            if verbose:
-                stdout.write("looking up ids\n");stdout.flush()
-            htmid2 = self.lookup_id(ra2, dec2)
-            minid = htmid2.min()
-            maxid = htmid2.max()
-        else:
-            if minid is None:
+        if (htmrev2 is None) or (minid is None) or (maxid is None):
+            if htmid2 is None:
+                if verbose:
+                    stdout.write("looking up ids\n");stdout.flush()
+                htmid2 = self.lookup_id(ra2, dec2)
                 minid = htmid2.min()
-            if maxid is None:
                 maxid = htmid2.max()
+            else:
+                if minid is None:
+                    minid = htmid2.min()
+                if maxid is None:
+                    maxid = htmid2.max()
 
-        if htmrev2 is None:
-            if verbose:
-                stdout.write("Getting reverse indices\n");stdout.flush()
-            hist2, htmrev2 = stat.histogram(htmid2-minid,rev=True)
+            if htmrev2 is None:
+                if verbose:
+                    stdout.write("Getting reverse indices\n");stdout.flush()
+                hist2, htmrev2 = stat.histogram(htmid2-minid,rev=True)
 
         if verbose:
             stdout.write("calling cmatch\n");stdout.flush()
@@ -221,6 +230,20 @@ class HTM(htmc.HTMC):
                            maxid,
                            maxmatch,
                            file)
+
+    def match_prepare(self, ra, dec, verbose=False):
+        if verbose:
+            stdout.write("looking up ids\n")
+
+        htmid = self.lookup_id(ra, dec)
+        minid = htmid.min()
+        maxid = htmid.max()
+
+        if verbose:
+            stdout.write("Getting reverse indices\n");stdout.flush()
+        hist, htmrev = stat.histogram(htmid-minid,rev=True)
+
+        return htmrev, minid, maxid
 
 
 
