@@ -1,6 +1,12 @@
 """
 Utilities for using and manipulating numerical python arrays (NumPy).
 
+    where1(logical):
+        A wrapper for where for 1-d arrays.  It is the equivalent of
+            w, = where(logical expression)
+        E.g.
+            w=where1( (x > 0.1) & (x < 1.5) )
+
     ahelp(array, recurse=False, pretty=True)
         Print out a formatted description of the input array.   If the array
         has fields, individual descriptions are printed for each field.  This
@@ -154,6 +160,24 @@ try:
 except:
     have_numpy=False
 
+def where1(conditional_expression):
+    """
+    Name:
+        where1
+
+    Calling Sequence:
+        w = where1(conditional_expression)
+
+    Purpose:
+        A wrapper for numpy.where() for 1-d arrays.  It is the equivalent of
+            w, = where(logical expression)
+
+        E.g.
+            w=where1( (x > 0.1) & (x < 1.5) )
+            print x[w]
+    """
+    w, = numpy.where(conditional_expression)
+    return w
 
 def ahelp(array, recurse=False, pretty=True, index=0, page=False):
     """
@@ -331,7 +355,7 @@ def aprint(array, **keys):
 
     Calling Sequence:
         aprint(array, **keywords)
-    
+
     Inputs:
         array: A numpy array with fields.
 
@@ -1878,7 +1902,7 @@ class ArrayWriter:
         astr = ArrayStringifier(delim=self._array_delim,
                                 brackets=self._bracket_arrays)
 
-        for i in xrange(arr.size):
+        for i in xrange(nlines):
             line=''
             iname=0
             for n in names:
