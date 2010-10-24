@@ -179,7 +179,7 @@ def where1(conditional_expression):
     w, = numpy.where(conditional_expression)
     return w
 
-def ahelp(array, recurse=False, pretty=True, index=0, page=False):
+def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     """
     Name:
       ahelp()
@@ -222,8 +222,14 @@ def ahelp(array, recurse=False, pretty=True, index=0, page=False):
     """
 
 
-    if not hasattr(array, 'dtype'):
-        raise ValueError("input must be an array")
+    # make sure the data can be viewed as a
+    # numpy ndarray.  pyfits in particular is
+    # a problem case that we must get a view of
+    # as ndarray.
+    if not hasattr(array_in,'view'):
+        raise ValueError("data must be an array or have the .view method")
+
+    array = array_in.view(numpy.ndarray)
 
     names = array.dtype.names
     descr = array.dtype.descr
