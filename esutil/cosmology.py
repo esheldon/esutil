@@ -102,11 +102,11 @@ license="""
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 """
 
+from sys import stdout
+
 try:
     import numpy
     from numpy import sqrt, sin, sinh, log10
-
-    have_numpy=True
 
     # Global variables for Ez integration.  
     _EZI_XXi=numpy.array([])
@@ -118,7 +118,7 @@ try:
 
 
 except:
-    have_numpy=False
+    stdout.write("Could not import numpy")
 
 import esutil.integrate
 
@@ -149,6 +149,7 @@ class Cosmo(object):
         self._ezi_run_gauleg()
         self._vi_run_gauleg()
 
+        self._four_ip_over_c_squared = four_ip_over_c_squared(dunits='Mpc')
 
     def DH(self):
         """
@@ -167,7 +168,7 @@ class Cosmo(object):
                                          vnpts=10)
             d = cosmo.DH()
         """
-        return 2.9979e5/100.0/self.h
+        return 2.99792458e5/100.0/self.h
 
 
     def Dc(self, z1in, z2in):
@@ -458,10 +459,11 @@ class Cosmo(object):
         NAME:
             Ezinv_integral
         PURPOSE:
-            Integrate kernel 1/E(z) used for distance calculations in FRW
-            universe. Gauss-legendre integration.  Default of npts=5 is
-            actually good to 0.05% to redshift 1 because it is such a slow
-            function.
+            Integrate kernel 1/E(z) used for distance calculations in
+            FRW universe. Gauss-legendre integration. Default of npts=5
+            is actually good to 1.e-8 between redshift 0-1 because it is
+            such a slow function.
+
         CALLING SEQUENCE:
             ezint = Ezinv_integral(z1, z2)
         INPUTS:
@@ -478,6 +480,86 @@ class Cosmo(object):
         ezint = f1 * ((ezivals*self.wwi).sum())
         return abs(ezint)
 
+
+    def sigmacritinv(self, zl, zs):
+        """
+        Method:
+            sigmacritinv
+        Purpose:
+            Calculate the inverse critical density for lensing. The units
+            are pc^2/Msun
+        usage: 
+            c=Cosmo(keywords..)
+            sc = c.sigmacritinv(zl, zs)
+
+        Possible inputs:
+            zl scalar, zs scalar
+            zl scalar, zs vector
+            zl vector, zs scalar
+            zl vector, zs vector of the same length
+
+        """
+        
+        zl = numpy.array(zl, ndmin=1, copy=False)
+        zs = numpy.array(zs, ndmin=1, copy=False)
+
+        if (zl.size != 1) and (zs.size != 1):
+            if zl.size != zs.size:
+                raise ValueError("Possible z input:\n"
+                                 "  zl scalar, zs scalar"
+                                 "  zl scalar, zs vector"
+                                 "  zl vector, zs scalar"
+                                 "  zl vector, zs vector of the same length")
+
+
+        # units are Mpc
+        dl  = self.Da(0.0, zl)
+        ds  = self.Da(0.0, zs)
+        dls = self.Da(zl, zs)
+
+        D = dls*dl/ds   # Mpc/h
+        scinv = D*self._four_ip_over_c_squared
+
+        w,=numpy.where(scinv < 0.0)
+        if w.size > 0:
+            scinv[w] = 0.0
+
+        return scinv
+
+def four_ip_over_c_squared(dunits='Mpc'):
+    """
+    4*pi*G/c^2 Dl * Dls/Ds has units of m^2/kg
+
+    we want units of pc^2/kg and Dl in units specified
+    by the dunits keyword
+    """
+
+    from math import pi as PI
+
+    # we want the formula to return pc^2/Msun
+    C=2.99792458e8 # m/s
+    GNEWTON=6.67428e-11 # m^3/kg/s^2
+
+    KG_PER_SUN=1.98892e30 # kg
+    M_PER_PARSEC=3.08568025e16
+
+    # m^2/kg
+    fourpiGoverc2 = 4.0*PI*GNEWTON/(C**2)
+
+    if dunits == 'meters':
+        return fourpiGoverc2
+    else:
+        # pc^2/msun, but would require Dl in parsecs
+        fourpiGoverc2 *= KG_PER_SUN/M_PER_PARSEC
+
+        if dunits == 'kpc':
+            return fourpiGoverc2*1.e3
+        elif dunits == 'Mpc':
+            return fourpiGoverc2*1.e6
+        elif dunits == 'Gpc':
+            return fourpiGoverc2*1.e9
+        else:
+            raise ValueError("Don't support dunits='%s'" % dunits)
 
 
 
@@ -533,7 +615,7 @@ def Ezinv_integral(z1, z2, omega_m, omega_l, omega_k, npts=5):
     PURPOSE:
         Integrate kernel 1/E(z) used for distance calculations in FRW
         universe. Gauss-legendre integration.  Defaults to npts=5 which
-        is actually good to 0.05% to redshift 1 because it is such a slow
+        is actually good to 1.e-8 to redshift 1 because it is such a slow
         function.
     CALLING SEQUENCE:
         ezint = Ezinv_integral(z1, z2, omega_m, omega_l, omega_k, npts=5)
@@ -541,7 +623,7 @@ def Ezinv_integral(z1, z2, omega_m, omega_l, omega_k, npts=5):
         z1, z2: The redshift interval, scalars.
         omega_m, omega_l, omega_k: Density parameters relative to critical.
         h: Hubble parameter. Default 1.0
-        npts: Number of points in the integration. Default 5, good to 0.05%
+        npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
 
@@ -586,7 +668,7 @@ def Dc(z1in, z2in, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the integration. Default 5, good to 0.05%
+        npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
   
@@ -649,7 +731,7 @@ def Dm(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the integration. Default 5, good to 0.05%
+        npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
     (omega_m, omega_l, omega_k) = _extract_omegas(omega_m, omega_l, omega_k, 
@@ -686,7 +768,7 @@ def Da(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the integration. Default 5, good to 0.05%
+        npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
     z1 = numpy.array(zmin, ndmin=1, copy=False)
@@ -718,7 +800,7 @@ def Dl(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the integration. Default 5, good to 0.05%
+        npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
     return Da(zmin,zmax,omega_m,omega_l,omega_k,h,flat,npts)*(1.0+zmax)**2
@@ -740,7 +822,7 @@ def Distmod(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the integration. Default 5, good to 0.05%
+        npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
 
@@ -768,7 +850,7 @@ def dV(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the integration. Default 5, good to 0.05%
+        npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
 
@@ -802,7 +884,7 @@ def Vold(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
         npts: Number of points in the distance integration. Default 5, good to 
-            0.05% to redshift 1.
+            1.e-8 to redshift 1.
     """
 
     # just import here since we don't use this old version any more
@@ -835,7 +917,7 @@ def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
         npts: Number of points in the distance integration. Default 5, good to 
-            0.05% to redshift 1.
+            1.e-8 to redshift 1.
         vnpts: Number of points in the volume integration. Default is 10
         comoving: Use comoving coords, default True.
     """
