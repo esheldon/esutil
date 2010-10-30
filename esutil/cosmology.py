@@ -941,4 +941,94 @@ def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
 
 
 
+def test_sigmacritinv_npts(epsfile=None):
+    """
+    Test accuracy of sigmacrit inv as a function of number
+    of points
+    """
 
+    from biggles import FramedPlot, PlotKey, PlotLabel, Curve, FramedArray, Table
+
+    c1000 = Cosmo(npts=1000)
+    c5 = Cosmo(npts=5)
+    c4 = Cosmo(npts=4)
+    c3 = Cosmo(npts=3)
+    c2 = Cosmo(npts=2)
+
+
+    tab = Table( 2, 2 )
+    tab.uniform_limits = 0
+    tab.cellspacing = 1
+
+    p5 = FramedPlot()
+    p5.xlabel = 'zsource'
+    p5.ylabel = '% diff'
+    p4 = FramedPlot()
+    p4.xlabel = 'zsource'
+    p4.ylabel = '% diff'
+    p3 = FramedPlot()
+    p3.xlabel = 'zsource'
+    p3.ylabel = '% diff'
+    p2 = FramedPlot()
+    p2.xlabel = 'zsource'
+    p2.ylabel = '% diff'
+    
+    l5 = PlotLabel(0.2,0.7,'npts = 5')
+    p5.add(l5)
+    l4 = PlotLabel(0.2,0.1,'npts = 4')
+    p4.add(l4)
+    l3 = PlotLabel(0.2,0.9,'npts = 3')
+    p3.add(l3)
+    l2 = PlotLabel(0.2,0.9,'npts = 2')
+    p2.add(l2)
+
+
+    colors = ['black','violet','blue','green','orange','magenta','firebrick','red']
+    zlvals = numpy.arange(0.1,0.9,0.1)
+    if zlvals.size != len(colors):
+        raise ValueError("mismatch colors and zlvals")
+
+
+
+    i=0
+
+    allc5 = []
+    for zl in zlvals:
+
+        zs = numpy.arange(zl+0.01, 2.0, 0.01)
+
+        scinv = c1000.sigmacritinv(zl, zs)
+        scinv5 = c5.sigmacritinv(zl, zs)
+        scinv4 = c4.sigmacritinv(zl, zs)
+        scinv3 = c3.sigmacritinv(zl, zs)
+        scinv2 = c2.sigmacritinv(zl, zs)
+
+        curve5 = Curve(zs, 100*(scinv-scinv5)/scinv, color=colors[i])
+        curve5.label = 'zlens: %0.2f' % zl
+        allc5.append(curve5)
+        p5.add(curve5)
+
+        curve4 = Curve(zs, 100*(scinv-scinv4)/scinv, color=colors[i])
+        p4.add(curve4)
+
+        curve3 = Curve(zs, 100*(scinv-scinv3)/scinv, color=colors[i])
+        p3.add(curve3)
+
+        curve2 = Curve(zs, 100*(scinv-scinv2)/scinv, color=colors[i])
+        p2.add(curve2)
+
+        i+=1
+
+    key = PlotKey(0.15,0.5,allc5)
+    p5.add(key)
+
+
+    tab[0,0] = p5
+    tab[0,1] = p4
+    tab[1,0] = p3
+    tab[1,1] = p2
+
+    tab.show()
+
+    if epsfile is not None:
+        tab.write_eps(epsfile)
