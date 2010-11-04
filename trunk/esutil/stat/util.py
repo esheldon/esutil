@@ -60,7 +60,7 @@ except:
 import esutil.numpy_util as numpy_util
 
 
-def histogram(data_input, binsize=1., min=None, max=None, rev=False, 
+def histogram(data_input, binsize=1., nbin=None, min=None, max=None, rev=False, 
               extern=True, use_weave=False, weights=None, more=False):
     """
     Name:
@@ -178,8 +178,11 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
     else:
         dmax = data[s[-1]]
 
-
-    bsize = float(binsize)
+    if nbin is None:
+        bsize = float(binsize)
+        nbin = numpy.int64( (dmax-dmin)/bsize ) + 1
+    else:
+        bsize = float(dmax-dmin)/nbin
 
     if dowhere:
         # where will preserve order, so subscript with s
@@ -188,7 +191,6 @@ def histogram(data_input, binsize=1., min=None, max=None, rev=False,
             raise ValueError("No data in specified min/max range\n")
         s = s[w]
 
-    nbin = numpy.int64( (dmax-dmin)/bsize ) + 1
 
 
     if extern:
