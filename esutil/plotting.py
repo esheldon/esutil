@@ -109,7 +109,7 @@ def bscatter(x, y, show=True, plt=None, **keywords):
 
     return plt
 
-def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
+def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**keywords):
     """
     Name:
         bhist
@@ -141,11 +141,14 @@ def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
     import biggles
     hout = esutil.stat.histogram(x, 
                                  binsize=binsize, 
+                                 nbin=nbin, 
                                  min=min,
                                  max=max,
                                  weights=weights,
                                  more=True)
     
+    if nbin is not None:
+        binsize = hout['low'][1] - hout['low'][0]
 
     if plt is None:
         plt = biggles.FramedPlot()
@@ -156,8 +159,12 @@ def bhist(x, binsize=1.0,min=None,max=None,weights=None,plt=None,**keywords):
         if color is not None:
             pkeywords['color'] = color
 
-    ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize, 
-                         **pkeywords)
+    if weights is not None:
+        ph=biggles.Histogram(hout['whist'], x0=hout['low'][0], binsize=binsize, 
+                             **pkeywords)
+    else:
+        ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize, 
+                             **pkeywords)
 
     plt.add(ph)
 

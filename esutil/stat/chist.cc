@@ -88,9 +88,6 @@ PyObject* chist(
     }
 
 
-
-
-
     if (dorev) {
         PyObject* output_tuple = PyTuple_New(2);
 		PyTuple_SetItem(output_tuple, 0, hist.getref());
