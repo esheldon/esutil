@@ -2110,6 +2110,10 @@ class ArrayWriter:
         if self._close_the_fobj:
             self._fobj.close()
 
+def arr2str(arr, delim=',', brackets=False):
+    astr = ArrayStringifier(delim=delim,brackets=brackets)
+    return astr.stringify(arr)
+
 class ArrayStringifier:
     """
     Stringify a simple array using a delimiter and

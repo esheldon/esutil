@@ -234,10 +234,10 @@ def histogram(data_input, binsize=1., nbin=None, min=None, max=None, rev=False,
         nhist = len(hist)
 
         low = numpy.arange(nhist, dtype='f8')
-        low = dmin + low*binsize
+        low = dmin + low*bsize
 
-        high = low + binsize
-        center = low + 0.5*binsize
+        high = low + bsize
+        center = low + 0.5*bsize
 
         output['low'] = low
         output['high'] = high
