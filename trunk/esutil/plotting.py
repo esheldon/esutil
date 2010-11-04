@@ -120,6 +120,9 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
     Calling Sequence:
         bhist(x, 
               binsize=1.0,
+              nbin=None,
+              weights=None,
+              gethist=False,
               min=None,
               max=None,
               xrange=None,
@@ -197,7 +200,10 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         if show:
             plt.show()
 
-    return plt
+    if gethist:
+        return plt,hout
+    else:
+        return plt
 
 def bwhiskers(xin, yin, uin, vin, 
               scale=1.0, 
