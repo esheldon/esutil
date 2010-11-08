@@ -62,7 +62,7 @@ def bscatter(x, y, show=True, plt=None, **keywords):
     if plt is None:
         plt = biggles.FramedPlot()
 
-    type = keywords.get('type', 'diamond')
+    type = keywords.get('type', 'filled circle')
 
     pkeywords = {}
     if 'color' in keywords:
@@ -78,6 +78,10 @@ def bscatter(x, y, show=True, plt=None, **keywords):
         p_xerr=biggles.SymmetricErrorBarsX(x, y, keywords['yerr'], **pkeywords)
         plt.add(p_xerr)
 
+    if 'xlog' in keywords:
+        plt.xlog = keywords['xlog']
+    if 'ylog' in keywords:
+        plt.xlog = keywords['ylog']
     if 'xrange' in keywords:
         plt.xrange = keywords['xrange']
     if 'yrange' in keywords:
@@ -200,6 +204,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         if show:
             plt.show()
 
+    #gethist = keywords.get('gethist',False)
     if gethist:
         return plt,hout
     else:
