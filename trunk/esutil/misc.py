@@ -40,7 +40,7 @@ license="""
 
 """
 
-
+import os
 from sys import stdout, stderr
 
 try:
@@ -127,6 +127,8 @@ def colprint(*args, **keys):
         if isinstance(f, file):
             fobj = f
         else:
+            f = os.path.expandvars(f)
+            f = os.path.expanduser(f)
             fobj = open(f,'w')
 
     # make sure all the arguments are the same length.
