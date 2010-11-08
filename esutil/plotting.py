@@ -81,7 +81,7 @@ def bscatter(x, y, show=True, plt=None, **keywords):
     if 'xlog' in keywords:
         plt.xlog = keywords['xlog']
     if 'ylog' in keywords:
-        plt.xlog = keywords['ylog']
+        plt.ylog = keywords['ylog']
     if 'xrange' in keywords:
         plt.xrange = keywords['xrange']
     if 'yrange' in keywords:
