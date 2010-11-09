@@ -173,6 +173,9 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize, 
                              **pkeywords)
 
+    label = keywords.get('label',None)
+    if label is not None:
+        ph.label = label
     plt.add(ph)
 
     if 'xrange' in keywords:
@@ -204,7 +207,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         if show:
             plt.show()
 
-    #gethist = keywords.get('gethist',False)
+    gethist = keywords.get('gethist',False)
     if gethist:
         return plt,hout
     else:
