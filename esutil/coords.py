@@ -97,6 +97,7 @@ except:
 
 import math
 PI=math.pi
+HALFPI = PI/2.0
 D2R = PI/180.0
 R2D = 1.0/D2R
 
@@ -421,8 +422,8 @@ def eq2xyz(ra, dec, dtype='f8'):
         This follows the same convention as the STOMP package.
     """
 
-    theta = numpy.array(ra, ndmin=1, copy=False, dtype=dtype)
-    phi = numpy.array(dec, ndmin=1, copy=False, dtype=dtype)
+    theta = numpy.array(ra, ndmin=1, copy=True, dtype=dtype)
+    phi = numpy.array(dec, ndmin=1, copy=True, dtype=dtype)
 
     # in place is more efficient
     theta *= D2R
@@ -482,6 +483,37 @@ def sphdist(ra1, dec1, ra2, dec2):
     return theta
 
 
+def gcirc(ra1,dec1,ra2,dec2,getangle=False):
+    ra1  = numpy.array(ra1, dtype='f8',ndmin=1,copy=False)
+    dec1 = numpy.array(dec1,dtype='f8',ndmin=1,copy=False)
+    ra2  = numpy.array(ra2, dtype='f8',ndmin=1,copy=False)
+    dec2 = numpy.array(dec2,dtype='f8',ndmin=1,copy=False)
+
+    sindec1 = sin(dec1*D2R)
+    cosdec1 = cos(dec1*D2R)
+
+    sindec2 = sin(dec2*D2R)
+    cosdec2 = cos(dec2*D2R)
+
+    radiff = (ra2-ra1)*D2R
+    cosradiff = cos(radiff)
+    cosdis = sindec1*sindec2 + cosdec1*cosdec2*cosradiff
+
+    ww,=where(cosdis < -1.)
+    if ww.size > 0:
+        cosdis[ww] = -1
+    ww,=where(cosdis >  1.)
+    if ww.size > 0:
+        cosdis[ww] =  1
+
+    dis = arccos(cosdis)
+
+    if getangle:
+        theta = arctan2( sin(radiff), 
+                         (sindec1*cosradiff - cosdec1*sindec2/cosdec2) ) - HALFPI
+        return dis,theta
+    else:
+        return dis
 
 #
 # SDSS specific conversions
