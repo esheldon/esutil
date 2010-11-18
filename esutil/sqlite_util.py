@@ -17,6 +17,292 @@ try:
 except:
     have_numpy=False
 
+_np2col={}
+
+_np2col['i1'] = 'int8'
+_np2col['int8'] = 'int8'
+_np2col['i2'] = 'int16'
+_np2col['int16'] = 'int16'
+_np2col['i4'] = 'int32'
+_np2col['int32'] = 'int32'
+_np2col['i8'] = 'int64'
+_np2col['int64'] = 'int64'
+_np2col['f4'] = 'float32'
+_np2col['float32'] = 'float32'
+_np2col['f8'] = 'float64'
+_np2col['float64'] = 'float64'
+
+"""
+_np2col['i1'] = 'integer'
+_np2col['int8'] = 'integer'
+_np2col['i2'] = 'integer'
+_np2col['int16'] = 'integer'
+_np2col['i4'] = 'integer'
+_np2col['int32'] = 'integer'
+_np2col['i8'] = 'integer'
+_np2col['int64'] = 'integer'
+_np2col['f4'] = 'real'
+_np2col['float32'] = 'real'
+_np2col['f8'] = 'real'
+_np2col['float64'] = 'real'
+"""
+
+
+class SqliteConnection(sqlite.Connection):
+    """
+    Inherits from the Connection class of sqlite and adds some functionality
+    """
+
+    def __init__(self, dbfile, **keys):
+
+        dbpath=esutil.ostools.expand_path(dbfile)
+        sqlite.Connection.__init__(self, dbpath, **keys)
+        self.row_factory = sqlite.Row
+        self.dbfile = dbpath
+
+    def describe(self, typ=None, tablename=None):
+        """
+        Describe the database or the table if tablename is given.
+
+        currently does nothing if tablename is not sent.
+
+        indices on tables not yet implemented.
+        """
+
+        if tablename is not None:
+            # describe this table
+            info = self.table_info(tablename)
+
+            stdout.write("%-15s %15s\n" % ("field","type"))
+            stdout.write("-"*32+"\n")
+            for row in info:
+                stdout.write("%-15s %15s\n" % (row['name'],row['type']))
+
+        else:
+            # describe all tables
+            infolist = self.info(typ=typ)
+            head = "%-15s %15s %15s %s" %  ('type','name','tbl_name','sql')
+            stdout.write(head) 
+            stdout.write("\n" + "-"*len(head)+"\n")
+            for info in infolist:
+                stdout.write("%-15s %15s %15s %s\n" % \
+                    (info['type'],info['name'],info['tbl_name'],info['sql'])) 
+
+
+    def info(self, typ=None):
+        """
+
+        Query the sqlite_master table.  This holds info about objects in the
+        database, such as tables and indexes.  By default return all entries.
+        If typ is not None, return only entries of that type, e.g. 'table' or
+        'index'
+
+        Each rows contains:
+            type: e.g. 'table' or 'index'
+            name: name of object
+            tbl_name: name of associated table
+            rootpage: ?
+            sql:  sql query used to create object.
+
+        """
+
+        query = "select * from sqlite_master"
+        if typ is not None:
+            query += " where type = '%s'" % typ
+        curs = self.cursor()
+        return curs.execute(query).fetchall()
+
+    def table_info(self, tablename=None, columns=None):
+        """
+        info = conn.table_info(tablename=None, columns=None)
+
+        if tablename is sent:
+
+            Retrieve the table info.  Each row returned has fields:
+                'cid': column id number
+                'name': name of column
+                'type': declared type. Ignored by sqlite but useful for 
+                    converting to numpy.
+                'notnull': If 1 can not be Null.
+                'dflt_value': default value for column
+                'pk': Do not know.
+            
+            if columns is sent, a subset of columns will be returned.
+
+        if tablename is not sent:
+            Retreive info about all tables from the sqlite_master table.
+            Each rows contains:
+                type: This will always be 'table'
+                name: name of object
+                tbl_name: name of associated table
+                rootpage: ?
+                sql:  sql query used to create object.
+        """
+
+        curs = self.cursor()
+        if tablename is not None:
+            query="pragma table_info(%s)" % tablename
+        else:
+            query = "select * from sqlite_master where type='table'"
+        res = curs.execute(query).fetchall()
+
+        if tablename is not None and columns is not None:
+            # extract a subset of columns
+            newres = []
+            for info in res:
+                if info['name'] in columns:
+                    newres.append(info)
+            return newres
+        else:
+            return res
+
+    def table_exists(self, tablename):
+        query = """
+            select 
+                name 
+            from 
+                sqlite_master 
+            where 
+                type='table' and name = '%s'
+        """ % tablename
+
+        curs = self.cursor()
+        res = curs.execute(query).fetchall()
+        if len(res) == 0:
+            return False
+        else:
+            return True
+
+
+    def asarray(self, tablename, query=None):
+        """
+        Instead maybe override execute and have a asarray= keyword?
+        """
+        if not have_numpy:
+            raise RuntimeError("numpy is not available")
+
+        if query is None:
+            query="select * from %s" % tablename
+
+
+
+        # when row factory is Row, the proper iteration is not supported
+        # for use with fromiter.  Temporarily turn it off.
+        row_factory_old = self.row_factory
+        self.row_factory=None
+        curs = self.cursor()
+        curs.execute(query)
+
+        # now figure out the data types for the returned columns
+        self.row_factory = row_factory_old
+        colnames = [d[0].lower() for d in curs.description]
+        tinfo = self.table_info(tablename, columns=colnames)
+        dtype = tabledef2dtype(tinfo)
+
+        
+        res = numpy.fromiter(curs, dtype=dtype)
+
+        return res
+    
+    def drop(self, tablename, verbose=False):
+        query = "drop table %s" % tablename
+        if verbose:
+            stdout.write("%s\n" % query)
+        curs=self.cursor()
+        curs.execute(query)
+
+
+    def fromarray(self, arr, tablename, indices=None,
+                  create=False, tmpdir=None, 
+                  cleanup=True,
+                  verbose=False):
+
+        from esutil import recfile
+        exists = self.table_exists(tablename)
+        if exists:
+            if create:
+                if verbose:
+                    stdout.write("Dropping existing table: %s\n" % tablename)
+                self.drop(tablename)
+            else:
+                if verbose:
+                    stdout.write("Appending to existing "
+                                 "table: %s\n" % tablename)
+
+        
+        tabledef = descr2tabledef(arr.dtype.descr, tablename)
+        
+        curs=self.cursor()
+
+        if verbose:
+            stdout.write(tabledef)
+
+        curs.execute(tabledef)
+
+
+        # write data to a temporary csv file and then import. Note we will
+        # ignore nulls in writing because sqlite can't handle them
+        csvtmp=tempfile.NamedTemporaryFile(dir=tmpdir,
+                                           prefix=tablename+'-temp-', 
+                                           suffix='.csv',
+                                           delete=False)
+
+        csvname = csvtmp.name
+
+        if verbose:
+            stdout.write("Writing to temporary file: %s\n" % csvname)
+        r = recfile.Open(csvtmp.file,mode='w',delim=',', padnull=True)
+        r.write(arr.view(numpy.ndarray))
+        r.close()
+        csvtmp.close()
+
+        if verbose:
+            stdout.write("Importing data\n")
+        comm="""
+            sqlite3 -separator ',' %s ".import %s %s" 
+        """ % (self.dbfile, csvname, tablename)
+
+        status, stdo, stde = esutil.ostools.exec_process(comm, verbose=verbose)
+        if status != 0 or stde != "":
+            mess="""
+            Error occurred:
+                exit_status: %s
+                stdout: %s
+                stderr: %s
+            """ % (status,stdo,stde)
+            raise RuntimeError(mess)
+
+        if cleanup:
+            if verbose:
+                stdout.write("Cleaning up temporary file %s\n" % csvname)
+            os.remove(csvname)
+
+        if indices is not None:
+            for index in indices:
+                self.add_index(tablename, index, verbose=verbose)
+
+        
+    def add_index(self, tablename, columns, verbose=False):
+
+        if not isinstance(columns,(list,tuple)):
+            columns = [columns]
+
+        curs=self.cursor()
+
+        index_name = '_'.join(columns) + '_index'
+        column_list = ','.join(columns)
+
+        query="""
+        create index if not exists %s on %s (%s)
+        \n""" % (index_name, tablename, column_list)
+
+        if verbose:
+            stdout.write("Adding index: \n")
+            stdout.write(query)
+
+        curs.execute(query)
+
+
 
 def table2array(dbfile, tablename):
     pass
@@ -48,35 +334,6 @@ def tabledef2dtype(table_info, columns=None, size=None):
             dtype.append( (name, typ) )
 
     return dtype
-
-_np2col={}
-
-_np2col['i1'] = 'int8'
-_np2col['int8'] = 'int8'
-_np2col['i2'] = 'int16'
-_np2col['int16'] = 'int16'
-_np2col['i4'] = 'int32'
-_np2col['int32'] = 'int32'
-_np2col['i8'] = 'int64'
-_np2col['int64'] = 'int64'
-_np2col['f4'] = 'float32'
-_np2col['float32'] = 'float32'
-_np2col['f8'] = 'float64'
-_np2col['float64'] = 'float64'
-
-_np2col['i1'] = 'integer'
-_np2col['int8'] = 'integer'
-_np2col['i2'] = 'integer'
-_np2col['int16'] = 'integer'
-_np2col['i4'] = 'integer'
-_np2col['int32'] = 'integer'
-_np2col['i8'] = 'integer'
-_np2col['int64'] = 'integer'
-_np2col['f4'] = 'real'
-_np2col['float32'] = 'real'
-_np2col['f8'] = 'real'
-_np2col['float64'] = 'real'
-
 
 def descr2tabledef(descr, tablename):
     """
@@ -157,7 +414,7 @@ def numpy2coltype(typename):
 
     if tname[0] == 's':
         # !!!!! FIX  THIS!!!!
-        return 'TEXT'
+        #return 'TEXT'
         try:
             lenstr = int( tname[1:] )
         except:
@@ -182,8 +439,8 @@ def coltype2numpy(typename, size=None):
     Determine sizes as best as possible from the declaration, or use the
     sizes= keyword to set sizes explicitly.
 
-    We have to deal with som limitations.  Primarily:
-        1) sqlite columsn have no data type.
+    We have to deal with some limitations.  Primarily:
+        1) sqlite columns have no data type.
         2) numpy fields are fixed length.
 
     In sqlite, columns don't actually have data types.  When data are inserted
@@ -472,7 +729,7 @@ def dict2table(data, dbfile, tablename,
         sqlite3 -separator ',' %s ".import %s %s" 
     """ % (dbpath, csvtmp, tablename)
 
-    esutil.misc.exec_process(comm, verbose=verbose)
+    esutil.ostools.exec_process(comm, verbose=verbose)
 
 
 
@@ -486,257 +743,6 @@ def dict2table(data, dbfile, tablename,
     if indices is not None:
         for index in indices:
             add_index(dbpath, tablename, index, verbose=verbose)
-
-class SqliteConnection(sqlite.Connection):
-    """
-    Inherits from the Connection class of sqlite and adds some functionality
-    """
-
-    def __init__(self, dbfile, **keys):
-
-        dbpath=esutil.ostools.expand_path(dbfile)
-        sqlite.Connection.__init__(self, dbpath, **keys)
-        self.row_factory = sqlite.Row
-        self.dbfile = dbpath
-
-    def describe(self, typ=None, tablename=None):
-        """
-        Describe the database or the table if tablename is given.
-
-        currently does nothing if tablename is not sent.
-
-        indices on tables not yet implemented.
-        """
-
-        if tablename is not None:
-            # describe this table
-            info = self.table_info(tablename)
-
-            stdout.write("%-15s %15s\n" % ("field","type"))
-            stdout.write("-"*32+"\n")
-            for row in info:
-                stdout.write("%-15s %15s\n" % (row['name'],row['type']))
-
-        else:
-            # describe all tables
-            infolist = self.info(typ=typ)
-            head = "%-15s %15s %15s %s" %  ('type','name','tbl_name','sql')
-            stdout.write(head) 
-            stdout.write("\n" + "-"*len(head)+"\n")
-            for info in infolist:
-                stdout.write("%-15s %15s %15s %s\n" % \
-                    (info['type'],info['name'],info['tbl_name'],info['sql'])) 
-
-
-    def info(self, typ=None):
-        """
-
-        Query the sqlite_master table.  This holds info about objects in the
-        database, such as tables and indexes.  By default return all entries.
-        If typ is not None, return only entries of that type, e.g. 'table' or
-        'index'
-
-        Each rows contains:
-            type: e.g. 'table' or 'index'
-            name: name of object
-            tbl_name: name of associated table
-            rootpage: ?
-            sql:  sql query used to create object.
-
-        """
-
-        query = "select * from sqlite_master"
-        if typ is not None:
-            query += " where type = '%s'" % typ
-        curs = self.cursor()
-        return curs.execute(query).fetchall()
-
-    def table_info(self, tablename=None, columns=None):
-        """
-        info = conn.table_info(tablename=None, columns=None)
-
-        if tablename is sent:
-
-            Retrieve the table info.  Each row returned has fields:
-                'cid': column id number
-                'name': name of column
-                'type': declared type. Ignored by sqlite but useful for 
-                    converting to numpy.
-                'notnull': If 1 can not be Null.
-                'dflt_value': default value for column
-                'pk': Do not know.
-            
-            if columns is sent, a subset of columns will be returned.
-
-        if tablename is not sent:
-            Retreive info about all tables from the sqlite_master table.
-            Each rows contains:
-                type: This will always be 'table'
-                name: name of object
-                tbl_name: name of associated table
-                rootpage: ?
-                sql:  sql query used to create object.
-        """
-
-        curs = self.cursor()
-        if tablename is not None:
-            query="pragma table_info(%s)" % tablename
-        else:
-            query = "select * from sqlite_master where type='table'"
-        res = curs.execute(query).fetchall()
-
-        if tablename is not None and columns is not None:
-            # extract a subset of columns
-            newres = []
-            for info in res:
-                if info['name'] in columns:
-                    newres.append(info)
-            return newres
-        else:
-            return res
-
-    def table_exists(self, tablename):
-        query = """
-            select 
-                name 
-            from 
-                sqlite_master 
-            where 
-                type='table' and name = '%s'
-        """ % tablename
-
-        curs = self.cursor()
-        res = curs.execute(query).fetchall()
-        if len(res) == 0:
-            return False
-        else:
-            return True
-
-
-    def asarray(self, tablename, query=None):
-        """
-        Instead maybe override execute and have a asarray= keyword?
-        """
-        if not have_numpy:
-            raise RuntimeError("numpy is not available")
-
-        if query is None:
-            query="select * from %s" % tablename
-
-
-
-        # when row factory is Row, the proper iteration is not supported
-        # for use with fromiter.  Temporarily turn it off.
-        row_factory_old = self.row_factory
-        self.row_factory=None
-        curs = self.cursor()
-        curs.execute(query)
-
-        # now figure out the data types for the returned columns
-        self.row_factory = row_factory_old
-        colnames = [d[0].lower() for d in curs.description]
-        tinfo = self.table_info(tablename, columns=colnames)
-        dtype = tabledef2dtype(tinfo)
-
-
-        
-        res = numpy.fromiter(curs, dtype=dtype)
-
-        return res
-    
-    def drop(self, tablename, verbose=False):
-        query = "drop table %s" % tablename
-        if verbose:
-            stdout.write("%s\n" % query)
-        curs=self.cursor()
-        curs.execute(query)
-
-
-    def fromarray(self, arr, tablename, indices=None,
-                  create=False, tmpdir='.', 
-                  cleanup=True,
-                  verbose=False):
-
-        from esutil import recfile
-        exists = self.table_exists(tablename)
-        if exists:
-            if create:
-                if verbose:
-                    stdout.write("Dropping existing table: %s\n" % tablename)
-                self.drop(tablename)
-            else:
-                if verbose:
-                    stdout.write("Appending to existing "
-                                 "table: %s\n" % tablename)
-
-        
-        tabledef = descr2tabledef(arr.dtype.descr, tablename)
-        
-        curs=self.cursor()
-
-        if verbose:
-            stdout.write(tabledef)
-
-        curs.execute(tabledef)
-
-
-        # write data to a temporary csv file and then import note we ill
-        # ignore nulls in writing because sqlite can't handle them
-        csvtmp = tempfile.mktemp(dir=tmpdir, 
-                                 prefix=tablename+'-temp-', 
-                                 suffix='.csv')
-
-        if verbose:
-            stdout.write("Writing to temporary file: %s\n" % csvtmp)
-        r = recfile.Open(csvtmp, mode='w', delim=',', dtype=arr.dtype)
-        r.Write(arr.view(numpy.ndarray), ignorenull=True)
-        r.Close()
-
-        if verbose:
-            stdout.write("Importing data\n")
-        comm="""
-            sqlite3 -separator ',' %s ".import %s %s" 
-        """ % (self.dbfile, csvtmp, tablename)
-
-        status, stdo, stde = esutil.misc.exec_process(comm, verbose=verbose)
-        if status != 0 or stde != "":
-            mess="""
-            Error occurred:
-                exit_status: %s
-                stdout: %s
-                stderr: %s
-            """ % (status,stdo,stde)
-            raise RuntimeError(mess)
-
-        if cleanup:
-            if verbose:
-                stdout.write("Cleaning up temporary file %s\n" % csvtmp)
-            os.remove(csvtmp)
-
-        if indices is not None:
-            for index in indices:
-                self.add_index(tablename, index, verbose=verbose)
-
-        
-    def add_index(self, tablename, columns, verbose=False):
-
-        if not isinstance(columns,(list,tuple)):
-            columns = [columns]
-
-        curs=self.cursor()
-
-        index_name = '_'.join(columns) + '_index'
-        column_list = ','.join(columns)
-
-        query="""
-        create index if not exists %s on %s (%s)
-        \n""" % (index_name, tablename, column_list)
-
-        if verbose:
-            stdout.write("Adding index: \n")
-            stdout.write(query)
-
-        curs.execute(query)
 
 
 

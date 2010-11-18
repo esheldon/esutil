@@ -1606,8 +1606,8 @@ void Records::MakePrintFormats()
 	mPrintFormats.clear();
 	mPrintFormats.assign( mScanFormats.begin(), mScanFormats.end() );
 	
-	mPrintFormats[NPY_FLOAT] = "%g";
-	mPrintFormats[NPY_DOUBLE] = "%15.8e";
+	mPrintFormats[NPY_FLOAT] = "%.7g";
+	mPrintFormats[NPY_DOUBLE] = "%.15e";
 
 	mPrintFormats[NPY_STRING] = "%s";
 
