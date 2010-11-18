@@ -149,7 +149,7 @@ class Cosmo(object):
         self._ezi_run_gauleg()
         self._vi_run_gauleg()
 
-        self._four_ip_over_c_squared = four_ip_over_c_squared(dunits='Mpc')
+        self._four_pi_G_over_c_squared = four_pi_G_over_c_squared(dunits='Mpc')
 
     def DH(self):
         """
@@ -518,7 +518,7 @@ class Cosmo(object):
         dls = self.Da(zl, zs)
 
         D = dls*dl/ds   # Mpc/h
-        scinv = D*self._four_ip_over_c_squared
+        scinv = D*self._four_pi_G_over_c_squared
 
         w,=numpy.where(scinv < 0.0)
         if w.size > 0:
@@ -526,7 +526,7 @@ class Cosmo(object):
 
         return scinv
 
-def four_ip_over_c_squared(dunits='Mpc'):
+def four_pi_G_over_c_squared(dunits='Mpc'):
     """
     4*pi*G/c^2 Dl * Dls/Ds has units of m^2/kg
 

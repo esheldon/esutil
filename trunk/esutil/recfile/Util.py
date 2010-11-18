@@ -1,169 +1,234 @@
 import numpy
-# this only works in 2.5
-#from . import records
 import records
 import sys
 import os
 import math
 import pprint
 
+# These are a bunch of docs pieces that can be pieced together
 
-def Open(fileobj, mode="r", delim=None, dtype=None, 
-         nrows=-9999, offset=None, skiplines=None,
-         padnull=False, ignorenull=False, 
+_instantiate_docs="""
+Instantiate a new Recfile class
+    For writing:
+        import recfile
+        r = recfile.Open(file/fileobj, 
+                         mode="w", 
+                         delim=None, 
+                         padnull=False, 
+                         ignorenull=False, 
+                         bracket_arrays=False,
+                         verbose=False)
+
+        for updating use mode="r+"
+    For reading:
+        import recfile
+        r = recfile.Open(file/fileobj, 
+                         delim=None, 
+                         dtype=None, 
+                         nrows=-9999, 
+                         offset=0, 
+                         skiplines=0,
+                         verbose=False)
+"""
+# docs for inputs to the varius "open" functions and methods.
+_open_input_docs="""
+Inputs:
+    file/fileobj:  A string file name or an open file object.
+
+Keywords:
+    mode: The file mode.  Default is "r" but can also be "r+","w","w+".
+    delim: The delimiter used in the file.  Use "" or None for
+        binary files.  Default is None. Can also be any string such 
+        as ",", "\\t", etc.
+
+    dtype:  A numpy dtype object.  REQUIRED FOR READING. 
+        For example:
+            [('field1', 'i4'),('field2', 'f8')]
+            array.dtype
+        the type must contain fields.
+
+    nrows: 
+        The number of rows in the file.  If rows is not sent, it will
+        be determined from the newlines for ascii or from file data and
+        dtype for binary.
+
+    offset:  Offset into the file where reading will begin.  Used
+        if opening with "r" or "r+".  For "w" or "w+" offset is
+        zero by definition.
+
+    skiplines:
+        Skip the specified number of lines (rows).  Only works for
+        ascii where rows are separated by '\\n'
+
+    padnull: When writing ascii, replace nulls in strings with spaces.
+        Useful for programs that don't understand nulls like sqlite
+        databases.
+    ignorenull:  When writing ascii, just ignore nulls when writing
+        strings. Note this will not result in fixed length data so
+        you cannot read it back in using recfile. Useful for 
+        programs that don't understand nulls, like sqlite databases.
+    bracket_arrays: 
+        If True and writing ascii, arrays are written thus: 
+            {el1,el2,....}
+        Currently the delimiter is forced to be a comma because the
+        authors were implementing postgres input files.
+
+    verbose:
+        Print information about processing.  Default False.
+"""
+_useful_methods_docs="""
+Useful Recfile Class Methods:
+
+    While reading, you can access rows and columns using [ ] notation.
+
+        r=recfile.Open(...)
+        data = r[rows]              # rows can be single number,slice,list
+        or
+        data = r[field_names][rows] # field names must come first. You
+                                    # must specify something for rows
+                                    # in order to read the data, otherwise
+                                    # a RecfileColumnSubset object is 
+                                    # returned.
+
+        If you put field_names *after* rows, then all rows will be read
+        and *then* the fields are extracted, which is inefficient. 
+
+        If only the fields are specified, the data are not read, rather a
+        RecfileColumnSubset object is returned.  
+        
+        You must specify the rows to actually read any data.  If you want
+        them all, use the [:] slice.
+
+        data = r[:]                   # read all rows and columns
+        data = r[start:stop]          # full slices allowed
+        data = r[start:stop:step]     # slice with step specified
+        data = r[field_names][:]      # read all rows but subset of columns.
+        data = r[field_names][rowlist] # subset of rows and columns
+
+    read(rows=, fields=):
+        Returns the data in a NumPy array.  Specific rows and fields of the
+        file can be specified with the keywords.  Fields must be unique but
+        can be in any order.
+
+    write(numpy_array):
+        Write the input numpy array to the file.  The array must have
+        field names defined.
+"""
+
+_examples_docs="""
+Examples:
+    import recfile
+
+    # Read from a binary file.  Number of rows will be determined from
+    # the file data and dtype if not entered.
+    file='test.bin'
+    dtype=[('field1','f8'),('field2','2i4'),('field3','i8')]
+
+    robj = recfile.Open(file, dtype=dtype)
+
+    # read all rows and columns
+    data = robj[:]
+    data = robj.read()
+
+    # read a subset of rows using slice notation
+    data = robj[3500:5238]
+    data = robj[ 10:1234:3 ]
+
+    # specifying rows explicitly
+    row_list = [35,88,217]
+    data = robj[row_list]
+    data = robj.read(rows=row_list)
+
+
+    # read a subset of columns.
+    column_list = ['field2','field3']
+    data = robj.read(columns=column_list)
+    data = robj.read(fields=column_list)    # columns/fields are synonyms
+
+    # In bracket notation, you must specify rows to read the data.
+    data = robj['field2'][:]
+    data = robj[column_list][rowlist]
+    data = robj['field3'].read()
+
+
+    # Read from a CSV file of the same structure, and only read a subset 
+    # of the data.  Nrows can be specified to speed up reading if known,
+    # otherwise they will be counted, which is slow for text.
+
+    rows2get=[2335,122332,1550021]
+    fields2get='field2'
+    robj = recfile.Open('test.csv', delim=",", dtype=dtype, nrows=nrows)
+    data = robj.read(rows=rows2get, fields=fields2get)
+    data = robj[fields2get][rows2get]
+
+
+    # Write a numpy array to a file, with ability to
+    # append
+    r = recfile.Open('test.tab', "r+", ",")
+    r.write(my_array)
+
+    # append more rows
+    r.write(second_array)
+
+    r.close()
+"""
+
+_tests_docs="""
+Unit Tests:
+    Make sure all unit tests pass.
+
+        import recfile
+        recfile.test()
+
+    Should show no failures for reading or writing:
+        Total number of write failures: 0
+        Total number of read failures: 0
+"""
+
+def indent(s, n=1):
+    ind = '    '*n
+    return '\n'.join([ind+sp for sp in s.split('\n')])
+
+# the main docs for this module
+__doc__="""
+Package:
+    recfile
+Classes
+
+    Recfile 
+    
+    A class for reading and writing structred numpy arrays to and from
+    files.  Structured arrays are also known as recarrays or arrays with
+    fields.  Both binary and ascii are supported.
+
+    This class addresses limitations of memmap class, which cannot 
+    read individual columns from a file without reading the whole file.
+
+{instantiate_docs}
+{input_docs}
+{useful_methods_docs}
+{examples_docs}
+{tests_docs}
+""".format(instantiate_docs=_instantiate_docs,
+           input_docs=_open_input_docs,
+           useful_methods_docs=_useful_methods_docs,
+           examples_docs=_examples_docs,
+           tests_docs=_tests_docs)
+
+def Open(fileobj, 
+         mode="r", 
+         delim=None, 
+         dtype=None, 
+         nrows=-9999, 
+         offset=None, 
+         skiplines=None,
+         padnull=False, 
+         ignorenull=False, 
          bracket_arrays=False,
          verbose=False):
-    """
-    Instantiate a new Recfile class
-        For writing:
-            import recfile
-            r = recfile.Open(file/fileobj, mode="w", delim=None, 
-                             padnull=False, ignorenull=False, 
-                             bracket_arrays=False,
-                             verbose=False)
-            for updating use mode="r+"
-        For reading:
-            import recfile
-            r = recfile.Open(file/fileobj, delim=None, dtype=None, 
-                             nrows=-9999, offset=0, skiplines=0,
-                             verbose=False)
-            # Arguments can all be given as keywords except the file
 
-        Inputs:
-            file/fileobj:  A string file name or an open file object.
+    # doc string generated dynamically below
 
-        Optional Inputs:
-            mode: The file mode.  Default is "r" but can also be "r+","w","w+".
-            delim: The delimiter used in the file.  Use "" or None for
-                binary files.  Default is None. Can also be any string such 
-                as ",", "\\t", etc.
-
-            dtype:  A numpy dtype object.  REQUIRED FOR READING. 
-                For example:
-                    [('field1', 'i4'),('field2', 'f8')]
-                    array.dtype
-                the type must contain fields.
-
-            nrows: The number of rows in the file.  REQUIRED FOR READING
-                ASCII. If reading binary and nrows is not sent, it will be
-                determined from the file data and dtype.
-
-            offset:  Offset into the file where reading will begin.  Used
-                if opening with "r" or "r+".  For "w" or "w+" offset is
-                zero by definition.
-
-            padnull: When writing ascii, replace nulls in strings with spaces.
-                Useful for programs that don't understand nulls like sqlite
-                databases.
-            ignorenull:  When writing ascii, just ignore nulls when writing
-                strings. Note this will not result in fixed length data so
-                you cannot read it back in using recfile. Useful for 
-                programs that don't understand nulls, like sqlite databases.
-            bracket_arrays: 
-                If True and writing ascii, arrays are written thus: 
-                    {el1,el2,....}
-                Currently the delimiter is forced to be a comma because the
-                authors were implementing postgres input files.
-
-    Useful Recfile Class Methods:
-
-        While reading, you can access rows and columns using [ ] notation.
-
-            r=recfile.Open(...)
-            data = r[rows]              # rows can be single number,slice,list
-            or
-            data = r[field_names][rows] # field names must come first. You
-                                        # must specify something for rows
-                                        # in order to read the data, otherwise
-                                        # a RecfileColumnSubset object is 
-                                        # returned.
-
-            If you put field_names *after* rows, then all rows will be read
-            and *then* the fields are extracted, which is inefficient. 
-
-            If only the fields are specified, the data are not read, rather a
-            RecfileColumnSubset object is returned.  
-            
-            You must specify the rows to actually read any data.  If you want
-            them all, use the [:] slice.
-
-            data = r[:]                   # read all rows and columns
-            data = r[start:stop]          # full slices allowed
-            data = r[start:stop:step]     # slice with step specified
-            data = r[field_names][:]      # read all rows but subset of columns.
-            data = r[field_names][rowlist] # subset of rows and columns
-
-        read(rows=, fields=):
-            Returns the data in a NumPy array.  Specific rows and fields of the
-            file can be specified with the keywords.  Fields must be unique but
-            can be in any order.
-
-        write(numpy_array):
-            Write the input numpy array to the file.  The array must have
-            field names defined.
-
-    Examples:
-        import recfile
-
-        # Read from a binary file.  Number of rows will be determined from
-        # the file data and dtype if not entered.
-        file='test.bin'
-        dtype=[('field1','f8'),('field2','2i4'),('field3','i8')]
-        nrows=10000000
-
-        robj = recfile.Open(file, dtype=dtype)
-
-        # read all rows and columns
-        data = robj.read()
-        data = robj[:]
-
-        # read a subset of rows
-        data = robj.read(rows=row_list)
-        data = robj[ 3500:5238 ]
-
-        # get every 3rd in a slice
-        data = robj[ 10:1234:3 ]
-
-        # send a full list
-        data = robj[ rowlist ]
-
-        # read a subset of columns.
-        data = robj.read(columns=column_list)
-        data = robj.read(fields=column_list)    # columns/fields are synonyms
-
-        # In bracket notation, you must specify rows to read the data.
-        data = robj['fieldname'][:]
-        data = robj[ fieldlist ][ rowlist ]
-        data = robj['fieldname'].read()
-
-
-        # Read from a CSV file of the same structure, and only read a subset 
-        # of the data.  Nrows must be specified.
-        rows2get=[2335,122332,1550021]
-        fields2get='field2'
-        robj = recfile.Open('test.csv', delim=",", dtype=dtype, nrows=nrows)
-        data = robj.read(rows=rows2get, fields=fields2get)
-        data = robj[fields2get][rows2get]
-
-
-        # Write a numpy array to a file, with ability to
-        # append
-        r = recfile.Open('test.tab', "r+", ",")
-        r.Write(my_array)
-
-        # append more rows
-        r.Write(second_array)
-
-    Todo:
-        implement auto-getting of size for ascii
-
-    Modification history:
-        Created: 2008-07-18, Erin Sheldon
-        Wrapper class Recfile added.  This is returned by Open.  Support
-            for [ ] style reading notation. 2009-11-20, ESS, BNL
-        Added simple slicing for ASCII.  2010-02-18, Erin Sheldon, BNL
-
-    """
     # make sure it's a dtype and not just a descr
     return Recfile(fileobj, mode=mode, delim=delim, dtype=dtype, 
                    nrows=nrows, offset=offset, skiplines=skiplines,
@@ -171,155 +236,20 @@ def Open(fileobj, mode="r", delim=None, dtype=None,
                    bracket_arrays=bracket_arrays,
                    verbose=verbose)
 
+Open.__doc__="""
+{instantiate_docs}
+{input_docs}
+{useful_methods_docs}
+{examples_docs}
+""".format(instantiate_docs=_instantiate_docs,
+           input_docs=_open_input_docs,
+           useful_methods_docs=_useful_methods_docs,
+           examples_docs=_examples_docs)
+
+
 
 class Recfile(object):
-    """
-    Instantiate a new Recfile class
-        For writing:
-            import recfile
-            r = recfile.Open(file/fileobj, mode="r", delim=None, 
-                             padnull=False, ignorenull=False, verbose=False)
-            for updating use mode="r+"
-        For reading:
-            import recfile
-            r = recfile.Open(file/fileobj, delim=None, dtype=None, 
-                             nrows=-9999, offset=0, skiplines=0,
-                             verbose=False)
-            # Arguments can all be given as keywords except the file
-
-        Inputs:
-            file/fileobj:  A string file name or an open file object.
-
-        Optional Inputs:
-            mode: The file mode.  Default is "r" but can also be "r+","w","w+".
-            delim: The delimiter used in the file.  Use "" or None for
-                binary files.  Default is None. Can also be any string such 
-                as ",", "\\t", etc.
-
-            dtype:  A numpy dtype object.  REQUIRED FOR READING. 
-                For example:
-                    [('field1', 'i4'),('field2', 'f8')]
-                    array.dtype
-                the type must contain fields.
-
-            nrows: The number of rows in the file.  REQUIRED FOR READING
-                ASCII. If reading binary and nrows is not sent, it will be
-                determined from the file data and dtype.
-
-            offset:  Offset into the file where reading will begin.  Used
-                if opening with "r" or "r+".  For "w" or "w+" offset is
-                zero by definition.
-
-            padnull: When writing ascii, replace nulls in strings with spaces.
-                Useful for programs that don't understand nulls like sqlite
-                databases.
-            ignorenull:  When writing ascii, just ignore nulls when writing
-                strings. Note this will not result in fixed length data so
-                you cannot read it back in using recfile. Useful for 
-                programs that don't understand nulls, like sqlite databases.
-            bracket_arrays: 
-                If True and writing ascii, arrays are written thus: 
-                    {el1,el2,....}
-                Currently the delimiter is forced to be a comma because the
-                authors were implementing postgres input files.
-
-    Useful Recfile Class Methods:
-
-        While reading, you can access rows and columns using [ ] notation.
-
-            r=recfile.Open(...)
-            data = r[rows]              # rows can be single number,slice,list
-            or
-            data = r[field_names][rows] # field names must come first. You
-                                        # must specify something for rows
-
-            If you put field_names *after* rows, then all rows will be read
-            and *then* the fields are extracted, which is inefficient. 
-
-            If only the fields are specified, the data are not read, rather a
-            RecfileColumnSubset object is returned.  
-            
-            You must specify the rows.  If you want them all, use the [:]
-            slice.
-
-            data = r[:]                   # read all rows and columns
-            data = r[start:stop]          # full slices allowed
-            data = r[start:stop:step]     # slice with step specified
-            data = r[field_names][:]      # read all rows but subset of columns.
-            data = r[field_names[rowlist] # subset of rows and columns
-
-        read(rows=, fields=):
-            Returns the data in a NumPy array.  Specific rows and fields of the
-            file can be specified with the keywords.  Fields must be unique but
-            can be in any order.
-
-        write(numpy_array):
-            Write the input numpy array to the file.  The array must have
-            field names defined.
-
-    Examples:
-        import recfile
-
-        # Read from a binary file.  Number of rows will be determined from
-        # the file data and dtype if not entered.
-        file='test.bin'
-        dtype=[('field1','f8'),('field2','2i4'),('field3','i8')]
-        nrows=10000000
-
-        robj = recfile.Open(file, dtype=dtype)
-
-        # read all rows and columns
-        data = robj.read()
-        data = robj[:]
-
-        # read a subset of rows
-        data = robj.read(rows=row_list)
-        data = robj[ 3500:5238 ]
-
-        # get every 3rd in a slice
-        data = robj[ 10:1234:3 ]
-
-        # send a full list
-        data = robj[ rowlist ]
-
-        # read a subset of columns.
-        data = robj.read(columns=column_list)
-        data = robj.read(fields=column_list)    # columns/fields are synonyms
-
-        # In bracket notation, you must specify rows to read the data.
-        data = robj['fieldname'][:]
-        data = robj[ fieldlist ][ rowlist ]
-        data = robj['fieldname'].read()
-
-
-        # Read from a CSV file of the same structure, and only read a subset 
-        # of the data.  Nrows must be specified.
-        rows2get=[2335,122332,1550021]
-        fields2get='field2'
-        robj = recfile.Open('test.csv', delim=",", dtype=dtype, nrows=nrows)
-        data = robj.read(rows=rows2get, fields=fields2get)
-        data = robj[fields2get][rows2get]
-
-
-        # Write a numpy array to a file, with ability to
-        # append
-        r = recfile.Open('test.tab', "r+", ",")
-        r.Write(my_array)
-
-        # append more rows
-        r.Write(second_array)
-
-    Todo:
-        implement auto-getting of size for ascii
-
-    Modification history:
-        Created: 2008-07-18, Erin Sheldon
-        Wrapper class Recfile added.  This is not returned by Open.  Support
-        for [ ] style reading notation. 2009-11-20, ESS, BNL
-        Added simple slicing for ASCII.  2010-02-18, Erin Sheldon, BNL
-
-    """
-
+    __doc__=Open.__doc__
 
     def __init__(self, fobj=None, mode="r", delim=None, dtype=None, 
                  nrows=-9999, offset=None, skiplines=None,
@@ -336,11 +266,30 @@ class Recfile(object):
                   bracket_arrays=bracket_arrays,
                   verbose=verbose)
 
-    def open(self, fobj, mode='r', delim=None, dtype=None, 
-             nrows=-9999, offset=None, skiplines=None,
-             padnull=False, ignorenull=False, 
+    def open(self, 
+             fobj, 
+             mode='r', 
+             delim=None, 
+             dtype=None, 
+             nrows=-9999, 
+             offset=None, 
+             skiplines=None,
+             padnull=False, 
+             ignorenull=False, 
              bracket_arrays=False,
              verbose=False):
+        """
+        Class:
+            Recfile
+        Method:
+            open
+        Calling Sequence:
+            r = recfile.Recfile()
+            r.open(...)
+
+            For more info, see documentation of the recfile.Open function,
+            which has identical syntax to this open() method.
+        """
 
         self.verbose=verbose
 
@@ -395,6 +344,11 @@ class Recfile(object):
                 raise ValueError("You must enter dtype when reading")
             self.dtype = numpy.dtype(dtype)
 
+            if nrows is None or nrows < 0:
+                self.nrows = self.get_nrows()
+            else:
+                self.nrows=nrows
+
             # we only pay attention to the offset when mode is 'r' or 'r+'
             
             if self.is_ascii:
@@ -416,10 +370,6 @@ class Recfile(object):
             if self.fobj.tell() != self.offset:
                 self.fobj.seek(offset)
 
-            if nrows is None or nrows < 0:
-                self.nrows = self.get_nrows()
-            else:
-                self.nrows=nrows
 
         
     def get_nrows(self):
@@ -488,6 +438,39 @@ class Recfile(object):
 
     def read(self, rows=None, fields=None, columns=None,
              view=None, split=False):
+        """
+        Class:
+            Recfile
+        Method:
+            read
+        Purpose:
+            read records from the opened file.
+        Syntax:
+            r=recfile.Open(...)
+            data = r.read(rows=None,
+                          fields=None, columns=None,
+                          view=None,
+                          split=False)
+
+            If no arguments are given, all data are read.
+
+        Inputs:
+            rows: A scalar, sequence or array indicating a subset
+                of rows to read.
+            fields or columns: A scalar, sequence, or array indicating
+                a subset of field to read. fields and columns mean the
+                same thing.
+            view: Specify an alternative view of the data.
+            split: Return a tuple of results rather than a rec array. Note
+                the data are still stored in one big chunk, this is just
+                an alternative access method.  E.g.
+
+                # this might return a rec array with fields accessed
+                # such as data['x'] data['y'] data['index']
+                data = r.read()
+                # this returns a tuple with an element for each
+                x,y,index = r.read(split=True)
+        """
         
         if self.fobj is None:
             raise ValueError("You have not yet opened a file")
@@ -517,6 +500,19 @@ class Recfile(object):
             return result
 
     def write(self, data):
+        """
+        Class:
+            Recfile
+        Method:
+            write
+        Purpose:
+            Write data to the opened file.  The dtype of the data must match
+            for successive calls to write.
+        Calling Sequence:
+            r=recfile.Open(.....)
+            r.write(array1)
+            r.write(array2)
+        """
         if self.fobj is None:
             raise ValueError("You have not yet opened a file")
 
@@ -585,10 +581,6 @@ class Recfile(object):
         return RecfileColumnSubset(self, columns=res)
 
     def read_slice(self, arg, split=False):
-        """
-        Use a memory map to read row slices. This is more powerful than
-        the simple slicer built into recfile.
-        """
 
         if self.fobj is None:
             raise ValueError("You have not yet opened a file")
