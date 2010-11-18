@@ -65,6 +65,52 @@ _np2col['f8'] = 'float64'
 _np2col['float64'] = 'float64'
 """
 
+# convenience functions
+def array2table(dbfile, array, tablename,
+                indices=None,
+                create=False, tmpdir=None, 
+                cleanup=True,
+                verbose=False):
+    """
+    Name:
+        array2table
+    Purpose:
+        Stuff a recarray into an sqlite3 table
+    Calling Sequence:
+        array2table(dbfile, arr, tablename, 
+                       indices=None,
+                       create=False, 
+                       tmpdir=None, 
+                       cleanup=True,
+                       verbose=False)
+    Inputs:
+        dbfile: An sqlite database file.  Create if does
+            not exist.
+        arr: An array with fields. AKA recarray.
+        tablename: The name for a table.  It is created
+            if it doesn't exist.
+    Keywords:
+        indices: list containing names of columns to index.
+        create: If True, drop any existing table with the
+            same name.  Otherwise, append.
+        tmpdir: Location for the temporary file.
+        cleanup: If not True, leave the temporary file for 
+            debugging
+        verbose:
+            print info
+        
+    """
+
+
+    sc = SqliteConnection(dbfile)
+    sc.array2table(array, tablename,
+                   indices=None,
+                   create=False, tmpdir=None, 
+                   cleanup=True,
+                   verbose=False)
+    sc.close()
+
+
 
 class SqliteConnection(sqlite.Connection):
     """
@@ -416,7 +462,7 @@ class SqliteConnection(sqlite.Connection):
                     cleanup=True,
                     verbose=False):
         """
-        Deprecated name, use array2table
+        Deprecated use array2table
         """
         return self.array2table(arr, tablename, 
                                 indices=indices,
@@ -427,41 +473,6 @@ class SqliteConnection(sqlite.Connection):
 
 
 
-def array2table(dbfile, array, tablename):
-    sc = SqliteConnection(dbfile)
-    sc.array2table(array, tablename)
-
-def table2array(dbfile, tablename):
-    sc = SqliteConnection(dbfile)
-    return sc.execute('select * from %s' % tablename)
-
-
-def tabledef2dtype(table_info, columns=None, size=None):
-    """
-    Take output of table_info() and convert to a numpy descriptor.
-
-    Todo: 
-        variable length columns
-        Implement sizes keyword
-    """
-    dtype = []
-    for info in table_info:
-        name = str( info['name'].lower() )
-        
-        keepcol=True
-        if columns is not None:
-            if name not in columns:
-                keepcol=False
-        
-        if keepcol:
-            typ = coltype2numpy(info['type'])
-
-            if typ == 'S?':
-                raise ValueError("Dont' support variable length columns yet")
-
-            dtype.append( (name, typ) )
-
-    return dtype
 
 def descr2tabledef(descr, tablename):
     """
@@ -557,6 +568,35 @@ def numpy2coltype(typename):
         raise ValueError("unrecognized typename: %s" % tname)
 
     return _np2col[tname]
+
+def tabledef2dtype(table_info, columns=None, size=None):
+    """
+    Take output of table_info() and convert to a numpy descriptor.
+    We can't really use this yet.
+
+    Todo: 
+        variable length columns
+        Implement sizes keyword
+    """
+    dtype = []
+    for info in table_info:
+        name = str( info['name'].lower() )
+        
+        keepcol=True
+        if columns is not None:
+            if name not in columns:
+                keepcol=False
+        
+        if keepcol:
+            typ = coltype2numpy(info['type'])
+
+            if typ == 'S?':
+                raise ValueError("Dont' support variable length columns yet")
+
+            dtype.append( (name, typ) )
+
+    return dtype
+
 
 def _remove_byteorder(tname):
     if tname[0] == '>' or tname[0] == '<' or tname[0] == '|':
