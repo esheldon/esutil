@@ -521,24 +521,25 @@ class Recfile(object):
 
         self.fobj.seek(0,2) # Seek to end of file
 
+        dataview = data.view(numpy.ndarray) 
         if self.verbose:
             stdout.write("Writing %s: %s\n" % \
-                            (data.size,pprint.pformat(data.dtype.descr)))
+                (dataview.size,pprint.pformat(dataview.dtype.descr)))
+
         if (self.delim is not None):
             # let recfile deal with ascii writing
             r = records.Records(self.fobj, mode='u', delim=self.delim, 
                                 bracket_arrays=self.bracket_arrays)
-            dataview = data.view(numpy.ndarray) 
             # make sure the data are in native format.  This greatly 
             # simplifies the C code
             to_native_inplace(dataview)
             r.Write(dataview, padnull=self.padnull, ignorenull=self.ignorenull)
         else:
             # Write data out as a binary chunk
-            data.tofile(self.fobj)
+            dataview.tofile(self.fobj)
 
         # update nrows to reflect the write
-        self.nrows += data.size
+        self.nrows += dataview.size
 
 
     def __getitem__(self, arg):

@@ -1,3 +1,65 @@
+_instantiate_docs="""
+    Class:
+        SqliteConnection
+    Purpose:
+        Inherits from the sqlite3.Connection class and adds
+        new functionality. 
+
+    Useful Methods:
+        See each method's documentation for more details.
+
+            execute: 
+                Execute a query and return the cursor. Alternatively
+                supports the asarray=True keyword to return the result
+                as a numpy array with fields (recarray).
+
+            array2table:  
+                Stuff a numpy array with fields (recarray) into a table.
+
+            table_exists: 
+                Check if the table exists.
+
+            describe:  
+                Print a visually appealing description of a database,
+                index, table, etc.
+
+            info: 
+                Get info about objects in the database, e.g. tables,
+                indexes.
+
+            table_info: 
+                Get info about a table.
+
+            drop:
+                Drop an object from the database.
+
+            add_index: 
+                Add an index to a table.
+
+    Instantiation:
+
+        sc = SqliteConnection(dbfile, tmpdir=, verbose=False, **sqlite_keywords)
+
+        Inputs:
+            tmpdir: Where to place the temporary files when importing
+                data.  Default is wherever the tempfile module chooses.
+            verbose:
+                print information about queries and processing.
+"""
+
+__doc__="""
+Name:
+    sqlite_util
+
+Purpose:
+    Some utilities to work with sqlite databases.  The SqliteConnection
+    class inherits from the sqlite3 connection class and adds additional
+    functionality.
+
+Classes:
+{instantiate_docs}
+""".format(instantiate_docs=_instantiate_docs)
+
 import os
 import tempfile
 import shutil
@@ -30,112 +92,60 @@ else:
 _int_types = tuple(_int_types)
 _string_types = tuple(_string_types)
 
-_np2col={}
-
-# for now map ignoring sizes of integers and floating types
-_np2col['i1'] = 'integer'
-_np2col['int8'] = 'integer'
-_np2col['i2'] = 'integer'
-_np2col['int16'] = 'integer'
-_np2col['i4'] = 'integer'
-_np2col['int32'] = 'integer'
-_np2col['i8'] = 'integer'
-_np2col['int64'] = 'integer'
-_np2col['f4'] = 'real'
-_np2col['float32'] = 'real'
-_np2col['f8'] = 'real'
-_np2col['float64'] = 'real'
-
-"""
-# When creating tables, we'll declare the columns with the
-# right types, just in case some time in the future we can
-# take advantage of it
-
-_np2col['i1'] = 'int8'
-_np2col['int8'] = 'int8'
-_np2col['i2'] = 'int16'
-_np2col['int16'] = 'int16'
-_np2col['i4'] = 'int32'
-_np2col['int32'] = 'int32'
-_np2col['i8'] = 'int64'
-_np2col['int64'] = 'int64'
-_np2col['f4'] = 'float32'
-_np2col['float32'] = 'float32'
-_np2col['f8'] = 'float64'
-_np2col['float64'] = 'float64'
-"""
-
-# convenience functions
-def array2table(dbfile, array, tablename,
-                indices=None,
-                create=False, tmpdir=None, 
-                cleanup=True,
-                verbose=False):
-    """
-    Name:
-        array2table
-    Purpose:
-        Stuff a recarray into an sqlite3 table
-    Calling Sequence:
-        array2table(dbfile, arr, tablename, 
-                       indices=None,
-                       create=False, 
-                       tmpdir=None, 
-                       cleanup=True,
-                       verbose=False)
-    Inputs:
-        dbfile: An sqlite database file.  Create if does
-            not exist.
-        arr: An array with fields. AKA recarray.
-        tablename: The name for a table.  It is created
-            if it doesn't exist.
-    Keywords:
-        indices: list containing names of columns to index.
-        create: If True, drop any existing table with the
-            same name.  Otherwise, append.
-        tmpdir: Location for the temporary file.
-        cleanup: If not True, leave the temporary file for 
-            debugging
-        verbose:
-            print info
-        
-    """
-
-
-    sc = SqliteConnection(dbfile)
-    sc.array2table(array, tablename,
-                   indices=None,
-                   create=False, tmpdir=None, 
-                   cleanup=True,
-                   verbose=False)
-    sc.close()
-
-
+# sqlite only has integer and real types.  Because we don't
+# know the true size of each field we'll have to read them
+# as 8-byte
+_np2sqlite={}
+_np2sqlite['i1']      = 'integer'
+_np2sqlite['int8']    = 'integer'
+_np2sqlite['i2']      = 'integer'
+_np2sqlite['int16']   = 'integer'
+_np2sqlite['i4']      = 'integer'
+_np2sqlite['int32']   = 'integer'
+_np2sqlite['i8']      = 'integer'
+_np2sqlite['int64']   = 'integer'
+_np2sqlite['f4']      = 'real'
+_np2sqlite['float32'] = 'real'
+_np2sqlite['f8']      = 'real'
+_np2sqlite['float64'] = 'real'
 
 class SqliteConnection(sqlite.Connection):
-    """
-    Inherits from the Connection class of sqlite and adds some functionality
-    """
-
-    def __init__(self, dbfile, **keys):
+    __doc__=_instantiate_docs
+    def __init__(self, dbfile, verbose=False, tmpdir=None, **keys):
 
         dbpath=esutil.ostools.expand_path(dbfile)
-        sqlite.Connection.__init__(self, dbpath, **keys)
-        self.row_factory = sqlite.Row
         self.dbfile = dbpath
+        self.verbose = verbose
+        self.tmpdir = tmpdir
 
-    def describe(self, typ=None, tablename=None):
+        sqlite.Connection.__init__(self, dbpath, **keys)
+
+        self.row_factory = sqlite.Row
+
+    def describe(self, type=None, name=None):
         """
-        Describe the database or the table if tablename is given.
+        Name:
+            describe
 
-        currently does nothing if tablename is not sent.
+        Purpose:
+            Print a visually appealing description of the database or an
+            object in the database, such as a table or index.  This just
+            calls the .info or .table_info method and prints the results.
 
-        indices on tables not yet implemented.
+        Calling Sequence:
+            describe(type=None, name=None)
+
+        Inputs/Keywords:
+            type: e.g. 'table','index'.  If None then all objects are
+                described
+            name: The name of an object.  If None, all objects of the
+                specified type are described.
+
         """
 
-        if tablename is not None:
-            # describe this table
-            info = self.table_info(tablename)
+        if type == 'table' and name is not None:
+            # tables we print in a particular way
+            info = self.table_info(name)
 
             stdout.write("%-15s %15s\n" % ("field","type"))
             stdout.write("-"*32+"\n")
@@ -143,23 +153,28 @@ class SqliteConnection(sqlite.Connection):
                 stdout.write("%-15s %15s\n" % (row['name'],row['type']))
 
         else:
-            # describe all tables
-            infolist = self.info(typ=typ)
-            head = "%-15s %15s %15s %s" %  ('type','name','tbl_name','sql')
+            # info for all objects of this type
+            infolist = self.info(type,name)
+
+            head = "%-10s %25s %15s %s" %  ('type','name','tbl_name','sql')
             stdout.write(head) 
             stdout.write("\n" + "-"*len(head)+"\n")
+
             for info in infolist:
-                stdout.write("%-15s %15s %15s %s\n" % \
+                stdout.write("%-10s %25s %15s %s\n" % \
                     (info['type'],info['name'],info['tbl_name'],info['sql'])) 
 
 
-    def info(self, typ=None):
+    def info(self, type=None, name=None):
         """
+        Name:
+            info
 
-        Query the sqlite_master table.  This holds info about objects in the
-        database, such as tables and indexes.  By default return all entries.
-        If typ is not None, return only entries of that type, e.g. 'table' or
-        'index'
+        Purpose:
+            Query the sqlite_master table. This table holds info about
+            objects in the database, such as tables and indexes. By
+            default return all entries. If type is not None, return only
+            entries of that type, e.g. 'table' or 'index'
 
         Each rows contains:
             type: e.g. 'table' or 'index'
@@ -171,36 +186,58 @@ class SqliteConnection(sqlite.Connection):
         """
 
         query = "select * from sqlite_master"
-        if typ is not None:
-            query += " where type = '%s'" % typ
+
+        clauses = []
+        if type is not None:
+            clauses.append("type = '%s'" % type)
+
+        if name is not None:
+            clauses.append("name = '%s'" % name)
+
+        if len(clauses) > 0:
+            clauses = ' and '.join(clauses)
+            query += " where "+clauses
+        if self.verbose:
+            stdout.write(query+'\n')
+
         curs = self.cursor()
-        return curs.execute(query).fetchall()
+        res = curs.execute(query).fetchall()
+        curs.close()
+        return res
 
     def table_info(self, tablename=None, columns=None):
         """
-        info = conn.table_info(tablename=None, columns=None)
+        Name:
+            table_info
 
-        if tablename is sent:
+        Calling Sequence:
+            sc = SqliteConnection('some file')
+            info = sc.table_info(tablename=None, columns=None)
+        
+        Inputs:
+            tablename: Name of a table to query.  If None, get
+                info for all tables.
+                    
+            columns:
+                if sent, a subset of columns will be returned.
 
-            Retrieve the table info.  Each row returned has fields:
-                'cid': column id number
-                'name': name of column
-                'type': declared type. Ignored by sqlite but useful for 
-                    converting to numpy.
-                'notnull': If 1 can not be Null.
-                'dflt_value': default value for column
-                'pk': Do not know.
-            
-            if columns is sent, a subset of columns will be returned.
+        Output:
+            if tablename is sent each row returned has fields:
+                    cid: column id number
+                    name: name of column
+                    type: declared type.
+                    notnull: If 1 can not be Null.
+                    dflt_value: default value for column
+                    pk: Do not know.
 
-        if tablename is not sent:
-            Retreive info about all tables from the sqlite_master table.
-            Each rows contains:
-                type: This will always be 'table'
-                name: name of object
-                tbl_name: name of associated table
-                rootpage: ?
-                sql:  sql query used to create object.
+            if tablename is not sent:
+                Retreive info about all tables from the sqlite_master table.
+                Each rows contains:
+                    type: This will always be 'table'
+                    name: name of object
+                    tbl_name: name of associated table
+                    rootpage: ?
+                    sql:  sql query used to create object.
         """
 
         curs = self.cursor()
@@ -208,7 +245,12 @@ class SqliteConnection(sqlite.Connection):
             query="pragma table_info(%s)" % tablename
         else:
             query = "select * from sqlite_master where type='table'"
+
+        if self.verbose:
+            stdout.write(query+'\n')
+
         res = curs.execute(query).fetchall()
+        curs.close()
 
         if tablename is not None and columns is not None:
             # extract a subset of columns
@@ -221,17 +263,29 @@ class SqliteConnection(sqlite.Connection):
             return res
 
     def table_exists(self, tablename):
+        """
+        Name:
+            table_exists
+
+        Calling Sequence:
+            sc=SqliteConnection('some file')
+            if sc.table_exists('tablename'):
+                ... do something ...
+        """
         query = """
             select 
                 name 
             from 
                 sqlite_master 
             where 
-                type='table' and name = '%s'
-        """ % tablename
+                type='table' and name = '%s'\n""" % tablename
+
+        if self.verbose:
+            stdout.write(query)
 
         curs = self.cursor()
         res = curs.execute(query).fetchall()
+        curs.close()
         if len(res) == 0:
             return False
         else:
@@ -259,15 +313,19 @@ class SqliteConnection(sqlite.Connection):
                 array. The data type is determined from the returned
                 data. Because the sqlite3 python module does not return
                 declared column types, we are stuck with 'i8' 'f8' and
-                string types. Note the length of the string column is
-                determined fro the *first* row, so you may end up with
-                truncated data. TODO: allow getting the max size of
-                string columns by looking at all the rows.
+                string types. 
+                
+                Note the length of the string column is determined from
+                the *first* row, so you may end up with truncated data
+                if the columns are variable length. TODO: allow getting
+                the max size of string columns by looking at all the
+                rows.
 
             dtype=None:
                 Explicitly send the data type for each row.  This can
                 save considerable memory if certain number columns are
-                not 8-byte.
+                not 8-byte.  Also, string fields can be declared large
+                enough to accomodate variable length columns.
 
         """
 
@@ -297,6 +355,7 @@ class SqliteConnection(sqlite.Connection):
         else:
             # this is cheaper
             res = numpy.fromiter(curs, dtype=dtype)
+        curs.close()
         return res
 
     def _extract_row_dtype(self, description, rows):
@@ -327,117 +386,39 @@ class SqliteConnection(sqlite.Connection):
             dt.append( (name,typecode) )
         return dt
     
-    def drop(self, tablename, verbose=False):
-        query = "drop table %s" % tablename
-        if verbose:
+    def drop(self, type, name):
+        """
+        Name:
+            drop
+        Calling Sequence:
+            sc=SqliteConnection('some file')
+            sc.drop(type, name)
+        Purpose:
+            Drop an object from the database.
+        Inputs:
+            type: The object type, e.g. table or index.
+            name: The name of the object.
+        """
+        query = "drop %s %s" % (type,name)
+        if self.verbose:
             stdout.write("%s\n" % query)
         curs=self.cursor()
         curs.execute(query)
 
-
-    def array2table(self, arr, tablename, indices=None,
-                    create=False, tmpdir=None, 
-                    cleanup=True,
-                    verbose=False):
+    def add_index(self, tablename, columns):
         """
         Name:
-            array2table
-        Purpose:
-            Stuff a recarray into an sqlite3 table
+            add_index
         Calling Sequence:
-            sc = SqliteConnection('somefile')
-            sc.array2table(arr, tablename, 
-                           indices=None,
-                           create=False, 
-                           tmpdir=None, 
-                           cleanup=True,
-                           verbose=False)
+            sc = SqliteConnection('some file')
+            sc.add_index(tablename, columns)
         Inputs:
-            arr: An array with fields. AKA recarray.
-            tablename: The name for a table.  It is created
-                if it doesn't exist.
-        Keywords:
-            indices: list containing names of columns to index.
-            create: If True, drop any existing table with the
-                same name.  Otherwise, append.
-            tmpdir: Location for the temporary file.
-            cleanup: If not True, leave the temporary file for 
-                debugging
-            verbose:
-                print info
-            
+            tablename: 
+                The name of the table where the index will be built.
+            columns: 
+                The columns to use on the index. Can be a string or a
+                list of strings for a multi-column index.
         """
-
-        from esutil import recfile
-        exists = self.table_exists(tablename)
-        if exists:
-            if create:
-                if verbose:
-                    stdout.write("Dropping existing table: %s\n" % tablename)
-                self.drop(tablename)
-            else:
-                if verbose:
-                    stdout.write("Appending to existing "
-                                 "table: %s\n" % tablename)
-        else:
-            # doesn't exist, so we have to create it
-            create=True
-
-        
-        if create:
-            tabledef = descr2tabledef(arr.dtype.descr, tablename)
-        
-            curs=self.cursor()
-
-            if verbose:
-                stdout.write(tabledef)
-
-            curs.execute(tabledef)
-
-
-        # write data to a temporary csv file and then import. Note we
-        # will pad nulls in writing because sqlite can't handle them
-        csvtmp=tempfile.NamedTemporaryFile(dir=tmpdir,
-                                           prefix=tablename+'-temp-', 
-                                           suffix='.csv',
-                                           delete=False)
-
-        csvname = csvtmp.name
-
-        if verbose:
-            stdout.write("Writing to temporary file: %s\n" % csvname)
-        r = recfile.Open(csvtmp.file,mode='w',delim=',', padnull=True)
-        r.write(arr.view(numpy.ndarray))
-        r.close()
-        csvtmp.close()
-
-        if verbose:
-            stdout.write("Importing data\n")
-        comm="""
-            sqlite3 -separator ',' %s ".import %s %s" 
-        """ % (self.dbfile, csvname, tablename)
-
-        status, stdo, stde = esutil.ostools.exec_process(comm, verbose=verbose)
-        if status != 0 or stde != "":
-            mess="""
-            Error occurred:
-                exit_status: %s
-                stdout: %s
-                stderr: %s
-            """ % (status,stdo,stde)
-            raise RuntimeError(mess)
-
-        if cleanup:
-            if verbose:
-                stdout.write("Cleaning up temporary file %s\n" % csvname)
-            os.remove(csvname)
-
-        if indices is not None:
-            for index in indices:
-                self.add_index(tablename, index, verbose=verbose)
-
-        
-    def add_index(self, tablename, columns, verbose=False):
 
         if not isinstance(columns,(list,tuple)):
             columns = [columns]
@@ -447,29 +428,125 @@ class SqliteConnection(sqlite.Connection):
         index_name = '_'.join(columns) + '_index'
         column_list = ','.join(columns)
 
-        query="""
-        create index if not exists %s on %s (%s)
-        \n""" % (index_name, tablename, column_list)
+        query=("create index if not exists "
+               "%s on %s (%s)""" % (index_name, tablename, column_list))
 
-        if verbose:
+        if self.verbose:
             stdout.write("Adding index: \n")
-            stdout.write(query)
+            stdout.write(query+'\n')
 
         curs.execute(query)
 
-    def fromarray(self, arr, tablename, indices=None,
-                    create=False, tmpdir=None, 
-                    cleanup=True,
-                    verbose=False):
+
+    def array2table(self, arr, tablename, 
+                    create=False, cleanup=True):
         """
-        Deprecated use array2table
+        Name:
+            array2table
+        Purpose:
+            Stuff a recarray into an sqlite3 table
+
+        Calling Sequence:
+            sc = SqliteConnection('somefile')
+            sc.array2table(arr, tablename, create=False, 
+                           cleanup=True)
+
+        Inputs:
+            arr: An array with fields. AKA recarray.
+            tablename: The name for a table.  It is created
+                if it doesn't exist.
+        Keywords:
+            create: 
+                If True, drop any existing table with the same name.
+                Otherwise, attempt to append.
+            cleanup: 
+                If not True, leave the temporary file for debugging
+
+        """
+
+        self._create_tabledef_from_array(arr, tablename, force=create)
+        tmpname = self.write_import_file(arr, extra=tablename)
+        self.import_file(tmpname, tablename)
+
+        if cleanup:
+            if self.verbose:
+                stdout.write("Cleaning up temporary file %s\n" % tmpname)
+            os.remove(tmpname)
+            
+    def _create_tabledef_from_array(self, arr, tablename, force=False):
+        """
+        Create the table definition from the array descriptor.
+        If force=True we will drop any existing table with this name
+        """
+        exists = self.table_exists(tablename)
+        if exists:
+            if force:
+                self.drop('table',tablename)
+            else:
+                # we'll assume the table has the right definition for
+                # this array, for now
+                return
+
+        tabledef = descr2tabledef(arr.dtype.descr, tablename)
+        curs=self.cursor()
+        if self.verbose:
+            stdout.write(tabledef)
+        curs.execute(tabledef)
+        curs.close()
+
+
+    def import_file(self, filename, tablename):
+        command="""
+            sqlite3 -separator '\t' %s ".import %s %s" 
+        """ % (self.dbfile, filename, tablename)
+
+        status, stdo, stde = \
+            esutil.ostools.exec_process(command, verbose=self.verbose)
+        if status != 0 or stde != "":
+            mess="""
+            Error occurred:
+                exit_status: %s
+                stdout: %s
+                stderr: %s
+            """ % (status,stdo,stde)
+            raise RuntimeError(mess)
+
+    def write_import_file(self, data, extra='sqlite'):
+        from esutil import recfile
+        tmpf = self.temp_file(extra)
+        tmpname = tmpf.name
+
+        if self.verbose:
+            stdout.write("Writing to temporary file: %s\n" % tmpname)
+        # padding nulls since sqlite cannot deal with them
+        r = recfile.Open(tmpf.file,mode='w',delim='\t', padnull=True)
+        r.write(data)
+        r.close()
+        tmpf.close()
+
+        return tmpname
+
+
+    def temp_file(self, extra):
+        # write data to a temporary csv file and then import.  We need
+        # to specify delete=False so the file will remain on disk after
+        # we close it
+        tmpf=tempfile.NamedTemporaryFile(dir=self.tmpdir,
+                                         prefix=extra+'-temp-', 
+                                         suffix='.csv',
+                                         delete=False)
+        return tmpf
+
+
+
+
+    def fromarray(self,arr,tablename,create=False,cleanup=True):
+        """
+        Deprecated. Use array2table
         """
         return self.array2table(arr, tablename, 
-                                indices=indices,
                                 create=create,
-                                tmpdir=tmpdir,
-                                cleanup=cleanup,
-                                verbose=verbose)
+                                cleanup=cleanup)
 
 
 
@@ -481,7 +558,7 @@ def descr2tabledef(descr, tablename):
         [(name1, type1), (name2,type2),...]
 
     Where names are strings and types are strings such as '<f4' or '|S20'.
-    See numpy2coltype() for how these type strings are converted to column
+    See numpy2sqlite() for how these type strings are converted to column
     type definitions.
 
     These can be retrieved from a recarray, or numpy array with fields, via
@@ -507,7 +584,7 @@ def descr2coldefs(descr):
         [(name1, type1), (name2,type2),...]
 
     Where names are strings and types are strings such as '<f4' or '|S20'.
-    See numpy2coltype() for how these type strings are converted to column
+    See numpy2sqlite() for how these type strings are converted to column
     type definitions.
 
     The descr can be retrieved from a recarray, or numpy array with fields, via
@@ -516,58 +593,37 @@ def descr2coldefs(descr):
 
     coldefs=[]
     for d in descr:
+        if len(d) > 2:
+            mess="""
+            Found array field: %s
+            sqlite does not support array columns
+            """ % str(d)
+            raise ValueError(mess)
         name = d[0]
         tname = d[1]
 
-        coltype = numpy2coltype(tname)
+        coltype = numpy2sqlite(tname)
 
-        coldef = '%s %s' % (name, coltype)
+        coldef = '%s %s not null' % (name, coltype)
         coldefs.append(coldef)
 
     return coldefs
 
-def numpy2coltype(typename):
+def numpy2sqlite(typename):
     """
-
-    When we get more power into sqlite3 we will do below. For now
-    we stick to the builtin sqlite types:
-
-    Convert a numpy data type name to an appropriate column type in sqlite.
-    Note sqlite doesn't actualy use this information; it will store any value
-    into any column.  This is to facilitate reading the data back into numpy
-    arrays.  Byte order characters are ignored at the beginning, e.g '>i4'.
-
-    The mapping:
-        numpy                       column declaration
-        ----------------------------------------------------------
-        i1                          int8
-        i2                          int16
-        i4                          int32
-        i8                          int64
-
-        f4                          float32
-        f8                          float64
-
-        SN                          char(N)
+    Convert a numpy type to a sqlite column type.
     """
 
     tname = typename.strip().lower()
     tname = _remove_byteorder(tname)
 
     if tname[0] == 's':
-        return 'TEXT'
-        """
-        try:
-            lenstr = int( tname[1:] )
-        except:
-            raise ValueError("Could not extract length from %s" % tname)
-        return 'char(%s)' % lenstr
-        """
+        return 'text'
     
-    if tname not in _np2col:
+    if tname not in _np2sqlite:
         raise ValueError("unrecognized typename: %s" % tname)
 
-    return _np2col[tname]
+    return _np2sqlite[tname]
 
 def tabledef2dtype(table_info, columns=None, size=None):
     """
@@ -588,7 +644,7 @@ def tabledef2dtype(table_info, columns=None, size=None):
                 keepcol=False
         
         if keepcol:
-            typ = coltype2numpy(info['type'])
+            typ = sqlite2numpy(info['type'])
 
             if typ == 'S?':
                 raise ValueError("Dont' support variable length columns yet")
@@ -604,7 +660,7 @@ def _remove_byteorder(tname):
     else:
         return tname
 
-def coltype2numpy(typename, size=None):
+def sqlite2numpy(typename, size=None):
     """
     We can't use this yet....
 
@@ -716,7 +772,11 @@ def coltype2numpy(typename, size=None):
 
 
 
-# dict sqlite tools
+#
+# dict sqlite tools. These need to be incorporated into the
+# SqliteConnection class
+#
+
 def py2sqlite(data):
     """
     Return an sqlite type name based on the type of the input data
@@ -733,10 +793,10 @@ def py2sqlite(data):
     else:
         message="""
         Error: python data must be one of the following types:
-            integer
+            int/long
             float
-            string
-            None"""
+            string/unicode
+        """
         raise ValueError(message)
 
 def dict2coldefs(data, types=None, keys=None):
@@ -913,26 +973,4 @@ def dict2table(data, dbfile, tablename,
         for index in indices:
             add_index(dbpath, tablename, index, verbose=verbose)
 
-
-
-def table_info(dbfile, tablename=None, columns=None):
-    """
-    Convenience function
-    """
-    conn = SqliteConnection(dbfile)
-    return conn.table_info(tablename=tablename, columns=columns)
-
-def describe(dbfile, typ=None, tablename=None):
-    """
-    Convenience function
-    """
-    conn = SqliteConnection(dbfile)
-    conn.describe(typ=typ, tablename=tablename)
-
-def asarray(dbfile, tablename, query=None):
-    """
-    Convenience function
-    """
-    conn = SqliteConnection(dbfile)
-    return conn.asarray(tablename, query=query)
 
