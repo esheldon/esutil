@@ -1,5 +1,3 @@
-#summary News
-
 = News for esutil =
 
 2010-11-19: The module [http://code.google.com/p/esutil/source/browse/trunk/esutil/sqlite_util.py sqlite_util] is ready for prime time.
