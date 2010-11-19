@@ -16,7 +16,8 @@ _instantiate_docs="""
             array2table:  
                 Stuff a numpy array with fields (recarray) into a table,
                 creating it if necessary.  The column names will match
-                those in the array.
+                those in the array.  Requires the sqlite3 command
+                line tool.
 
             table_exists: 
                 Check if the table exists.
@@ -479,7 +480,8 @@ class SqliteConnection(sqlite.Connection):
         Name:
             array2table
         Purpose:
-            Stuff a recarray into an sqlite3 table
+            Stuff a recarray into an sqlite3 table Requires the sqlite3
+            command line tool.
 
         Calling Sequence:
             sc = SqliteConnection('somefile')
