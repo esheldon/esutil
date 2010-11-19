@@ -45,6 +45,19 @@ _instantiate_docs="""
                 data.  Default is wherever the tempfile module chooses.
             verbose:
                 print information about queries and processing.
+
+    Examples:
+        sc = SqliteConnection('some file')
+        >>> sc.describe('table','test')
+        name                       type
+        --------------------------------
+        id                      integer
+        ra                         real
+        dec                        real
+        name                       text
+        rmag                       real
+        somestring                 text
+
 """
 
 __doc__="""
@@ -147,7 +160,7 @@ class SqliteConnection(sqlite.Connection):
             # tables we print in a particular way
             info = self.table_info(name)
 
-            stdout.write("%-15s %15s\n" % ("field","type"))
+            stdout.write("%-15s %15s\n" % ("name","type"))
             stdout.write("-"*32+"\n")
             for row in info:
                 stdout.write("%-15s %15s\n" % (row['name'],row['type']))
