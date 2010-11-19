@@ -9,12 +9,14 @@ _instantiate_docs="""
         See each method's documentation for more details.
 
             execute: 
-                Execute a query and return the cursor. Alternatively
-                supports the asarray=True keyword to return the result
-                as a numpy array with fields (recarray).
+                Execute a query and return the cursor. Alternatively if
+                the keyword asarray=True return the result as a numpy
+                array with fields corresponding to the columns (recarray).
 
             array2table:  
-                Stuff a numpy array with fields (recarray) into a table.
+                Stuff a numpy array with fields (recarray) into a table,
+                creating it if necessary.  The column names will match
+                those in the array.
 
             table_exists: 
                 Check if the table exists.
@@ -47,9 +49,18 @@ _instantiate_docs="""
                 print information about queries and processing.
 
     Examples:
-        sc = SqliteConnection('some file')
+
+        >>> sc = SqliteConnection('some file')
+
+        # put a recarray into a table
+        >>> print arr.dtype
+        [('id', '<i8'), ('ra', '<f8'), ('dec', '<f8'), 
+         ('name', '|S25'), ('rmag', '<f8'), ('somestring', '|S10')]
+        >>> sc.array2table(arr, 'test')
+
+        # describe the table "test"
         >>> sc.describe('table','test')
-        name                       type
+        column                     type
         --------------------------------
         id                      integer
         ra                         real
@@ -57,6 +68,17 @@ _instantiate_docs="""
         name                       text
         rmag                       real
         somestring                 text
+
+        # read some data
+        >>> sc.execute('select id,ra,dec from test where ra > 100',asarray=True)
+            
+        array([(0, 234.22054479562661, 51.847377397263408),
+               (1, 191.35238390475229, 74.59074110561744),
+               (2, 204.31881737647379, -79.021416563580445),
+               (5, 273.42461342683248, -84.026182045433345)], 
+              dtype=[('id', '<i8'), ('ra', '<f8'), ('dec', '<f8')])
+
+
 
 """
 
@@ -160,7 +182,7 @@ class SqliteConnection(sqlite.Connection):
             # tables we print in a particular way
             info = self.table_info(name)
 
-            stdout.write("%-15s %15s\n" % ("name","type"))
+            stdout.write("%-15s %15s\n" % ("column","type"))
             stdout.write("-"*32+"\n")
             for row in info:
                 stdout.write("%-15s %15s\n" % (row['name'],row['type']))
