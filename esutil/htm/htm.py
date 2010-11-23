@@ -423,8 +423,8 @@ class HTM(htmc.HTMC):
                     flag_matched[m2[j1[i]]] = 1
             else:
                 #compute difference in z-direction for the different matches.
-                zdiff = numpy.abs(z2[m2[j1[i]:j2[i]]] - \
-                                   z1[m1[j1[i]:j2[i]]])
+                zdiff = z1[m1[j1[i]:j2[i]]] - \
+                        z2[m2[j1[i]:j2[i]]]
 
                 angdists = d12[j1[i]:j2[i]]
                 matchis = m2[j1[i]:j2[i]]
@@ -435,12 +435,12 @@ class HTM(htmc.HTMC):
 
                 #If none remains, there's no match
                 if len(zdiff) > 0:
-                    # sort matches by distance in z direction
-                    isort = zdiff.argsort()
+                    # sort matches by absolute distance in z direction
+                    isort = (numpy.abs(zdiff)).argsort()
                     angdists = angdists[isort]
                     zdiff = zdiff[isort]
                     matchis = matchis[isort]
-                    flag_matched[m2[j1[i]]+isort[0]] = 1
+                    flag_matched[m2[j1[i]+isort[0]]] = 1
 
 
 
