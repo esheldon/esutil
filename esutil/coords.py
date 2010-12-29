@@ -419,6 +419,7 @@ def eq2xyz(ra, dec, dtype='f8'):
         x,y,z = eq2xyz(ra,dec)
 
     Notes:
+        Inputs and outputs are degrees.
         This follows the same convention as the STOMP package.
     """
 
@@ -452,23 +453,34 @@ def xyz2eq(xin,yin,zin):
 
    
 
-# Not good for lensing, we also need the angle in the ra-dec or whatever
-# coords
-def sphdist(ra1, dec1, ra2, dec2):
+def sphdist(ra1, dec1, ra2, dec2, units=['deg','deg']):
     """
     Name:
         sphdist
     Purpose:
         Get the arc length between two points on the unit sphere
     Calling Sequence:
-        d = sphdist(ra1,dec1,ra2,dec2)
+        d = sphdist(ra1,dec1,ra2,dec2,units=['deg','deg'])
     Inputs:
-        ra1,dec1,ra2,dec2: Scalars or arrays in degrees.  Must be
-            the same length
+        ra1,dec1,ra2,dec2: 
+            Scalars or arrays.  Must be the same length.
+    Keywords:
+        units: 
+            A sequence containing the units of the in put and output.  Default
+            ['deg',deg'], which means inputs and outputs are in degrees.  Units
+            can be 'deg' or 'rad'
+
     """
     
-    x1,y1,z1 = eq2xyz(ra1, dec1)
-    x2,y2,z2 = eq2xyz(ra2, dec2)
+    units_in,units_out = units
+
+    # note x,y,z from eq2xyz always returns 8-byte float
+    if units_in == 'rad':
+        x1,y1,z1 = eq2xyz(ra1, numpy.rad2deg(dec1))
+        x2,y2,z2 = eq2xyz(ra2, numpy.rad2deg(dec2))
+    else:
+        x1,y1,z1 = eq2xyz(ra1, dec1)
+        x2,y2,z2 = eq2xyz(ra2, dec2)
 
     costheta = x1*x2 + y1*y2 + z1*z2
     w,=where(costheta > 1.0)
@@ -480,10 +492,15 @@ def sphdist(ra1, dec1, ra2, dec2):
         costheta[w] = -1.0
     theta = arccos(costheta)
 
+    if units_out == 'deg':
+        numpy.rad2deg(theta,theta)
     return theta
 
 
 def gcirc(ra1,dec1,ra2,dec2,getangle=False):
+    """
+    This is currently very inflexible: degrees in, radians out
+    """
     ra1  = numpy.array(ra1, dtype='f8',ndmin=1,copy=False)
     dec1 = numpy.array(dec1,dtype='f8',ndmin=1,copy=False)
     ra2  = numpy.array(ra2, dtype='f8',ndmin=1,copy=False)
