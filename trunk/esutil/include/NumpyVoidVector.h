@@ -55,7 +55,7 @@
  *    npy_intp itemsize = vec.item_size();
  *
  *
- *    // Access data in a way that is aware of strides
+ *    // Access data without knowledge of type
  *    void* p = vec.ptr();
  *
  *    // if we know the data are double...
