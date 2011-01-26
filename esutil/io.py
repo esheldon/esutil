@@ -11,14 +11,6 @@ The functions most users will use:
         Provide a single interface to write a variety of file types.
         Not yet implemented.
 
-    Useful functions called by the above:
-
-        read_fits(): 
-            A convenience function wrapping pyfits.getdata.  Adds some extra
-            functionality such as getting subsets of rows and columns for
-            binary tables, ensuring native byte ordering, and forcing the case
-            of binary table columns to be upper/lower.
-
 Created late 2009 Erin Sheldon, Brookhaven National Laboratory.  See docs
 for individual methods for revision history.
 
@@ -65,7 +57,7 @@ except:
         have_pyfits=False
 
 
-def read(fobj, **keywords): 
+def read(fileobj, **keywords): 
     """
     Name:
         io.read
@@ -94,10 +86,9 @@ def read(fobj, **keywords):
             Flexible Image Transport System
         REC
             Simple ascii header followed by data in binary or text form. These
-            files can be written/read using the esutil.sfile module.  Supports
-            writing in faster native byte ordering for binary data and
-            writing/reading of recarrays (numpy arrays with fields) to ascii
-            and binary.  Supports reading sub-selections of rows and columns.
+            files can be written/read using the esutil.sfile module.  Unlike
+            FITS files, REC files support appending.  Also supports reading
+            sub-selections of rows and columns.
         XML
             Extensible Markup Language
         JSON
@@ -171,22 +162,22 @@ def read(fobj, **keywords):
     verbose = keywords.get('verbose', False)
 
     # If input is a sequence, read them all.
-    if isinstance(fobj, (list,tuple)):
+    if isinstance(fileobj, (list,tuple)):
         combine = keywords.get('combine', False)
 
         # a list was given
         alldata = []
-        for f in fobj:
+        for f in fileobj:
             # note, only fields/columns is begin passed on but not rows
             # also note seproot is not being passed on
             data = read(f, **keywords) 
             alldata.append(data)
 
         if combine:
-            if len(fobj) == 1:
+            if len(fileobj) == 1:
                 alldata = alldata[0]
             else:
-                fn,type = _get_fname_ftype_from_inputs(fobj[0], **keywords)
+                fn,fobj,type = _get_fname_ftype_from_inputs(fileobj[0], **keywords)
                 if type == 'fits' or type == 'rec':
                     # this will only work if the all data has the 
                     # same structure
@@ -196,7 +187,7 @@ def read(fobj, **keywords):
         return alldata
 
     # a scalar was input
-    fname,type=_get_fname_ftype_from_inputs(fobj, **keywords)
+    fname,fobj,type=_get_fname_ftype_from_inputs(fileobj, **keywords)
     if verbose:
         stdout.write("Reading: %s\n" % fname)
 
@@ -215,7 +206,7 @@ def read(fobj, **keywords):
     return data
 
 
-def write(fobj, data, **keywords):
+def write(fileobj, data, **keywords):
     """
     Name:
         io.write
@@ -225,7 +216,7 @@ def write(fobj, data, **keywords):
 
     Usage:
         import esutil
-        esutil.io.write(fobj, data, **keywords)
+        esutil.io.write(fileobj, data, **keywords)
 
     Inputs:
         filename/object:
@@ -257,10 +248,10 @@ def write(fobj, data, **keywords):
             NOTE: requires the patched version of pyfits that comes with esutil.
         REC
             Simple ascii header followed by data in binary or text form. These
-            files can be written/read using the esutil.sfile module.  Supports
-            writing in faster native byte ordering for binary data and
-            writing/reading of recarrays (numpy arrays with fields) to ascii
-            and binary.  Supports reading sub-selections of rows and columns.
+            files can be written/read using the esutil.sfile module.  Unlike
+            FITS files, REC files support appending.  Also supports reading
+            sub-selections of rows and columns.
+
         JSON
             JavaScript Object Notation.  Less flexible than XML but more useful
             in most practical situations such as storing inhomogeneous data in
@@ -268,7 +259,7 @@ def write(fobj, data, **keywords):
     """
 
     # a scalar was input
-    fname,type=_get_fname_ftype_from_inputs(fobj, **keywords)
+    fname,fobj,type=_get_fname_ftype_from_inputs(fileobj, **keywords)
 
     # pick the right reader based on type
     if type == 'fits':
@@ -282,16 +273,16 @@ def write(fobj, data, **keywords):
 
 
 
-def read_fits(fobj, **keywords):
+def read_fits(fileobj, **keywords):
     """
     Name:
         read_fits
     Purpose:
         Read data from a single fits file.
     Calling Sequence:
-        data=read_fits(fobj, **keywords)
+        data=read_fits(fileobj, **keywords)
     Inputs:
-        fobj: The file name/file object for a fits file.
+        fileobj: The file name/file object for a fits file.
     Keywords:
         ext: Which extension, or HDU, to read.  Default 0.
         view: What view of the data to return. Default is numpy.ndarray
@@ -333,17 +324,17 @@ def read_fits(fobj, **keywords):
         import numpy
         view = numpy.ndarray
 
-    if isinstance(fobj,(str,unicode)):
-        fobj=ostools.expand_filename(fobj)
+    if isinstance(fileobj,(str,unicode)):
+        fileobj=ostools.expand_filename(fileobj)
 
     if 'ignore_missing_end' not in keywords:
         keywords['ignore_missing_end'] = True
     if header:
         # the ignore_missing_end=True is for the multitude
         # of malformed FITS files out there
-        d,h = pyfits.getdata(fobj, **keywords)
+        d,h = pyfits.getdata(fileobj, **keywords)
     else:
-        d = pyfits.getdata(fobj, **keywords)
+        d = pyfits.getdata(fileobj, **keywords)
 
     d=d.view(view)
 
@@ -368,17 +359,17 @@ def read_fits(fobj, **keywords):
         return d
 
 
-def write_fits(fobj, data, **keys):
+def write_fits(fileobj, data, **keys):
     verbose = keys.get('verbose', False)
     if verbose:
 
         # only write if appending or file does not exist: pyfits will print a
         # message when over-writing only
 
-        if isinstance(fobj,file):
+        if isinstance(fileobj,file):
             name=f.name
         else:
-            name=fobj
+            name=fileobj
 
         append = keys.get('append', False)
         if append:
@@ -388,14 +379,14 @@ def write_fits(fobj, data, **keys):
                 stdout.write("Writing to: %s\n" % name)
 
 
-    pyfits.writeto(fobj, data, **keys)
+    pyfits.writeto(fileobj, data, **keys)
 
-def write_rec(fobj, data, **keys):
-    sfile.write(data, fobj, **keys)
+def write_rec(fileobj, data, **keys):
+    sfile.write(data, fileobj, **keys)
 
 
 
-def read_rec(fobj, **keywords):
+def read_rec(fileobj, **keywords):
     import numpy
     header=keywords.get('header',False)
     view=keywords.get('view',numpy.ndarray)
@@ -404,7 +395,7 @@ def read_rec(fobj, **keywords):
     fields=keywords.get('fields',None)
     ensure_native = keywords.get('ensure_native',False)
 
-    data = sfile.read(fobj, header=header, view=view, 
+    data = sfile.read(fileobj, header=header, view=view, 
                       rows=rows, fields=fields, columns=columns)
     if ensure_native:
         numpy_util.to_native(data, inplace=True)
@@ -412,10 +403,10 @@ def read_rec(fobj, **keywords):
     return data
 
 
-def read_xml(fobj, **keywords):
+def read_xml(fileobj, **keywords):
     noroot=keywords.get('noroot',True)
     seproot=keywords.get('seproot',False)
-    data = xmltools.xml2dict(fobj, noroot=noroot, seproot=seproot)
+    data = xmltools.xml2dict(fileobj, noroot=noroot, seproot=seproot)
     return data
 
 def ftype2fext(ftype_input):
@@ -447,13 +438,15 @@ def fext2ftype(fext_input):
     else:
         raise ValueError("Don't know about files with '%s' extension" % fext)
 
-def _get_fname_ftype_from_inputs(fobj, **keywords):
+def _get_fname_ftype_from_inputs(fileobj, **keywords):
 
-    if isinstance(fobj, file):
-        fname = fobj.name
-    elif isinstance(fobj, (str,unicode)):
+    if isinstance(fileobj, file):
+        fname = fileobj.name
+        fobj = fileobj
+    elif isinstance(fileobj, (str,unicode)):
         # make sure we expand all ~username and other variables
-        fname=ostools.expand_filename(fobj)
+        fname=ostools.expand_filename(fileobj)
+        fobj = fname
     else:
         raise ValueError("Input must be a string or file object, or a "
                          "list thereof")
@@ -469,7 +462,7 @@ def _get_fname_ftype_from_inputs(fobj, **keywords):
         ftype=get_ftype(fname)
     ftype = ftype.lower()
 
-    return fname, ftype
+    return fname, fobj, ftype
 
 
 def get_ftype(filename):
