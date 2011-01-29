@@ -59,6 +59,264 @@ except:
 
 import esutil.numpy_util as numpy_util
 
+class binner(dict):
+    def __init__(self, x, y=None, weights=None):
+        self.x = numpy.array(x, ndmin=1, copy=False)
+        self.y = y
+        self.weights = weights
+        self.revind = None
+        self.s = None
+
+
+        if y is not None:
+            self.y = numpy.array(y, ndmin=1, copy=False)
+            if self.y.size != self.x.size:
+                raise ValueError("y must be same len as x")
+
+        if weights is not None:
+            self.weights = numpy.array(weights, ndmin=1, copy=False)
+            if self.weights.size != self.x.size:
+                raise ValueError("Weights must be same len as data")
+
+
+
+    def dohist(self, binsize=None, nbin=None, nperbin=None, min=None, max=None, rev=False):
+        """
+        Perform the basic histogram, optionally getting reverse indices. Note
+        if weights were sent, reverse indices will always be calculated
+        """
+
+        self.clear()
+
+        if nperbin is not None:
+            raise RuntimeError("Implement nperbin")
+        elif nbin is not None or binsize is not None:
+            self._hist_by_binsize_or_nbin(binsize=binsize, nbin=nbin, min=min, max=max, rev=rev)
+        else:
+            raise ValueError("Send binsize or nbin or nperbin")
+
+    def _hist_by_binsize_or_nbin(self, binsize=None, nbin=None, min=None, max=None, rev=False):
+        self._get_sort_index()
+        s=self.s
+
+        self._get_minmax(min=min, max=max)
+        dmin=self.dmin; dmax=self.dmax; dowhere=self.dowhere
+        if dowhere:
+            # where will preserve order, so subscript with s
+            w,=numpy.where( (self.x[s] >= dmin) & (self.x[s] <= dmax) )
+            if w.size == 0:
+                raise ValueError("No data in specified min/max range\n")
+            s = s[w]
+
+        if binsize is not None:
+            nbin = numpy.int64( (dmax-dmin)/binsize ) + 1
+        elif nbin is not None:
+            binsize = float(dmax-dmin)/nbin
+        else:
+            raise RuntimeError("Expected binsize or nbin")
+        self['binsize'] = binsize
+        self['nbin'] = nbin
+
+        self._do_hist(self.x, dmin, s, binsize, nbin, rev=rev)
+
+
+    def _do_hist(self, data, dmin, s, bsize, nbin, rev=False):
+        dorev = rev
+        if self.weights is not None:
+            # force rev so we can add up in bins with weights
+            dorev=True
+
+        if have_chist:
+            # compute using the external C++ code
+            if dorev:
+                hist, revind = chist.chist(data, dmin, s, bsize, nbin, dorev)
+            else:
+                hist         = chist.chist(data, dmin, s, bsize, nbin, dorev)
+                revind=None
+
+        else:
+            # compute in a python loop
+
+            if dorev:
+                revsize = s.size + nbin+1
+                revind = numpy.zeros(revsize, dtype='i8')
+            else:
+                # this is just a dummy variable
+                revind=None
+            hist = numpy.zeros(nbin, dtype='i8')
+
+            _dohist(data, dmin, s, bsize, hist, revind=revind)
+
+        self['hist'] = hist
+        if revind is not None:
+            self.revind = revind
+
+
+    def _get_sort_index(self):
+        if self.s is None:
+            self.s = self.x.argsort()
+
+    def _get_minmax(self, min=None, max=None):
+        self._get_sort_index()
+        s=self.s
+        if min is not None:
+            dmin = min
+            dowhere=True
+        else:
+            dmin = self.x[s[0]]
+            dowhere=False
+
+
+        if max is not None:
+            dmax = max
+            dowhere=True
+        else:
+            dmax = self.x[s[-1]]
+            dowhere=False
+        
+        self.dmin = dmin
+        self.dmax = dmax
+        self.dowhere=dowhere
+
+    def calc_stats(self):
+        if 'hist' not in self:
+            raise ValueError("run dohist first")
+
+        xpref=''
+        if self.y is not None:
+            xpref = 'x'
+
+        if 'nperbin' in self:
+            # we need to get the actual bin edges
+            # from the reverse indices
+            raise RuntimeError("Implement stats for nperbin")
+        else:
+            # if we used a binsize or nbin, we return the
+            # edges and center of the bin
+            nhist = len(self['hist'])
+
+            low = numpy.arange(nhist, dtype='f8')
+            low = self.dmin + low*self['binsize']
+
+            high = low + self['binsize']
+            center = low + 0.5*self['binsize']
+
+            self[xpref+'low'] = low
+            self[xpref+'high'] = high
+            self[xpref+'center'] = center
+
+        if self.revind is not None:
+            revind = self.revind
+            # calculate the mean in the bins
+            xmean = numpy.zeros(nhist)
+            xmean[:] = -9999.0
+            xstd = xmean.copy()
+            xerr = xmean.copy()
+            xmedian = xmean.copy()
+            if self.y is not None:
+                ymean = xmean.copy()
+                ystd = xmean.copy()
+                yerr = xmean.copy()
+                ymedian = xmean.copy()
+
+            if self.weights is not None:
+                whist = xmean.copy()
+                whist[:] = 0
+                wmean = xmean.copy()
+                wstd = xmean.copy()
+                werr = xmean.copy()
+                werr2 = xmean.copy()
+                if self.y is not None:
+                    ywmean = xmean.copy()
+                    ywstd = xmean.copy()
+                    ywerr = xmean.copy()
+                    ywerr2 = xmean.copy()
+
+            for i in xrange(nhist):
+                if revind[i] != revind[i+1]:
+                    w = revind[ revind[i]:revind[i+1] ]
+
+                    if w.size == 1:
+                        xmean[i] = self.x[w[0]]
+                        xmedian[i] = xmean[i]
+                        xstd[i] = 0
+                        xerr[i] = xmean[i]
+                        if self.y is not None:
+                            ymean[i] = self.y[w[0]]
+                            ymedian[i] = ymean[i]
+                            ystd[i] = 0
+                            yerr[i] = ymean[i]
+
+                        if self.weights is not None:
+                            whist[i] = self.x[w[0]]*self.weights[w[0]]
+                            wmean[i] = xmean[i]
+                            wstd[i] = 0
+                            werr[i] = wmean[i]
+                            werr2[i] = wmean[i]
+                            if self.y is not None:
+                                ywmean[i] = ymean[i]
+                                ywstd[i] = 0
+                                ywerr[i] = ywmean[i]
+                                ywerr2[i] = ywmean[i]
+
+
+                    else:
+                        xmean[i] = self.x[w].mean()
+                        xstd[i] = self.x[w].std()
+                        xerr[i] = xstd[i]/numpy.sqrt(w.size)
+                        xmedian[i] = numpy.median(self.x[w])
+                        if self.y is not None:
+                            ymean[i] = self.y[w].mean()
+                            ystd[i] = self.y[w].std()
+                            yerr[i] = ystd[i]/numpy.sqrt(w.size)
+                            ymedian[i] = numpy.median(self.y[w])
+
+                        if self.weights is not None:
+                            whist[i] = self.weights[w].sum()
+                            wm,we,ws=wmom(self.x[w],self.weights[w],sdev=True)
+                            j1,we2=wmom(self.x[w],self.weights[w], calcerr=True)
+                            wmean[i] = wm
+                            wstd[i] = ws
+                            werr[i] = we
+                            werr2[i] = we2
+
+                            if self.y is not None:
+                                wm,we,ws=wmom(self.y[w],self.weights[w],sdev=True)
+                                j1,we2=wmom(self.y[w],self.weights[w], calcerr=True)
+                                ywmean[i] = wm
+                                ywstd[i] = ws
+                                ywerr[i] = we
+                                ywerr2[i] = we2
+
+
+
+
+            self[xpref+'mean'] = xmean
+            self[xpref+'std'] = xstd
+            self[xpref+'err'] = xerr
+            self[xpref+'median'] = xmedian
+            if self.y is not None:
+                self['ymean'] = ymean
+                self['ystd'] = ystd
+                self['yerr'] = yerr
+                self['ymedian'] = ymedian
+
+
+            if self.weights is not None:
+                self['whist'] = whist
+                self['w'+xpref+'mean'] = wmean
+                self['w'+xpref+'std'] = wstd
+                self['w'+xpref+'err'] = werr
+                self['w'+xpref+'err2'] = werr2
+                if self.y is not None:
+                    self['ywmean'] = ywmean
+                    self['ywstd'] = ywstd
+                    self['ywerr'] = ywerr
+                    self['ywerr2'] = ywerr2
+
+
+
+
 
 def histogram(data_input, binsize=1., nbin=None, min=None, max=None, rev=False, 
               extern=True, use_weave=False, weights=None, more=False):
@@ -208,14 +466,14 @@ def histogram(data_input, binsize=1., nbin=None, min=None, max=None, rev=False,
             revind = numpy.zeros(revsize, dtype='i8')
         else:
             # this is just a dummy variable
-            revind=numpy.zeros(1, dtype='i8')
+            revind=None
         hist = numpy.zeros(nbin, dtype='i8')
 
         # populate the array from nbin+1:nbin+1+s.size
         # with the sort indices.  Simultaneosly record bin
         # edges at the beginning of reverse indices
 
-        _dohist(data, dmin, s, bsize, hist, revind, dorev=rev)
+        _dohist(data, dmin, s, bsize, hist, revind=revind)
 
 
 
@@ -308,13 +566,15 @@ def histogram(data_input, binsize=1., nbin=None, min=None, max=None, rev=False,
 
         return output
 
-
-
-def _dohist(data, dmin, s, binsize, hist, revind, dorev=False):
+def _dohist(data, dmin, s, binsize, hist, revind=None):
     """
     This is the slower python-only implementation
     """
     
+    dorev=False
+    if revind is not None:
+        dorev=True
+
     nbin=hist.size
     offset = nbin+1
     i=0
