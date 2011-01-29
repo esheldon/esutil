@@ -43,6 +43,7 @@ def bscatter(x, y, show=True, plt=None, **keywords):
                  color=None,
                  xlabel=None, 
                  ylabel=None, 
+                 label=None,
                  title=None,
                  file=None, 
                  xsize=None, 
@@ -69,6 +70,11 @@ def bscatter(x, y, show=True, plt=None, **keywords):
         pkeywords['color'] = keywords['color']
 
     p=biggles.Points(x, y, type=type, **pkeywords)
+
+    label = keywords.get('label',None)
+    if label is not None:
+        p.label = label
+
     plt.add(p)
 
     if 'yerr' in keywords:
@@ -127,6 +133,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
               nbin=None,
               weights=None,
               gethist=False,
+              getphist=False,
               min=None,
               max=None,
               xrange=None,
@@ -134,6 +141,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
               color='black',
               xlabel=None, 
               ylabel=None, 
+              label=None,
               title=None,
               file=None, 
               xsize=None, 
@@ -208,8 +216,11 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
             plt.show()
 
     gethist = keywords.get('gethist',False)
+    getphist = keywords.get('getphist',False)
     if gethist:
         return plt,hout
+    elif getphist:
+        return plt,ph
     else:
         return plt
 
