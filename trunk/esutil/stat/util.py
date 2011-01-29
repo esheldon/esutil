@@ -189,7 +189,8 @@ class Binner(dict):
         if 'nperbin' in self:
             # we need to get the actual bin edges
             # from the reverse indices
-            raise RuntimeError("Implement stats for nperbin")
+            #raise RuntimeError("Implement stats for nperbin")
+            pass
         else:
             # if we used a binsize or nbin, we return the
             # edges and center of the bin
@@ -208,28 +209,27 @@ class Binner(dict):
         if self.revind is not None:
             revind = self.revind
             # calculate the mean in the bins
-            xmean = numpy.zeros(nhist)
-            xmean[:] = -9999.0
-            xstd = xmean.copy()
-            xerr = xmean.copy()
+            xmean   = numpy.zeros(nhist) - 9999.0
+            xstd    = xmean.copy()
+            xerr    = xmean.copy()
             xmedian = xmean.copy()
             if self.y is not None:
-                ymean = xmean.copy()
-                ystd = xmean.copy()
-                yerr = xmean.copy()
+                ymean   = xmean.copy()
+                ystd    = xmean.copy()
+                yerr    = xmean.copy()
                 ymedian = xmean.copy()
 
             if self.weights is not None:
                 whist = xmean.copy()
                 whist[:] = 0
                 wmean = xmean.copy()
-                wstd = xmean.copy()
-                werr = xmean.copy()
+                wstd  = xmean.copy()
+                werr  = xmean.copy()
                 werr2 = xmean.copy()
                 if self.y is not None:
                     ywmean = xmean.copy()
-                    ywstd = xmean.copy()
-                    ywerr = xmean.copy()
+                    ywstd  = xmean.copy()
+                    ywerr  = xmean.copy()
                     ywerr2 = xmean.copy()
 
             for i in xrange(nhist):
@@ -291,27 +291,27 @@ class Binner(dict):
 
 
 
-            self[xpref+'mean'] = xmean
-            self[xpref+'std'] = xstd
-            self[xpref+'err'] = xerr
+            self[xpref+'mean']   = xmean
+            self[xpref+'std']    = xstd
+            self[xpref+'err']    = xerr
             self[xpref+'median'] = xmedian
             if self.y is not None:
-                self['ymean'] = ymean
-                self['ystd'] = ystd
-                self['yerr'] = yerr
+                self['ymean']   = ymean
+                self['ystd']    = ystd
+                self['yerr']    = yerr
                 self['ymedian'] = ymedian
 
 
             if self.weights is not None:
-                self['whist'] = whist
+                self['whist']          = whist
                 self['w'+xpref+'mean'] = wmean
-                self['w'+xpref+'std'] = wstd
-                self['w'+xpref+'err'] = werr
+                self['w'+xpref+'std']  = wstd
+                self['w'+xpref+'err']  = werr
                 self['w'+xpref+'err2'] = werr2
                 if self.y is not None:
                     self['ywmean'] = ywmean
-                    self['ywstd'] = ywstd
-                    self['ywerr'] = ywerr
+                    self['ywstd']  = ywstd
+                    self['ywerr']  = ywerr
                     self['ywerr2'] = ywerr2
 
 
