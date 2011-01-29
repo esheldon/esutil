@@ -59,7 +59,7 @@ except:
 
 import esutil.numpy_util as numpy_util
 
-class binner(dict):
+class Binner(dict):
     def __init__(self, x, y=None, weights=None):
         self.x = numpy.array(x, ndmin=1, copy=False)
         self.y = y
