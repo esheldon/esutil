@@ -39,7 +39,7 @@ def bscatter(x, y, show=True, plt=None, **keywords):
                  yerr=None,
                  xrange=None,
                  yrange=None,
-                 type='diamond', 
+                 type='filled_circle', 
                  color=None,
                  xlabel=None, 
                  ylabel=None, 
@@ -69,7 +69,11 @@ def bscatter(x, y, show=True, plt=None, **keywords):
     if 'color' in keywords:
         pkeywords['color'] = keywords['color']
 
-    p=biggles.Points(x, y, type=type, **pkeywords)
+    if type in ["solid","dotted","dotdashed","shortdashed",
+                "longdashed","dotdotdashed","dotdotdotdashed"]:
+        p=biggles.Curve(x, y, type=type, **pkeywords)
+    else:
+        p=biggles.Points(x, y, type=type, **pkeywords)
 
     label = keywords.get('label',None)
     if label is not None:
