@@ -8,7 +8,7 @@ Methods:
     histogram:  
         Calculate the histogram of the input data.  The reverse indices are
         also optionally calculated.  This function behaves similarly to the
-        IDL histogram funcion.  Also has the option to use weights, and
+        IDL histogram function.  Also has the option to use weights, and
         to tabulate a large number of statistics for each bin.
     histogram2d:  
         Histgram two variables.
@@ -64,11 +64,12 @@ class Binner(dict):
         self.x = numpy.array(x, ndmin=1, copy=False)
         self.y = y
         self.weights = weights
-        self.revind = None
-        self.s = None
 
+        self.sort_index = None
 
+        self.xpref=''
         if y is not None:
+            self.xpref = 'x'
             self.y = numpy.array(y, ndmin=1, copy=False)
             if self.y.size != self.x.size:
                 raise ValueError("y must be same len as x")
@@ -88,37 +89,63 @@ class Binner(dict):
 
         self.clear()
 
+        # get self['wsort'] and self.dmin, self.dmax
+        self._get_minmax_and_indices(min=min, max=max)
+
         if nperbin is not None:
-            raise RuntimeError("Implement nperbin")
+            self._hist_by_num(nperbin)
         elif nbin is not None or binsize is not None:
-            self._hist_by_binsize_or_nbin(binsize=binsize, nbin=nbin, min=min, max=max, rev=rev)
+            self._hist_by_binsize_or_nbin(binsize, nbin, rev)
         else:
             raise ValueError("Send binsize or nbin or nperbin")
 
-    def _hist_by_binsize_or_nbin(self, binsize=None, nbin=None, min=None, max=None, rev=False):
-        self._get_sort_index()
-        s=self.s
-
-        self._get_minmax(min=min, max=max)
-        dmin=self.dmin; dmax=self.dmax; dowhere=self.dowhere
-        if dowhere:
-            # where will preserve order, so subscript with s
-            w,=numpy.where( (self.x[s] >= dmin) & (self.x[s] <= dmax) )
-            if w.size == 0:
-                raise ValueError("No data in specified min/max range\n")
-            s = s[w]
+    def _hist_by_binsize_or_nbin(self, binsize, nbin, rev):
 
         if binsize is not None:
-            nbin = numpy.int64( (dmax-dmin)/binsize ) + 1
+            nbin = numpy.int64( (self.dmax-self.dmin)/binsize ) + 1
         elif nbin is not None:
-            binsize = float(dmax-dmin)/nbin
+            binsize = float(self.dmax-self.dmin)/nbin
         else:
             raise RuntimeError("Expected binsize or nbin")
         self['binsize'] = binsize
         self['nbin'] = nbin
 
-        self._do_hist(self.x, dmin, s, binsize, nbin, rev=rev)
+        h,r = self._do_hist(self.x, self.dmin, self['wsort'], binsize, nbin, rev=rev)
 
+        self['hist'] = h
+        if r is not None:
+            self['rev'] = r
+
+    def _hist_by_num(self, nperbin):
+        
+        # histogram indices into array
+        # binsize is nperbin
+        ind = numpy.arange(self['wsort'].size)
+        # already sorted
+        inds = ind
+        bsize = float(nperbin)
+        indmax = ind[-1]
+        indmin = 0
+        nbin = numpy.int64( (indmax-indmin)/bsize ) + 1
+        hist,rev = self._do_hist(ind, 0, inds, bsize, nbin, True)
+
+        # convert the indices in rev to the unlimited, unsorted frame
+        self['low'] = numpy.zeros(nbin, dtype='f8')
+        self['high'] = numpy.zeros(nbin, dtype='f8')
+        for i in xrange(nbin):
+            if rev[i] != rev[i+1]:
+                w = rev[ rev[i]:rev[i+1] ]
+                w = self['wsort'][w]
+
+                rev[ rev[i]:rev[i+1] ] = w
+
+                self['low'][i] = self.x[w[0]]
+                self['high'][i] = self.x[w[-1]]
+
+        self['hist'] = hist
+        if rev is not None:
+            self['rev'] = rev
+        self['nperbin'] = nperbin
 
     def _do_hist(self, data, dmin, s, bsize, nbin, rev=False):
         dorev = rev
@@ -147,54 +174,66 @@ class Binner(dict):
 
             _dohist(data, dmin, s, bsize, hist, revind=revind)
 
-        self['hist'] = hist
-        if revind is not None:
-            self.revind = revind
+        return hist, revind
 
 
     def _get_sort_index(self):
-        if self.s is None:
-            self.s = self.x.argsort()
+        if self.sort_index is None:
+            self.sort_index = self.x.argsort()
+        # make it visible too
+        self['sort_index'] = self.sort_index
 
-    def _get_minmax(self, min=None, max=None):
+    def _get_minmax_and_indices(self, min=None, max=None):
+        """
+        Get sort index, min/max, and w, the sorted indices in the specified
+        min/max range.
+        """
         self._get_sort_index()
-        s=self.s
+        s=self['sort_index']
         if min is not None:
-            dmin = min
+            xmin = min
             dowhere=True
         else:
-            dmin = self.x[s[0]]
+            xmin = self.x[s[0]]
             dowhere=False
 
 
         if max is not None:
-            dmax = max
+            xmax = max
             dowhere=True
         else:
-            dmax = self.x[s[-1]]
+            xmax = self.x[s[-1]]
             dowhere=False
         
-        self.dmin = dmin
-        self.dmax = dmax
-        self.dowhere=dowhere
+        self.dmin = xmin
+        self.dmax = xmax
+
+        self[self.xpref+'min'] = xmin
+        self[self.xpref+'max'] = xmax
+
+        if dowhere:
+            # where function will preserve order, so subscript with s
+            w,=numpy.where( (self.x[s] >= xmin) & (self.x[s] <= xmax) )
+            if w.size == 0:
+                raise ValueError("No data in specified min/max range: [%s,%s]" % (xmin,xmax))
+            self['wsort'] = s[w]
+        else:
+            self['wsort'] = s
 
     def calc_stats(self):
         if 'hist' not in self:
             raise ValueError("run dohist first")
 
-        xpref=''
-        if self.y is not None:
-            xpref = 'x'
+        xpref=self.xpref
 
+        nhist = len(self['hist'])
         if 'nperbin' in self:
             # we need to get the actual bin edges
             # from the reverse indices
-            #raise RuntimeError("Implement stats for nperbin")
             pass
         else:
             # if we used a binsize or nbin, we return the
             # edges and center of the bin
-            nhist = len(self['hist'])
 
             low = numpy.arange(nhist, dtype='f8')
             low = self.dmin + low*self['binsize']
@@ -206,8 +245,8 @@ class Binner(dict):
             self[xpref+'high'] = high
             self[xpref+'center'] = center
 
-        if self.revind is not None:
-            revind = self.revind
+        if 'rev' in self:
+            revind = self['rev']
             # calculate the mean in the bins
             xmean   = numpy.zeros(nhist) - 9999.0
             xstd    = xmean.copy()
@@ -222,15 +261,15 @@ class Binner(dict):
             if self.weights is not None:
                 whist = xmean.copy()
                 whist[:] = 0
-                wmean = xmean.copy()
-                wstd  = xmean.copy()
-                werr  = xmean.copy()
-                werr2 = xmean.copy()
+                wxmean = xmean.copy()
+                wxstd  = xmean.copy()
+                wxerr  = xmean.copy()
+                wxerr2 = xmean.copy()
                 if self.y is not None:
-                    ywmean = xmean.copy()
-                    ywstd  = xmean.copy()
-                    ywerr  = xmean.copy()
-                    ywerr2 = xmean.copy()
+                    wymean = xmean.copy()
+                    wystd  = xmean.copy()
+                    wyerr  = xmean.copy()
+                    wyerr2 = xmean.copy()
 
             for i in xrange(nhist):
                 if revind[i] != revind[i+1]:
@@ -249,15 +288,15 @@ class Binner(dict):
 
                         if self.weights is not None:
                             whist[i] = self.x[w[0]]*self.weights[w[0]]
-                            wmean[i] = xmean[i]
-                            wstd[i] = 0
-                            werr[i] = wmean[i]
-                            werr2[i] = wmean[i]
+                            wxmean[i] = xmean[i]
+                            wxstd[i] = 0
+                            wxerr[i] = wxmean[i]
+                            wxerr2[i] = wxmean[i]
                             if self.y is not None:
-                                ywmean[i] = ymean[i]
-                                ywstd[i] = 0
-                                ywerr[i] = ywmean[i]
-                                ywerr2[i] = ywmean[i]
+                                wymean[i] = ymean[i]
+                                wystd[i] = 0
+                                wyerr[i] = wymean[i]
+                                wyerr2[i] = wymean[i]
 
 
                     else:
@@ -275,18 +314,18 @@ class Binner(dict):
                             whist[i] = self.weights[w].sum()
                             wm,we,ws=wmom(self.x[w],self.weights[w],sdev=True)
                             j1,we2=wmom(self.x[w],self.weights[w], calcerr=True)
-                            wmean[i] = wm
-                            wstd[i] = ws
-                            werr[i] = we
-                            werr2[i] = we2
+                            wxmean[i] = wm
+                            wxstd[i] = ws
+                            wxerr[i] = we
+                            wxerr2[i] = we2
 
                             if self.y is not None:
                                 wm,we,ws=wmom(self.y[w],self.weights[w],sdev=True)
                                 j1,we2=wmom(self.y[w],self.weights[w], calcerr=True)
-                                ywmean[i] = wm
-                                ywstd[i] = ws
-                                ywerr[i] = we
-                                ywerr2[i] = we2
+                                wymean[i] = wm
+                                wystd[i] = ws
+                                wyerr[i] = we
+                                wyerr2[i] = we2
 
 
 
@@ -304,15 +343,15 @@ class Binner(dict):
 
             if self.weights is not None:
                 self['whist']          = whist
-                self['w'+xpref+'mean'] = wmean
-                self['w'+xpref+'std']  = wstd
-                self['w'+xpref+'err']  = werr
-                self['w'+xpref+'err2'] = werr2
+                self['w'+xpref+'mean'] = wxmean
+                self['w'+xpref+'std']  = wxstd
+                self['w'+xpref+'err']  = wxerr
+                self['w'+xpref+'err2'] = wxerr2
                 if self.y is not None:
-                    self['ywmean'] = ywmean
-                    self['ywstd']  = ywstd
-                    self['ywerr']  = ywerr
-                    self['ywerr2'] = ywerr2
+                    self['wymean'] = wymean
+                    self['wystd']  = wystd
+                    self['wyerr']  = wyerr
+                    self['wyerr2'] = wyerr2
 
 
 
