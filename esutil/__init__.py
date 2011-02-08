@@ -175,4 +175,3 @@ try:
 except:
     pass
 
-import test
