@@ -1070,6 +1070,12 @@ def replicate(value, shape, dtype=None):
         The data type of the result. If None, the default
         type for the platform is used, 64-bit float on most systems.
 
+    Returns
+    -------
+    array: ndarray
+        A new numerical python array with every element set to the input
+        value
+
     Examples
     --------
     >>> import esutil
@@ -1083,13 +1089,23 @@ def replicate(value, shape, dtype=None):
 
 def is_big_endian(array):
     """
-    Return True if array is big endian.  Note strings are neither big
-    or little endian.  The input must be a simple numpy array, not
-    an array with fields.
+    Return True if array is big endian, False otherwise.  
 
+    Parameters
+    ----------
+    array: numpy array
+        A numerical python array.
 
-    REVISION HISTORY:
-        Created 2009, Erin Sheldon, NYU.
+    Returns
+    -------
+    Truth value:
+        True for big-endian
+
+    Notes
+    -----
+    Strings are neither big or little endian.  The input must be a simple numpy
+    array, not an array with fields.
+
     """
 
     if numpy.little_endian:
@@ -1102,12 +1118,23 @@ def is_big_endian(array):
 
 def is_little_endian(array):
     """
-    Return True if array is little endian. Note strings are neither big
-    or little endian.  The input must be a simple numpy array, not
-    an array with fields.
+    Return True if array is little endian, False otherwise. 
 
-    REVISION HISTORY:
-        Created 2009, Erin Sheldon, NYU.
+    Parameters
+    ----------
+    array: numpy array
+        A numerical python array.
+
+    Returns
+    -------
+    Truth value:
+        True for little-endian
+
+    Notes
+    -----
+    Strings are neither big or little endian.  The input must be a simple numpy
+    array, not an array with fields.
+
     """
 
     if numpy.little_endian:
