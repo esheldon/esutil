@@ -69,6 +69,8 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         Compare the values field-by-field in two sets of numpy arrays or
         recarrays.  Return true if the data match.
 
+    replicate(value, num, dtype=None)
+        Create an array with every value set to the input value.
 
     is_big_endian(array)
         Return True if array is big endian.  Note strings are neither big
@@ -959,30 +961,30 @@ def split_fields(data, fields=None, getnames=False):
 
 def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):
     """
-    NAME:
+    Name:
         compare_arrays
 
-    CALLING SEQUENCE:
+    Calling Sequence:
         boolval=compare_arrays(array1, array2, ignore_missing=True,
                                verbose=False)
 
-    PURPOSE:
+    Purpose:
         Compare the values field-by-field in two sets of numpy arrays or
         recarrays.  Return true if the data match.
 
-    INPUTS:
+    Inputs:
         array1, array2: Two arrays with fields.
 
-    KEYWORDS:
+    Keywords:
         ignore_missing: Default True.  Ignore fields not found in both
             arrays.
         verbose:  By default the program is silent.  set verbose=True to
             print info about each field.
 
-    OUTPUTS:
+    Outputs:
         True if the matching criteria are met, False if not.
 
-    REVISION HISTORY:
+    Revision History:
         Created 2007, Erin Sheldon, NYU.
         Added ignore_missing keyword.  2009-11-02, Erin Sheldon, BNL
 
@@ -1054,6 +1056,30 @@ def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):
             stdout.write('%d differences found\n' % nfail)
         return False
 
+def replicate(value, shape, dtype=None):
+    """
+    Create an array filled with the input value
+
+    Parameters
+    ----------
+    value: Scalar.
+        The value to be replicated
+    shape: Scalar or sequence.
+        The shape of the resulting array.
+    dtype: data-type, optional
+        The data type of the result. If None, the default
+        type for the platform is used, 64-bit float on most systems.
+
+    Examples
+    --------
+    >>> import esutil
+    >>> esutil.numpy_util.replicate(-9999.0, (2,2))
+    array([[-9999., -9999.],
+           [-9999., -9999.]])
+    """
+    data = numpy.empty(shape,dtype=dtype)
+    data[:] = value
+    return data
 
 def is_big_endian(array):
     """
