@@ -5,6 +5,7 @@ except:
     have_numpy = False
 
 import esutil
+import numpy_util
 
 # biggles plotting routines.  mostly convenience functions for interactive work
 
@@ -456,22 +457,28 @@ def polar2whisker(e1, e2, angle=False, degrees=False):
     return u, v
 
 
-def plotrand(x, y, marker, frac=0.1, plt=None, backend=None, params=None, **keys):
+def plotrand(x, y, frac=0.1, plt=None, **keys):
+    import biggles
+    from biggles import FramedPlot, Points
     if plt is None:
-        plt=setuplot(backend=backend,params=params)
+        plt = FramedPlot()
 
     x=numpy.array(x,ndmin=1,copy=False)
     y=numpy.array(y,ndmin=1,copy=False)
     if x.size != y.size:
         raise ValueError("x,y must be same size")
+    nrand = int(x.size*frac)
 
-    nuse = long( x.size*frac)
-    ind=numpy.zeros(nuse,dtype='i4')
+    ind = numpy_util.random_subset(x.size, nrand)
 
-    rnd=numpy.random.random(nuse)
-    ind[:]=esutil.numpy_util.arrscl( rnd, 0, x.size-1, arrmin=0.0, arrmax=1.0)
-    
-    plt.plot(x[ind],y[ind],marker,**keys)
+    c = Points(x[ind], y[ind], **keys)
+    plt.add(c)
+
+    if 'xlabel' in keys:
+        plt.xlabel = keys['xlabel']
+    if 'ylabel' in keys:
+        plt.ylabel = keys['ylabel']
+    plt.show()
 
     return plt
 

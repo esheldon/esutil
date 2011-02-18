@@ -60,6 +60,38 @@ except:
 import esutil.numpy_util as numpy_util
 
 class Binner(dict):
+    """
+    Bin data and calculate statistics of the bins.
+
+    Examples
+    --------
+    For more examples, see the dohist() and calc_stats() methods.
+    1-d:
+        b=Binner(x)
+        # few ways to calculate hist
+        b.dohist(binsize=0.1)
+        b.dohist(nbin=10)
+        b.dohist(nperbin=10)
+
+        # histogram exists now
+        b['hist']
+
+        # calculate more statistics about the bins
+        b.calc_stats()
+        b['center'], b['low'], b['high']
+
+    2-d:
+        b=Binner(x,y)
+        b.dohist(nperbin=10)
+        b.calc_stats()
+
+        # reverse indices are always calculated when
+        # y is sent, so we have the mean values for x,y
+        b['center']
+        b['xmean'], b['xstd'], b['xerr'], b['xerr2']
+        b['ymean'], b['ystd'], b['yerr'], b['yerr2']
+
+    """
     def __init__(self, x, y=None, weights=None):
         self.x = numpy.array(x, ndmin=1, copy=False)
         self.y = y
@@ -88,6 +120,10 @@ class Binner(dict):
         """
 
         self.clear()
+
+        # if y is sent, we use rev to get mean y in the bins
+        if self.y is not None:
+            rev=True
 
         # get self['wsort'] and self.dmin, self.dmax
         self._get_minmax_and_indices(min=min, max=max)
