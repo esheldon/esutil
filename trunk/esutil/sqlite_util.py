@@ -56,7 +56,7 @@ _instantiate_docs="""
         # put a recarray into a table
         >>> print arr.dtype
         [('id', '<i8'), ('ra', '<f8'), ('dec', '<f8'), 
-         ('name', '|S25'), ('rmag', '<f8'), ('somestring', '|S10')]
+         ('name', '|S25'), ('rmag', '<f4'), ('somestring', '|S10')]
         >>> sc.array2table(arr, 'test')
 
         # describe the table "test"
