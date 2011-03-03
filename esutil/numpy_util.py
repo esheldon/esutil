@@ -236,6 +236,7 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     names = array.dtype.names
     descr = array.dtype.descr
 
+
     topformat="size: %s  nfields: %s  type: %s\n"
 
     lines=[]
@@ -270,6 +271,12 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
     if names is None:
         raise ValueError("array has no fields")
 
+    if len(array.shape) == 0:
+        is_scalar=True
+    else:
+        is_scalar=False
+
+
     lines=[]
     spacing = ' '*nspace
 
@@ -298,7 +305,10 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
 
         type=array.dtype.descr[i][1]
 
-        fdata = array[n][index]
+        if is_scalar:
+            fdata = array[n]
+        else:
+            fdata = array[n][index]
 
         shape_str = ','.join( str(s) for s in fdata.shape)
 
