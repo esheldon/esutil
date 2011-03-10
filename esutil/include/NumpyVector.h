@@ -1,87 +1,90 @@
 /*
- * NumpyVector.h
- *
- * This is simple wrapper class for 1-d and scalar numpy arrays.  Only
- * numerical data are supported at this time.  It should be straightforward
- * to expand this to higher dimensions.  It is *not* easy to support 
- * std::string, but char* type strings may be easier..
- *
- * This is a header-only template class.  Simply include it and use.
- *
- * Examples:
- *    #include "NumpyVector.h"
- *
- *    // creating a new int vector of size 100.  Internally this is a
- *    // PyArrayObject
- *    NumpyVector<int> vec(100);
- *
- *
- *
- *    // Get some info about the array
- *
- *    // the string representation of the type, from <typeinfo>
- *    cout<<"type name is: "<<vec.type_name()<<"\n";
- *
- *    // The numpy type number
- *    int type_num = vec.type_num();
- *
- *    // the number of elements in the vector
- *    npy_intp nel = vec.size();
- *
- *    // the stride of the array
- *    npy_inpt stride = vec.stride();
- *
- *
- *
- *    // double vector from an input python object (PyObject*).  
- *    // Could be array, python  sequence, or scalar.  The result will only
- *    // be copied if the obj is not already a double vector in native byte
- *    // ordering.
- *
- *    NumpyVector<double> vec(obj);
- *
- *
- *    // Access data in a way that is aware of strides and is type-safe.  
- *    // No bounds checking is done
- *    vec[35] = 22.2;
- *    double val = vec[35];
- *
- *    // Loop over data in a simple, type-safe, and stride-aware way.
- *    for (npy_intp i=0; i<vec.size(); i++) {
- *        val = vec[i];
- *        vec[i] = val*26;
- *    }
- *
- *    // get pointer to the data.  Careful when using if data are strided
- *    double* p = vec.ptr();
- *
- *    // if you *know* the data are contiguous, this is an easy and fast way
- *    // to access the data.
- *    for (npy_intp i=0; i<vec.size(); i++) {
- *        val = *p;
- *        ++p;
- *    }
- *
- *    // This is the fastest way to loop using strides.
- *
- *    double* p = vec.ptr();
- *    npy_intp stride = vec.stride();  // zero for scalars
- *    for (npy_intp i=0; i<vec.size(); i++) {
- *        val = *p;
- *        p = p + stride;
- *    }
- *
- *
- *    // get pointer to particular location.  This is stride-aware.
- *    double* p = vec.ptr(22);
- *
- *    // get a reference for returning to python.  Reference counting is
- *    // done correctly
- *
- *    PyObject* output = vec.getref();
- *    return output;
- *
- *   
+   NumpyVector.h
+
+   This is simple wrapper class for 1-d and scalar numpy arrays.  Only
+   numerical data are supported at this time.  It should be straightforward
+   to expand this to higher dimensions.  It is *not* easy to support 
+   std::string, but char* type strings may be easier..
+
+   This is a header-only template class.  Simply include it and use.
+
+   Examples:
+      #include "NumpyVector.h"
+
+      // creating a new int vector of size 100.  Internally this is a
+      // PyArrayObject
+      NumpyVector<int> vec(100);
+
+
+
+      // Get some info about the array
+
+      // the string representation of the type, from <typeinfo>
+      cout<<"type name is: "<<vec.type_name()<<"\n";
+
+      // The numpy type number
+      int type_num = vec.type_num();
+
+      // the number of elements in the vector
+      npy_intp nel = vec.size();
+
+      // the stride of the array
+      npy_inpt stride = vec.stride();
+
+
+
+      // double vector from an input python object (PyObject*).  
+      // Could be array, python  sequence, or scalar.  The result will only
+      // be copied if the obj is not already a double vector in native byte
+      // ordering.
+
+      NumpyVector<double> vec(obj);
+
+
+      // Access data in a way that is aware of strides and is type-safe.  
+      // No bounds checking is done
+      vec[35] = 22.2;
+      double val = vec[35];
+
+      // Loop over data in a simple, type-safe, and stride-aware way.
+      for (npy_intp i=0; i<vec.size(); i++) {
+          val = vec[i];
+          vec[i] = val*26;
+      }
+
+      // using an iterator.  This is not faster than the above.
+      for (NumpyVector<npy_double>::iterator it=dvec.begin(); 
+              it != dvec.end(); it++) {
+          double val=*it;
+      }
+
+      // This is the fastest way to loop using strides.  use char* to avoid
+      // warnings from g++
+
+      char* p = (char*) vec.void_ptr();
+      npy_intp stride = vec.stride();  // zero for scalars
+      for (npy_intp i=0; i<vec.size(); i++) {
+          val = *(double *) *p;
+          p = p + stride;
+      }
+
+
+      // get pointer to particular location.  This is stride-aware.  Do *NOT*
+      // perform pointer arithmetic with this pointer unless you know the
+      // stride is equal to the element size (e.g. 8 for double).  See example
+      // above for proper way to do pointer arithmetic
+
+      double* p = vec.ptr();
+      double* p = vec.ptr(22);
+
+
+      // get a reference for returning to python.  Reference counting is
+      // done correctly
+
+      PyObject* output = vec.getref();
+      return output;
+
+
  */
 
 
@@ -94,6 +97,7 @@
 #include <typeinfo>
 #include <map>
 #include <stdint.h>
+#include <iterator>
 #include "numpy/arrayobject.h"
 
 
@@ -159,6 +163,14 @@ template <class T> class NumpyVector {
         // are performed.
 		T* ptr(npy_intp index) throw (const char *);
 
+        void* void_ptr() throw (const char*) {
+            if (mArray == NULL) {
+                throw "Error: attempt to get pointer from an uninitialized array";
+            }
+
+            npy_intp index=0;
+            return PyArray_GetPtr((PyArrayObject*) mArray, &index);
+        }
 
 
         // Get a reference the underlying python object and incref the object.
@@ -168,8 +180,6 @@ template <class T> class NumpyVector {
         // is correct..
 
 		PyObject* getref() throw (const char *);
-
-
 
 
         // get the type name.  Equivalent to typeid(T).name()
@@ -188,6 +198,48 @@ template <class T> class NumpyVector {
         npy_intp stride() {
             return mStride;
         }
+
+
+        // Interestingly, the iterator is actually slower than just
+        // subscripting using brackets []
+        class iterator : public std::iterator<std::forward_iterator_tag, T> {
+            // use char* to avoid warnings from g++ about void* arithmetic
+            char* _ptr;
+            int _stride;
+
+            public:
+                iterator() : _ptr(NULL), _stride(0) {}
+                iterator(char* x, int stride) :_ptr(x), _stride(stride) {}
+
+                iterator(const iterator& mit) : _ptr(mit._ptr), _stride(mit._stride) {}
+
+                iterator& operator++() {
+                    _ptr += _stride;
+                    return *this;
+                }
+                iterator operator++(int) {
+                    iterator tmp(*this); 
+                    operator++(); 
+                    return tmp;
+                }
+
+                bool operator==(const iterator& rhs) {return _ptr==rhs._ptr;}
+                bool operator!=(const iterator& rhs) {return _ptr!=rhs._ptr;}
+                T& operator*() {return *(T*) _ptr;}
+        };
+
+        iterator begin() {
+            char* tptr = (char*) this->void_ptr();
+            iterator tmp(tptr, mStride);
+            return tmp;
+        }
+        iterator end() {
+            // point just past last element, accounting for stride
+            char* tptr = (char*) this->void_ptr();
+            iterator tmp(tptr + mSize*mStride, mStride);
+            return tmp;
+        }
+
 
 	
 	private:
@@ -340,10 +392,6 @@ void NumpyVector<T>::init(PyObject* obj)  throw (const char *) {
         mArray = PyArray_CheckFromAny(
                 obj, descr, min_depth, max_depth, requirements, NULL);
 
-        /*
-        // We MUST decref this no matter what
-        mArray = PyArray_FROM_OTF(obj, mTypeNum, requirements);
-        */
         if (mArray == NULL) {
             // this causes a segfault, don't do it
             //Py_XDECREF(descr);
@@ -421,8 +469,9 @@ T* NumpyVector<T>::ptr(npy_intp index) throw (const char *) {
 		throw "Error: attempt to get pointer from an uninitialized array";
 	}
 
-	return PyArray_GetPtr((PyArrayObject*) mArray, &index);
+	return (T*) PyArray_GetPtr((PyArrayObject*) mArray, &index);
 }
+
 
 
 template <class T>
