@@ -195,7 +195,7 @@ def Open(fobj, mode='r', delim=None, verbose=False, memmap=False):
     else:
         return sf
 
-class SFile(object):
+class SFile:
     """
     Class SFile
 
@@ -349,19 +349,6 @@ class SFile(object):
             raise ValueError("Only support filenames and file objects "
                              "as input")
 
-        
-        crap="""
-        import gzip
-        reading=False
-        if isinstance(self.fobj,gzip.GzipFile):
-            if self.fobj.mode == 1:
-                reading=True
-
-        elif isinstance(self.fobj,file):
-            if self.fobj.mode[0] == 'r':
-                reading=True
-        """
-
 
         if self.fobj.mode[0] == 'r':
             #if reading:
@@ -383,6 +370,8 @@ class SFile(object):
             # get delim from the keyword.  This will be used for writing later
             self.delim=delim
 
+    def __del__(self):
+        self.close()
 
     def close(self):
         """
@@ -1183,10 +1172,12 @@ def read(infile, **keys):
 
     sf = SFile(infile, verbose=verbose)
     if memmap:
-        return sf.get_memmap(view=view, header=header)
+        data = sf.get_memmap(view=view, header=header)
     else:
-        return sf.read(rows=rows, fields=fields, columns=columns, 
+        data = sf.read(rows=rows, fields=fields, columns=columns, 
                        view=view, header=header)
+        sf.close()
+    return data
 
     
 
@@ -1324,7 +1315,9 @@ def read_header(infile, verbose=False):
     """
 
     sf = SFile(infile, verbose=verbose)
-    return sf.hdr
+    hdr = sf.hdr
+    sf.close()
+    return hdr
 
 
 def split_fields(data, fields=None, getnames=False):
