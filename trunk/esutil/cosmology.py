@@ -520,7 +520,7 @@ class Cosmo(object):
         D = dls*dl/ds   # Mpc/h
         scinv = D*self._four_pi_G_over_c_squared
 
-        w,=numpy.where(scinv < 0.0)
+        w,=numpy.where(zs <= zl)
         if w.size > 0:
             scinv[w] = 0.0
 
