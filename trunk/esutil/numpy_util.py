@@ -1648,56 +1648,74 @@ def randind(nmax, nrand, dtype=None):
     return ind
 
 
-def random_subset(ntot, nrand, old=False, verbose=False):
+def random_subset(imax, nrand, unique=True, verbose=False):
     """
     Name:
         random_subset
     Calling Sequence:
-        ind = random_subset(ntot, nrand)
+        ind = random_subset(imax, nrand)
     Purpose:
-        Return a random selection of indices in [0,ntot) of
+        Return a random selection of indices in [0,imax) of
         size nrand
     Inputs:
-        ntot: range to draw from is [0,ntot)
+        imax: range to draw from is [0,imax)
         nrand: Number of randoms to create.
 
     """
 
-    if nrand > ntot:
+    if nrand > imax:
         raise ValueError("number of requestedr randoms must be "
-                         "<= ntot")
+                         "<= imax")
 
-    if not old:
-        if ntot > (2**32-1):
-            dtype = 'u8'
+    r = numpy.random.randint(0, imax, nrand)
+    if not unique:
+        return
+
+    ur = numpy.unique(r)
+    nkeep = ur.size
+
+    nkeep = 0
+    while nkeep < nrand:
+        tmp = numpy.random.randint(0, imax, nrand-nkeep)
+        if not unique:
+            return tmp
+
+        if r is None:
+            r = tmp.copy()
         else:
-            dtype = 'u4'
+            r[nkeep:nrand] = tmp[:]
+        
+        ur = numpy.unique(r)
+        nkeep = ur.size
 
-        r = numpy.zeros(nrand, dtype=dtype)
-        nkeep = 0
-        while nkeep < nrand:
-            # generate enough randoms to meet our needs
-            tmp = numpy.random.randint(0, ntot, nrand-nkeep)
-            r[nkeep:nrand] = tmp
+        if verbose:
+            stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
 
-            # now make sure they are unique
-            newr = numpy.unique1d(r)
-            nkeep = newr.size
-            if nkeep != nrand:
-                r[0:nkeep] = newr
+        if nkeep != nrand:
+            r[0:nkeep] = ur[:]
+        else:
+            return r
 
-            if verbose:
-                stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
+    return
 
-        return r
+    nkeep = 0
+    while nkeep < nrand:
+        # generate enough randoms to meet our needs
+        tmp = numpy.random.randint(0, imax, nrand-nkeep)
+        if r is None:
+            r = tmp.copy()
+        r[nkeep:nrand] = tmp[:]
 
-    else:
+        # now make sure they are unique
+        newr = numpy.unique(r)
+        nkeep = newr.size
+        if nkeep != nrand:
+            r[0:nkeep] = newr[:]
 
-        # generate ntot random numbers, sort and return
-        # the first nrand
-        r=numpy.random.random(ntot)
-        s=r.argsort()
-        return s[0:nrand]
+        if verbose:
+            stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
+
+    return r
 
 
 class ArrayWriter:
