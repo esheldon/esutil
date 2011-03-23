@@ -48,6 +48,10 @@ try:
 except:
     have_cgauleg=False
 
+def qgauss(x,y,npts):
+    qg=QGauss(npts)
+    return qg.integrate(x,y)
+
 class QGauss:
     """
     Module:
