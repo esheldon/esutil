@@ -71,9 +71,9 @@ if have_numpy:
 
 
     # pyfits
-    include_dirs += ['esutil/pyfits']
-    pyfits_sources = glob('esutil/pyfits/*.c')
-    pyfits_module = Extension("esutil.pyfits.pyfitsComp",
+    include_dirs += ['esutil/pyfitspatch']
+    pyfits_sources = glob('esutil/pyfitspatch/*.c')
+    pyfits_module = Extension("esutil.pyfitspatch.pyfitsComp",
                               sources=pyfits_sources)
     ext_modules.append(pyfits_module)
     packages.append('esutil.pyfits')

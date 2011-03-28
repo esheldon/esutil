@@ -166,7 +166,7 @@ except:
     pass
 
 try:
-    from . import pyfits-patch as pyfits
+    from . import pyfitspatch as pyfits
 except:
     pass
 
