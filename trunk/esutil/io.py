@@ -47,7 +47,7 @@ import os
 from sys import stdout, stderr
 
 try:
-    from . import pyfits
+    from . import pyfits-patch as pyfits
     have_pyfits=True
 except:
     try:
