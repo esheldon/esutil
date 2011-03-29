@@ -59,7 +59,7 @@ def read(filename, ext, **keys):
     f=FITS(filename, **keys)
     return f.read(ext, **keys)
 
-class FITS:
+class FITS(list):
     """
     A class for working with fits files.
 
@@ -88,17 +88,21 @@ class FITS:
     """
     def __init__(self, filename=None, mode='r', **keys):
         self.filename=filename
-        self.hdulist=None
         if filename is not None:
             self.open(filename, mode, **keys)
 
     def open(self, filename, mode='r', **keys):
+        while len(self) > 0:
+            self.pop()
+
         if mode not in modemap:
             raise ValueError('only support modes: %s' % list(modemap.keys()))
 
         if mode == 'r':
             mode='readonly'
-        self.hdulist = pyfits.core.open(filename,mode)
+        hdulist = pyfits.core.open(filename,mode)
+        for i in xrange(len(hdulist)):
+            self.append(hdulist[i])
 
 
     def read(self, ext, **keys):
@@ -139,10 +143,10 @@ class FITS:
 
         """
         self._check_ext(ext)
-        if isinstance(self.hdulist[ext], pyfits.BinTableHDU):
+        if isinstance(self[ext], pyfits.BinTableHDU):
             return self.read_table(ext, **keys)
         else:
-            return self.hdulist[ext].data
+            return self[ext].data
 
     def read_table(self, ext, **keys):
         """
@@ -183,10 +187,10 @@ class FITS:
         """
         self._check_ext(ext)
 
-        if not isinstance(self.hdulist[ext], pyfits.BinTableHDU):
+        if not isinstance(self[ext], pyfits.BinTableHDU):
             raise ValueError("Extension %s is not a BinTableHDU" % ext)
 
-        hdu = self.hdulist[ext] 
+        hdu = self[ext] 
         hdu._file.seek(hdu._datLoc)
         
         dtype=self.get_dtype(hdu, **keys)
@@ -199,9 +203,8 @@ class FITS:
         
 
     def read_header(self, ext, **keys):
-        if self.hdulist is None:
-            raise ValueError("Open file first")
-        return self.hdulist[ext].header
+        self._check_ext(ext)
+        return self[ext].header
 
     def get_dtype(self, hdu, **keys):
         """
@@ -238,6 +241,8 @@ class FITS:
 
 
     def _check_ext(self, ext):
-        maxext = len(self.hdulist)-1
+        if len(self) == 0:
+            raise ValueError("Open a file first")
+        maxext = len(self)-1
         if ext > maxext:
             raise ValueError("ext is outside of range [%s,%s]" % (0,maxext))
