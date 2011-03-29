@@ -44,10 +44,12 @@ from esutil import sfile
 from esutil import ostools
 import os
 
+import copy
+
 from sys import stdout, stderr
 
 try:
-    from . import pyfits-patch as pyfits
+    from . import pyfitspatch as pyfits
     have_pyfits=True
 except:
     try:
@@ -332,6 +334,7 @@ def read_fits(fileobj, **keywords):
     if header:
         # the ignore_missing_end=True is for the multitude
         # of malformed FITS files out there
+
         d,h = pyfits.getdata(fileobj, **keywords)
     else:
         d = pyfits.getdata(fileobj, **keywords)

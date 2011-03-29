@@ -304,8 +304,12 @@ class Recfile(object):
 
         if self.skiplines is None:
             self.skiplines = 0
+
         if self.offset is None:
-            self.offset = 0
+            if isinstance(fobj,file):
+                self.offset = fobj.tell()
+            else:
+                self.offset = 0
 
         if self.delim is not None and self.delim != "":
             self.is_ascii = True
@@ -368,6 +372,7 @@ class Recfile(object):
                 self.offset=0
             # go to the offset position in the file
             if self.fobj.tell() != self.offset:
+                print 'moving'
                 self.fobj.seek(offset)
 
 
@@ -437,7 +442,7 @@ class Recfile(object):
 
 
     def read(self, rows=None, fields=None, columns=None,
-             view=None, split=False):
+             view=None, split=False, **keys):
         """
         Class:
             Recfile

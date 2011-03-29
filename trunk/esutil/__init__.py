@@ -165,10 +165,18 @@ try:
 except:
     pass
 
+import fits
 try:
-    from . import pyfitspatch as pyfits
+    import pyfitspatch
 except:
     pass
+
+try:
+    import pyfitspatch240
+except:
+    pass
+
+
 
 try:
     import recfile
