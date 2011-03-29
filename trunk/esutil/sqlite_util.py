@@ -134,12 +134,25 @@ _string_types = tuple(_string_types)
 _np2sqlite={}
 _np2sqlite['i1']      = 'integer'
 _np2sqlite['int8']    = 'integer'
+_np2sqlite['u1']      = 'integer'
+_np2sqlite['uint8']    = 'integer'
+
 _np2sqlite['i2']      = 'integer'
 _np2sqlite['int16']   = 'integer'
+_np2sqlite['u2']      = 'integer'
+_np2sqlite['uint16']   = 'integer'
+
 _np2sqlite['i4']      = 'integer'
 _np2sqlite['int32']   = 'integer'
+_np2sqlite['u4']      = 'integer'
+_np2sqlite['uint32']   = 'integer'
+
 _np2sqlite['i8']      = 'integer'
 _np2sqlite['int64']   = 'integer'
+# possible loss of information
+_np2sqlite['u8']      = 'integer'
+_np2sqlite['uint64']   = 'integer'
+
 _np2sqlite['f4']      = 'real'
 _np2sqlite['float32'] = 'real'
 _np2sqlite['f8']      = 'real'
