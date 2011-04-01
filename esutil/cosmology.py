@@ -134,8 +134,12 @@ class Cosmo(object):
 
         # If flat is specified, make sure omega_l = 1-omega_m
         # and omega_k=0
-        omega_m, omega_l, omega_k = \
-                self.extract_omegas(omega_m,omega_l,omega_k,flat)
+
+
+        flat, omega_m, omega_l, omega_k = \
+                self.extract_parms(omega_m,omega_l,omega_k,flat)
+
+        self.flat = flat
 
         self.omega_m=omega_m
         self.omega_l=omega_l
@@ -150,6 +154,25 @@ class Cosmo(object):
         self._vi_run_gauleg()
 
         self._four_pi_G_over_c_squared = four_pi_G_over_c_squared(dunits='Mpc')
+
+        # it used to be capilalized
+        self.Distmod=self.distmod
+
+    def __repr__(self):
+        m="""
+        H0:      {H0}
+        flat:    {flat}
+        omega_m: {omega_m}
+        omega_l: {omega_l}
+        omega_k: {omega_k}
+        """.format(H0=self.h*100,
+                   flat=self.flat,
+                   omega_m=self.omega_m,
+                   omega_l=self.omega_l,
+                   omega_k=self.omega_k)
+        return m
+
+
 
     def DH(self):
         """
@@ -259,12 +282,12 @@ class Cosmo(object):
         dh = self.DH()
         dc=self.Dc(zmin, zmax)
 
-        if self.omega_k == 0:
+        if self.flat:
             return dc
         elif self.omega_k > 0:
-            return dh/sqrt(self.omega_l)*sinh( sqrt(self.omega_k)*dc/dh )
+            return dh/sqrt(self.omega_k)*sinh( sqrt(self.omega_k)*dc/dh )
         else:
-            return dh/sqrt(self.omega_l)*sin( sqrt(self.omega_k)*dc/dh )
+            return dh/sqrt(-self.omega_k)*sin( sqrt(-self.omega_k)*dc/dh )
 
 
     def Da(self, zmin, zmax):
@@ -328,10 +351,10 @@ class Cosmo(object):
         z2 = numpy.array(zmax, ndmin=1, copy=False)
         return self.Da(z1,z2)*(1.0+z2)**2
 
-    def Distmod(self, z):
+    def distmod(self, z):
         """
         NAME:
-            Distmod
+            distmod
         PURPOSE:
             Calculate the distance modulus to redshift z.
         CALLING SEQUENCE:
@@ -352,6 +375,7 @@ class Cosmo(object):
         dpc = dmpc*1.e6
         dm = 5.0*log10(dpc/10.0)
         return dm      
+
 
     def dV(self, z_input, comoving=True):
         """
@@ -420,15 +444,27 @@ class Cosmo(object):
         return v
 
 
-    def extract_omegas(self, omega_m, omega_l, omega_k, flat):
-        """
-        If flat is specified, make sure omega_l = 1-omega_m
-        and omega_k=0
-        """
+    def extract_parms(self, omega_m, omega_l, omega_k, flat):
+        if omega_k is not None:
+            # if omega_k is 0.0, we will set flat=True to simplify
+            # the calculations
+            if omega_k == 0.0:
+                flat=True
+            else:
+                flat=False
+
+        if omega_k is None:
+            # without omega_k set we default to flat
+            flat=True
+            omega_k=0.0
+        elif flat:
+            # finally, if flat is set we always put omega_k = 0
+            omega_k=0.0
+
         if flat:
             omega_l = 1.0-omega_m
-            omega_k = 0.0
-        return omega_m, omega_l, omega_k
+
+        return flat, omega_m, omega_l, omega_k
 
 
 
