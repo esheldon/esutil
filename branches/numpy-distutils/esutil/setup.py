@@ -6,6 +6,7 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('htm')
     config.add_subpackage('integrate')
     config.add_subpackage('recfile')
+    config.add_subpackage('pyfitspatch')
 
     return config
 
