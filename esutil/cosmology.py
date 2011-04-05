@@ -155,24 +155,26 @@ class Cosmo(object):
 
         self._four_pi_G_over_c_squared = four_pi_G_over_c_squared(dunits='Mpc')
 
-        # it used to be capilalized
-        self.Distmod=self.distmod
-
     def __repr__(self):
-        m="""
+        rep="""
         H0:      {H0}
-        flat:    {flat}
         omega_m: {omega_m}
         omega_l: {omega_l}
         omega_k: {omega_k}
-        """.format(H0=self.h*100,
-                   flat=self.flat,
-                   omega_m=self.omega_m,
-                   omega_l=self.omega_l,
-                   omega_k=self.omega_k)
-        return m
+        flat:    {flat}
+        npts:    {npts}
+        vnpts:   {vnpts}\n""".format(h=self.h*100.,
+                                     omega_m=self.omega_m,
+                                     omega_l=self.omega_l,
+                                     omega_k=self.omega_k,
+                                     flat=self.flat,
+                                     npts=self.npts,
+                                     vnpts=self.vnpts)
+        return rep
 
 
+        # it used to be capilalized
+        self.Distmod=self.distmod
 
     def DH(self):
         """
