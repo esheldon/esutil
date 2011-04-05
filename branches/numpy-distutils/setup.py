@@ -1,3 +1,4 @@
+import numpy
 import sys,os
 import time
 from sys import stdout,stderr
@@ -29,8 +30,32 @@ tablefile.write(tab)
 tablefile.close()
 
 
+def configuration(parent_package='',top_path=None):
+    from numpy.distutils.misc_util import Configuration
 
-# can we build recfile?
+    config = Configuration(None, parent_package, top_path)
+
+    config.add_subpackage('esutil')
+    return config
+
+def setup_package():
+
+    from numpy.distutils.core import setup
+
+    try:
+        setup(name='esutil',
+              configuration=configuration)
+    finally:
+        sys.stdout.write("failed")
+    return
+
+
+
+if __name__ == '__main__':
+    setup_package()
+
+
+"""
 packages = ['esutil']
 ext_modules = []
 try:
@@ -45,9 +70,10 @@ except:
 
     stdout.write('Numpy not found:  Not building C extensions\n')
     time.sleep(5)
+"""
 
 
-
+"""
 if have_numpy:
     # recfile
     recfile_sources = ['esutil/recfile/records.cpp',
@@ -117,3 +143,4 @@ setup(name='esutil',
       data_files=[('ups',['ups/esutil.table'])],
       ext_modules=ext_modules,
       include_dirs=include_dirs)
+"""
