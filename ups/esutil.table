@@ -7,4 +7,3 @@
 setupOptional("python")
 setupOptional("cjson")
 envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib/python2.6/site-packages)
-envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib64/python2.6/site-packages)
