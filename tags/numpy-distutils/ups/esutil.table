@@ -1,0 +1,10 @@
+
+# The default version of this file will be overwritten on setup to include
+# paths determined from the python version.  This is useful to have in place
+# though so that dependencies can be checked *before* installation.  Currently
+# there are no required dependencies, so this is somewhat moot.
+
+setupOptional("python")
+setupOptional("cjson")
+envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib/python2.6/site-packages)
+envPrepend(PYTHONPATH,${PRODUCT_DIR}/lib64/python2.6/site-packages)

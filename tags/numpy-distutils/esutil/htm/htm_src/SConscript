@@ -1,0 +1,29 @@
+# vim: set filetype=python :
+import os,sys
+
+Import('env')
+CPPPATH=env['CPPPATH'] + ['.']
+
+# We'll use these as sources for all shared objects.  We turned off the
+# duplicate environments warnings in order to do this
+libsources = ['BitList.cpp',
+              'SpatialVector.cpp',
+              'SpatialIndex.cpp',
+              'SpatialInterface.cpp',
+              'SpatialEdge.cpp',
+              'SpatialException.cpp',
+              'SpatialConstraint.cpp',
+              'SpatialConvex.cpp',
+              'SpatialDomain.cpp',
+              'instances.cpp',
+              'htmUtilIDL.cpp']
+
+
+for name in ['htmIndexIDL','htmIntersectIDL','htmMatchIDL']:
+    target='../DLM/'+name
+    sources=[libsources,name+".cpp"],
+    dlm=name+'.dlm'
+    env.SharedLibrary(target=target,source=sources,
+                      CPPPATH=CPPPATH,
+                      SHLIBPREFIX='')
+    env.Command("../DLM/"+dlm,dlm, Copy("$TARGET","$SOURCE"))
