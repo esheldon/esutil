@@ -4,6 +4,8 @@ def configuration(parent_package='',top_path=None):
 
     config.add_subpackage('stat')
     config.add_subpackage('htm')
+    config.add_subpackage('integrate')
+    config.add_subpackage('recfile')
 
     return config
 
