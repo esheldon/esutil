@@ -36,6 +36,7 @@ def configuration(parent_package='',top_path=None):
     config = Configuration(None, parent_package, top_path)
 
     config.add_subpackage('esutil')
+    config.add_data_dir('esutil/include')
     return config
 
 def setup_package():
