@@ -1,0 +1,3 @@
+A python module to calculate cosmological distances in a FRW metric.
+
+The geometry can be non-flat.  TODO: add an equation of state.
