@@ -138,7 +138,7 @@ def get_python_version(numerical=False):
 # imports are the ony things that will have to be converted for py3k
 # other than extension modules
 import algorithm
-"""
+
 import xmltools
 import ostools
 import misc
@@ -150,38 +150,37 @@ import oracle_util
 import sfile
 import io
 import wcsutil
-import cosmology
 import coords
 import coords as astro_util
 import stomp_util
 import plotting
+import random
+import fits
+
+
+# extensions might not compile
+try:
+    import cosmology
+except:
+    pass
 try:
     import sqlite_util
 except:
     pass
-import random
 
 try:
     import htm
 except:
     pass
 
-import fits
 try:
     import pyfitspatch
 except:
     pass
 
 try:
-    import pyfitspatch240
-except:
-    pass
-
-
-
-try:
     import recfile
 except:
     pass
 
-"""
+
