@@ -1,0 +1,10 @@
+If your fortran 95 compiler is found, you can simply type
+
+    python setup.py install --prefix=/some/path
+
+If the fortran compiler is not found automatically, you can try this sequence:
+    python setup.py build --fcompiler=name
+    python setup.py install --prefix=/some/path
+
+Where name can be, e.g., gnu95, ifort
+

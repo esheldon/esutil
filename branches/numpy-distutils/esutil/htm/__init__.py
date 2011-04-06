@@ -131,6 +131,6 @@ MODIFICATION HISTORY:
 
 
 
-import htm
-from htm import HTM
+from . import htm
+from .htm import HTM
 import unit_tests
