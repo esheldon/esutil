@@ -1,3 +1,31 @@
+v0.5.0
+----------------------------------------------------------------------
+
+Overhaul of build system to use numpy.distutils rather than ordinary python
+distutils.  This simplifies creating extensions and supports fortran
+extensions.
+
+New Packages:
+    esutil/cosmology: 
+        This replaces the old cosmology.py module. Uses fortran 95 extension
+        for speed.  The cosmology.py file has been moved to cosmology_purepy.py
+
+New Modules:
+    esutil/fits.py: 
+        Wrapper for pyfits that allows reading subsets of rows and columns.
+        The underlying technology is recfile.
+
+Modifications/bug fixes:
+    esutil/plotting.py: 
+        More work on biggles plotting routines,
+    esutil/sqlite_util.py: 
+        This module is now quite mature.
+    esutil/recfile: 
+        Correctly deal with offset in file.
+    setup.py: 
+        fixed bug where esutil/include was not being copied to the install
+        directory.
+
 v0.4.1 (2010-08-18)
 ----------------------------------------------------------------------
 

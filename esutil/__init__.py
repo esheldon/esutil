@@ -156,6 +156,7 @@ import stomp_util
 import plotting
 import random
 import fits
+from . import cosmology_purepy
 
 
 # extensions might not compile

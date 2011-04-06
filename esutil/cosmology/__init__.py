@@ -9,7 +9,7 @@ routines written in fortran 90.
 
 See docs for the Cosmo class for details, e.g.  in ipython
 
-    import cosmology
+    from esutil import cosmology
     cosmology.Cosmo?
 
 """
