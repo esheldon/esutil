@@ -15,29 +15,40 @@ try:
 except:
     pass
 
-from optparse import OptionParser
-parser=OptionParser(__doc__)
-parser.add_option("--prefix",default=distutils.sysconfig.PREFIX,
-                  help="the prefix")
-# this is a dummy
-parser.add_option("--fcompiler",default=None, help="dummy")
-options, args = parser.parse_args(sys.argv[1:])
 
 def create_ups():
 
-    prefix=options.prefix
+    # numpy distutils does not put data files under prefix, only in the package
+    # directory, but we need the ups file to go directly under prefix/ups look
+    # for a --prefix option in the args
+
+    # default to system prefix
+    prefix=distutils.sysconfig.PREFIX
+    
+    for i in xrange(1, len(sys.argv) ):
+        arg = sys.argv[i]
+        if arg.find('--prefix') != -1:
+            if arg.find('='):
+                prefix=arg.split('=')[1]
+            else:
+                # next arg is prefix
+                prefix = sys.argv[i+1]
+
     prefix=os.path.expandvars(prefix)
     prefix=os.path.expanduser(prefix)
 
-    main_libdir=distutils.sysconfig.get_python_lib()
-    pylib_install_subdir = main_libdir.replace(distutils.sysconfig.PREFIX+os.sep,'')
-    pylib_install_subdir = pylib_install_subdir.replace('dist-packages','site-packages')
 
     ups_dir = os.path.join(prefix, 'ups')
 
     if not os.path.exists(ups_dir):
         os.mkdir(ups_dir)
     ups_file = os.path.join(ups_dir, 'esutil.table')
+
+    # create the ups file
+    # generate the lib directory
+    main_libdir=distutils.sysconfig.get_python_lib()
+    pylib_install_subdir = main_libdir.replace(distutils.sysconfig.PREFIX+os.sep,'')
+    pylib_install_subdir = pylib_install_subdir.replace('dist-packages','site-packages')
 
     sys.stdout.write("writing ups file: %s\n" % ups_file)
     tablefile=open(ups_file,'w')
@@ -64,7 +75,7 @@ def setup_package():
     from numpy.distutils.core import setup
     setup(name='esutil', configuration=configuration)
 
-    if 'install' in args and with_ups:
+    if 'install' in sys.argv and with_ups:
         create_ups()
 
 if __name__ == '__main__':

@@ -1,10 +1,25 @@
-If your fortran 95 compiler is found, you can simply type
+Basic Installation
+------------------
 
     python setup.py install --prefix=/some/path
 
-If the fortran compiler is not found automatically, you can try this sequence:
+If the fortran compiler is not found automatically, this sequence should work:
+
     python setup.py build --fcompiler=name
     python setup.py install --prefix=/some/path
 
 Where name can be, e.g., gnu95, ifort
+
+Alternatively, if you don't have a fortran 95 compiler, edit this file and
+comment out the line with "config.add_subpackage('cosmology')"
+    ./esutil/setup.py
+
+
+UPS
+---
+If you use ups or extended ups, you can install the ups table under
+the prefix/ups directory:
+
+
+    python setup.py install with_ups --prefix=/some/path
 

@@ -3,11 +3,21 @@ Package:
     esutil
 
 Sub-packages:
+
     htm:  
         Tools for working with the Hierarchical Triangular Mesh, whic his a
         method for breaking the unit sphere into a tree structure where each
         node in the tree is represented by a spherical triangle.   This can be
         used for fast searching of the sphere and matching lists of points.
+
+        The underlying code is C++ linked as an extension.
+
+    cosmology:
+        A set of tools for calculating distances in an expanding universe.
+        These routines are completely general for any specified omega_m,
+        omega_k, and cosmological constant omega_l.  This code follows the
+        conventions of Hogg astro-ph/9905116.  The underlying calculations
+        are done in an extension module written in fortran 95
 
     integrate:
         Tools for integration of data and functions.  Currently contains the QGauss
@@ -20,22 +30,22 @@ Sub-packages:
     recfile:
         Contains the class Recfile for efficiently reading and writing
         structured numpy arrays to and from binary and ascii files.  Individual
-        columns and rows can be selected. 
+        columns and rows can be selected.   Underlying code is C++ linked
+        as an extension.
 
     stat:
         This packages contains tools for statistical analysis, including an IDL-like
-        histogram function.
+        histogram function.  The histogram function is written in C++ and linked
+        as an extension.
 
 Sub-modules:
     coords:
         A set of astronomical utilities for dealing with coordinates and
         coordinate transformations.
 
-    cosmology:
-        A set of tools for calculating distances in an expanding universe.
-        These routines are completely general for any specified omega_m,
-        omega_k, and cosmological constant omega_l.  This code follows the
-        conventions of Hogg astro-ph/9905116.
+    wcsutil:
+        Fast tools for working with the World Coordinat System used in astronomy to
+        convert instrument coordinates to sky coordinates.
 
     io: 
         File input/output convenience functions.  Read and write many file
@@ -71,24 +81,32 @@ Sub-modules:
             is_little_endian: Check if the array is little endian byte order.
             to_big_endian: convert to big endian
             to_little_endian: convert to little endian
+            to_native: Convert to native byte order.
             byteswap: byteswap array with ability to automatically update the
                 type descriptor.
             unique: Return unique elements or indices (note now there is a built
-                in for this...)
+                numpy routine for this...)
             match: Match the elements two arrays.
             dict2array: Convert a dict to a structure/recarray.
             splitarray: Split rows of the array into chunks of at least a given size.
             randind: Get random indices with replacement in the open range [0,nmax)
+            random_subset: Generate a random subset of integers in a range.  Like
+                randind but *without* replacement.
 
-    oracle_util
+    sqlite_util
+        Tools for working with an sqlite database, including the ability to write
+        record arrays to tables and read from tables into rec arrays.
+
+    random:
+        A class to generate random numbers from arbitrary distributions.
+
+
+    stomp_util
     ostools
     plotting
-    random
     sfile
-    sqlite_util
-    stomp_util
-    wcsutil
     xmltools
+    oracle_util
 
 """
 # version info
@@ -135,52 +153,54 @@ def get_python_version(numerical=False):
     return pyvers
 
 
-# imports are the ony things that will have to be converted for py3k
-# other than extension modules
-import algorithm
+from . import algorithm
 
-import xmltools
-import ostools
-import misc
-import integrate
-import json_util
-import stat
-import numpy_util
-import oracle_util
-import sfile
-import io
-import wcsutil
-import coords
-import coords as astro_util
-import stomp_util
-import plotting
-import random
-import fits
-from . import cosmology_purepy
+from . import xmltools
+from . import ostools
+from . import misc
+from . import integrate
+from . import json_util
+from . import stat
+from . import numpy_util
+from . import oracle_util
+from . import sfile
+from . import io
+from . import wcsutil
+
+from . import stomp_util
+from . import plotting
+from . import random
+from . import fits
+
+from . import coords
+# old name for this module
+from . import coords as astro_util
 
 
 # extensions might not compile
+from . import cosmology_purepy
 try:
-    import cosmology
+    from . import cosmology
 except:
     pass
+    cosmology = cosmology_purepy
 try:
-    import sqlite_util
-except:
-    pass
-
-try:
-    import htm
+    from . import sqlite_util
 except:
     pass
 
 try:
-    import pyfitspatch
+    from . import htm
 except:
     pass
 
 try:
-    import recfile
+    from . import pyfitspatch
+except:
+    pass
+
+try:
+    from . import recfile
 except:
     pass
 
