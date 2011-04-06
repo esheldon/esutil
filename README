@@ -3,12 +3,11 @@ Basic Installation
 
     python setup.py install --prefix=/some/path
 
-If the fortran compiler is not found automatically, this sequence should work:
+If the fortran compiler is not found automatically, this should work:
 
-    python setup.py build --fcompiler=name
-    python setup.py install --prefix=/some/path
+    python setup.py config_fc --fcompiler=gnu95 install --prefix=/some/path
 
-Where name can be, e.g., gnu95, ifort
+Where gnu95 could be any compiler type, e.g. gnu95, ifort
 
 Alternatively, if you don't have a fortran 95 compiler, edit this file and
 comment out the line with "config.add_subpackage('cosmology')"
