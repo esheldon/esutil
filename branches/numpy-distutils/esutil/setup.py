@@ -6,6 +6,8 @@ def configuration(parent_package='',top_path=None):
     # this requires a fortran 95 compiler
     config.add_subpackage('cosmology')
 
+    config.add_subpackage('ccosmo')
+
     config.add_subpackage('stat')
     config.add_subpackage('htm')
     config.add_subpackage('integrate')
