@@ -183,7 +183,6 @@ try:
     from . import cosmology
 except:
     pass
-    cosmology = cosmology_purepy
 try:
     from . import sqlite_util
 except:
