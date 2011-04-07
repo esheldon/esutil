@@ -127,7 +127,8 @@ class Cosmo(object):
                  omega_m=0.3, 
                  omega_l=0.7,
                  omega_k=0.0,
-                 h=1.0,
+                 H0=100.0,
+                 h=None,
                  flat=True,
                  npts=5,
                  vnpts=10):
@@ -135,6 +136,10 @@ class Cosmo(object):
         # If flat is specified, make sure omega_l = 1-omega_m
         # and omega_k=0
 
+        if h is not None:
+            H0 = 100.0*h
+        else:
+            h = H0/100.0
 
         flat, omega_m, omega_l, omega_k = \
                 self.extract_parms(omega_m,omega_l,omega_k,flat)
