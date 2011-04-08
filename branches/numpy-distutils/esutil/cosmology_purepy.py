@@ -162,19 +162,11 @@ class Cosmo(object):
 
     def __repr__(self):
         rep="""
-        H0:      {H0}
-        omega_m: {omega_m}
-        omega_l: {omega_l}
-        omega_k: {omega_k}
-        flat:    {flat}
-        npts:    {npts}
-        vnpts:   {vnpts}\n""".format(h=self.h*100.,
-                                     omega_m=self.omega_m,
-                                     omega_l=self.omega_l,
-                                     omega_k=self.omega_k,
-                                     flat=self.flat,
-                                     npts=self.npts,
-                                     vnpts=self.vnpts)
+        H0:      %s
+        omega_m: %s
+        omega_l: %s
+        omega_k: %s
+        flat:    %s\n""" % (self.h*100., self.omega_m, self.omega_l, self.omega_k, self.flat)
         return rep
 
 

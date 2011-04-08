@@ -204,16 +204,16 @@ Classes
     This class addresses limitations of memmap class, which cannot 
     read individual columns from a file without reading the whole file.
 
-{instantiate_docs}
-{input_docs}
-{useful_methods_docs}
-{examples_docs}
-{tests_docs}
-""".format(instantiate_docs=_instantiate_docs,
-           input_docs=_open_input_docs,
-           useful_methods_docs=_useful_methods_docs,
-           examples_docs=_examples_docs,
-           tests_docs=_tests_docs)
+%s
+%s
+%s
+%s
+%s
+""" % (_instantiate_docs,
+       _open_input_docs,
+       _useful_methods_docs,
+       _examples_docs,
+       _tests_docs)
 
 def Open(fileobj, 
          mode="r", 
@@ -237,14 +237,14 @@ def Open(fileobj,
                    verbose=verbose)
 
 Open.__doc__="""
-{instantiate_docs}
-{input_docs}
-{useful_methods_docs}
-{examples_docs}
-""".format(instantiate_docs=_instantiate_docs,
-           input_docs=_open_input_docs,
-           useful_methods_docs=_useful_methods_docs,
-           examples_docs=_examples_docs)
+%s
+%s
+%s
+%s
+""" % (_instantiate_docs,
+       _open_input_docs,
+       _useful_methods_docs,
+       _examples_docs)
 
 
 
