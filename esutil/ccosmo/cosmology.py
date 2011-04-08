@@ -1,6 +1,5 @@
-from __future__ import print_function
 import numpy
-from numpy import isscalar
+from numpy import isscalar, linspace
 from . import _cosmolib
 
 
@@ -11,8 +10,7 @@ class Cosmo(dict):
     A Class for calculating  cosmological distances.  
 
     This is an implementation of Hogg, D., Distance measures in cosmology,
-    astro-ph/9905116 The python class is a wrapper for fast fortran 90
-    routines.
+    astro-ph/9905116 The python class is a wrapper for fast c routines.
 
     Class Name
     ----------
@@ -454,224 +452,135 @@ class Cosmo(dict):
 
 
 
-        print("Comparing ez_inverse:")
-        print("  new:",self.Ez_inverse(0.2))
-        print("  old:",cold.Ez_inverse(0.2))
+        print "Comparing ez_inverse:"
+        print "  new:   ",self.Ez_inverse(0.2)
+        print "  purepy:",cpy.Ez_inverse(0.2)
 
-        print("Comparing ez_inverse vec:")
-        z = [0.2, 0.3, 0.4] 
-        ezinew  = self.Ez_inverse(z)
-        eziold  = cold.Ez_inverse(z)
-        print("%15s %15s" % ("old","new"))
-        for i in xrange(len(z)):
-            print("%.10f %.10f" % (ezinew[i], eziold[i]))
+        print "Comparing ez_inverse vec:"
+        print "  new:   ",self.Ez_inverse([0.2,0.4])
+        print "  purepy:",cpy.Ez_inverse([0.2,0.4])
 
-        print("Comparing ez_inverse_integral")
-        print("  new:   ",self.Ezinv_integral(0.2, 0.4))
-        print("  old:   ",cold.Ezinv_integral(0.2, 0.4))
-        print("  purepy:",cpy.Ezinv_integral(0.2, 0.4))
+        print "Comparing ez_inverse_integral"
+        print "  new:   ",self.Ezinv_integral(0.2, 0.4)
+        print "  purepy:",cpy.Ezinv_integral(0.2, 0.4)
 
-        print("\nComparing Dc")
-        print("  new:   ",self.Dc(0.2, 0.4))
-        print("  old:   ",cold.Dc(0.2, 0.4))
-        print("  purepy:",cpy.Dc(0.2, 0.4))
+        print "\nComparing Dc"
+        print "  new:   ",self.Dc(0.2, 0.4)
+        print "  purepy:",cpy.Dc(0.2, 0.4)[0]
 
-        print("Comparing Dc vec1")
-        print("  new:   ",self.Dc([0.2,0.3], 0.4))
-        print("  old:   ",cold.Dc([0.2,0.3], 0.4))
-        print("  purepy:",cpy.Dc([0.2,0.3], 0.4))
+        print "Comparing Dc vec1"
+        print "  new:   ",self.Dc([0.2,0.3], 0.4)
+        print "  purepy:",cpy.Dc([0.2,0.3], 0.4)
 
-        print("Comparing Dc vec2")
-        print("  new:   ",self.Dc(0.1, [0.2,0.3]))
-        print("  old:   ",cold.Dc(0.1, [0.2,0.3]))
-        print("  purepy:",cpy.Dc(0.1, [0.2,0.3]))
+        print "Comparing Dc vec2"
+        print "  new:   ",self.Dc(0.1, [0.2,0.3])
+        print "  purepy:",cpy.Dc(0.1, [0.2,0.3])
 
-        print("Comparing Dc 2 vec")
-        print("  new:   ",self.Dc([0.1,0.1], [0.2,0.3]))
-        print("  old:   ",cold.Dc([0.1,0.1], [0.2,0.3]))
-        print("  purepy:",cpy.Dc([0.1,0.1], [0.2,0.3]))
+        print "Comparing Dc 2 vec"
+        print "  new:   ",self.Dc([0.1,0.1], [0.2,0.3])
+        print "  purepy:",cpy.Dc([0.1,0.1], [0.2,0.3])
 
 
 
 
-        print("\nComparing Dm")
-        print("  new:   ",self.Dm(0.2, 0.4))
-        print("  old:   ",cold.Dm(0.2, 0.4))
-        print("  purepy:",cpy.Dm(0.2, 0.4))
+        print "\nComparing Dm"
+        print "  new:   ",self.Dm(0.2, 0.4)
+        print "  purepy:",cpy.Dm(0.2, 0.4)[0]
 
-        print("Comparing Dm vec1")
-        print("  new:   ",self.Dm([0.2,0.3], 0.4))
-        print("  old:   ",cold.Dm([0.2,0.3], 0.4))
-        print("  purepy:",cpy.Dm([0.2,0.3], 0.4))
+        print "Comparing Dm vec1"
+        print "  new:   ",self.Dm([0.2,0.3], 0.4)
+        print "  purepy:",cpy.Dm([0.2,0.3], 0.4)
 
-        print("Comparing Dm vec2")
-        print("  new:   ",self.Dm(0.1, [0.2,0.3]))
-        print("  old:   ",cold.Dm(0.1, [0.2,0.3]))
-        print("  purepy:",cpy.Dm(0.1, [0.2,0.3]))
+        print "Comparing Dm vec2"
+        print "  new:   ",self.Dm(0.1, [0.2,0.3])
+        print "  purepy:",cpy.Dm(0.1, [0.2,0.3])
 
-        print("Comparing Dm 2 vec")
-        print("  new:   ",self.Dm([0.1,0.1], [0.2,0.3]))
-        print("  old:   ",cold.Dm([0.1,0.1], [0.2,0.3]))
-        print("  purepy:",cpy.Dm([0.1,0.1], [0.2,0.3]))
+        print "Comparing Dm 2 vec"
+        print "  new:   ",self.Dm([0.1,0.1], [0.2,0.3])
+        print "  purepy:",cpy.Dm([0.1,0.1], [0.2,0.3])
 
 
-        print("\nComparing Da")
-        print("  new:   ",self.Da(0.2, 0.4))
-        print("  old:   ",cold.Da(0.2, 0.4))
-        print("  purepy:",cpy.Da(0.2, 0.4))
+        print "\nComparing Da"
+        print "  new:   ",self.Da(0.2, 0.4)
+        print "  purepy:",cpy.Da(0.2, 0.4)[0]
 
-        print("Comparing Da vec1")
-        print("  new:   ",self.Da([0.2,0.3], 0.4))
-        print("  old:   ",cold.Da([0.2,0.3], 0.4))
-        print("  purepy:",cpy.Da([0.2,0.3], 0.4))
+        print "Comparing Da vec1"
+        print "  new:   ",self.Da([0.2,0.3], 0.4)
+        print "  purepy:",cpy.Da([0.2,0.3], 0.4)
 
-        print("Comparing Da vec2")
-        print("  new:   ",self.Da(0.1, [0.2,0.3]))
-        print("  old:   ",cold.Da(0.1, [0.2,0.3]))
-        print("  purepy:",cpy.Da(0.1, [0.2,0.3]))
+        print "Comparing Da vec2"
+        print "  new:   ",self.Da(0.1, [0.2,0.3])
+        print "  purepy:",cpy.Da(0.1, [0.2,0.3])
 
-        print("Comparing Da 2 vec")
-        print("  new:   ",self.Da([0.1,0.1], [0.2,0.3]))
-        print("  old:   ",cold.Da([0.1,0.1], [0.2,0.3]))
-        print("  purepy:",cpy.Da([0.1,0.1], [0.2,0.3]))
+        print "Comparing Da 2 vec"
+        print "  new:   ",self.Da([0.1,0.1], [0.2,0.3])
+        print "  purepy:",cpy.Da([0.1,0.1], [0.2,0.3])
 
 
-        print("\nComparing Dl")
-        print("  new:   ",self.Dl(0.2, 0.4))
-        print("  old:   ",cold.Dl(0.2, 0.4))
-        print("  purepy:",cpy.Dl(0.2, 0.4))
+        print "\nComparing Dl"
+        print "  new:   ",self.Dl(0.2, 0.4)
+        print "  purepy:",cpy.Dl(0.2, 0.4)[0]
 
-        print("Comparing Dl vec1")
-        print("  new:   ",self.Dl([0.2,0.3], 0.4))
-        print("  old:   ",cold.Dl([0.2,0.3], 0.4))
-        print("  purepy:",cpy.Dl([0.2,0.3], 0.4))
+        print "Comparing Dl vec1"
+        print "  new:   ",self.Dl([0.2,0.3], 0.4)
+        print "  purepy:",cpy.Dl([0.2,0.3], 0.4)
 
-        print("Comparing Dl vec2")
-        print("  new:   ",self.Dl(0.1, [0.2,0.3]))
-        print("  old:   ",cold.Dl(0.1, [0.2,0.3]))
-        print("  purepy:",cpy.Dl(0.1, [0.2,0.3]))
+        print "Comparing Dl vec2"
+        print "  new:   ",self.Dl(0.1, [0.2,0.3])
+        print "  purepy:",cpy.Dl(0.1, [0.2,0.3])
 
-        print("Comparing Dl 2 vec")
-        print("  new:   ",self.Dl([0.1,0.1], [0.2,0.3]))
-        print("  old:   ",cold.Dl([0.1,0.1], [0.2,0.3]))
-        print("  purepy:",cpy.Dl([0.1,0.1], [0.2,0.3]))
+        print "Comparing Dl 2 vec"
+        print "  new:   ",self.Dl([0.1,0.1], [0.2,0.3])
+        print "  purepy:",cpy.Dl([0.1,0.1], [0.2,0.3])
 
 
-        print("\nComparing dV")
-        print("  new:   ",self.dV(0.4))
-        print("  old:   ",cold.dV(0.4))
-        print("  purepy:",cpy.dV(0.4)[0])
+        print "\nComparing dV"
+        print "  new:   ",self.dV(0.4)
+        print "  purepy:",cpy.dV(0.4)[0]
 
-        print("Comparing dV vec1")
-        print("  new:   ",self.dV([0.2,0.3]))
-        print("  old:   ",cold.dV([0.2,0.3]))
-        print("  purepy:",cpy.dV([0.2,0.3]))
+        print "Comparing dV vec1"
+        print "  new:   ",self.dV([0.2,0.3])
+        print "  purepy:",cpy.dV([0.2,0.3])
 
 
-        print("\nComparing V")
-        print("  new:   ",self.V(0.1,0.4))
-        print("  old:   ",cold.V(0.1,0.4))
-        print("  purepy:",cpy.V(0.1,0.4)[0])
+        print "\nComparing V"
+        print "  new:   ",self.V(0.1,0.4)
+        print "  purepy:",cpy.V(0.1,0.4)[0]
 
 
-        print("\nComparing sigmacritinv")
-        print("  new:   ",self.sigmacritinv(0.1,0.4))
-        print("  old:   ",cold.sigmacritinv(0.1,0.4))
-        print("  purepy:",cpy.sigmacritinv(0.1,0.4)[0])
+        print "\nComparing sigmacritinv"
+        print "  new:   ",self.sigmacritinv(0.1,0.4)
+        print "  purepy:",cpy.sigmacritinv(0.1,0.4)[0]
 
-        print("Comparing sigmacritinv vec1")
-        print("  new:   ",self.sigmacritinv([0.2,0.3], 0.4))
-        print("  old:   ",cold.sigmacritinv([0.2,0.3], 0.4))
-        print("  purepy:",cpy.sigmacritinv([0.2,0.3], 0.4))
+        print "Comparing sigmacritinv vec1"
+        print "  new:   ",self.sigmacritinv([0.2,0.3], 0.4)
+        print "  purepy:",cpy.sigmacritinv([0.2,0.3], 0.4)
 
-        print("Comparing sigmacritinv vec2")
-        print("  new:   ",self.sigmacritinv(0.1, [0.2,0.3]))
-        print("  old:   ",cold.sigmacritinv(0.1, [0.2,0.3]))
-        print("  purepy:",cpy.sigmacritinv(0.1, [0.2,0.3]))
+        print "Comparing sigmacritinv vec2"
+        print "  new:   ",self.sigmacritinv(0.1, [0.2,0.3])
+        print "  purepy:",cpy.sigmacritinv(0.1, [0.2,0.3])
 
-        print("Comparing sigmacritinv 2 vec")
-        print("  new:   ",self.sigmacritinv([0.1,0.1], [0.2,0.3]))
-        print("  old:   ",cold.sigmacritinv([0.1,0.1], [0.2,0.3]))
-        print("  purepy:",cpy.sigmacritinv([0.1,0.1], [0.2,0.3]))
-
-
+        print "Comparing sigmacritinv 2 vec"
+        print "  new:   ",self.sigmacritinv([0.1,0.1], [0.2,0.3])
+        print "  purepy:",cpy.sigmacritinv([0.1,0.1], [0.2,0.3])
 
 
         if ntime > 0:
+            print '\nComparing timings for sigmacritinv'
+            tm=0.0
+            tmpy=0.0
+            print '   doing c code'
+            for i in xrange(ntime):
+                tm0=time.time()
+                da = self.Da(0.0, linspace(0.1, 0.2, 100000))
+                tm += time.time()-tm0
 
-            print("\nDc timings")
-            zmin=numpy.linspace(0.2,0.3,1000000)
-            tnew=0.0
-            told=0.0
+            print '   doing python code'
             for i in xrange(ntime):
-                tm=time.time()
-                dc=self.Dc(zmin, 0.4)
-                tnew += time.time()-tm
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=cold.Dc(zmin, 0.4)
-                told += time.time()-tm
-            print("  new:   ",tnew)
-            print("  old:   ",told)
+                tm0=time.time()
+                da = cpy.Da(0.0, linspace(0.1, 0.2, 100000))
+                tmpy += time.time()-tm0
 
-
-            print("\nDm timings")
-            zmin=numpy.linspace(0.2,0.3,1000000)
-            tnew=0.0
-            told=0.0
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=self.Dm(zmin, 0.4)
-                tnew += time.time()-tm
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=cold.Dm(zmin, 0.4)
-                told += time.time()-tm
-            print("  new:   ",tnew)
-            print("  old:   ",told)
-
-            print("\nDa timings")
-            zmin=numpy.linspace(0.2,0.3,1000000)
-            tnew=0.0
-            told=0.0
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=self.Da(zmin, 0.4)
-                tnew += time.time()-tm
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=cold.Da(zmin, 0.4)
-                told += time.time()-tm
-            print("  new:   ",tnew)
-            print("  old:   ",told)
-
-            print("\nDl timings")
-            zmin=numpy.linspace(0.2,0.3,1000000)
-            tnew=0.0
-            told=0.0
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=self.Dl(zmin, 0.4)
-                tnew += time.time()-tm
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=cold.Dl(zmin, 0.4)
-                told += time.time()-tm
-            print("  new:   ",tnew)
-            print("  old:   ",told)
-
-            print("\nsigmacritinv timings")
-            zmin=numpy.linspace(0.2,0.3,1000000)
-            tnew=0.0
-            told=0.0
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=self.sigmacritinv(zmin, 0.4)
-                tnew += time.time()-tm
-            for i in xrange(ntime):
-                tm=time.time()
-                dc=cold.sigmacritinv(zmin, 0.4)
-                told += time.time()-tm
-            print("  new:   ",tnew)
-            print("  old:   ",told)
-
+            print 'C code:',tm
+            print 'pure py code:',tmpy
+            print 'C code is',tmpy/tm,'faster'

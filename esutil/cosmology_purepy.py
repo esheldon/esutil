@@ -106,7 +106,7 @@ from sys import stdout
 
 try:
     import numpy
-    from numpy import sqrt, sin, sinh, log10
+    from numpy import sqrt, sin, sinh, log10, isscalar
 
     # Global variables for Ez integration.  
     _EZI_XXi=numpy.array([])
@@ -492,6 +492,8 @@ class Cosmo(object):
         CALLING SEQUENCE:
             ezi = cosmo.Ez_inverse(z)
         """
+        if not isscalar(z):
+            z = numpy.array(z, copy=False)
         arg=self.omega_m*(1.0+z)**3 + self.omega_k*(1.0+z)**2 + self.omega_l
         return 1.0/sqrt(arg)
 
