@@ -1,4 +1,3 @@
-from __future__ import print_function
 from . import _cosmolib
 
 import numpy
@@ -486,7 +485,7 @@ def test_cosmo(omega_k=None):
 
     c=Cosmo(flat=flat, omega_k=omega_k)
 
-    print("  Testing Da,Dl")
+    print "  Testing Da,Dl"
     da=c.Da(0.1, 0.5)
     da=c.Da(0.1, [0.4, 0.5])
     da=c.Da([0.1,0.2], [0.4, 0.5])
@@ -495,16 +494,16 @@ def test_cosmo(omega_k=None):
     dl=c.Dl(0.1, [0.4, 0.5])
     dl=c.Dl([0.1,0.2], [0.4, 0.5])
 
-    print("  Testing sicmacrit inverse")
+    print "  Testing sicmacrit inverse"
     scinv=c.sigmacritinv(0.1, 0.5)
     scinv=c.sigmacritinv(0.1, [0.4, 0.5])
     scinv=c.sigmacritinv([0.1,0.2], [0.4, 0.5])
 
 
 def test():
-    print("Testing flat")
+    print "Testing flat"
     test_cosmo()
 
     omega_k=0.05
-    print("Testing non-flat, omega_k:",omega_k)
+    print "Testing non-flat, omega_k:",omega_k
     test_cosmo(omega_k=omega_k)
