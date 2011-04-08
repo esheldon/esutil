@@ -400,16 +400,12 @@ class Cosmo(dict):
 
     def __repr__(self):
         m="""
-        H0:      {H0}
-        flat:    {flat}
-        omega_m: {omega_m}
-        omega_l: {omega_l}
-        omega_k: {omega_k}
-        """.format(H0=self.H0,
-                   flat=self.flat,
-                   omega_m=self.omega_m,
-                   omega_l=self.omega_l,
-                   omega_k=self.omega_k)
+        H0:      %s
+        flat:    %s
+        omega_m: %s
+        omega_l: %s
+        omega_k: %s
+        """ % (self.H0, self.flat, self.omega_m, self.omega_l, self.omega_k)
         return m
 
     def extract_parms(self, omega_m, omega_l, omega_k, flat):
