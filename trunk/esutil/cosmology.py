@@ -64,6 +64,7 @@
         # using the Cosmo class.  
         >>> import esutil
         >>> cosmo=esutil.cosmology.Cosmo(omega_m=0.24,h=0.7)
+        # angular diameter distance
         >>> cosmo.Da(0.0, 0.35)
         array([ 1034.76013423])
         # using a convenience function
