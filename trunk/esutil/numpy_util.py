@@ -1388,7 +1388,7 @@ def unique(arr, values=False):
 
 
 
-def match(arr1input, arr2input):
+def match(arr1input, arr2input, dtype='i4'):
     """
     NAME:
         match
@@ -1419,7 +1419,6 @@ def match(arr1input, arr2input):
     arr1 = numpy.array(arr1input, ndmin=1, copy=False)
     arr2 = numpy.array(arr2input, ndmin=1, copy=False)
 
-    dtype = 'i8'
     n1 = len(arr1)
     n2 = len(arr2)
 
