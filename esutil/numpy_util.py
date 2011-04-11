@@ -1388,7 +1388,7 @@ def unique(arr, values=False):
 
 
 
-def match(arr1input, arr2input, dtype='i4'):
+def match(arr1input, arr2input):
     """
     NAME:
         match
@@ -1415,6 +1415,9 @@ def match(arr1input, arr2input, dtype='i4'):
             to [-1]. This way one can just check match.size > 0
             2010-05-14
     """
+
+    # since where returns i8, we are kind of forced into this
+    dtype='i8'
 
     arr1 = numpy.array(arr1input, ndmin=1, copy=False)
     arr2 = numpy.array(arr2input, ndmin=1, copy=False)
