@@ -63,6 +63,8 @@ class Binner(dict):
     """
     Bin data and calculate statistics of the bins.
 
+    b = Binner(x, y=None, weights=None)
+
     Examples
     --------
     For more examples, see the dohist() and calc_stats() methods.
@@ -79,6 +81,12 @@ class Binner(dict):
         # calculate more statistics about the bins
         b.calc_stats()
         b['center'], b['low'], b['high']
+
+        # if weights are sent, we also get 'whist' after
+        # running calc_stats
+        b=Binner(x, weights=w)
+        b.dohist(binsize=0.1)
+        b.calc_stats()
 
     2-d:
         b=Binner(x,y)
