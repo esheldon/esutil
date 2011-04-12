@@ -64,7 +64,6 @@
         # using the Cosmo class.  
         >>> import esutil
         >>> cosmo=esutil.cosmology.Cosmo(omega_m=0.24,h=0.7)
-        # angular diameter distance
         >>> cosmo.Da(0.0, 0.35)
         array([ 1034.76013423])
         # using a convenience function
@@ -107,7 +106,7 @@ from sys import stdout
 
 try:
     import numpy
-    from numpy import sqrt, sin, sinh, log10
+    from numpy import sqrt, sin, sinh, log10, isscalar
 
     # Global variables for Ez integration.  
     _EZI_XXi=numpy.array([])
@@ -128,7 +127,8 @@ class Cosmo(object):
                  omega_m=0.3, 
                  omega_l=0.7,
                  omega_k=0.0,
-                 h=1.0,
+                 H0=100.0,
+                 h=None,
                  flat=True,
                  npts=5,
                  vnpts=10):
@@ -136,6 +136,10 @@ class Cosmo(object):
         # If flat is specified, make sure omega_l = 1-omega_m
         # and omega_k=0
 
+        if h is not None:
+            H0 = 100.0*h
+        else:
+            h = H0/100.0
 
         flat, omega_m, omega_l, omega_k = \
                 self.extract_parms(omega_m,omega_l,omega_k,flat)
@@ -158,19 +162,11 @@ class Cosmo(object):
 
     def __repr__(self):
         rep="""
-        H0:      {H0}
-        omega_m: {omega_m}
-        omega_l: {omega_l}
-        omega_k: {omega_k}
-        flat:    {flat}
-        npts:    {npts}
-        vnpts:   {vnpts}\n""".format(h=self.h*100.,
-                                     omega_m=self.omega_m,
-                                     omega_l=self.omega_l,
-                                     omega_k=self.omega_k,
-                                     flat=self.flat,
-                                     npts=self.npts,
-                                     vnpts=self.vnpts)
+        H0:      %s
+        omega_m: %s
+        omega_l: %s
+        omega_k: %s
+        flat:    %s\n""" % (self.h*100., self.omega_m, self.omega_l, self.omega_k, self.flat)
         return rep
 
 
@@ -488,6 +484,8 @@ class Cosmo(object):
         CALLING SEQUENCE:
             ezi = cosmo.Ez_inverse(z)
         """
+        if not isscalar(z):
+            z = numpy.array(z, copy=False)
         arg=self.omega_m*(1.0+z)**3 + self.omega_k*(1.0+z)**2 + self.omega_l
         return 1.0/sqrt(arg)
 
