@@ -32,7 +32,7 @@
 
                 Da(zmin, zmax) : angular diameter distance.
                 Dl(zmin, zmax) : luminosity distance.
-                Distmod(z): Distance modulus.
+                distmod(z): Distance modulus.
                 dV(z, comoving=True): Volume element.
                 V(zmin, zmax, comoving=True):  Volume between two redshifts.
                 Dc(zmin,zmax): Comoving distance.

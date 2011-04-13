@@ -10,7 +10,7 @@ import os
 
 main_libdir=distutils.sysconfig.get_python_lib()
 pylib_install_subdir = main_libdir.replace(distutils.sysconfig.PREFIX+os.sep,'')
-
+pylib_install_subdir = pylib_install_subdir.replace('dist-packages','site-packages')
 
 if not os.path.exists('ups'):
     os.mkdir('ups')
@@ -56,6 +56,14 @@ if have_numpy:
                                sources=recfile_sources)
     ext_modules.append(recfile_module)
     packages.append('esutil.recfile')
+
+    # cosmology package
+    cosmo_sources = glob('esutil/cosmology/*.c')
+    cosmo_module = Extension('esutil.cosmology._cosmolib', 
+                             sources=cosmo_sources)
+    ext_modules.append(cosmo_module)
+    packages.append('esutil.cosmology')
+
 
 
     # HTM

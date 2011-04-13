@@ -1,83 +1,80 @@
+main_docs="""
+A Class for calculating  cosmological distances.  
+
+This is an implementation of Hogg, D., Distance measures in cosmology,
+astro-ph/9905116 The python class is a wrapper for fast c routines.
+
+Class Name
+----------
+Cosmo
+
+import esutil
+c=esutil.cosmology.Cosmo()
+
+Methods
+-------
+DH: Return the hubble distance.
+Dc: Comoving distance.
+Dm: Transverse comoving distance.
+Da: Angular diameter distance.
+Dl: Luminosity distance.
+dV: Volume element.
+V:  Volume between two redshifts.
+distmod: Distance modulus.
+sigmacritinv: Inverse critical density for lensing.
+
+Ez_inverse: Calculate 1/E(z)
+Ezinv_integral: Calculate the integral of 1/E(z) from zmin to zmax
+
+Optional Construction Keywords
+------------------------------
+H0, h: float, optional
+    Hubble constant in units of m/s/Mpc.  You can send either H0 or little h.
+    Default is H0=100
+flat: boolean, optional
+    Force a flat geometry.  Default is True
+omega_m: float, optional
+    Matter density relative to the critical density.  Default is 0.3
+omega_l: float, optional
+    Dark energy density relative to the critical density.  If flat is True,
+    omega_l = 1-omega_m
+omega_k: float, optional
+    Curvature in units of the critical density. If flat, omega_k=0
+
+
+
+Examples:
+    import cosmology
+    c=cosmology.Cosmo()
+
+    # comoving distance to z=0.5
+    c.Dc(0.0, 0.5) 
+
+    # angular diameter distance between z=0.5 and z=0.9
+    c.Da(0.5, 0.9)
+
+    # luminosity distance between z=0.2 and a sequence of redshifts
+    c.Dl(0.2, [0.3, 0.4, 0.5])
+
+    # new cosmology
+    c=cosmology.Cosmo(H0=70.0, omega_m=0.25)
+
+    # inverse critical density for lensing, lens at 0.2 and
+    # source at 0.3
+    c.sigmacritinv(0.2, 0.3)
+
+"""
+
+__doc__=main_docs
 import numpy
 from numpy import isscalar, linspace
-#from . import cosmolib
 import _cosmolib
 
 
 _CLIGHT=2.99792458e5
 
 class Cosmo:
-    """
-    A Class for calculating  cosmological distances.  
-
-    This is an implementation of Hogg, D., Distance measures in cosmology,
-    astro-ph/9905116 The python class is a wrapper for fast c routines.
-
-    Class Name
-    ----------
-    Cosmo
-
-    Construction Parameters
-    -----------------------
-    H0, h: float, optional
-        Hubble constant in units of m/s/Mpc.  You can send either H0 or little h.
-        Default is H0=100
-    flat: boolean, optional
-        Force a flat geometry.  Default is True
-    omega_m: float, optional
-        Matter density relative to the critical density.  Default is 0.3
-    omega_l: float, optional
-        Dark energy density relative to the critical density.  If flat is True,
-        omega_l = 1-omega_m
-    omega_k: float, optional
-        Curvature in units of the critical density. If flat, omega_k=0
-
-
-    Methods
-    -------
-    DH: Return the hubble distance.
-    Dc: Comoving distance.
-    Dm: Transverse comoving distance.
-    Da: Angular diameter distance.
-    Dl: Luminosity distance.
-    dV: Volume element.
-    V:  Volume between two redshifts.
-    distmod: Distance modulus.
-    sigmacritinv: Inverse critical density for lensing.
-
-    Ez_inverse: Calculate 1/E(z)
-    Ezinv_integral: Calculate the integral of 1/E(z) from zmin to zmax
-
-    Examples:
-        import cosmology
-        c=cosmology.Cosmo()
-
-        # comoving distance to z=0.5
-        c.Dc(0.0, 0.5) 
-
-        # angular diameter distance between z=0.5 and z=0.9
-        c.Da(0.5, 0.9)
-
-        # luminosity distance between z=0.2 and a sequence of redshifts
-        c.Dl(0.2, [0.3, 0.4, 0.5])
-
-        # new cosmology
-        c=cosmology.Cosmo(H0=70.0, omega_m=0.25)
-
-        # inverse critical density for lensing, lens at 0.2 and
-        # source at 0.3
-        c.sigmacritinv(0.2, 0.3)
-
-    Internal fixed parameters
-    -------------------------
-    npts: integer
-        Number of points used for integrating 1/E(z).  npts=5 is good to 1.e-8,
-        as E(z) is a very slow function.
-    vnpts: integer
-        Number of points to use for volume integrations. Default is 10, good to
-        1.e-11 for example between 0.2 and 1.0
-
-    """
+    __doc__=main_docs
     def __init__(self, 
                  H0=100.0,
                  h=None, # can send either h or H0
