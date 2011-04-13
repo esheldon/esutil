@@ -113,7 +113,8 @@ class Cosmo:
             The following combinations are supported
                 1) Two scalars
                 2) zmin a scalar and zmax an array
-                2) Both arrays of the same length.
+                3) zmin an array and zmax a scalar
+                4) Both arrays of the same length.
 
         """
 
@@ -157,7 +158,8 @@ class Cosmo:
             The following combinations are supported
                 1) Two scalars
                 2) zmin a scalar and zmax an array
-                2) Both arrays of the same length.
+                3) zmin an array and zmax a scalar
+                4) Both arrays of the same length.
 
         """
 
@@ -199,7 +201,8 @@ class Cosmo:
             The following combinations are supported
                 1) Two scalars
                 2) zmin a scalar and zmax an array
-                2) Both arrays of the same length.
+                3) zmin an array and zmax a scalar
+                4) Both arrays of the same length.
 
         """
 
@@ -241,7 +244,8 @@ class Cosmo:
             The following combinations are supported
                 1) Two scalars
                 2) zmin a scalar and zmax an array
-                2) Both arrays of the same length.
+                3) zmin an array and zmax a scalar
+                4) Both arrays of the same length.
 
         """
 
@@ -328,8 +332,9 @@ class Cosmo:
         zl, zs: scalars or arrays
             The following combinations are supported
                 1) Two scalars
-                2) zl a scalar and zs an array
-                2) Both arrays of the same length.
+                2) zmin a scalar and zmax an array
+                3) zmin an array and zmax a scalar
+                4) Both arrays of the same length.
 
         """
 
