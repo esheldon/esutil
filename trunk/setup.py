@@ -78,7 +78,7 @@ if have_numpy:
 
 
     # pyfits
-    include_dirs += ['esutil/pyfitspatch']
+    #include_dirs += ['esutil/pyfitspatch']
     pyfits_sources = glob('esutil/pyfitspatch/*.c')
     pyfits_module = Extension("esutil.pyfitspatch.pyfitsComp",
                               sources=pyfits_sources)
@@ -86,7 +86,7 @@ if have_numpy:
     packages.append('esutil.pyfitspatch')
 
     # pyfits 2.4.0
-    include_dirs += ['esutil/pyfitspatch240']
+    #include_dirs += ['esutil/pyfitspatch240']
     pyfits_sources = glob('esutil/pyfitspatch240/*.c')
     pyfits_module = Extension("esutil.pyfitspatch240.pyfitsComp",
                               sources=pyfits_sources)
@@ -97,7 +97,7 @@ if have_numpy:
 
 
     # stat package
-    include_dirs += ['esutil/stat']
+    #include_dirs += ['esutil/stat']
     chist_sources = glob('esutil/stat/*.cc')
     chist_module = Extension('esutil.stat._chist', 
                              sources=chist_sources)
@@ -106,7 +106,7 @@ if have_numpy:
 
 
     # integrate package
-    include_dirs += ['esutil/integrate']
+    #include_dirs += ['esutil/integrate']
     cgauleg_sources = glob('esutil/integrate/*.cc')
     cgauleg_module = Extension('esutil.integrate._cgauleg', 
                                sources=cgauleg_sources)
