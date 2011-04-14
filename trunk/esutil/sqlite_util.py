@@ -93,8 +93,8 @@ Purpose:
     functionality.
 
 Classes:
-{instantiate_docs}
-""".format(instantiate_docs=_instantiate_docs)
+%s
+""" % _instantiate_docs
 
 import os
 import tempfile

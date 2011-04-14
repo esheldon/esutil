@@ -2,7 +2,7 @@ main_docs="""
 A Class for calculating  cosmological distances.  
 
 This is an implementation of Hogg, D., Distance measures in cosmology,
-astro-ph/9905116 The python class is a wrapper for fast c routines.
+astro-ph/9905116 The python class is a wrapper for fast C routines.
 
 Class Name
 ----------
@@ -25,6 +25,11 @@ sigmacritinv: Inverse critical density for lensing.
 
 Ez_inverse: Calculate 1/E(z)
 Ezinv_integral: Calculate the integral of 1/E(z) from zmin to zmax
+
+flat(): return if universe is flat
+omega_m(): value of omega matter
+omega_l(): value of omega lambda
+omega_k(): value of omega curvature
 
 Optional Construction Keywords
 ------------------------------
@@ -63,6 +68,10 @@ Examples:
     # source at 0.3
     c.sigmacritinv(0.2, 0.3)
 
+Notes:
+    Don't call the c codes directly, they do very little error checking.  Error
+    checking is dealt with in the Cosmo python class.
+
 """
 
 __doc__=main_docs
@@ -89,19 +98,26 @@ class Cosmo:
         if h is not None:
             H0 = 100.0*h
 
-        self.DH = _CLIGHT/H0
+        DH = _CLIGHT/H0
 
-        self._cosmo =  _cosmolib.cosmo(self.DH, flat, omega_m, omega_l, omega_k)
-        #_cosmolib.cosmo.__init__(self, self.DH, flat, omega_m, omega_l, omega_k)
-
-        self.H0 = H0 
-        self.omega_m = omega_m
-        self.omega_l = omega_l
-        self.omega_k = omega_k
-        self.flat = flat
-
+        self._cosmo =  _cosmolib.cosmo(DH, flat, omega_m, omega_l, omega_k)
 
         self.Distmod = self.distmod
+
+        self._H0 = H0
+
+    def H0(self):
+        return self._H0
+    def DH(self):
+        return self._cosmo.DH()
+    def flat(self):
+        return self._cosmo.flat()
+    def omega_m(self):
+        return self._cosmo.omega_m()
+    def omega_l(self):
+        return self._cosmo.omega_l()
+    def omega_k(self):
+        return self._cosmo.omega_k()
 
     def Dc(self, zmin, zmax):
         """
@@ -404,13 +420,12 @@ class Cosmo:
 
 
     def __repr__(self):
-        m="""
-        H0:      %s
-        flat:    %s
-        omega_m: %s
-        omega_l: %s
-        omega_k: %s
-        """ % (self.H0, self.flat, self.omega_m, self.omega_l, self.omega_k)
+        m="""H0:      %s
+flat:    %s
+omega_m: %s
+omega_l: %s
+omega_k: %s
+        """ % (self._H0, self.flat(), self.omega_m(), self.omega_l(), self.omega_k())
         return m
 
     def extract_parms(self, omega_m, omega_l, omega_k, flat):
@@ -435,15 +450,104 @@ class Cosmo:
 
         return flat, omega_m, omega_l, omega_k
 
+    def test(self):
 
-    def test(self, ntime=0):
+        print "ez_inverse:"
+        print "     ",self.Ez_inverse(0.2)
+
+        print "ez_inverse vec:"
+        print "     ",self.Ez_inverse([0.2,0.4])
+
+        print "ez_inverse_integral"
+        print "     ",self.Ezinv_integral(0.2, 0.4)
+
+        print "\nDc"
+        print "     ",self.Dc(0.2, 0.4)
+
+        print "Dc vec1"
+        print "     ",self.Dc([0.2,0.3], 0.4)
+
+        print "Dc vec2"
+        print "     ",self.Dc(0.1, [0.2,0.3])
+
+        print "Dc 2 vec"
+        print "     ",self.Dc([0.1,0.1], [0.2,0.3])
+
+
+
+
+        print "\nDm"
+        print "     ",self.Dm(0.2, 0.4)
+
+        print "Dm vec1"
+        print "     ",self.Dm([0.2,0.3], 0.4)
+
+        print "Dm vec2"
+        print "     ",self.Dm(0.1, [0.2,0.3])
+
+        print "Dm 2 vec"
+        print "     ",self.Dm([0.1,0.1], [0.2,0.3])
+
+
+        print "\nDa"
+        print "     ",self.Da(0.2, 0.4)
+
+        print "Da vec1"
+        print "     ",self.Da([0.2,0.3], 0.4)
+
+        print "Da vec2"
+        print "     ",self.Da(0.1, [0.2,0.3])
+
+        print "Da 2 vec"
+        print "     ",self.Da([0.1,0.1], [0.2,0.3])
+
+
+        print "\nDl"
+        print "     ",self.Dl(0.2, 0.4)
+
+        print "Dl vec1"
+        print "     ",self.Dl([0.2,0.3], 0.4)
+
+        print "Dl vec2"
+        print "     ",self.Dl(0.1, [0.2,0.3])
+
+        print "Dl 2 vec"
+        print "     ",self.Dl([0.1,0.1], [0.2,0.3])
+
+
+        print "\ndV"
+        print "     ",self.dV(0.4)
+
+        print "dV vec1"
+        print "     ",self.dV([0.2,0.3])
+
+
+        print "\nV"
+        print "     ",self.V(0.1,0.4)
+
+
+        print "\nsigmacritinv"
+        print "     ",self.sigmacritinv(0.1,0.4)
+
+        print "sigmacritinv vec1"
+        print "     ",self.sigmacritinv([0.2,0.3], 0.4)
+
+        print "sigmacritinv vec2"
+        print "     ",self.sigmacritinv(0.1, [0.2,0.3])
+
+        print "sigmacritinv 2 vec"
+        print "     ",self.sigmacritinv([0.1,0.1], [0.2,0.3])
+
+
+    def test_vs_purepy(self, ntime=0):
         import time
         import esutil as eu
-        cpy = eu.cosmology_purepy.Cosmo(H0=self.H0,
-                                        flat=self.flat,
-                                        omega_m=self.omega_m, 
-                                        omega_l=self.omega_l,
-                                        omega_k=self.omega_k)
+        from esutil import cosmology_purepy
+        cpy = cosmology_purepy.Cosmo(H0=self.H0,
+                                     flat=self.flat,
+                                     omega_m=self.omega_m, 
+                                     omega_l=self.omega_l,
+                                     omega_k=self.omega_k)
 
 
 
