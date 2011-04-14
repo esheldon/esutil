@@ -2,54 +2,7 @@
 Package:
     esutil
 
-Sub-packages:
-    htm:  
-        Tools for working with the Hierarchical Triangular Mesh, whic his a
-        method for breaking the unit sphere into a tree structure where each
-        node in the tree is represented by a spherical triangle.   This can be
-        used for fast searching of the sphere and matching lists of points.
-
-    integrate:
-        Tools for integration of data and functions.  Currently contains the QGauss
-        class for gauss-legendre integration, which relies on the gauleg C++ extension.
-
-    pyfitspatch:
-        A patched version of pyfits that allows writing structures (numpy arrays with
-        fields, recarrays) to disk in a single call.
-
-    recfile:
-        Contains the class Recfile for efficiently reading and writing
-        structured numpy arrays to and from binary and ascii files.  Individual
-        columns and rows can be selected. 
-
-    stat:
-        This packages contains tools for statistical analysis, including an IDL-like
-        histogram function.
-
-Sub-modules:
-    coords:
-        A set of astronomical utilities for dealing with coordinates and
-        coordinate transformations.
-
-    cosmology:
-        A set of tools for calculating distances in an expanding universe.
-        These routines are completely general for any specified omega_m,
-        omega_k, and cosmological constant omega_l.  This code follows the
-        conventions of Hogg astro-ph/9905116.
-
-    io: 
-        File input/output convenience functions.  Read and write many file
-        formats using the same read() write() interface.
-
-    json_util:
-        Convienience functions for working with JSON files
-        http://en.wikipedia.org/wiki/JSON
-
-    misc:
-        Miscellaneous usefule tools, such as a tool for printing variables
-        in column format, pretty printing elapsed time, executing system
-        processes, sub-selecting from a dictionary, etc.
-
+Sub-packages and modules:
     numpy_util:
         A large number of functions for working with numerical python arrays.
         The focus is primarily on structures, aka recarrays or structured
@@ -79,16 +32,82 @@ Sub-modules:
             dict2array: Convert a dict to a structure/recarray.
             splitarray: Split rows of the array into chunks of at least a given size.
             randind: Get random indices with replacement in the open range [0,nmax)
+            random_subset: Generate a random subset of integers in a range.  Like
+                randind but *without* replacement.
 
-    oracle_util
+
+    io: 
+        File input/output convenience functions.  Read and write many file
+        formats using the same read() write() interface.
+
+    integrate:
+        Tools for integration of data and functions.  Currently contains the QGauss
+        class for gauss-legendre integration, which relies on the gauleg C++ extension.
+
+    fits:
+        A module wrappying pyfits that uses the recfile C extension (see below) to
+        read subset of rows and columns from binary tables.
+
+    recfile:
+        Contains the class Recfile for efficiently reading and writing
+        structured numpy arrays to and from binary and ascii files.  Individual
+        columns and rows can be selected.   Underlying code is C++ linked
+        as an extension.
+
+    stat:
+        This packages contains tools for statistical analysis, including an IDL-like
+        histogram function.  The histogram function is written in C++ and linked
+        as an extension.
+
+    cosmology:
+        A set of tools for calculating distances in an expanding universe.
+        These routines are completely general for any specified omega_m,
+        omega_k, and cosmological constant omega_l.  This code follows the
+        conventions of Hogg astro-ph/9905116.  The underlying calculations
+        are done in an extension module written in C
+
+    coords:
+        A set of astronomical utilities for dealing with coordinates and
+        coordinate transformations.
+
+    wcsutil:
+        Fast tools for working with the World Coordinat System used in astronomy to
+        convert instrument coordinates to sky coordinates.
+
+    htm:  
+        Tools for working with the Hierarchical Triangular Mesh, whic his a
+        method for breaking the unit sphere into a tree structure where each
+        node in the tree is represented by a spherical triangle.   This can be
+        used for fast searching of the sphere and matching lists of points.
+
+        The underlying code is C++ linked as an extension.
+
+
+
+    json_util:
+        Convienience functions for working with JSON files
+        http://en.wikipedia.org/wiki/JSON
+
+    misc:
+        Miscellaneous usefule tools, such as a tool for printing variables
+        in column format, pretty printing elapsed time, executing system
+        processes, sub-selecting from a dictionary, etc.
+
+
+    sqlite_util
+        Tools for working with an sqlite database, including the ability to write
+        record arrays to tables and read from tables into rec arrays.
+
+    random:
+        A class to generate random numbers from arbitrary distributions.
+
+
+    stomp_util
     ostools
     plotting
-    random
     sfile
-    sqlite_util
-    stomp_util
-    wcsutil
     xmltools
+    oracle_util
 
 """
 # version info
@@ -135,8 +154,6 @@ def get_python_version(numerical=False):
     return pyvers
 
 
-# imports are the ony things that will have to be converted for py3k
-# other than extension modules
 import algorithm
 import xmltools
 import ostools

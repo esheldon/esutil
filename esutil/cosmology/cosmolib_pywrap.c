@@ -87,6 +87,22 @@ PyCosmoObject_repr(struct PyCosmoObject* self) {
     }
 }
 
+static PyObject* PyCosmoObject_DH(struct PyCosmoObject* self) {
+    return PyFloat_FromDouble(self->cosmo->DH);
+}
+static PyObject* PyCosmoObject_flat(struct PyCosmoObject* self) {
+    return PyInt_FromLong(self->cosmo->flat);
+}
+static PyObject* PyCosmoObject_omega_m(struct PyCosmoObject* self) {
+    return PyFloat_FromDouble(self->cosmo->omega_m);
+}
+static PyObject* PyCosmoObject_omega_l(struct PyCosmoObject* self) {
+    return PyFloat_FromDouble(self->cosmo->omega_l);
+}
+static PyObject* PyCosmoObject_omega_k(struct PyCosmoObject* self) {
+    return PyFloat_FromDouble(self->cosmo->omega_k);
+}
+
 /*
    The wrapper methods and vectorizations.
 
@@ -643,6 +659,11 @@ PyCosmoObject_scinv_2vec(struct PyCosmoObject* self, PyObject* args) {
 
 
 static PyMethodDef PyCosmoObject_methods[] = {
+    {"DH",          (PyCFunction)PyCosmoObject_DH,          METH_VARARGS, "DH\n\nGet the Hubble distance"},
+    {"flat",          (PyCFunction)PyCosmoObject_flat,          METH_VARARGS, "flat\n\nReturn if universe if flat"},
+    {"omega_m",          (PyCFunction)PyCosmoObject_omega_m,          METH_VARARGS, "omega_m\n\nGet omega matter"},
+    {"omega_l",          (PyCFunction)PyCosmoObject_omega_l,          METH_VARARGS, "omega_m\n\nGet omega lambda"},
+    {"omega_k",          (PyCFunction)PyCosmoObject_omega_k,          METH_VARARGS, "omega_m\n\nGet omega curvature"},
     {"ez_inverse",          (PyCFunction)PyCosmoObject_ez_inverse,          METH_VARARGS, "ez_inverse(z)\n\nGet 1/E(z)"},
     {"ez_inverse_vec",          (PyCFunction)PyCosmoObject_ez_inverse_vec,          METH_VARARGS, "ez_inverse_vec(z)\n\nGet 1/E(z) for z an array"},
     {"ez_inverse_integral", (PyCFunction)PyCosmoObject_ez_inverse_integral, METH_VARARGS, "ez_inverse_integral(zmin, zmax)\n\nGet integral of 1/E(z) from zmin to zmax"},
