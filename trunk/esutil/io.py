@@ -470,6 +470,8 @@ def _get_fname_ftype_from_inputs(fileobj, **keywords):
 
 def get_ftype(filename):
     fsplit = filename.split('.')
+    if len(fsplit) == 1:
+        raise ValueError("Could not determine file type file filename: '%s'" % filename)
     fext = fsplit[-1]
     if (fext == 'gz' or fext == 'bz' or fext == 'bz2') and len(fsplit) > 2:
         fext = fsplit[-2]
