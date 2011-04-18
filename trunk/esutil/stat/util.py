@@ -399,9 +399,101 @@ class Binner(dict):
 
 
 
+def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None, 
+              min=None, max=None, 
+              rev=False, more=False):
+    """
+    Calculate the histogram of the input data.  
+    
+    Similar to IDL histogram.  The reverse indices are also optionally
+    calculated.  This routine uses the Binner class in this module for the
+    computations.  If you need something more flexible, or need to calculate
+    statistics for another variable in the bin, see that class.
+
+    Parameters
+    ----------
+    data: 
+        A numpy array or a sequence that can be converted.
+
+    weights: optional
+        A set of weights to use for calculating some statistics.  If weights
+        are sent, both rev and more are set to True, this the return result is
+        a dictionary with a wide variety of statistics tabulated.
+
+    binsize: number, optional
+        Default 1.0.  The bin size for histogramming.
+    nbin: integar, optional
+        Choose a number of bins instead of a binsize.  Overrides
+        the binsize keyword.
+    nperbin: integar, optional
+        Choose the number of objects that should fall in each bin.
+        Overrides the binsize keyword.  Results in uneven binning.
+
+    min, max:  number, optional
+        The min and max data to use from the array.  If these are not sent, min
+        and max are determined from the input.
 
 
-def histogram(data_input, binsize=1., nbin=None, min=None, max=None, rev=False, 
+    rev: boolean, optional
+        If true, return a tuple 
+            h, rev
+        Where rev is the reverse indices.   Default is false.  Note if weights
+        are sent, or more=True, the result is always a dictionary.  See below.
+
+    more:
+
+        If more is True, or weights are sent, then return more statistics, with
+        all outputs in a dictionary.
+
+            keys of the returned dictionary:
+                'hist': The histogram.
+                'rev':  The reverse indices if the keyword rev=True
+                'low': The lower edge of the bins
+                'high' Upper edge of the bins.
+                'center': Center of the bins
+                
+            if the keyword rev=True or weights are sent:
+                'mean': The mean value in the bin. -9999 if there are
+                    no data in the bin.
+                'std': The standard deviation in the bin.
+                'err': The error on the mean.
+
+            if weights are sent:
+                'whist': The weighted histogram.
+                'wmean': The weighted mean in the bin.
+                'wstd': The weighted standard deviation in the bin.
+                'werr': The weighted error in the bin, calculated as
+                    sqrt(1/sum(weights))
+                'werr2': The weighted error calculated from the
+                    weighted variance: 
+                      sqrt( (w**2 * (arr-mean)**2).sum() )/weights.sum()
+
+
+    Using Reverse Indices:
+        h,rev = histogram(data, binsize=binsize, rev=True)
+
+        for i in range(h.size):
+            if rev[i] != rev[i+1]:
+                # data points were found in this bin, get their indices
+                indices = rev[ rev[i]:rev[i+1] ]
+
+                # do calculations with data[indices] ...
+    """
+
+    b = Binner(data, weights=weights)
+    b.dohist(binsize=binsize, nbin=nbin, nperbin=nperbin, min=min, max=max, rev=rev)
+
+    if weights is not None or more:
+        return b
+
+    if rev:
+        return b['hist'], b['rev']
+    else:
+        return b['hist']
+
+
+
+def histogram_old(data_input, binsize=1., nbin=None, min=None, max=None, rev=False, 
               extern=True, use_weave=False, weights=None, more=False):
     """
     Name:
