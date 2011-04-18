@@ -234,12 +234,13 @@ class Binner(dict):
         """
         self._get_sort_index()
         s=self['sort_index']
+
+        dowhere=False
         if min is not None:
             xmin = min
             dowhere=True
         else:
             xmin = self.x[s[0]]
-            dowhere=False
 
 
         if max is not None:
@@ -247,7 +248,6 @@ class Binner(dict):
             dowhere=True
         else:
             xmax = self.x[s[-1]]
-            dowhere=False
         
         self.dmin = xmin
         self.dmax = xmax
