@@ -483,6 +483,9 @@ def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None,
     b = Binner(data, weights=weights)
     b.dohist(binsize=binsize, nbin=nbin, nperbin=nperbin, min=min, max=max, rev=rev)
 
+    if more:
+        b.calc_stats()
+
     if weights is not None or more:
         return b
 
