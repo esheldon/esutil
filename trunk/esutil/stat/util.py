@@ -417,8 +417,8 @@ def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None,
 
     weights: optional
         A set of weights to use for calculating some statistics.  If weights
-        are sent, both rev and more are set to True, this the return result is
-        a dictionary with a wide variety of statistics tabulated.
+        are sent, more=True is implied and a dictionary is returned containing
+        a wide variety of statistics.  See docs for the more keyword below.
 
     binsize: number, optional
         Default 1.0.  The bin size for histogramming.
