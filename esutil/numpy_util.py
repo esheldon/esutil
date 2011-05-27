@@ -1665,6 +1665,7 @@ def random_subset(imax, nrand, unique=True, verbose=False):
 
     """
 
+    nrand=int(nrand)
     if nrand > imax:
         raise ValueError("number of requestedr randoms must be "
                          "<= imax")
