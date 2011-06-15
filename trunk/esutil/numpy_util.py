@@ -364,12 +364,12 @@ def aprint(array, **keys):
         Optionally results can be sent to a pager or file.  
         
         By default, the columns are printed in a simple, machine readable
-        format, but if fancy=True a more visually appealing format is used.
+        format, but using the type= keyword you can print in other styles.
 
         Subsets of the fields can be chosen.  Also, printing can be 
         restricted to the top N lines.
 
-        If not fancy printing, the user has more control over the format.
+        If not type='fancy', the user has more control over the format.
 
     Calling Sequence:
         aprint(array, **keywords)
@@ -378,11 +378,20 @@ def aprint(array, **keys):
         array: A numpy array with fields.
 
     Keywords:
-        fancy: 
-            If True, print with a visually appealing, but less machine readable
-            format
-        page: 
-            If True, send results to a pager.
+        type:
+            Default: 'table'.  Print simple columns.
+            If 'fancy' print with a visually appealing format.
+                The delim keyword is ignored and arrays are always bracketed.
+
+            If 'latex' print a latex table such that the
+                delimiter is '&' and the lines end in latex
+                continuations.  Paging is turned off.
+
+                Currently this just prints the data part of the
+                table; in the future, the full header and footer
+                will be added with control.
+            If 'latex-deluxe' this is currently a synonym for 'latex'
+
         file: 
             Send results to this file rather than standard output. 
         nlines: 
@@ -413,8 +422,8 @@ def aprint(array, **keys):
             Put brackets in place to delineate dimensional boundies.  e.g.
             {{a,b,c},{d,e,f}}
 
-            Notes: if fancy=True, brackets are always used.
-                   If fancy=True, the default array_delim is ',' instead
+            Notes: if type='fancy', brackets are always used.
+                   If type='fancy', the default array_delim is ',' instead
                    of ' '
 
 
@@ -456,7 +465,7 @@ def aprint(array, **keys):
           1729.27612305   209.312911987  0.626632451812
 
         # fancy printing with a title
-        >>> aprint(arr, title='My Data',fancy=True)
+        >>> aprint(arr, title='My Data',type='fancy')
                             My Data                     
                x       |       y       |     sigma0     
         ---------------+---------------+---------------
@@ -1736,15 +1745,29 @@ class ArrayWriter:
 
     Constructor:
         aw = ArrayWriter(file=None, 
+                         type='table',
                          delim=' ', 
                          array_delim=' ',
                          bracket_arrays=False,
-                         fancy=False,
                          page=False)
 
     Inputs:
         file:
             File name or file object to use for printing.
+        type:
+            Default: 'table'.  Print simple columns.
+            If 'fancy' print with a visually appealing format.
+                The delim keyword is ignored and arrays are always bracketed.
+
+            If 'latex' print a latex table such that the
+                delimiter is '&' and the lines end in latex
+                continuations.  Paging is turned off.
+
+                Currently this just prints the data part of the
+                table; in the future, the full header and footer
+                will be added with control.
+            If 'latex-deluxe' this is currently a synonym for 'latex'
+
         delim: 
             The delimiter between fields.
         array_delim: 
@@ -1754,15 +1777,10 @@ class ArrayWriter:
             Put brackets in place to delineate dimensional boundies.  e.g.
             {{a,b,c},{d,e,f}}
 
-            Notes: if fancy=True, brackets are always used.
-                   If fancy=True, the default array_delim is ',' instead
+            Notes: if type='fancy', brackets are always used.
+                   If type='fancy', the default array_delim is ',' instead
                    of ' '
 
-        fancy:  
-            If True, use a fancy printing scheme instead of the simple machine
-            readable format that is default.  The delim keyword is ignored and
-            arrays are always bracketed.  fancy can also be specified while
-            calling the write() method.
         page:
             If True, send the output to a pager.
 
@@ -1823,27 +1841,38 @@ class ArrayWriter:
 
         self._page=False
         self._fancy=False
+        self._type = 'table'
 
     def set_keywords(self, **keys):
         self._delim = keys.get('delim',self._delim)
         self._page = keys.get('page',self._page)
+        self._type = keys.get('type',self._type)
 
+        # deal with deprecated fancy= keyword, superceded
+        # by type=
         self._fancy=keys.get('fancy',self._fancy)
         if self._fancy:
+            self._type = 'fancy'
+
+        if self._type == 'fancy':
             self._bracket_arrays=True
         else:
             self._bracket_arrays = keys.get('bracket_arrays',
                                             self._bracket_arrays)
 
-        if not 'array_delim' in keys:
-            if self._bracket_arrays:
-                # default to commas in arrays when we are bracketing
-                self._array_delim = ','
-            else:
-                # otherwise use the same as delim
-                self._array_delim = self._delim
+        if self._type in ['latex','latex-deluxe']:
+            self._delim = ' & '
+            self._array_delim = ' '
         else:
-            self._array_delim = keys['array_delim']
+            if not 'array_delim' in keys:
+                if self._bracket_arrays:
+                    # default to commas in arrays when we are bracketing
+                    self._array_delim = ','
+                else:
+                    # otherwise use the same as delim
+                    self._array_delim = self._delim
+            else:
+                self._array_delim = keys['array_delim']
 
     def open(self,**keys):
 
@@ -1921,8 +1950,10 @@ class ArrayWriter:
         
         self.set_keywords(**keys)
 
-        if self._fancy:
+        if self._type == 'fancy':
             self.fancy_write(arr, **keys)
+        elif self._type in ['latex','latex-deluxe']:
+            self.latex_write(arr, **keys)
         else:
             self.simple_write(arr, **keys)
             return
@@ -2036,6 +2067,73 @@ class ArrayWriter:
         else:
             self._fobj.flush()
         
+    def latex_write(self, arrin, **keys):
+
+        arr=arrin.view(numpy.ndarray)
+        allnames = arr.dtype.names
+
+        if allnames is None:
+            # simple arrays are easy
+            arr.tofile(self._fobj, sep='\n')
+            return
+
+        nall = len(allnames)
+
+        if 'fields' in keys:
+            names_in = keys['fields']
+        elif 'columns' in keys:
+            names_in = keys['columns']
+        else:
+            names_in = allnames
+
+        format = keys.get('format',None)
+
+        if esutil.misc.isstring(names_in[0]):
+            names = names_in
+        else:
+            names = []
+            for ni in names_in:
+                if ni > nall:
+                    raise ValueError("Field index out of range: %s" % ni)
+                names.append(allnames[ni])
+        
+        nnames = len(names)
+
+        # we have fields
+        astr = ArrayStringifier(delim=self._array_delim,
+                                brackets=self._bracket_arrays)
+
+        nlines = arr.size
+        for i in xrange(nlines):
+            line=''
+            iname=0
+            for n in names:
+
+                data = arr[n][i]
+                if data.ndim > 0:
+                    strval=astr.stringify(data)
+                    if format is not None:
+                        strval = format % strval
+                else:
+                    if format is not None:
+                        strval = format % data
+                    else:
+                        strval = str(data)
+
+                line += strval
+                    
+                if iname < (nnames-1):
+                    line += self._delim
+                iname += 1
+            self._fobj.write(line)
+            if i < (nlines-1):
+                self._fobj.write(r' \\')
+
+            self._fobj.write('\n')
+
+
+        self._fobj.flush()
+
     def fancy_write(self, arrin, **keys):
         array=arrin.view(numpy.ndarray)
 
