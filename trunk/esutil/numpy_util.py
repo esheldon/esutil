@@ -13,9 +13,9 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         is designed to be similar to help, struct, /str in IDL. 
 
 
-    aprint(array, fancy=False, page=False, nlines=ALL, fields=ALL, file=None)
+    aprint(array, type='table', page=False, nlines=ALL, fields=ALL, file=None)
         Print fields from the array in columns, optionally send to a pager or
-        file.  If fancy=False, more keywords are available.
+        file.  If type='fancy', more keywords are available.
 
     arrscl(arr, minval, maxval, arrmin=None, arrmax=None)
         Rescale the range of an array to be between minval and maxval.
