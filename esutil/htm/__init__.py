@@ -126,6 +126,7 @@ To Perform Unit Tests:
 
 MODIFICATION HISTORY:
     SWIG Wrapper working 2010-03-03, Erin Sheldon, BNL.
+    Early 2011: Re-write without swig.
 
 """
 

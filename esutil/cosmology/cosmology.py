@@ -72,6 +72,8 @@ Notes:
     Don't call the c codes directly, they do very little error checking.  Error
     checking is dealt with in the Cosmo python class.
 
+Modification:
+    Early 2011: Complete Re-write without using SWIG.
 """
 
 __doc__=main_docs
@@ -139,19 +141,19 @@ class Cosmo:
             d = self._cosmo.Dc(zmin, zmax)
 
         elif not isscalar(zmin) and isscalar(zmax):
-            # scalar for zmin, array for zmax: note order reversed in call for SWIG reasons
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
+            # scalar for zmin, array for zmax
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
             d=self._cosmo.Dc_vec1(zmin, zmax)
 
         elif isscalar(zmin) and not isscalar(zmax):
             # array for zmin, scalar zmax
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             d=self._cosmo.Dc_vec2( zmin, zmax)
 
         elif not isscalar(zmin) and not isscalar(zmax):
             # both arrays: must be same length
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             if len(zmin) != len(zmax):
                 raise ValueError("If zmin and zmax are arrays, they must be same length")
             d=self._cosmo.Dc_2vec(zmin, zmax)
@@ -184,19 +186,19 @@ class Cosmo:
             d = self._cosmo.Dm(zmin, zmax)
 
         elif not isscalar(zmin) and isscalar(zmax):
-            # scalar for zmin, array for zmax: note order reversed in call for SWIG reasons
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
+            # scalar for zmin, array for zmax
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
             d=self._cosmo.Dm_vec1(zmin, zmax)
 
         elif isscalar(zmin) and not isscalar(zmax):
             # array for zmin, scalar zmax
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             d=self._cosmo.Dm_vec2( zmin, zmax)
 
         elif not isscalar(zmin) and not isscalar(zmax):
             # both arrays: must be same length
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             if len(zmin) != len(zmax):
                 raise ValueError("If zmin and zmax are arrays, they must be same length")
             d=self._cosmo.Dm_2vec(zmin, zmax)
@@ -227,19 +229,19 @@ class Cosmo:
             d = self._cosmo.Da(zmin, zmax)
 
         elif not isscalar(zmin) and isscalar(zmax):
-            # scalar for zmin, array for zmax: note order reversed in call for SWIG reasons
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
+            # scalar for zmin, array for zmax
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
             d=self._cosmo.Da_vec1(zmin, zmax)
 
         elif isscalar(zmin) and not isscalar(zmax):
             # array for zmin, scalar zmax
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             d=self._cosmo.Da_vec2( zmin, zmax)
 
         elif not isscalar(zmin) and not isscalar(zmax):
             # both arrays: must be same length
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             if len(zmin) != len(zmax):
                 raise ValueError("If zmin and zmax are arrays, they must be same length")
             d=self._cosmo.Da_2vec(zmin, zmax)
@@ -270,19 +272,19 @@ class Cosmo:
             d = self._cosmo.Dl(zmin, zmax)
 
         elif not isscalar(zmin) and isscalar(zmax):
-            # scalar for zmin, array for zmax: note order reversed in call for SWIG reasons
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
+            # scalar for zmin, array for zmax
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
             d=self._cosmo.Dl_vec1(zmin, zmax)
 
         elif isscalar(zmin) and not isscalar(zmax):
             # array for zmin, scalar zmax
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             d=self._cosmo.Dl_vec2( zmin, zmax)
 
         elif not isscalar(zmin) and not isscalar(zmax):
             # both arrays: must be same length
-            zmin = numpy.array(zmin, dtype='f8', copy=False)
-            zmax = numpy.array(zmax, dtype='f8', copy=False)
+            zmin = numpy.array(zmin, dtype='f8', copy=False, order='C')
+            zmax = numpy.array(zmax, dtype='f8', copy=False, order='C')
             if len(zmin) != len(zmax):
                 raise ValueError("If zmin and zmax are arrays, they must be same length")
             d=self._cosmo.Dl_2vec(zmin, zmax)
@@ -306,7 +308,7 @@ class Cosmo:
         if isscalar(z):
             dv = self._cosmo.dV(z)
         else:
-            z = numpy.array(z, dtype='f8', copy=False)
+            z = numpy.array(z, dtype='f8', copy=False, order='C')
             dv = self._cosmo.dV_vec(z)
 
         return dv
@@ -359,19 +361,19 @@ class Cosmo:
             scinv = self._cosmo.scinv(zl, zs)
 
         elif not isscalar(zl) and isscalar(zs):
-            # scalar for zl, array for zs: note order reversed in call for SWIG reasons
-            zl = numpy.array(zl, dtype='f8', copy=False)
+            # scalar for zl, array for zs
+            zl = numpy.array(zl, dtype='f8', copy=False, order='C')
             scinv=self._cosmo.scinv_vec1(zl, zs)
 
         elif isscalar(zl) and not isscalar(zs):
             # array for zl, scalar zs
-            zs = numpy.array(zs, dtype='f8', copy=False)
+            zs = numpy.array(zs, dtype='f8', copy=False, order='C')
             scinv=self._cosmo.scinv_vec2( zl, zs)
 
         elif not isscalar(zl) and not isscalar(zs):
             # both arrays: must be same length
-            zl = numpy.array(zl, dtype='f8', copy=False)
-            zs = numpy.array(zs, dtype='f8', copy=False)
+            zl = numpy.array(zl, dtype='f8', copy=False, order='C')
+            zs = numpy.array(zs, dtype='f8', copy=False, order='C')
             if len(zl) != len(zs):
                 raise ValueError("If zl and zs are arrays, they must be same length")
             scinv=self._cosmo.scinv_2vec(zl, zs)
@@ -399,7 +401,7 @@ class Cosmo:
         if isscalar(z):
             ez = self._cosmo.ez_inverse(z)
         else:
-            z=numpy.array(z, dtype='f8', copy=False)
+            z=numpy.array(z, dtype='f8', copy=False, order='C')
             ez=self._cosmo.ez_inverse_vec(z)
 
         return ez
