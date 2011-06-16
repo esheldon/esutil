@@ -522,3 +522,21 @@ def transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys, **keys):
         return esutil.coords.sdss2eq(blon,blat)
     else:
         raise ValueError("dont' yet support '%s' to '%s'" % (fromsys,tosys))
+
+
+def asinh_scale(image, alpha=0.02, nonlinearity=8.0):
+    image_out=numpy.array(image, dtype='f8', copy=True)
+
+    image_out[:] = \
+        numpy.arcsinh( alpha*nonlinearity*image )/nonlinearity
+
+    return image_out
+
+def image_norm(image, reverse=False):
+    image_out=numpy.array(image, dtype='f8', copy=True)
+    image_out /= image_out.max()
+
+    if reverse:
+        image_out = 1.0 - image_out
+
+    return image_out
