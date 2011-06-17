@@ -1116,9 +1116,10 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={},
 
         w, = numpy.where( (numpy.abs(arr[index]) - m) < clip )
 
-        if (w.size == 0) and (not silent):
-            stderr.write("nsig too small. Everything clipped on "
-                         "iteration %d\n" % (i+1))
+        if (w.size == 0):
+            if (not silent):
+                stderr.write("nsig too small. Everything clipped on "
+                             "iteration %d\n" % (i+1))
             return m,s
 
         index = index[w]
