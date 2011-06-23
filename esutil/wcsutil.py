@@ -31,6 +31,8 @@ Modification History:
     Now included in esutil.  Cleaned up imports so the module can be imported
     without numpy/scipy even though nothing will work.  2009-11-01. E.S.S. BNL
 
+    2011-06-18: If input are scalars, return scalars
+
 """
 
 license="""
@@ -54,6 +56,7 @@ license="""
 
 try:
     import numpy
+    from numpy import isscalar
     have_numpy=True
 except:
     have_numpy=False
@@ -199,7 +202,7 @@ class WCS(object):
     def keys(self):
         return self.wcs.keys()
 
-    def image2sky(self, xin, yin, distort=True):
+    def image2sky(self, x, y, distort=True):
         """
         Usage:
             lon,lat = image2sky(x,y, distort=True)
@@ -222,8 +225,11 @@ class WCS(object):
             wcs = wcsutil.WCS(hdr)
             ra,dec = wcs.image2sky(x,y)
         """
-        x = numpy.array(xin, ndmin=1, dtype='f8')
-        y = numpy.array(yin, ndmin=1, dtype='f8')
+        
+        arescalar=isscalar(x)
+        x = numpy.array(x, dtype='f8', copy=False)
+        y = numpy.array(y, dtype='f8', copy=False)
+
         xdiff = x - self.crpix[0]
         ydiff = y - self.crpix[1]
 
@@ -243,9 +249,11 @@ class WCS(object):
 
         longitude,latitude = self.image2sph(u, v)
 
+        if arescalar:
+            longitude, latitude = longitude[0], latitude[0]
         return longitude, latitude
 
-    def sky2image(self, lonin, latin, distort=True, find=True):
+    def sky2image(self, lon, lat, distort=True, find=True):
         """
         Usage:
             x,y=sky2image(longitude, latitude, distort=True, find=True)
@@ -271,35 +279,38 @@ class WCS(object):
             x,y = wcs.image2sky(ra,dec)
         """
  
+        arescalar=isscalar(lon)
+        longitude  = numpy.array(lon, ndmin=1, dtype='f8', copy=False)
+        latitude = numpy.array(lat, ndmin=1, dtype='f8', copy=False)
  
         # Only do this if there is distortion
         if find and (self.distort is not None):
-            return self._findxy(lonin, latin)
-
-        longitude  = numpy.array(lonin, ndmin=1, dtype='f8')
-        latitude = numpy.array(latin, ndmin=1, dtype='f8')
-
-        u, v = self.sph2image(longitude, latitude)
-
-        p=self.projection.upper()
-        if p == '-TAN':
-            if distort:
-                u,v = self.Distort(u, v, inverse=True)
-            xdiff, ydiff = self.ApplyCDMatrix(u, v, inverse=True)
-
-        elif p == '-TAN-SIP':
-            u,v = self.ApplyCDMatrix(u, v, inverse=True)
-            if distort:
-                xdiff, ydiff = self.Distort(u, v, inverse=True)
-            else:
-                xdiff,ydiff = u,v
-
+            x,y = self._findxy(longitude, latitude)
         else:
-            raise ValueError("projection '%s' not supported" % p)
 
-        x = xdiff + self.crpix[0]
-        y = ydiff + self.crpix[1]
+            u, v = self.sph2image(longitude, latitude)
 
+            p=self.projection.upper()
+            if p == '-TAN':
+                if distort:
+                    u,v = self.Distort(u, v, inverse=True)
+                xdiff, ydiff = self.ApplyCDMatrix(u, v, inverse=True)
+
+            elif p == '-TAN-SIP':
+                u,v = self.ApplyCDMatrix(u, v, inverse=True)
+                if distort:
+                    xdiff, ydiff = self.Distort(u, v, inverse=True)
+                else:
+                    xdiff,ydiff = u,v
+
+            else:
+                raise ValueError("projection '%s' not supported" % p)
+
+            x = xdiff + self.crpix[0]
+            y = ydiff + self.crpix[1]
+
+        if arescalar:
+            return x[0], y[0]
         return x,y
 
     def ExtractProjection(self, wcs):
@@ -481,7 +492,7 @@ class WCS(object):
         return diff
 
 
-    def _findxy(self, lonin, latin):
+    def _findxy(self, lon, lat):
         """ 
         This is the simplest way to do the inverse of the (x,y)->(lon,lat)
         transformation when there are distortions.  Simply find the x,y 
@@ -491,8 +502,8 @@ class WCS(object):
         """
 
         import scipy.optimize
-        lon = numpy.array(lonin, ndmin=1, dtype='f8')
-        lat = numpy.array(latin, ndmin=1, dtype='f8')
+        #lon = numpy.array(lonin, ndmin=1, dtype='f8', copy=False)
+        #lat = numpy.array(latin, ndmin=1, dtype='f8', copy=False)
         if lon.size != lat.size:
             raise ValueError('lon and lat must be same size')
 
@@ -508,8 +519,8 @@ class WCS(object):
                     self.sky2image(lon[i], lat[i], find=False, distort=False)
             xy = scipy.optimize.fsolve(self._lonlatdiff, xyguess)
             x[i],y[i] = xy[0], xy[1]
-            loncheck,latcheck = self.image2sky(x[i],y[i])
-            lonerr, laterr = loncheck-lon[i], latcheck-lat[i]
+            #loncheck,latcheck = self.image2sky(x[i],y[i])
+            #lonerr, laterr = loncheck-lon[i], latcheck-lat[i]
 
         return x,y
 
