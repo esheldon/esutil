@@ -72,9 +72,13 @@ def bscatter(x, y, show=True, plt=None, **keywords):
 
     if type in ["solid","dotted","dotdashed","shortdashed",
                 "longdashed","dotdotdashed","dotdotdotdashed"]:
+        if 'width' in keywords:
+            pkeywords['width'] = keywords['width']
+
         p=biggles.Curve(x, y, type=type, **pkeywords)
     else:
-        p=biggles.Points(x, y, type=type, **pkeywords)
+        size=keywords.get('size', 1)
+        p=biggles.Points(x, y, type=type, size=size, **pkeywords)
 
     label = keywords.get('label',None)
     if label is not None:

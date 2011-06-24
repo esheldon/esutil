@@ -191,7 +191,6 @@ class HTM(htmc.HTMC):
                 Erin Sheldon, BNL.
             2010-03-19: Default to maxmatch=1, return the closest match.
             2010-06-16: Fixed bug that disallowed scalar inputs.  -BFG
-            Early 2011: Re-write without swig.
 
 
         """
@@ -495,7 +494,6 @@ class HTM(htmc.HTMC):
          MODIFICATION HISTORY:
             SWIG Wrapper and matching code working 2010-03-03, 
                 Erin Sheldon, BNL.
-            Early 2011: Re-write without swig.
 
         """
 
@@ -653,7 +651,6 @@ class HTM(htmc.HTMC):
         
          MODIFICATION HISTORY:
              Created:  2010-03-31, Erin Sheldon, BNL
-             Early 2011: Re-write without swig.
 
 
         """
