@@ -103,6 +103,10 @@ def read(fileobj, **keywords):
             JavaScript Object Notation.  Less flexible than XML but more useful
             in most practical situations such as storing inhomogeneous data in
             a portable way. 
+        YAML
+            A nice, human readable markup language, especially useful
+            for configuration files.  YAML stands for
+                YAML Ain't Markup Language
 
     Inputs:
         filename/fileobject:  
@@ -266,6 +270,10 @@ def write(fileobj, data, **keywords):
             JavaScript Object Notation.  Less flexible than XML but more useful
             in most practical situations such as storing inhomogeneous data in
             a portable way. 
+        YAML
+            A nice, human readable markup language, especially useful
+            for configuration files.  YAML stands for
+                YAML Ain't Markup Language
     """
 
     # a scalar was input
@@ -274,6 +282,8 @@ def write(fileobj, data, **keywords):
     # pick the right reader based on type
     if type == 'fits':
         write_fits(fobj, data, **keywords)
+    elif type == 'yaml':
+        write_yaml(fobj, data)
     elif type == 'json':
         json_util.write(data, fobj)
     elif type == 'rec':
@@ -425,6 +435,17 @@ def read_yaml(fileobj, **keywords):
         return yaml.load(open(fileobj))
     elif isinstance(fileobj,file):
         return yaml.load(fileobj)
+    else:
+        raise ValueError("file must be a string or open file object")
+
+def write_yaml(fileobj, data, **keywords):
+    if isinstance(fileobj, (str,unicode)):
+        return yaml.dump(data, open(fileobj,'w'))
+    elif isinstance(fileobj,file):
+        return yaml.dump(data, fileobj)
+    else:
+        raise ValueError("file must be a string or open file object")
+
 
 
 
