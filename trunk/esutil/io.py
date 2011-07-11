@@ -59,6 +59,12 @@ except:
         have_pyfits=False
 
 
+try:
+    import yaml
+    have_yaml=True
+except:
+    have_yaml=False
+
 def read(fileobj, **keywords): 
     """
     Name:
@@ -198,6 +204,8 @@ def read(fileobj, **keywords):
         data = read_fits(fobj, **keywords)
     elif type == 'json':
         data = json_util.read(fobj)
+    elif type == 'yaml':
+        data = read_yaml(fobj)
     elif type == 'rec':
         data = read_rec(fobj, **keywords)
     elif type == 'xml':
@@ -412,6 +420,14 @@ def read_xml(fileobj, **keywords):
     data = xmltools.xml2dict(fileobj, noroot=noroot, seproot=seproot)
     return data
 
+def read_yaml(fileobj, **keywords):
+    if isinstance(fileobj, (str,unicode)):
+        return yaml.load(open(fileobj))
+    elif isinstance(fileobj,file):
+        return yaml.load(fileobj)
+
+
+
 def ftype2fext(ftype_input):
     ftype=ftype_input.lower()
 
@@ -421,6 +437,8 @@ def ftype2fext(ftype_input):
         return 'rec'
     elif ftype == 'json':
         return 'json'
+    elif ftype == 'yaml':
+        return 'yaml'
     elif ftype == 'xml':
         return 'xml'
     else:
@@ -436,6 +454,8 @@ def fext2ftype(fext_input):
         return 'rec'
     elif fext == 'json':
         return 'json'
+    elif fext == 'yaml':
+        return 'yaml'
     elif fext == 'xml':
         return 'xml'
     else:
