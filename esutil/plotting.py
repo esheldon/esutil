@@ -64,31 +64,31 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
     if plt is None:
         plt = biggles.FramedPlot()
 
+    # plot symbol or line type
+    type = keywords.get('type', 'filled circle')
+
     xerr = keywords.get('xerr',None)
     yerr = keywords.get('yerr',None)
     x = xin
     y = yin
 
-    # plot symbol or line type
-    type = keywords.get('type', 'filled circle')
-
-    w=None
     xlog=keywords.get('xlog',False)
     ylog=keywords.get('ylog',False)
     xrng = keywords.get('xrange',None)
     yrng = keywords.get('yrange',None)
 
-    minval = 1.e-5
+    # For log, Don't plot points less than zero
+    w=None
     if xlog and ylog:
         xrng = get_log_plot_range(x, err=xerr, input_range=xrng)
         yrng = get_log_plot_range(y, err=yerr, input_range=yrng)
-        w,=numpy.where( (x > minval) & (y > minval) )
+        w,=numpy.where( (x > xrng[0]) & (y > yrng[0]) )
     elif xlog:
         xrng = get_log_plot_range(x, err=xerr, input_range=xrng)
-        w,=numpy.where( x > minval )
+        w,=numpy.where( x > xrng[0])
     elif ylog:
         yrng = get_log_plot_range(y, err=yerr, input_range=yrng)
-        w,=numpy.where( y > minval )
+        w,=numpy.where( y > yrng[0])
 
     if w is not None:
         if w.size == 0:
@@ -116,6 +116,8 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
 
     plt.add(p)
 
+    # note for log error bars, we start with original points since
+    # the bars may extend above zero even for negative points
     if yerr is not None:
         if ylog:
             add_log_error_bars(plt, 'y', xin, yin, yerr, yrng, **pkeywords)
