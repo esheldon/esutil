@@ -64,6 +64,8 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
     if plt is None:
         plt = biggles.FramedPlot()
 
+    pdict={}
+
     # plot symbol or line type
     type = keywords.get('type', 'filled circle')
 
@@ -115,21 +117,26 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
         p.label = label
 
     plt.add(p)
+    pdict['p'] = p
 
     # note for log error bars, we start with original points since
     # the bars may extend above zero even for negative points
     if yerr is not None:
         if ylog:
-            add_log_error_bars(plt, 'y', xin, yin, yerr, yrng, **pkeywords)
+            pdict['p_yerr'] = add_log_error_bars(plt, 'y', xin, yin, yerr, yrng, **pkeywords)
+            #p_yerr = add_log_error_bars(plt, 'y', xin, yin, yerr, yrng, **pkeywords)
         else:
             p_yerr=biggles.SymmetricErrorBarsY(x, y, yerr, **pkeywords)
             plt.add(p_yerr)
+            pdict['p_yerr'] = p_yerr
     if xerr is not None:
         if xlog:
-            add_log_error_bars(plt, 'y', xin, yin, xerr, xrng, **pkeywords)
+            pdict['p_xerr'] = add_log_error_bars(plt, 'y', xin, yin, xerr, xrng, **pkeywords)
+            #p_xerr = add_log_error_bars(plt, 'y', xin, yin, xerr, xrng, **pkeywords)
         else:
             p_xerr=biggles.SymmetricErrorBarsX(x, y, xerr, **pkeywords)
             plt.add(p_xerr)
+            pdict['p_xerr'] = p_xerr
 
     plt.xlog = xlog
     plt.ylog = ylog
@@ -163,6 +170,10 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
         if show:
             plt.show()
 
+    if 'dict' in keywords:
+        if keywords['dict']:
+            pdict['plt'] = plt
+            return pdict
     return plt
 
 def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**keywords):
@@ -619,13 +630,15 @@ def add_log_error_bars(plt, type, x, y, err, prange, **pkeywords):
     w,=where(high > 0)
     if w.size > 0:
         high = high[w]
+
         # outside range to avoid seeing hat
-        low = low[w].clip(0.5*prange[0], 2.0*prange[1])
+        low = low[w].clip(0.5*prange[0], 2.0*max(max(high),prange[1]) )
 
         if type == 'x':
-            p=biggles.ErrorBarsX(y, low, high, **pkeywords)
+            p=biggles.ErrorBarsX(y[w], low, high, **pkeywords)
         else:
-            p=biggles.ErrorBarsY(x, low, high, **pkeywords)
+            p=biggles.ErrorBarsY(x[w], low, high, **pkeywords)
         plt.add(p)
 
+        return p
 
