@@ -1,5 +1,6 @@
 try:
     import numpy
+    from numpy import where
     have_numpy = True
 except:
     have_numpy = False
@@ -26,7 +27,7 @@ def bbox(x0, x1, y0, y1, **keys):
 
     return biggles.Curve(bx, by, **keys)
 
-def bscatter(x, y, show=True, plt=None, **keywords):
+def bscatter(xin, yin, show=True, plt=None, **keywords):
     """
     Name:
         bscatter
@@ -60,11 +61,40 @@ def bscatter(x, y, show=True, plt=None, **keywords):
     """
 
     import biggles
-
     if plt is None:
         plt = biggles.FramedPlot()
 
+    xerr = keywords.get('xerr',None)
+    yerr = keywords.get('yerr',None)
+    x = xin
+    y = yin
+
+    # plot symbol or line type
     type = keywords.get('type', 'filled circle')
+
+    w=None
+    xlog=keywords.get('xlog',False)
+    ylog=keywords.get('ylog',False)
+    xrng = keywords.get('xrange',None)
+    yrng = keywords.get('yrange',None)
+
+    minval = 1.e-5
+    if xlog and ylog:
+        xrng = get_log_plot_range(x, err=xerr, input_range=xrng)
+        yrng = get_log_plot_range(y, err=yerr, input_range=yrng)
+        w,=numpy.where( (x > minval) & (y > minval) )
+    elif xlog:
+        xrng = get_log_plot_range(x, err=xerr, input_range=xrng)
+        w,=numpy.where( x > minval )
+    elif ylog:
+        yrng = get_log_plot_range(y, err=yerr, input_range=yrng)
+        w,=numpy.where( y > minval )
+
+    if w is not None:
+        if w.size == 0:
+            raise ValueError("no points > 0 for log plot")
+        x = x[w]
+        y = y[w]
 
     pkeywords = {}
     if 'color' in keywords:
@@ -86,21 +116,26 @@ def bscatter(x, y, show=True, plt=None, **keywords):
 
     plt.add(p)
 
-    if 'yerr' in keywords:
-        p_yerr=biggles.SymmetricErrorBarsY(x, y, keywords['yerr'], **pkeywords)
-        plt.add(p_yerr)
-    if 'xerr' in keywords:
-        p_xerr=biggles.SymmetricErrorBarsX(x, y, keywords['yerr'], **pkeywords)
-        plt.add(p_xerr)
+    if yerr is not None:
+        if ylog:
+            add_log_error_bars(plt, 'y', xin, yin, yerr, yrng, **pkeywords)
+        else:
+            p_yerr=biggles.SymmetricErrorBarsY(x, y, yerr, **pkeywords)
+            plt.add(p_yerr)
+    if xerr is not None:
+        if xlog:
+            add_log_error_bars(plt, 'y', xin, yin, xerr, xrng, **pkeywords)
+        else:
+            p_xerr=biggles.SymmetricErrorBarsX(x, y, xerr, **pkeywords)
+            plt.add(p_xerr)
 
-    if 'xlog' in keywords:
-        plt.xlog = keywords['xlog']
-    if 'ylog' in keywords:
-        plt.ylog = keywords['ylog']
-    if 'xrange' in keywords:
-        plt.xrange = keywords['xrange']
-    if 'yrange' in keywords:
-        plt.yrange = keywords['yrange']
+    plt.xlog = xlog
+    plt.ylog = ylog
+
+    if xrng is not None:
+        plt.xrange = xrng
+    if yrng is not None:
+        plt.yrange = yrng
 
     if 'xlabel' in keywords:
         plt.xlabel = keywords['xlabel']
@@ -544,3 +579,51 @@ def image_norm(image, reverse=False):
         image_out = 1.0 - image_out
 
     return image_out
+
+def get_log_plot_range(x, err=None, input_range=None):
+    if input_range is not None:
+        if input_range[0] <= 0. or input_range[1] <= 0.:
+            raise ValueError("cannot use plot range < 0 for log plots, got [%s,%s]" % tuple(input_range))
+        return input_range
+
+    w,=where(x > 0.)
+    if w.size == 0:
+        raise ValueError("No values are greater than zero in log plot")
+
+    minval = min(x[w])
+    if err is not None:
+        w2, = where( (x[w] - err[w]) > 0 )
+        minval2 =  min(x[w[w2]] - err[w[w2]])
+        minval = min(minval,minval2)
+
+        maxval = max(x+err)
+    else:
+        maxval = max(x)
+
+    minval *= 0.5
+    maxval *= 2
+
+    return [minval,maxval]
+
+def add_log_error_bars(plt, type, x, y, err, prange, **pkeywords):
+    import biggles
+    if type == 'x':
+        low = x-err
+        high = x+err
+    else:
+        low = y-err
+        high = y+err
+
+    w,=where(high > 0)
+    if w.size > 0:
+        high = high[w]
+        # outside range to avoid seeing hat
+        low = low[w].clip(0.5*prange[0], 2.0*prange[1])
+
+        if type == 'x':
+            p=biggles.ErrorBarsX(y, low, high, **pkeywords)
+        else:
+            p=biggles.ErrorBarsY(x, low, high, **pkeywords)
+        plt.add(p)
+
+
