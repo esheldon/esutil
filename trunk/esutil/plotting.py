@@ -170,9 +170,9 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
         if show:
             plt.show()
 
+    pdict['plt'] = plt
     if 'dict' in keywords:
         if keywords['dict']:
-            pdict['plt'] = plt
             return pdict
     return plt
 
@@ -530,7 +530,10 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
         plt.xlabel = keys['xlabel']
     if 'ylabel' in keys:
         plt.ylabel = keys['ylabel']
-    plt.show()
+
+    if 'show' in keys:
+        if keys['show']:
+            plt.show()
 
     return plt
 
@@ -642,3 +645,33 @@ def add_log_error_bars(plt, type, x, y, err, prange, **pkeywords):
 
         return p
 
+
+def fake_filled_circles(labels, colors=None, x=-9.99e12, y=-9.99e12):
+    """
+
+    When using a dot as plot symbol, the PlotKey is not useful because the dot
+    is too small to see.  This creates a filled circle point in specified
+    location (should be off the plot region) and returns the Point objects in a
+    list with the specified labels and possibly colors.
+
+    Then add these to your PlotKey
+
+    """
+    from biggles import Point
+
+    if colors is not None:
+        if len(colors) != len(labels):
+            raise ValueError("colors must be same len as labels")
+
+    points=[]
+    keys={}
+    for i in xrange(len(labels)):
+
+        if colors is not None:
+            keys['color'] = colors[i]
+
+        p = Point(x,y,type='filled circle', **keys)
+        p.label = labels[i]
+
+        points.append(p)
+    return points
