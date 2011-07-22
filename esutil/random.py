@@ -60,6 +60,7 @@ from types import *
 
 import numpy_util
 import stat
+import esutil as eu
 
 class Generator(object):
     """
@@ -157,8 +158,7 @@ class Generator(object):
                 # we'll generate the points from xrange and nx
                 if xrange is None or nx is None:
                     raise ValueError("Enter the points x or both xrange and nx")
-                x = numpy.arange(nx,dtype='f8')
-                x = numpy_util.arrscl(x, xrange[0], xrange[1] )
+                x = numpy.linspace(xrange[0], xrange[1], nx)
 
             self.xinput = numpy.array(x, ndmin=1, copy=False)
 
@@ -352,6 +352,46 @@ class Generator(object):
 
                 # interval is smaller, no integral in first point
                 self.xvals = self.xinput[1:]
+
+    def get_yvals(self, x):
+        if self.cumulative:
+            raise ValueError("dont' support getting y vals for cumulative")
+        if self.isfunc:
+            return self.pofx(x)
+        else:
+            rand = stat.interplin(self.xvals, self.pofx, x)
+
+    def test(self, nrand=500000):
+        """
+        Generate some randoms and compare to input distribution
+        """
+
+        import biggles
+
+        x = self.xinput
+        if self.isfunc:
+            y = self.pofx(x)
+        else:
+            y = self.pofx
+
+        # generate some randoms
+        rand = self.genrand(nrand)
+
+        # make the histogram at the binsize of the
+        # xinput
+        binsize = x[1]-x[0]
+        h = eu.stat.histogram(rand, min=x[0], max=x[-1], binsize=binsize)
+
+        # since on same grid can normalize simply
+        h = h/float(h.sum())
+        y = y/float(y.sum())
+
+        plt=biggles.FramedPlot()
+        py = biggles.Histogram(y, x0=x[0], binsize=binsize)
+        ph = biggles.Histogram(h, x0=x[0], binsize=binsize, color='red')
+            
+        plt.add(py,ph)
+        plt.show()
 
         
 def test_generator(doplot=False):
