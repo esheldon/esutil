@@ -203,9 +203,11 @@ def read(fileobj, **keywords):
 
     if fs == 'hdfs':
         fobj = hdfs_stage(fname, verbose=verbose)
-
-    if verbose:
-        stdout.write("Reading: %s\n" % fname)
+        if verbose:
+            stdout.write("Reading: %s\n" % fobj)
+    else:
+        if verbose:
+            stdout.write("Reading: %s\n" % fname)
 
 
     # pick the right reader based on type
