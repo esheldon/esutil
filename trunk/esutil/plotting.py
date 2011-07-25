@@ -531,9 +531,9 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     if 'ylabel' in keys:
         plt.ylabel = keys['ylabel']
 
-    if 'show' in keys:
-        if keys['show']:
-            plt.show()
+    show = keys.get('show',True)
+    if show:
+        plt.show()
 
     return plt
 
