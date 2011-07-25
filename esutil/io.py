@@ -189,7 +189,7 @@ def read(fileobj, **keywords):
             if len(fileobj) == 1:
                 alldata = alldata[0]
             else:
-                fn,fobj,type = _get_fname_ftype_from_inputs(fileobj[0], **keywords)
+                fn,fobj,type,fs = _get_fname_ftype_from_inputs(fileobj[0], **keywords)
                 if type == 'fits' or type == 'rec':
                     # this will only work if the all data has the 
                     # same structure
@@ -199,23 +199,32 @@ def read(fileobj, **keywords):
         return alldata
 
     # a scalar was input
-    fname,fobj,type=_get_fname_ftype_from_inputs(fileobj, **keywords)
+    fname,fobj,type,fs = _get_fname_ftype_from_inputs(fileobj, **keywords)
+
+    if fs == 'hdfs':
+        fobj = hdfs_stage(fname, verbose=verbose)
+
     if verbose:
         stdout.write("Reading: %s\n" % fname)
 
+
     # pick the right reader based on type
-    if type == 'fits':
-        data = read_fits(fobj, **keywords)
-    elif type == 'json':
-        data = json_util.read(fobj)
-    elif type == 'yaml':
-        data = read_yaml(fobj)
-    elif type == 'rec':
-        data = read_rec(fobj, **keywords)
-    elif type == 'xml':
-        data = read_xml(fobj, **keywords)
-    else:
-        raise ValueError("Don't know about file type '%s'" % type)
+    try:
+        if type == 'fits':
+            data = read_fits(fobj, **keywords)
+        elif type == 'json':
+            data = json_util.read(fobj)
+        elif type == 'yaml':
+            data = read_yaml(fobj)
+        elif type == 'rec':
+            data = read_rec(fobj, **keywords)
+        elif type == 'xml':
+            data = read_xml(fobj, **keywords)
+        else:
+            raise ValueError("Don't know about file type '%s'" % type)
+    finally:
+        if fs == 'hdfs':
+            hdfs_cleanup(fobj, verbose=verbose)
 
     return data
 
@@ -277,7 +286,7 @@ def write(fileobj, data, **keywords):
     """
 
     # a scalar was input
-    fname,fobj,type=_get_fname_ftype_from_inputs(fileobj, **keywords)
+    fname,fobj,type,fs =_get_fname_ftype_from_inputs(fileobj, **keywords)
 
     # pick the right reader based on type
     if type == 'fits':
@@ -483,11 +492,19 @@ def fext2ftype(fext_input):
         raise ValueError("Don't know about files with '%s' extension" % fext)
 
 def _get_fname_ftype_from_inputs(fileobj, **keywords):
+    """
+    Get filename, file type, and file system
+    """
+
+    fs='local'
 
     if isinstance(fileobj, file):
         fname = fileobj.name
         fobj = fileobj
     elif isinstance(fileobj, (str,unicode)):
+        if is_in_hdfs(fileobj):
+            fs='hdfs'
+
         # make sure we expand all ~username and other variables
         fname=ostools.expand_filename(fileobj)
         fobj = fname
@@ -506,7 +523,7 @@ def _get_fname_ftype_from_inputs(fileobj, **keywords):
         ftype=get_ftype(fname)
     ftype = ftype.lower()
 
-    return fname, fobj, ftype
+    return fname, fobj, ftype, fs
 
 
 def get_ftype(filename):
@@ -518,3 +535,35 @@ def get_ftype(filename):
         fext = fsplit[-2]
     typ = fext2ftype(fext)
     return typ
+
+def hdfs_stage(fname, verbose=False):
+    import subprocess
+    bname = os.path.basename(fname)
+    local_file = os.path.join('/tmp', bname)
+    command = 'hadoop fs -copyToLocal {hdfs_file} {local_file}'.format(hdfs_file=fname,
+                                                                     local_file=local_file)
+
+    if verbose:
+        stdout.write("Staging %s to local %s\n" % (fname, local_file))
+
+    res = os.system(command)
+
+    if res != 0:
+        raise RuntimeError("Failed to copy from hdfs %s -> %s" % (fname,local_file))
+
+    if not os.path.exists(local_file):
+        raise RuntimeError("In copy from hdfs %s -> %s, local copy not found" % (fname,local_file))
+
+    return local_file
+
+def hdfs_cleanup(fname, verbose=False):
+    if verbose:
+        stdout.write("Cleaning up hdfs staged local file %s\n" % fname)
+    if os.path.exists(fname):
+        os.remove(fname)
+
+def is_in_hdfs(fname):
+    if fname.find('hdfs://') == 0:
+        return True
+    else:
+        return False
