@@ -540,10 +540,13 @@ def get_ftype(filename):
 
 def hdfs_stage(fname, verbose=False):
     import subprocess
+    import tempfile
+
     bname = os.path.basename(fname)
-    local_file = os.path.join('/tmp', bname)
+    #local_file = os.path.join('/tmp', bname)
+    local_file = tempfile.mktemp(prefix='tmp-', suffix='-'+bname)
     command = 'hadoop fs -copyToLocal {hdfs_file} {local_file}'.format(hdfs_file=fname,
-                                                                     local_file=local_file)
+                                                                       local_file=local_file)
 
     if verbose:
         stdout.write("Staging %s to local %s\n" % (fname, local_file))
