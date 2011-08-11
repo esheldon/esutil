@@ -523,6 +523,9 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
 
     ind = numpy_util.random_subset(x.size, nrand)
 
+    if 'type' not in keys:
+        keys['type'] = 'dot'
+
     c = Points(x[ind], y[ind], **keys)
     plt.add(c)
 
@@ -531,8 +534,6 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     if 'ylabel' in keys:
         plt.ylabel = keys['ylabel']
 
-    if 'type' not in keys:
-        keys['type'] = 'dot'
 
     show = keys.get('show',True)
     if show:
