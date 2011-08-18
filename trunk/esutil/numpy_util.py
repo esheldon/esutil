@@ -1657,7 +1657,7 @@ def randind(nmax, nrand, dtype=None):
     return ind
 
 
-def random_subset(imax, nrand, unique=True, verbose=False):
+def random_subset(imax, nrand, unique=True, verbose=False, method='iter'):
     """
     Name:
         random_subset
@@ -1674,58 +1674,45 @@ def random_subset(imax, nrand, unique=True, verbose=False):
 
     nrand=int(nrand)
     if nrand > imax:
-        raise ValueError("number of requestedr randoms must be "
+        raise ValueError("number of requested randoms must be "
                          "<= imax")
 
-    r = numpy.random.randint(0, imax, nrand)
-    if not unique:
-        return
-
-    ur = numpy.unique(r)
-    nkeep = ur.size
-
-    nkeep = 0
-    while nkeep < nrand:
-        tmp = numpy.random.randint(0, imax, nrand-nkeep)
+    if method=='sort':
+        r=numpy.random.sample(imax)
+        s=r.argsort()
+        return s[0:nrand]
+    elif method=='iter':
+        r = numpy.random.randint(0, imax, nrand)
         if not unique:
-            return tmp
+            return
 
-        if r is None:
-            r = tmp.copy()
-        else:
-            r[nkeep:nrand] = tmp[:]
-        
         ur = numpy.unique(r)
         nkeep = ur.size
 
-        if verbose:
-            stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
+        nkeep = 0
+        while nkeep < nrand:
+            tmp = numpy.random.randint(0, imax, nrand-nkeep)
+            if not unique:
+                return tmp
 
-        if nkeep != nrand:
-            r[0:nkeep] = ur[:]
-        else:
-            return r
+            if r is None:
+                r = tmp.copy()
+            else:
+                r[nkeep:nrand] = tmp[:]
+            
+            ur = numpy.unique(r)
+            nkeep = ur.size
 
-    return
+            if verbose:
+                stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
 
-    nkeep = 0
-    while nkeep < nrand:
-        # generate enough randoms to meet our needs
-        tmp = numpy.random.randint(0, imax, nrand-nkeep)
-        if r is None:
-            r = tmp.copy()
-        r[nkeep:nrand] = tmp[:]
+            if nkeep != nrand:
+                r[0:nkeep] = ur[:]
+            else:
+                return r
 
-        # now make sure they are unique
-        newr = numpy.unique(r)
-        nkeep = newr.size
-        if nkeep != nrand:
-            r[0:nkeep] = newr[:]
-
-        if verbose:
-            stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
-
-    return r
+    else:
+        raise ValueError("method should be sort or iter")
 
 
 class ArrayWriter:
