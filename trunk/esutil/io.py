@@ -6,6 +6,9 @@ The functions most users will use:
     read():
         Provide a single interface to read from a variety of file types.
         Supports reading from a list of files.
+    read_header():
+        Read just a header, if the file type suppots headers.  equivalent to
+        read(..., header='only')
 
     write()
         Provide a single interface to write a variety of file types.
@@ -64,6 +67,17 @@ try:
     have_yaml=True
 except:
     have_yaml=False
+
+def read_header(fileobj, **keys):
+    """
+    read the header from a file.
+
+    This function is equivalent to io.read(.., header='only').  See the io.read
+    function for a description of accepted keywords.
+
+    """
+    keys['header'] = 'only'
+    return read(fileobj, **keys)
 
 def read(fileobj, **keywords): 
     """
@@ -139,8 +153,12 @@ def read(fileobj, **keywords):
             the requested rows are read from disk by using the recfile package.
             Default is all columns.
 
-        header:  If True, and the file type supports header+data, return a 
-            tuple  (data, header).  Default is False.
+        header:  
+            If True, and the file type supports header+data, return a tuple
+            (data, header).  Can also be 'only' in which case only the header
+            is read and returned (rec and fits only for now).  Default is
+            False.
+
         combine:  If a list of filenames/fileobjects is sent, the default
             behavior is to return a list of data.  If combine=True and the
             data are numpy arrays, attempt to combine them into a single
@@ -371,6 +389,10 @@ def read_fits(fileobj, **keywords):
 
     if 'ignore_missing_end' not in keywords:
         keywords['ignore_missing_end'] = True
+
+    if header == 'only':
+        return pyfits.getheader(fileobj, **keywords)
+
     if header:
         # the ignore_missing_end=True is for the multitude
         # of malformed FITS files out there
@@ -438,12 +460,22 @@ def read_rec(fileobj, **keywords):
     fields=keywords.get('fields',None)
     ensure_native = keywords.get('ensure_native',False)
 
-    data = sfile.read(fileobj, header=header, view=view, 
-                      rows=rows, fields=fields, columns=columns)
+    if header == 'only':
+        return sfile.read_header(fileobj)
+
+    if header:
+        data,hdr = sfile.read(fileobj, header=header, view=view, 
+                              rows=rows, fields=fields, columns=columns)
+    else:
+        data = sfile.read(fileobj, header=header, view=view, 
+                          rows=rows, fields=fields, columns=columns)
     if ensure_native:
         numpy_util.to_native(data, inplace=True)
 
-    return data
+    if header:
+        return data,hdr
+    else:
+        return data
 
 
 def read_xml(fileobj, **keywords):

@@ -16,9 +16,11 @@ def read(filename, ext, **keys):
     Read data from a FITS file using the FITS class.
 
     Currently this is a wrapper for pyfits designed to allow reading subsets of
-    rows and columns.  The recfile package is used for this purpose.  It can be
-    found in esutil, where most of the development occurs, and it's own package
-    on google code.
+    rows and columns from binary tables.  The recfile package is used for this
+    purpose.  It can be found in esutil, where most of the development occurs,
+    and it's own package on google code.  
+    
+    Images are always read whole.
 
     Parameters
     ----------
@@ -27,8 +29,10 @@ def read(filename, ext, **keys):
 
     rows: scalar,sequence,array
         A scalar, sequence or array indicating a subset of rows to read.
+        Only used when the extension is a table.
     fields or columns: scalar, sequence, array 
         A subset of field to read. fields and columns mean the same thing.
+        Only used when the extension is a table.
     view: type object
         Specify an alternative view of the data.  Should be a subclass
         of numpy.ndarray
@@ -38,9 +42,9 @@ def read(filename, ext, **keys):
         If upper, all names are converted to upper case.
 
     split: boolean
-        Return a tuple of results rather than a rec array. Note the data
-        are still stored in one big chunk, this is just an alternative access
-        method.  E.g.
+        For binary tables, return a tuple of results rather than a rec array.
+        Note the data are still stored in one big chunk, this is just an
+        alternative access method.  E.g.
 
         # this might return a rec array with fields accessed
         # such as data['x'] data['y'] data['index']
@@ -62,9 +66,11 @@ class FITS(list):
     A class for working with fits files.
 
     Currently this is a wrapper for pyfits designed to allow reading subsets of
-    rows and columns.  The recfile package is used for this purpose.  It can be
-    found in esutil, where most of the development occurs, and it's own package
-    on google code.
+    rows and columns from binary tables.  The recfile package is used for this
+    purpose.  It can be found in esutil, where most of the development occurs,
+    and it's own package on google code.  
+    
+    Images are always read whole.
 
     Examples
     ----------
@@ -114,8 +120,10 @@ class FITS(list):
 
         rows: scalar,sequence,array
             A scalar, sequence or array indicating a subset of rows to read.
+            Only used when the extension is a table.
         fields or columns: scalar, sequence, array 
             A subset of field to read. fields and columns mean the same thing.
+            Only used when the extension is a table.
         view: type object
             Specify an alternative view of the data.  Should be a subclass
             of numpy.ndarray
@@ -123,11 +131,12 @@ class FITS(list):
         lower,upper: boolean
             If lower, all names are converted to lower case.
             If upper, all names are converted to upper case.
+            Only used when the extension is a table.
 
         split: boolean
-            Return a tuple of results rather than a rec array. Note the data
-            are still stored in one big chunk, this is just an alternative access
-            method.  E.g.
+            For binary tables, return a tuple of results rather than a rec
+            array. Note the data are still stored in one big chunk, this is
+            just an alternative access method.  E.g.
 
             # this might return a rec array with fields accessed
             # such as data['x'] data['y'] data['index']
