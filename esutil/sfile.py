@@ -303,6 +303,7 @@ class SFile:
     """
     def __init__(self, fobj=None, mode='r', delim=None, 
                  padnull=False, ignorenull=False, verbose=False):
+
         self.open(fobj, mode=mode, delim=delim, verbose=verbose)
 
     def open(self, fobj, mode='r', delim=None, verbose=False,
@@ -316,11 +317,14 @@ class SFile:
         if not have_numpy:
             raise ImportError("numpy could not be imported")
 
-        self.verbose=verbose
-
         self.close()
+
+        self.verbose=verbose
         self.padnull=padnull
         self.ignorenull=ignorenull
+        self.mode = mode
+
+        self.fobj_input = fobj
 
         if fobj is None:
             return
@@ -350,13 +354,13 @@ class SFile:
                              "as input")
 
 
-        if self.fobj.mode[0] == 'r':
+        if self.mode[0] == 'r':
             #if reading:
             # For 'r' and 'r+' try to read the header
             if self.verbose:
                 stdout.write("\tReading header\n")
             self.hdr = self.read_header()
-            
+
             self.data_start = self.fobj.tell()
 
             self.delim = _match_key(self.hdr, '_delim')
@@ -385,10 +389,17 @@ class SFile:
         self.dtype=None
         self.has_fields=None
         self.shape=None
-        if hasattr(self, 'fobj'):
-            if self.fobj is not None:
-                if isinstance(self.fobj, file):
-                    self.fobj.close()
+
+        # if the input fobj was a file, don't close it. That is
+        # up to the user
+        if hasattr(self, 'fobj_input'):
+            if self.fobj_input is not None:
+                if not isinstance(self.fobj_input,file):
+                    # this means a string was passed in
+                    if isinstance(self.fobj, file):
+                        self.fobj.close()
+
+        self.fobj_input=None
         self.fobj=None
 
         self.padnull=False
@@ -399,7 +410,7 @@ class SFile:
 
         if isinstance(self.fobj,file):
             s += ["filename: '%s'" % self.fobj.name]
-            s += ["mode: '%s'" % self.fobj.mode]
+            s += ["mode: '%s'" % self.mode]
         if self.delim is not None:
             s=["delim: '%s'" % self.delim]
 
@@ -1394,7 +1405,7 @@ def _match_key(d, key, require=False):
     if not found or raise an error if require=True
     """
     if not isinstance(d,dict):
-        raise RuntimeError('Input object must be a dict')
+        raise RuntimeError('Input object must be a dict, got %s' % d)
     keys = list( d.keys() )
     keyslow = [k.lower() for k in keys]
     keylow = key.lower()
