@@ -63,6 +63,11 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
     import biggles
     if plt is None:
         plt = biggles.FramedPlot()
+        xlog=keywords.get('xlog',False)
+        ylog=keywords.get('ylog',False)
+    else:
+        xlog=plt.xlog
+        ylog=plt.ylog
 
     pdict={}
 
@@ -74,8 +79,6 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
     x = xin
     y = yin
 
-    xlog=keywords.get('xlog',False)
-    ylog=keywords.get('ylog',False)
     xrng = keywords.get('xrange',None)
     yrng = keywords.get('yrange',None)
 

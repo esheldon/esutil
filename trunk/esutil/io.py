@@ -209,7 +209,6 @@ def read(fileobj, **keywords):
         if verbose:
             stdout.write("Reading: %s\n" % fname)
 
-
     # pick the right reader based on type
     try:
         if type == 'fits':
@@ -287,22 +286,34 @@ def write(fileobj, data, **keywords):
                 YAML Ain't Markup Language
     """
 
+    verbose = keywords.get('verbose', False)
+
     # a scalar was input
     fname,fobj,type,fs =_get_fname_ftype_from_inputs(fileobj, **keywords)
 
-    # pick the right reader based on type
-    if type == 'fits':
-        write_fits(fobj, data, **keywords)
-    elif type == 'yaml':
-        write_yaml(fobj, data)
-    elif type == 'json':
-        json_util.write(data, fobj)
-    elif type == 'rec':
-        write_rec(fobj, data, **keywords)
-    else:
-        raise ValueError("Need to implement writing file type: %s\n" % type)
+    if fs == 'hdfs':
+        fname_hdfs = fname
+        fobj = hdfs_tempfile(fname)
 
+    try:
+        # pick the right reader based on type
+        if type == 'fits':
+            write_fits(fobj, data, **keywords)
+        elif type == 'yaml':
+            write_yaml(fobj, data)
+        elif type == 'json':
+            json_util.write(data, fobj)
+        elif type == 'rec':
+            write_rec(fobj, data, **keywords)
+        else:
+            raise ValueError("Need to implement writing file type: %s\n" % type)
 
+        if fs == 'hdfs':
+            hdfs_put(fobj, fname_hdfs, verbose=verbose)
+
+    finally:
+        if fs == 'hdfs':
+            hdfs_cleanup(fobj, verbose=verbose)
 
 def read_fits(fileobj, **keywords):
     """
@@ -538,27 +549,40 @@ def get_ftype(filename):
     typ = fext2ftype(fext)
     return typ
 
-def hdfs_stage(fname, verbose=False):
+def hdfs_stage(hdfs_file, verbose=False):
     import subprocess
-    import tempfile
 
-    bname = os.path.basename(fname)
-    #local_file = os.path.join('/tmp', bname)
-    local_file = tempfile.mktemp(prefix='tmp-', suffix='-'+bname)
-    command = 'hadoop fs -copyToLocal {hdfs_file} {local_file}'.format(hdfs_file=fname,
-                                                                       local_file=local_file)
+    local_file = hdfs_tempfile(hdfs_file)
+    command = 'hadoop fs -get {hdfs_file} {local_file}'.format(hdfs_file=hdfs_file,
+                                                               local_file=local_file)
 
     if verbose:
-        stdout.write("Staging %s to local %s\n" % (fname, local_file))
+        stdout.write("Staging %s to local %s\n" % (hdfs_file, local_file))
 
     res = os.system(command)
 
     if res != 0:
-        raise RuntimeError("Failed to copy from hdfs %s -> %s" % (fname,local_file))
+        raise RuntimeError("Failed to copy from hdfs %s -> %s" % (hdfs_file,local_file))
 
     if not os.path.exists(local_file):
-        raise RuntimeError("In copy from hdfs %s -> %s, local copy not found" % (fname,local_file))
+        raise RuntimeError("In copy from hdfs %s -> %s, local copy not found" % (hdfs_file,local_file))
 
+    return local_file
+
+def hdfs_put(local_file, hdfs_file, verbose=False):
+    command = 'hadoop fs -put {local_file} {hdfs_file}'.format(local_file=local_file,
+                                                               hdfs_file=hdfs_file)
+    if verbose:
+        print command
+    res = os.system(command)
+    if res != 0:
+        raise RuntimeError("Failed to copy to hdfs %s -> %s" % (local_file,hdfs_file))
+
+
+def hdfs_tempfile(fname):
+    import tempfile
+    bname = os.path.basename(fname)
+    local_file = tempfile.mktemp(prefix='hdfs-', suffix='-'+bname)
     return local_file
 
 def hdfs_cleanup(fname, verbose=False):
