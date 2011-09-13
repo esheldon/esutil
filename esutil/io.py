@@ -303,7 +303,6 @@ def write(fileobj, data, **keywords):
                 ignorenull: When writing ascii, ignore Null characters. Note
                     you won't be able to read the data back in, but it is
                     useful for things like sqlite database input.
-                
 
         JSON
             JavaScript Object Notation.  Less flexible than XML but more useful
@@ -498,7 +497,7 @@ def write_fits(fileobj, data, **keys):
     if fits_package == 'fitsio':
         write_fits_fitsio(fileobj, data, **keys)
     elif fits_package == 'pyfits':
-        result = write_fits_pyfits(fileobj, data, **keywords)
+        result = write_fits_pyfits(fileobj, data, **keys)
     else:
         raise ValueError("expected fitsio or pyfits")
 
