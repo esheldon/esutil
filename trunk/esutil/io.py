@@ -52,14 +52,15 @@ import copy
 from sys import stdout, stderr
 
 try:
-    from . import pyfitspatch as pyfits
-    have_pyfits=True
+    import fitsio
+    fits_type='fitsio'
 except:
     try:
         import pyfits
-        have_pyfits=True
+        fits_type='pyfits'
     except:
-        have_pyfits=False
+        fits_type=None
+
 
 
 try:
@@ -108,9 +109,9 @@ def read(fileobj, **keywords):
             Flexible Image Transport System
         REC
             Simple ascii header followed by data in binary or text form. These
-            files can be written/read using the esutil.sfile module.  Unlike
-            FITS files, REC files support appending.  Also supports reading
-            sub-selections of rows and columns.
+            files can be written/read using the esutil.sfile module.  REC files
+            support appending rows.  Also supports reading sub-selections of
+            rows and columns.
         XML
             Extensible Markup Language
         JSON
@@ -272,27 +273,37 @@ def write(fileobj, data, **keywords):
         type:
             Indicator of the file type, e.g. 'fits'.  If None, the type is
             determined from the file name.
-        append:
-            If true, append the data if supported by the indicated file type.
-            Default is False.
         header:
             If not None, write the header to the file if supported.
 
-    
-    All other keywords will be passed on to the underlying file writer if
-    **keywords is supported.  See those functions for more details, e.g
-    esutil.pyfitspyatch.writeto()
-
+    There are other keywords for the individual writers.
 
     Currently Supported File Types:
         FITS
             Flexible Image Transport System
-            NOTE: requires the patched version of pyfits that comes with esutil.
+
+            extra write keywords (if using fitsio)
+                extname: a name for the new extension
+                units: units for each column in tables
+                compress: compression scheme for images
+                header: a header to write
+                clobber: remove any existing file
         REC
             Simple ascii header followed by data in binary or text form. These
-            files can be written/read using the esutil.sfile module.  Unlike
-            FITS files, REC files support appending.  Also supports reading
-            sub-selections of rows and columns.
+            files can be written/read using the esutil.sfile module.  REC files
+            support appending rows.  Also supports reading sub-selections of
+            rows and columns.
+
+            extra write keywords
+                header: a header to write
+                append: append rows instead of clobbering
+                delim: If not None, write ascii data with the specified 
+                    delimiter
+                padnull:  When writing ascii, replace Null characters with spaces.
+                ignorenull: When writing ascii, ignore Null characters. Note
+                    you won't be able to read the data back in, but it is
+                    useful for things like sqlite database input.
+                
 
         JSON
             JavaScript Object Notation.  Less flexible than XML but more useful
@@ -359,64 +370,96 @@ def read_fits(fileobj, **keywords):
         data=esutil.io.read('test.fits', ext=1, )
     """
 
-    if not have_pyfits:
-        raise ImportError("Could not import pyfits")
     import numpy
 
-    #ext=keywords.get('ext',0)
-    view = keywords.get('view', numpy.ndarray)
-    header = keywords.get('header', False)
-    rows=keywords.get('rows',None)
-    fields = keywords.get('fields', None)
-    columns = keywords.get('columns', None)
+    if fits_type is None:
+        raise ImportError("Could not import fitsio or pyfits")
+
+    if fits_type == 'fitsio':
+        result = read_fits_fitsio(fileobj, **keywords)
+    elif fits_type == 'pyfits':
+        result = read_fits_pyfits(fileobj, **keywords)
+    else:
+        raise ValueError("expected fitsio or pyfits")
+
+    h=None
+    if isinstance(result,tuple):
+        d,h = result
+    elif keywords.get('header') == 'only':
+        return result
+    else:
+        d = result
+
     lower= keywords.get('lower',False)
     upper= keywords.get('upper',False)
-    ensure_native = keywords.get('ensure_native',False)
-
-
-
-    if fields is None:
-        if columns is not None:
-            # allow columns to be synonymous with fields
-            fields=columns
-
-    if view is None:
-        import numpy
-        view = numpy.ndarray
-
-    if isinstance(fileobj,(str,unicode)):
-        fileobj=ostools.expand_filename(fileobj)
-
-    if 'ignore_missing_end' not in keywords:
-        keywords['ignore_missing_end'] = True
-
-    if header == 'only':
-        return pyfits.getheader(fileobj, **keywords)
-
-    if header:
-        # the ignore_missing_end=True is for the multitude
-        # of malformed FITS files out there
-
-        d,h = pyfits.getdata(fileobj, **keywords)
-    else:
-        d = pyfits.getdata(fileobj, **keywords)
-
-    d=d.view(view)
 
     if lower:
         d.dtype.names = [n.lower() for n in d.dtype.names]
     elif upper:
         d.dtype.names = [n.upper() for n in d.dtype.names]
 
+    view = keywords.get('view',numpy.ndarray)
+    if view is not None:
+        d=d.view(view)
+
+    ensure_native = keywords.get('ensure_native',False)
+    if ensure_native:
+        numpy_util.to_native(d.view(numpy.ndarray), inplace=True)
+
+    if h is not None:
+        return d,h
+    else:
+        return d
+
+def read_fits_fitsio(filename, **keywords):
+    ext=keywords.get('ext',None)
+    rows=keywords.get('rows',None)
+    columns=keywords.get('columns',None)
+    fields = keywords.get('fields', None)
+    header=keywords.get('header',False)
+
+    if columns is None and fields is not None:
+        columns=fields
+
+    return fitsio.read(filename,
+                       ext=ext,
+                       rows=rows,
+                       columns=columns,
+                       header=header)
+
+def read_fits_pyfits(fileobj, **keywords):
+    import numpy
+    header = keywords.get('header', False)
+    rows=keywords.get('rows',None)
+    fields = keywords.get('fields', None)
+    columns = keywords.get('columns', None)
+
+    if fields is None:
+        if columns is not None:
+            # allow columns to be synonymous with fields
+            fields=columns
+
+    if isinstance(fileobj,(str,unicode)):
+        fileobj=ostools.expand_filename(fileobj)
+
+    if 'ignore_missing_end' not in keywords:
+        # the ignore_missing_end=True is for the multitude
+        # of malformed FITS files out there
+        keywords['ignore_missing_end'] = True
+
+    if header == 'only':
+        return pyfits.getheader(fileobj, **keywords)
+
+    if header:
+        d,h = pyfits.getdata(fileobj, **keywords)
+    else:
+        d = pyfits.getdata(fileobj, **keywords)
+
     # extract subsets of the data
     if rows is not None:
         d = d[rows]
     if fields is not None:
-        d = numpy_util.extract_fields(d, fields)
-
-
-    if ensure_native:
-        numpy_util.to_native(d, inplace=True)
+        d = numpy_util.extract_fields(d.view(numpy.ndarray), fields)
 
     if header:
         return d,h
@@ -428,22 +471,37 @@ def write_fits(fileobj, data, **keys):
     verbose = keys.get('verbose', False)
     if verbose:
 
-        # only write if appending or file does not exist: pyfits will print a
-        # message when over-writing only
-
         if isinstance(fileobj,file):
             name=f.name
         else:
             name=fileobj
 
-        append = keys.get('append', False)
-        if append:
-            stdout.write("Appending to: %s\n" % name)
-        else:
-            if not os.path.exists(name):
-                stdout.write("Writing to: %s\n" % name)
+        stdout.write("Writing to: %s\n" % name)
+
+    if fits_type == 'fitsio':
+        write_fits_fitsio(fileobj, data, **keys)
+    elif fits_type == 'pyfits':
+        result = write_fits_pyfits(fileobj, data, **keywords)
+    else:
+        raise ValueError("expected fitsio or pyfits")
+
+def write_fits_fitsio(fileobj, data, **keys):
+    extname=keys.get('extname',None)
+    units=keys.get('units',None)
+    compress=keys.get('compress',None)
+    header=keys.get('header',None)
+    clobber=keys.get('clobber',False)
+
+    fitsio.write(fileobj, data, 
+                 extname=extname,
+                 units=units,
+                 compress=compress,
+                 header=header,
+                 clobber=clobber)
 
 
+
+def write_fits_pyfits(fileobj, data, **keys):
     pyfits.writeto(fileobj, data, **keys)
 
 def write_rec(fileobj, data, **keys):
