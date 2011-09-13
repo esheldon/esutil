@@ -53,13 +53,13 @@ from sys import stdout, stderr
 
 try:
     import fitsio
-    fits_type='fitsio'
+    fits_package='fitsio'
 except:
     try:
         import pyfits
-        fits_type='pyfits'
+        fits_package='pyfits'
     except:
-        fits_type=None
+        fits_package=None
 
 
 
@@ -137,7 +137,7 @@ def read(fileobj, **keywords):
         ext: 
             The file extension.  If multiple extensions are supported by the
             file type, such as for FITS, then use this keyword to select which
-            is to be read. Default is 0, the first extension.
+            is to be read. Default is the first extension with data.
 
         rows:  
             For numpy record-type files such as FITS binary tables or simple
@@ -355,7 +355,7 @@ def read_fits(fileobj, **keywords):
     Inputs:
         fileobj: The file name/file object for a fits file.
     Keywords:
-        ext: Which extension, or HDU, to read.  Default 0.
+        ext: Which extension, or HDU, to read.  Default first with data.
         view: What view of the data to return. Default is numpy.ndarray
         header:  Return the data,header tuple?  Default False.
         rows:  Subset of the rows to return if reading a binary table extension.
@@ -372,12 +372,12 @@ def read_fits(fileobj, **keywords):
 
     import numpy
 
-    if fits_type is None:
+    if fits_package is None:
         raise ImportError("Could not import fitsio or pyfits")
 
-    if fits_type == 'fitsio':
+    if fits_package == 'fitsio':
         result = read_fits_fitsio(fileobj, **keywords)
-    elif fits_type == 'pyfits':
+    elif fits_package == 'pyfits':
         result = read_fits_pyfits(fileobj, **keywords)
     else:
         raise ValueError("expected fitsio or pyfits")
@@ -429,10 +429,22 @@ def read_fits_fitsio(filename, **keywords):
 
 def read_fits_pyfits(fileobj, **keywords):
     import numpy
+    import pyfits
     header = keywords.get('header', False)
-    rows=keywords.get('rows',None)
-    fields = keywords.get('fields', None)
-    columns = keywords.get('columns', None)
+    rows=None
+    fields=None
+    columns=None
+
+    if 'rows' in keywords:
+        rows=keywords['rows']
+        del keywords['rows']
+
+    if 'fields' in keywords:
+        fields=keywords['fields']
+        del keywords['fields']
+    if 'columns' in keywords:
+        columns=keywords['columns']
+        del keywords['columns']
 
     if fields is None:
         if columns is not None:
@@ -455,9 +467,14 @@ def read_fits_pyfits(fileobj, **keywords):
     else:
         d = pyfits.getdata(fileobj, **keywords)
 
+    view = keywords.get('view',numpy.ndarray)
+    if view is not None:
+        d = d.view(view)
+
     # extract subsets of the data
     if rows is not None:
         d = d[rows]
+
     if fields is not None:
         d = numpy_util.extract_fields(d.view(numpy.ndarray), fields)
 
@@ -478,9 +495,9 @@ def write_fits(fileobj, data, **keys):
 
         stdout.write("Writing to: %s\n" % name)
 
-    if fits_type == 'fitsio':
+    if fits_package == 'fitsio':
         write_fits_fitsio(fileobj, data, **keys)
-    elif fits_type == 'pyfits':
+    elif fits_package == 'pyfits':
         result = write_fits_pyfits(fileobj, data, **keywords)
     else:
         raise ValueError("expected fitsio or pyfits")
@@ -502,6 +519,7 @@ def write_fits_fitsio(fileobj, data, **keys):
 
 
 def write_fits_pyfits(fileobj, data, **keys):
+    import pyfits
     pyfits.writeto(fileobj, data, **keys)
 
 def write_rec(fileobj, data, **keys):
