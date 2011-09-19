@@ -403,7 +403,7 @@ def read_fits(fileobj, **keywords):
 
     ensure_native = keywords.get('ensure_native',False)
     if ensure_native:
-        numpy_util.to_native(d.view(numpy.ndarray), inplace=True)
+        numpy_util.to_native(d, inplace=True)
 
     if h is not None:
         return d,h
