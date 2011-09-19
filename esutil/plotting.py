@@ -179,6 +179,7 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
             return pdict
     return plt
 
+
 def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**keywords):
     """
     Name:
@@ -235,21 +236,67 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
             pkeywords['color'] = color
 
     if weights is not None:
-        ph=biggles.Histogram(hout['whist'], x0=hout['low'][0], binsize=binsize, 
-                             **pkeywords)
+        h = hout['whist'].copy()
     else:
-        ph=biggles.Histogram(hout['hist'], x0=hout['low'][0], binsize=binsize, 
-                             **pkeywords)
+        h = hout['hist'].copy()
+        
+
+    xlog = keywords.get('xlog',False)
+    ylog = keywords.get('ylog',False)
+    xrng = keywords.get('xrange',None)
+    yrng = keywords.get('yrange',None)
+
+
+    if ylog:
+        yrng,wy = get_log_plot_range(h, input_range=yrng,get_good=True)
+        plt.ylog=True
+        miny = yrng[0]
+    else:
+        wy=numpy.arange(h.size)
+        miny = h.min()
+
+    if len(wy) != len(x):
+        hplot = numpy.zeros(h.size,dtype='f8') + miny
+        hplot[wy] = h[wy]
+        h = hplot
+
+    xvals=numpy.zeros(2*h.size + 2)
+    yvals=numpy.zeros(2*h.size + 2)
+    for i in xrange(xvals.size):
+        if i == 0:
+            xvals[i]=hout['low'][0]
+            yvals[i]=miny
+        elif i == (xvals.size-1):
+            xvals[i]=hout['high'][-1]
+            yvals[i]=miny
+        elif i == (xvals.size-2):
+            xvals[i] = hout['high'][-1]
+            yvals[i] = h[-1]
+        else:
+            iix = i/2
+            iiy = (i-1)/2
+            xvals[i] = hout['low'][iix]
+            yvals[i] = h[iiy]
+
+
+    if xlog:
+        print 'sending xrng:',xrng
+        xrng,wx = get_log_plot_range(xvals, input_range=xrng, get_good=True)
+        ph = biggles.Curve(xvals[wx], yvals[wx], **pkeywords)
+        plt.xlog=True
+    else:
+        ph = biggles.Curve(xvals, yvals, **pkeywords)
 
     label = keywords.get('label',None)
     if label is not None:
         ph.label = label
     plt.add(ph)
 
-    if 'xrange' in keywords:
-        plt.xrange = keywords['xrange']
-    if 'yrange' in keywords:
-        plt.yrange = keywords['yrange']
+    if xrng is not None:
+        print 'setting xrng:',xrng
+        plt.xrange = xrng
+    if yrng is not None:
+        plt.yrange = yrng
 
     if 'xlabel' in keywords:
         plt.xlabel = keywords['xlabel']
@@ -283,6 +330,9 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         return plt,ph
     else:
         return plt
+
+
+
 
 def bwhiskers(xin, yin, uin, vin, 
               scale=1.0, 
@@ -603,11 +653,41 @@ def image_norm(image, reverse=False):
 
     return image_out
 
-def get_log_plot_range(x, err=None, input_range=None):
+def get_log_plot_range_xy(x, y, xerr=None, yerr=None, 
+                          xlog=False, ylog=False, xrng=None, yrng=None,
+                          get_good=False):
+    # For log, Don't plot points less than zero
+    w=None
+    if xlog and ylog:
+        xrng = get_log_plot_range(x, err=xerr, input_range=xrng)
+        yrng = get_log_plot_range(y, err=yerr, input_range=yrng)
+        w,=numpy.where( (x > xrng[0]) & (y > yrng[0]) )
+    elif xlog:
+        xrng = get_log_plot_range(x, err=xerr, input_range=xrng)
+        w,=numpy.where( x > xrng[0])
+    elif ylog:
+        yrng = get_log_plot_range(y, err=yerr, input_range=yrng)
+        w,=numpy.where( y > yrng[0])
+    else:
+        w=numpy.arange(x.size)
+
+    if get_good:
+        return xrng, yrng, w
+    else:
+        return xrng, yrng
+
+
+def get_log_plot_range(x, err=None, input_range=None, get_good=False):
     if input_range is not None:
+        if len(input_range) < 2:
+            raise ValueError("expected [xmin,xmax] for input range")
         if input_range[0] <= 0. or input_range[1] <= 0.:
             raise ValueError("cannot use plot range < 0 for log plots, got [%s,%s]" % tuple(input_range))
-        return input_range
+        if get_good:
+            w,=where((x >= input_range[0]) & (x <= input_range[1]))
+            return input_range, w
+        else:
+            return input_range
 
     w,=where(x > 0.)
     if w.size == 0:
@@ -626,7 +706,10 @@ def get_log_plot_range(x, err=None, input_range=None):
     minval *= 0.5
     maxval *= 2
 
-    return [minval,maxval]
+    if get_good:
+        return [minval,maxval], w
+    else:
+        return [minval,maxval]
 
 def add_log_error_bars(plt, type, x, y, err, prange, **pkeywords):
     import biggles
