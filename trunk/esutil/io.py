@@ -45,6 +45,7 @@ from esutil import json_util
 from esutil import xmltools
 from esutil import sfile
 from esutil import ostools
+from esutil import hdfs
 import os
 
 import copy
@@ -221,9 +222,9 @@ def read(fileobj, **keywords):
     fname,fobj,type,fs = _get_fname_ftype_from_inputs(fileobj, **keywords)
 
     if fs == 'hdfs':
-        fobj = hdfs_stage(fname, verbose=verbose)
-        if verbose:
-            stdout.write("Reading: %s\n" % fobj)
+        with hdfs.HDFSFile(fname, verbose=verbose) as hdfs_file:
+            data = hdfs_file.read(read, **keywords)
+        return data
     else:
         if verbose:
             stdout.write("Reading: %s\n" % fname)
@@ -243,8 +244,7 @@ def read(fileobj, **keywords):
         else:
             raise ValueError("Don't know about file type '%s'" % type)
     finally:
-        if fs == 'hdfs':
-            hdfs_cleanup(fobj, verbose=verbose)
+        pass
 
     return data
 
@@ -320,17 +320,18 @@ def write(fileobj, data, **keywords):
     fname,fobj,type,fs =_get_fname_ftype_from_inputs(fileobj, **keywords)
 
     if fs == 'hdfs':
-        fname_hdfs = fname
-        fobj = hdfs_tempfile(fname)
+        with hdfs.HDFSFile(fname, verbose=verbose) as hdfs_file:
+            hdfs_file.write(write, data, **keywords)
+        return
 
     try:
         # pick the right reader based on type
         if type == 'fits':
             write_fits(fobj, data, **keywords)
         elif type == 'yaml':
-            write_yaml(fobj, data)
+            write_yaml(fobj, data, **keywords)
         elif type == 'json':
-            json_util.write(data, fobj)
+            json_util.write(data, fobj, **keywords)
         elif type == 'rec':
             write_rec(fobj, data, **keywords)
         else:
@@ -340,8 +341,7 @@ def write(fileobj, data, **keywords):
             hdfs_put(fobj, fname_hdfs, verbose=verbose)
 
     finally:
-        if fs == 'hdfs':
-            hdfs_cleanup(fobj, verbose=verbose)
+        pass
 
 def read_fits(fileobj, **keywords):
     """
@@ -656,47 +656,6 @@ def get_ftype(filename):
     typ = fext2ftype(fext)
     return typ
 
-def hdfs_stage(hdfs_file, verbose=False):
-    import subprocess
-
-    local_file = hdfs_tempfile(hdfs_file)
-    command = 'hadoop fs -get {hdfs_file} {local_file}'.format(hdfs_file=hdfs_file,
-                                                               local_file=local_file)
-
-    if verbose:
-        stdout.write("Staging %s to local %s\n" % (hdfs_file, local_file))
-
-    res = os.system(command)
-
-    if res != 0:
-        raise RuntimeError("Failed to copy from hdfs %s -> %s" % (hdfs_file,local_file))
-
-    if not os.path.exists(local_file):
-        raise RuntimeError("In copy from hdfs %s -> %s, local copy not found" % (hdfs_file,local_file))
-
-    return local_file
-
-def hdfs_put(local_file, hdfs_file, clobber=False, verbose=False):
-    command = 'hadoop fs -put {local_file} {hdfs_file}'.format(local_file=local_file,
-                                                               hdfs_file=hdfs_file)
-    if verbose:
-        print command
-    res = os.system(command)
-    if res != 0:
-        raise RuntimeError("Failed to copy to hdfs %s -> %s" % (local_file,hdfs_file))
-
-
-def hdfs_tempfile(fname):
-    import tempfile
-    bname = os.path.basename(fname)
-    local_file = tempfile.mktemp(prefix='hdfs-', suffix='-'+bname)
-    return local_file
-
-def hdfs_cleanup(fname, verbose=False):
-    if verbose:
-        stdout.write("Cleaning up hdfs staged local file %s\n" % fname)
-    if os.path.exists(fname):
-        os.remove(fname)
 
 def is_in_hdfs(fname):
     if fname.find('hdfs://') == 0:

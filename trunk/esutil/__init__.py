@@ -171,6 +171,8 @@ import coords
 import coords as astro_util
 import stomp_util
 import plotting
+import hdfs
+
 try:
     import sqlite_util
 except:

@@ -21,7 +21,7 @@ def test(hdfs_url, test='e'):
 
         Default is an existence test, 'e'
     """
-    command="""hadoop fs -test %s %s""" % (test, hdfs_url)
+    command="""hadoop fs -test -%s %s""" % (test, hdfs_url)
 
     exit_code, stdo, stde = exec_command(command)
 
@@ -295,6 +295,7 @@ class HDFSFile:
 
         self.stage()
 
+        keys['verbose'] = self.verbose
         try:
             data = reader(self.localfile, **keys)
         finally:
@@ -329,6 +330,8 @@ class HDFSFile:
         if exists(self.hdfs_url):
             clobber=keys.get('clobber',False)
             if clobber:
+                if self.verbose:
+                    print 'removing existing hdfs file:',self.hdfs_url
                 rm(self.hdfs_url)
             else:
                 raise ValueError("hdfs file already exists: %s, "
@@ -337,15 +340,14 @@ class HDFSFile:
         tmpdir=keys.get('tmpdir',None)
         self.localfile = self.temp_filename(self.hdfs_url, tmpdir=tmpdir)
 
+        keys['verbose'] = self.verbose
         try:
             writer(self.localfile, data, **keys)
+            put(self.localfile, self.hdfs_url, verbose=self.verbose)
         finally:
             cleanup=keys.get('cleanup',True)
             if cleanup:
                 self.cleanup()
-
-        return data
-
 
 
     def temp_filename(self, fname, tmpdir=None):
