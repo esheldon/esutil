@@ -233,9 +233,9 @@ def read(fileobj, **keywords):
         if type == 'fits':
             data = read_fits(fobj, **keywords)
         elif type == 'json':
-            data = json_util.read(fobj)
+            data = json_util.read(fobj, **keywords)
         elif type == 'yaml':
-            data = read_yaml(fobj)
+            data = read_yaml(fobj, **keywords)
         elif type == 'rec':
             data = read_rec(fobj, **keywords)
         elif type == 'xml':
@@ -676,7 +676,7 @@ def hdfs_stage(hdfs_file, verbose=False):
 
     return local_file
 
-def hdfs_put(local_file, hdfs_file, verbose=False):
+def hdfs_put(local_file, hdfs_file, clobber=False, verbose=False):
     command = 'hadoop fs -put {local_file} {hdfs_file}'.format(local_file=local_file,
                                                                hdfs_file=hdfs_file)
     if verbose:
