@@ -1,3 +1,256 @@
+----------------------------------------------------------------------
+New files:
+    esutil/hdfs.py: routines to get files in and out of the hadoop
+        file system.  Also routines for listing, removing, etc.
+    esutil/cosmology:
+        Now using simplified cosmology package written in C.
+
+Removed Files:
+    Removed patched pyfits.  Trying to use the fitsio package
+    when available.
+
+Updates:
+
+    General:
+        Removed some features that did not exist in python 2.5, such
+        as as format() functions for strings and importing print function
+        from future.
+
+    esutil/plotting.py: 
+        - bhist now doesn't use Histogram but a new histogram plotter.  ylog
+          and xlog now work
+        - in plotrand use dot as default stuyle
+        - added fake filled circle point maker for when plotting dots and need
+          a key
+        - plotting.bscatter works better with log plots now
+        - added asinh_scale and norm to plotting, for images
+
+    esutil/io.py: 
+        - Use the fitsio package if available, fall back to pyfits otherwise.
+          https://github.com/esheldon/fitsio
+        - Added read_header function
+        - determine mode from input mode not from file object
+        - added reading and writing of yaml
+        - deal with file names that have no extensioin
+
+    esutil/numpy_util.py:
+        - Added sort option to numpy_util.random_subset
+        - added ability to print latex table to ArrayWriter and aprint       
+    esutil/stat:
+        - Added Binner class to handle all histogramming, including
+          weighted histograms, etc.
+        - updated histogram to use binner
+Bugs:
+
+    esutil/numpy_util.py:
+        - fixed bug with ensure_native
+    esutil/stat/util.py
+        - fixed bug sending nbin for histogram. 
+        - Fix bug in stat.sigma_clip
+        - In Binner, make sure stats are fully calculated if weights are sent
+        - fixed bug in histogram when only min= or max= are sent
+    esutil/plotting.py:
+        - fixed bug for point type in plotrand. 
+    esutil/cosmology:
+        - Use exact speed of light value.
+
+
+added pyfitspatch240
+------------------------------------------------------------------------
+r307 | erin.sheldon | 2011-03-29 13:49:07 -0400 (Tue, 29 Mar 2011) | 1 line
+
+added fits.py
+------------------------------------------------------------------------
+r306 | erin.sheldon | 2011-03-29 13:48:49 -0400 (Tue, 29 Mar 2011) | 1 line
+
+implemened FITS class in fits.py for working on new features for fits reading.  Possible to includein pyfits
+------------------------------------------------------------------------
+r305 | erin.sheldon | 2011-03-28 10:20:13 -0400 (Mon, 28 Mar 2011) | 1 line
+
+renamed pyfits subdir to pyfitspatch
+------------------------------------------------------------------------
+r304 | erin.sheldon | 2011-03-28 10:17:31 -0400 (Mon, 28 Mar 2011) | 1 line
+
+renamed pyfits subdir to pyfits-patch
+------------------------------------------------------------------------
+r303 | erin.sheldon | 2011-03-23 02:38:40 -0400 (Wed, 23 Mar 2011) | 1 line
+
+tweaking random sample
+------------------------------------------------------------------------
+r302 | erin.sheldon | 2011-03-23 02:38:27 -0400 (Wed, 23 Mar 2011) | 1 line
+
+added qgauss convenience function
+------------------------------------------------------------------------
+r301 | erin.sheldon | 2011-03-23 02:37:49 -0400 (Wed, 23 Mar 2011) | 1 line
+
+bug in sigmacrit for zs less zl
+------------------------------------------------------------------------
+r300 | erin.sheldon | 2011-03-20 00:04:14 -0400 (Sun, 20 Mar 2011) | 1 line
+
+careful to close files
+------------------------------------------------------------------------
+r299 | erin.sheldon | 2011-03-10 13:12:39 -0500 (Thu, 10 Mar 2011) | 1 line
+
+more updates to headers.  NumpyRecords much more fleshed out
+------------------------------------------------------------------------
+r298 | erin.sheldon | 2011-03-03 18:36:54 -0500 (Thu, 03 Mar 2011) | 1 line
+
+ahelp can be used on scalars
+------------------------------------------------------------------------
+r297 | erin.sheldon | 2011-02-18 17:30:30 -0500 (Fri, 18 Feb 2011) | 1 line
+
+plotrand now uses biggles
+------------------------------------------------------------------------
+r296 | erin.sheldon | 2011-02-11 22:49:07 -0500 (Fri, 11 Feb 2011) | 1 line
+
+some docs
+------------------------------------------------------------------------
+r295 | erin.sheldon | 2011-02-11 22:43:08 -0500 (Fri, 11 Feb 2011) | 1 line
+
+added replicate function to numpy_util
+------------------------------------------------------------------------
+r294 | erin.sheldon | 2011-02-08 18:58:02 -0500 (Tue, 08 Feb 2011) | 1 line
+
+removed test.py import
+------------------------------------------------------------------------
+r293 | erin.sheldon | 2011-02-02 16:50:31 -0500 (Wed, 02 Feb 2011) | 1 line
+
+if you send curve line types in type= to bscatter, a Curve is created
+------------------------------------------------------------------------
+r292 | erin.sheldon | 2011-01-28 19:10:28 -0500 (Fri, 28 Jan 2011) | 1 line
+
+work on Binner class
+------------------------------------------------------------------------
+r291 | erin.sheldon | 2011-01-28 19:05:54 -0500 (Fri, 28 Jan 2011) | 1 line
+
+started binner class
+------------------------------------------------------------------------
+r290 | erin.sheldon | 2011-01-28 19:04:55 -0500 (Fri, 28 Jan 2011) | 1 line
+
+started binner class
+------------------------------------------------------------------------
+r289 | erin.sheldon | 2011-01-26 10:21:40 -0500 (Wed, 26 Jan 2011) | 1 line
+
+fixed bug where file paths were not always being expanded
+------------------------------------------------------------------------
+r288 | erin.sheldon | 2011-01-04 13:07:03 -0500 (Tue, 04 Jan 2011) | 1 line
+
+docs on NumpyVoidVector.h
+------------------------------------------------------------------------
+r287 | erin.sheldon | 2010-12-28 19:38:02 -0500 (Tue, 28 Dec 2010) | 1 line
+
+added more optionals units to sphdist
+------------------------------------------------------------------------
+r286 | briangerke | 2010-11-23 15:54:46 -0500 (Tue, 23 Nov 2010) | 1 line
+
+fixed bug in htm.cylmatch that took the absolute value of the z separation.
+------------------------------------------------------------------------
+r285 | erin.sheldon | 2010-11-19 15:12:55 -0500 (Fri, 19 Nov 2010) | 1 line
+
+docs for sqlite_util
+------------------------------------------------------------------------
+r282 | erin.sheldon | 2010-11-19 14:41:38 -0500 (Fri, 19 Nov 2010) | 1 line
+
+docs for sqlite_util
+------------------------------------------------------------------------
+r281 | erin.sheldon | 2010-11-19 14:34:09 -0500 (Fri, 19 Nov 2010) | 1 line
+
+module sqlite_util is  basically working
+------------------------------------------------------------------------
+r280 | erin.sheldon | 2010-11-19 14:31:20 -0500 (Fri, 19 Nov 2010) | 1 line
+
+module sqlite_util is  basically working
+------------------------------------------------------------------------
+r279 | erin.sheldon | 2010-11-18 18:25:25 -0500 (Thu, 18 Nov 2010) | 1 line
+
+some work on sqlite convenience functions
+------------------------------------------------------------------------
+r278 | erin.sheldon | 2010-11-18 18:20:13 -0500 (Thu, 18 Nov 2010) | 1 line
+
+make sqlite util functional with arrays.  Was not able to get type sizes working
+------------------------------------------------------------------------
+r277 | erin.sheldon | 2010-11-18 11:57:36 -0500 (Thu, 18 Nov 2010) | 1 line
+
+ in recfile increased precision on float and double ascii write
+------------------------------------------------------------------------
+r276 | erin.sheldon | 2010-11-09 18:08:34 -0500 (Tue, 09 Nov 2010) | 1 line
+
+updating coords
+------------------------------------------------------------------------
+r275 | erin.sheldon | 2010-11-08 23:59:35 -0500 (Mon, 08 Nov 2010) | 1 line
+
+label added for hist, but no way to access it yet
+------------------------------------------------------------------------
+r274 | erin.sheldon | 2010-11-08 09:06:51 -0500 (Mon, 08 Nov 2010) | 1 line
+
+added xlog ylog to bscatter
+------------------------------------------------------------------------
+r273 | erin.sheldon | 2010-11-08 08:29:33 -0500 (Mon, 08 Nov 2010) | 1 line
+
+added xlog ylog
+------------------------------------------------------------------------
+r272 | erin.sheldon | 2010-11-04 19:22:15 -0400 (Thu, 04 Nov 2010) | 1 line
+
+now can use weights in plot hist.  Fixed bug in histogram returned x values
+------------------------------------------------------------------------
+r271 | erin.sheldon | 2010-11-04 19:16:52 -0400 (Thu, 04 Nov 2010) | 1 line
+
+now can use weights in plot hist.  Fixed bug in histogram returned x values
+------------------------------------------------------------------------
+r270 | erin.sheldon | 2010-11-04 18:09:53 -0400 (Thu, 04 Nov 2010) | 1 line
+
+added arr2str
+------------------------------------------------------------------------
+r269 | erin.sheldon | 2010-11-04 17:05:12 -0400 (Thu, 04 Nov 2010) | 1 line
+
+added nbin= keyword to histogram
+------------------------------------------------------------------------
+r268 | erin.sheldon | 2010-10-30 18:00:42 -0400 (Sat, 30 Oct 2010) | 3 lines
+
+added plotter testing accuracy of sigmacrit
+calculation as a function of npts
+
+------------------------------------------------------------------------
+r267 | erin.sheldon | 2010-10-30 12:12:44 -0400 (Sat, 30 Oct 2010) | 1 line
+
+added sigma crit calculation, and 4*pi/c^2 calculation, to cosmology
+------------------------------------------------------------------------
+r266 | erin.sheldon | 2010-10-24 10:46:33 -0400 (Sun, 24 Oct 2010) | 1 line
+
+ahelp now tries to view data as ndarray
+------------------------------------------------------------------------
+r265 | erin.sheldon | 2010-10-17 21:34:47 -0400 (Sun, 17 Oct 2010) | 1 line
+
+added where1 and fixed nlines in array writer
+------------------------------------------------------------------------
+r264 | erin.sheldon | 2010-10-17 21:30:51 -0400 (Sun, 17 Oct 2010) | 1 line
+
+added match_prepare to htm.  
+------------------------------------------------------------------------
+r263 | briangerke | 2010-09-13 14:53:49 -0400 (Mon, 13 Sep 2010) | 1 line
+
+Add silent keyword to stat.sigma_clip, to turn off error messages.
+------------------------------------------------------------------------
+r262 | erin.sheldon | 2010-09-01 21:55:29 -0400 (Wed, 01 Sep 2010) | 1 line
+
+write convenience function close file
+------------------------------------------------------------------------
+r261 | erin.sheldon | 2010-08-31 16:04:51 -0400 (Tue, 31 Aug 2010) | 1 line
+
+bug where array delim not defaulting to delim
+------------------------------------------------------------------------
+r260 | briangerke | 2010-08-24 21:27:14 -0400 (Tue, 24 Aug 2010) | 1 line
+
+tiny documentation fix.
+------------------------------------------------------------------------
+r259 | erin.sheldon | 2010-08-24 00:18:56 -0400 (Tue, 24 Aug 2010) | 1 line
+
+use **keys on read() and write() helper functions
+------------------------------------------------------------------------
+r258 | erin.sheldon | 2010-08-23 15:42:56 -0400 (Mon, 23 Aug 2010) | 1 line
+
+support writing rec files
+
 v0.4.1 (2010-08-18)
 ----------------------------------------------------------------------
 
