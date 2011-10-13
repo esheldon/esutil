@@ -295,7 +295,6 @@ class HDFSFile:
 
         self.stage()
 
-        keys['verbose'] = self.verbose
         try:
             data = reader(self.localfile, **keys)
         finally:
@@ -340,7 +339,6 @@ class HDFSFile:
         tmpdir=keys.get('tmpdir',None)
         self.localfile = self.temp_filename(self.hdfs_url, tmpdir=tmpdir)
 
-        keys['verbose'] = self.verbose
         try:
             writer(self.localfile, data, **keys)
             put(self.localfile, self.hdfs_url, verbose=self.verbose)
