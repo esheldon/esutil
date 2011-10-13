@@ -33,7 +33,7 @@ try:
 except:
     have_cjson=False
 
-def read(fname):
+def read(fname, **keys):
     """
     obj = json_util.read(file):  
 
@@ -66,7 +66,7 @@ def read(fname):
         fobj.close()
     return data
 
-def write(obj, fname, pretty=True):
+def write(obj, fname, pretty=True, **keys):
     """
     json_util.write(obj, fname, pretty=True)
 
