@@ -4,6 +4,9 @@ New files:
         file system.  Also routines for listing, removing, etc.
     esutil/cosmology:
         Now using simplified cosmology package written in C.
+    esutil/fits.py: 
+        This is a workaround for reading subsets of columns and rows from fits
+        files when only pyfits is available.  Prefer just using fitsio!
 
 Removed Files:
     Removed patched pyfits.  Trying to use the fitsio package
