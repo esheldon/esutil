@@ -105,24 +105,6 @@ def read(fileobj, **keywords):
         Provide a single interface to read from a variety of file types.
         Supports reading from a list of files.
 
-    Currently Supported File Types:
-        FITS
-            Flexible Image Transport System
-        REC
-            Simple ascii header followed by data in binary or text form. These
-            files can be written/read using the esutil.sfile module.  REC files
-            support appending rows.  Also supports reading sub-selections of
-            rows and columns.
-        XML
-            Extensible Markup Language
-        JSON
-            JavaScript Object Notation.  Less flexible than XML but more useful
-            in most practical situations such as storing inhomogeneous data in
-            a portable way. 
-        YAML
-            A nice, human readable markup language, especially useful
-            for configuration files.  YAML stands for
-                YAML Ain't Markup Language
 
     Inputs:
         filename/fileobject:  
@@ -133,8 +115,9 @@ def read(fileobj, **keywords):
             as the data types match.
 
     Keywords:
-        type: A string describing the file type.  If this is not sent, then
-              the file type is determined from the file extension.
+        type: 
+            A string describing the file type, see below.  If this is not sent,
+            then the file type is determined from the file extension.
         ext: 
             The file extension.  If multiple extensions are supported by the
             file type, such as for FITS, then use this keyword to select which
@@ -183,6 +166,31 @@ def read(fileobj, **keywords):
 
         ensure_native: For numpy arrays, make sure data is in native
             byte ordering.
+
+    Currently Supported File Types:
+        fits
+            Flexible Image Transport System
+        rec
+            Simple ascii header followed by data in binary or text form. These
+            files can be written/read using the esutil.sfile module.  REC files
+            support appending rows.  Also supports reading sub-selections of
+            rows and columns.
+        xml
+            Extensible Markup Language
+        json
+            JavaScript Object Notation.  Less flexible than XML but more useful
+            in most practical situations such as storing inhomogeneous data in
+            a portable way. 
+        yaml
+            A nice, human readable markup language, especially useful
+            for configuration files.  YAML stands for
+                YAML Ain't Markup Language
+        pyobj
+            A straight dump of an object to disk using it's repr().  Files are
+            written using pprint, read simply using eval(open(file).read()).
+
+            This is not secure so use with caution.
+
 
     Revision History:
         Use **keywords for input and for sending to all called methods. Much
@@ -241,6 +249,8 @@ def read(fileobj, **keywords):
             data = read_rec(fobj, **keywords)
         elif type == 'xml':
             data = read_xml(fobj, **keywords)
+        elif type == 'pyobj':
+            data = read_pyobj(fobj, **keywords)
         else:
             raise ValueError("Don't know about file type '%s'" % type)
     finally:
@@ -271,15 +281,15 @@ def write(fileobj, data, **keywords):
 
     Optional Inputs:
         type:
-            Indicator of the file type, e.g. 'fits'.  If None, the type is
-            determined from the file name.
+            Indicator of the file type, e.g. 'fits', see below.  If None, the
+            type is determined from the file name.
         header:
             If not None, write the header to the file if supported.
 
     There are other keywords for the individual writers.
 
     Currently Supported File Types:
-        FITS
+        fits
             Flexible Image Transport System
 
             extra write keywords (if using fitsio)
@@ -288,7 +298,7 @@ def write(fileobj, data, **keywords):
                 compress: compression scheme for images
                 header: a header to write
                 clobber: remove any existing file
-        REC
+        rec
             Simple ascii header followed by data in binary or text form. These
             files can be written/read using the esutil.sfile module.  REC files
             support appending rows.  Also supports reading sub-selections of
@@ -304,14 +314,23 @@ def write(fileobj, data, **keywords):
                     you won't be able to read the data back in, but it is
                     useful for things like sqlite database input.
 
-        JSON
+        xml
+            Extensible Markup Language
+        json
             JavaScript Object Notation.  Less flexible than XML but more useful
             in most practical situations such as storing inhomogeneous data in
             a portable way. 
-        YAML
+        yaml
             A nice, human readable markup language, especially useful
             for configuration files.  YAML stands for
                 YAML Ain't Markup Language
+        pyobj
+            A straight dump of an object to disk using it's repr().  Files are
+            written using pprint, read simply using eval(open(file).read()).
+
+            This is not secure so use with caution.
+
+
     """
 
     verbose = keywords.get('verbose', False)
@@ -334,6 +353,8 @@ def write(fileobj, data, **keywords):
             json_util.write(data, fobj, **keywords)
         elif type == 'rec':
             write_rec(fobj, data, **keywords)
+        elif type == 'pyobj':
+            data = write_pyobj(fobj, data, **keywords)
         else:
             raise ValueError("Need to implement writing file type: %s\n" % type)
 
@@ -433,6 +454,9 @@ def read_fits_pyfits(fileobj, **keywords):
     rows=None
     fields=None
     columns=None
+
+    if 'verbose' in keywords:
+        del keywords['verbose']
 
     if 'rows' in keywords:
         rows=keywords['rows']
@@ -575,6 +599,23 @@ def write_yaml(fileobj, data, **keywords):
     else:
         raise ValueError("file must be a string or open file object")
 
+def read_pyobj(fileobj, **keywords):
+    if isinstance(fileobj, (str,unicode)):
+        return eval(open(fileobj).read())
+    elif isinstance(fileobj,file):
+        return eval(fileobj.read())
+    else:
+        raise ValueError("file must be a string or open file object")
+
+def write_pyobj(fileobj, data, **keywords):
+    import pprint
+    if isinstance(fileobj, (str,unicode)):
+        pprint.pprint(data,stream=open(fileobj,'w'))
+    elif isinstance(fileobj,file):
+        pprint.pprint(data,stream=fileobj)
+    else:
+        raise ValueError("file must be a string or open file object")
+
 
 
 
@@ -608,6 +649,8 @@ def fext2ftype(fext_input):
         return 'yaml'
     elif fext == 'xml':
         return 'xml'
+    elif fext == 'pyobj':
+        return 'pyobj'
     else:
         raise ValueError("Don't know about files with '%s' extension" % fext)
 
