@@ -70,7 +70,7 @@ def write(obj, fname, pretty=True, **keys):
     """
     json_util.write(obj, fname, pretty=True)
 
-    Write the object to a fson file.  The "file" input can be either a file
+    Write the object to a json file.  The "file" input can be either a file
     name or opened file object.  Ordinary json is the default since it
     supports human readable writing.  Sending pretty=False to the write
     program will force use of cjson if it is available.

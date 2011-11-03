@@ -320,23 +320,28 @@ def exec_process(command,
 
 def _poll_subprocess(pobj, timeout, poll):
     import time
+    import signal
 
     if poll < 0.1:
         poll = 0.1
     if timeout < 0:
         timeout = poll
 
-    tm0 = time.time()
-    while 1:
-        time.sleep(poll)
+    try:
+        tm0 = time.time()
+        while 1:
+            time.sleep(poll)
 
-        exit_status = pobj.poll()
-        if exit_status is not None:
-            break
-        tm = time.time()-tm0
-        if tm > timeout:
-            break
-
+            exit_status = pobj.poll()
+            if exit_status is not None:
+                break
+            tm = time.time()-tm0
+            if tm > timeout:
+                break
+    except KeyboardInterrupt:
+        mess='Keyboard Interrupt encountered, halted process %s' % pobj.pid
+        os.kill(pobj.pid, signal.SIGTERM)
+        raise KeyboardInterrupt(mess)
 
     # exit status will not be None upon completion.  If we passed
     # the timeout we want to kill the process.
