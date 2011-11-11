@@ -1607,7 +1607,8 @@ void Records::MakePrintFormats()
 	mPrintFormats.assign( mScanFormats.begin(), mScanFormats.end() );
 	
 	mPrintFormats[NPY_FLOAT] = "%.7g";
-	mPrintFormats[NPY_DOUBLE] = "%.15e";
+    // for g the .16 means 16 total, 15 mantissa which is what we want for double
+	mPrintFormats[NPY_DOUBLE] = "%.16g";
 
 	mPrintFormats[NPY_STRING] = "%s";
 
