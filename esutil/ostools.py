@@ -42,6 +42,13 @@ Functions:
         $SOMEVAR.  this simple uses a call to both os.path.expanduser and
         os.path.expandvars
 
+    exec_process:
+        Execute a command on the operating system with a possible timeout in
+        seconds
+
+    makedirs_fromfile:
+        Extract the directory from a file name and create it if it doesn't
+        exist.
 """
 import os
 
@@ -358,3 +365,19 @@ def _poll_subprocess(pobj, timeout, poll):
 
 
 
+def makedirs_fromfile(f, verbose=False):
+    """
+    Extract the directory from a file name and create it if it doesn't exist.
+
+    parameters
+    ----------
+    filename: string
+        The file name
+    verbose: boolean, optional
+        Optionally print that the dir is being created.
+    """
+    d=os.path.dirname(f)
+    if not os.path.exists(d):
+        if verbose:
+            print 'creating dir:',d
+        os.makedirs(d)

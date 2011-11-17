@@ -58,20 +58,51 @@ def ls(hdfs_url='', recurse=False):
     """
     List the hdfs URL.  If the URL is a directory, the contents are returned.
     """
+    import subprocess
+    from subprocess import PIPE
     if recurse:
         cmd='lsr'
     else:
         cmd='ls'
 
-    command = "hadoop fs -%s %s | awk 'NF==8 {print $8}'" % (cmd,hdfs_url)
+    command = "hadoop fs -%s %s" % (cmd,hdfs_url)
 
     exit_code, stdo, stde = exec_command(command)
-
     if exit_code != 0:
-        raise RuntimeError("hdfs failed to list url '%s'" % hdfs_url)
+        raise ValueError("command failed with code %s: %s" % (exit_code,command))
 
-    fl = stdo.strip().split('\n')
-    return fl
+    flist = []
+    lines = stdo.split('\n')
+    for line in lines:
+        ls = line.split()
+        if len(ls) == 8:
+            # this is a file description line
+            fname=ls[-1]
+            flist.append(fname)
+
+    return flist
+
+    """
+    proc = subprocess.Popen(command, stdout=PIPE, shell=True)
+
+    flist=[]
+    while True:
+        line = proc.stdout.readline()
+        if line != '':
+            ls = line.split()
+            if len(ls) == 8:
+                # this is a file description line
+                fname=ls[-1]
+                flist.append(fname)
+        else:
+            break
+    print flist
+    exit_code = proc.returncode
+    if exit_code != 0:
+        raise ValueError("command failed with code %s: %s" % (exit_code,command))
+    print flist
+    """
+
 
 def lsr(hdfs_url=''):
     """
