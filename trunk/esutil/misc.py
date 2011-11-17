@@ -10,10 +10,6 @@ colprint
 dict_select
   Select a subset of keys from the input dict.
 
-exec_process
-  Execute a command on the operating system with a possible timeout in
-  seconds
-
 isstring
   Returns True if the input object is a string.
 
