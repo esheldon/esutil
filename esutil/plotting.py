@@ -332,7 +332,44 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         return plt
 
 
+def make_hist_curve(xlow, xhigh, y, ymin=None, ymax=None, **keys):
+    """
+    Make a curve corresponding to the input edge locations and y values, that
+    will draw the usual "box-like" histogram shape
 
+    extra plotting keywords can be sent in the keys
+    """
+    import biggles
+
+
+    xvals=numpy.zeros(2*y.size + 2)
+    yvals=numpy.zeros(2*y.size + 2)
+    for i in xrange(xvals.size):
+        if i == 0:
+            xvals[i]=xlow[0]
+            yvals[i]=0
+        elif i == (xvals.size-1):
+            xvals[i]=xhigh[-1]
+            yvals[i]=0
+        elif i == (xvals.size-2):
+            xvals[i] = xhigh[-1]
+            yvals[i] = y[-1]
+        else:
+            iix = i/2
+            iiy = (i-1)/2
+            xvals[i] = xlow[iix]
+            yvals[i] = y[iiy]
+
+    if ymin is not None or ymax is not None:
+        if ymin is None:
+            ymin = 0.0
+        if ymax is None:
+            ymax = yvals.max()
+        yvals = esutil.numpy_util.arrscl(yvals, ymin, ymax)
+
+
+    ph = biggles.Curve(xvals, yvals, **keys)
+    return ph
 
 def bwhiskers(xin, yin, uin, vin, 
               scale=1.0, 
