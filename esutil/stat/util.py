@@ -443,7 +443,7 @@ def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None,
     more:
 
         If more is True, or weights are sent, then return more statistics, with
-        all outputs in a dictionary.
+        all outputs in a dictionary. Note more implies rev=True
 
             keys of the returned dictionary:
                 'hist': The histogram.
@@ -482,6 +482,9 @@ def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None,
 
     if nbin is not None:
         binsize=None
+
+    if more:
+        rev=True
 
     b = Binner(data, weights=weights)
     b.dohist(binsize=binsize, nbin=nbin, nperbin=nperbin, min=min, max=max, rev=rev)

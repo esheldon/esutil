@@ -331,6 +331,76 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
     else:
         return plt
 
+def plot_vs(data, *fields, **keys):
+    """
+    Plot data from an array with fields or dictionary.
+    
+    If only xfield is sent, a histogram of that field is the only plot.   If
+    other arguments are sent, these name other fields in the input data to
+    plot vs x in the same bins.
+
+    """
+    from itertools import izip
+    import copy
+
+    if len(fields) == 0:
+        raise ValueError("Send at least one field name")
+
+    # names for the fields in the plots
+    knames=keys.get('names',{})
+    fnames = {}
+    for k in fields:
+        if k in knames:
+            fnames[k] = knames[k]
+        else:
+            fnames[k] = k
+
+    # this will make a histogram of x and return the plot
+    # object and the histrogram data
+    keys['gethist'] = True
+
+    xfield = fields.pop(0)
+    x=data[xfield]
+    plt, hout = bhist(x, xtitle=fnames[xfield], **keys)
+
+    return
+    nfields=len(fields)
+    if nfields == 0:
+        return
+    
+    nx=len(x)
+    bindata=[]
+    nbin = hout['hist'].size
+
+
+    # now make a data set for each argument
+    for i,a in enumerate(fields):
+        if len(a) != nx:
+            raise ValueError("each argument must be same size as x")
+        bindata.append({'name':names[i],
+                        'mean':numpy.zeros(nx),
+                        'err':numpy.zeros(nx)})
+
+    # get averages for each argument in each bin
+    print 'hout keys:',hout.keys()
+    rev=hout['rev']
+    weights=keys.get('weights',None)
+    for i in xrange(nbin):
+        print 'bin:',(i+1)
+        if rev[i] != rev[i+1]:
+            w=rev[ rev[i]:rev[i+1] ]
+
+            for y,bd in izip(fields,bindata):
+                ydata = y[w]
+                if weights is not None:
+                    bd['mean'],bd['err']= wres=wmom(ydata, weights[w])
+                else:
+                    bd['mean'][i] = ydata.mean()
+                    sdev = ydata.std()
+                    bd['err'][i] = sdev/numpy.sqrt(w.size)
+
+    # now run through and make all the plots
+    
 
 def make_hist_curve(xlow, xhigh, y, ymin=None, ymax=None, **keys):
     """
