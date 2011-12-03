@@ -331,7 +331,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
     else:
         return plt
 
-def plot_vs(data, *fields, **keys):
+def bhist_vs(data, *fields, **keys):
     """
     Plot data from an array with fields or dictionary.
     
@@ -340,30 +340,44 @@ def plot_vs(data, *fields, **keys):
     plot vs x in the same bins.
 
     """
+    import biggles
     from itertools import izip
     import copy
+    from esutil.stat import wmom
 
     if len(fields) == 0:
         raise ValueError("Send at least one field name")
 
+    fields=list(fields)
+
     # names for the fields in the plots
     knames=keys.get('names',{})
-    fnames = {}
+    plabels = {}
     for k in fields:
         if k in knames:
-            fnames[k] = knames[k]
+            plabels[k] = knames[k]
         else:
-            fnames[k] = k
-
-    # this will make a histogram of x and return the plot
-    # object and the histrogram data
-    keys['gethist'] = True
+            plabels[k] = k
 
     xfield = fields.pop(0)
     x=data[xfield]
-    plt, hout = bhist(x, xtitle=fnames[xfield], **keys)
 
-    return
+    keys['more'] = True
+    hout = esutil.stat.histogram(x, **keys)
+ 
+    plots=[]
+    if 'nperbin' not in keys:
+        if 'weights' in keys:
+            hcurve = make_hist_curve(hout['low'],hout['high'],hout['whist'])
+        else:
+            hcurve = make_hist_curve(hout['low'],hout['high'],hout['hist'])
+
+        hplt = biggles.FramedPlot()
+        hplt.add(hcurve)
+        hplt.xlabel = plabels[xfield]
+        hplt.show()
+        plots.append(hplt)
+
     nfields=len(fields)
     if nfields == 0:
         return
@@ -372,35 +386,43 @@ def plot_vs(data, *fields, **keys):
     bindata=[]
     nbin = hout['hist'].size
 
-
     # now make a data set for each argument
-    for i,a in enumerate(fields):
-        if len(a) != nx:
-            raise ValueError("each argument must be same size as x")
-        bindata.append({'name':names[i],
-                        'mean':numpy.zeros(nx),
-                        'err':numpy.zeros(nx)})
+    for f in fields:
+        if len(data[f]) != nx:
+            raise ValueError("field %s is not same size as field %s" % (f,xfield))
+        bindata.append({'name':f,
+                        'plabel':plabels[f],
+                        'mean':numpy.zeros(nbin),
+                        'err':numpy.zeros(nbin)})
 
     # get averages for each argument in each bin
-    print 'hout keys:',hout.keys()
     rev=hout['rev']
     weights=keys.get('weights',None)
     for i in xrange(nbin):
-        print 'bin:',(i+1)
         if rev[i] != rev[i+1]:
             w=rev[ rev[i]:rev[i+1] ]
 
-            for y,bd in izip(fields,bindata):
-                ydata = y[w]
+            for bd in bindata:
+                ydata = data[bd['name']][w]
                 if weights is not None:
-                    bd['mean'],bd['err']= wres=wmom(ydata, weights[w])
+                    bd['mean'][i],bd['err'][i] = wmom(ydata, weights[w])
                 else:
                     bd['mean'][i] = ydata.mean()
                     sdev = ydata.std()
                     bd['err'][i] = sdev/numpy.sqrt(w.size)
 
     # now run through and make all the plots
-    
+    keys['xlabel'] = plabels[xfield]
+    for bd in bindata:
+        keys['ylabel'] = bd['plabel']
+        if 'mean' in hout:
+            xh = hout['mean']
+        else:
+            xh = hout['center']
+        plt=bscatter(xh, bd['mean'], yerr=bd['err'], **keys)
+        plots.append(plt)
+
+    return plots
 
 def make_hist_curve(xlow, xhigh, y, ymin=None, ymax=None, **keys):
     """

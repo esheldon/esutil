@@ -401,7 +401,7 @@ class Binner(dict):
 
 def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None, 
               min=None, max=None, 
-              rev=False, more=False):
+              rev=False, more=False, **keys):
     """
     Calculate the histogram of the input data.  
     
