@@ -53,6 +53,14 @@ def center_text(text, width):
     space = width - len(text)
     return ' '*(space/2) + text + ' '*(space/2 + space%2)
 
+def iformat(i):
+    """
+    Format an integer with commas deliminating every factor of 1000
+    """
+    import locale
+    locale.setlocale(locale.LC_ALL, 'en_US')
+    return locale.format('%d',i, grouping=True)
+
 def colprint(*args, **keys):
     """
     Name:

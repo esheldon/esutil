@@ -339,6 +339,30 @@ def bhist_vs(data, *fields, **keys):
     other arguments are sent, these name other fields in the input data to
     plot vs x in the same bins.
 
+    parameters
+    ----------
+    data: numpy array with fields or dict
+        Must have field names.  This can be a recarray or ordinary
+        array with field names, or even a dict as long as the arrays
+        all have the same length.
+    field1, field2, ...:  string
+        A set of fields names to plot.  The first is the "x" variable The data
+        are binned according to this variable.  If only a single field is sent,
+        a simple histogram is shown.  If multiple are given, the average as a
+        function of x is shown in separate plots.  Note if nperbin= is given,
+        no histogram is shown.
+    stype: string
+        The type of statistic to plot
+            if 'mean', plot the mean with errors as a function of the binning field.
+            if 'sdev', plot the standard deviation as a function of the binning field.
+    names: dict
+        Dictionary with names for plotting, e.g. if a field name is 'x'
+        this could be {'x':'new name for x'}.
+    clip: bool
+        If clip=true and weights are not sent for the histogram, the 
+        data are sigma clipped at 4 sigma with 4 iterations.
+    extra keywords:
+        Extra keywords for the histogram program and for plotting.
     """
     import biggles
     from itertools import izip
@@ -349,6 +373,8 @@ def bhist_vs(data, *fields, **keys):
         raise ValueError("Send at least one field name")
 
     fields=list(fields)
+
+    stype=keys.get('stype','mean')
 
     # names for the fields in the plots
     knames=keys.get('names',{})
@@ -390,14 +416,20 @@ def bhist_vs(data, *fields, **keys):
     for f in fields:
         if len(data[f]) != nx:
             raise ValueError("field %s is not same size as field %s" % (f,xfield))
-        bindata.append({'name':f,
-                        'plabel':plabels[f],
-                        'mean':numpy.zeros(nbin),
-                        'err':numpy.zeros(nbin)})
+        d = {'name':f,
+             'plabel':plabels[f]}
+        if stype == 'mean':
+            d['mean'] = numpy.zeros(nbin)
+            d['err'] = numpy.zeros(nbin)
+        else:
+            d['sdev'] = numpy.zeros(nbin)
+        bindata.append(d)
 
     # get averages for each argument in each bin
     rev=hout['rev']
     weights=keys.get('weights',None)
+    # this only applies if weights are None
+    clip=keys.get('clip',False)
     for i in xrange(nbin):
         if rev[i] != rev[i+1]:
             w=rev[ rev[i]:rev[i+1] ]
@@ -405,11 +437,19 @@ def bhist_vs(data, *fields, **keys):
             for bd in bindata:
                 ydata = data[bd['name']][w]
                 if weights is not None:
-                    bd['mean'][i],bd['err'][i] = wmom(ydata, weights[w])
+                    mn,err,sdev = wmom(ydata, weights[w], sdev=True)
                 else:
-                    bd['mean'][i] = ydata.mean()
-                    sdev = ydata.std()
-                    bd['err'][i] = sdev/numpy.sqrt(w.size)
+                    if clip:
+                        mn,sdev=esutil.stat.sigma_clip(ydata)
+                    else:
+                        mn = ydata.mean()
+                        sdev = ydata.std()
+                    err = sdev/numpy.sqrt(w.size)
+                if stype == 'mean':
+                    bd['mean'][i] = mn
+                    bd['err'][i] = err
+                else:
+                    bd['sdev'][i] = sdev
 
     # now run through and make all the plots
     keys['xlabel'] = plabels[xfield]
@@ -419,7 +459,11 @@ def bhist_vs(data, *fields, **keys):
             xh = hout['mean']
         else:
             xh = hout['center']
-        plt=bscatter(xh, bd['mean'], yerr=bd['err'], **keys)
+
+        if stype == 'mean':
+            plt=bscatter(xh, bd['mean'], yerr=bd['err'], **keys)
+        else:
+            plt=bscatter(xh, bd['sdev'], **keys)
         plots.append(plt)
 
     return plots
