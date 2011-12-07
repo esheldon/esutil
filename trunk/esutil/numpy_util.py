@@ -1096,7 +1096,10 @@ def replicate(value, shape, dtype=None):
     Examples
     --------
     >>> import esutil
-    >>> esutil.numpy_util.replicate(-9999.0, (2,2))
+    >>> from esutil.numpy_util import replicate
+    >>> replicate('hello world', 3)
+    array(['hello world', 'hello world', 'hello world'], dtype='|S11')
+    >>> replicate(-9999.0, (2,2))
     array([[-9999., -9999.],
            [-9999., -9999.]])
     """
