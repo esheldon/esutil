@@ -1,11 +1,17 @@
 """
 Miscellaneous functions that may be convenient:
 
+colprint
+  Print sequences out in columnar format (or write to a text file).
+
+ptime
+  Prints the input time in seconds in a human-friendly format
+
 center_text
   Print text centered in a field of a given width.
 
-colprint
-  Print sequences out in columnar format (or write to a text file).
+iformat
+    Format an integer with commas at each factor of 1000
 
 dict_select
   Select a subset of keys from the input dict.
@@ -13,8 +19,6 @@ dict_select
 isstring
   Returns True if the input object is a string.
 
-ptime
-  Prints an input time in seconds in a more human-friendly format
 
 """
 
@@ -312,12 +316,7 @@ def dict_select(input_dict, keep=None, remove=None):
 
 
 def isstring(obj):
-    if have_numpy:
-        string_types=(basestring, numpy.string_)
-    else:
-        string_types=basestring
-
-    if isinstance(obj, string_types):
+    if isinstance(obj, basestring):
         return True
     else:
         return False

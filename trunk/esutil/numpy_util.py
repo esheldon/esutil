@@ -1084,8 +1084,8 @@ def replicate(value, shape, dtype=None):
     shape: Scalar or sequence.
         The shape of the resulting array.
     dtype: data-type, optional
-        The data type of the result. If None, the default
-        type for the platform is used, 64-bit float on most systems.
+        The data type of the result. If None, the value is determined from
+        the input value.
 
     Returns
     -------
@@ -1100,7 +1100,11 @@ def replicate(value, shape, dtype=None):
     array([[-9999., -9999.],
            [-9999., -9999.]])
     """
-    data = numpy.empty(shape,dtype=dtype)
+    if dtype is None:
+        tmp = numpy.array([value])
+        data = numpy.empty(shape,dtype=tmp.dtype)
+    else:
+        data = numpy.empty(shape,dtype=dtype)
     data[:] = value
     return data
 
