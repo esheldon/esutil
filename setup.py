@@ -2,6 +2,7 @@ import sys,os
 import time
 from sys import stdout,stderr
 from glob import glob
+import platform
 
 from distutils.core import setup,Extension
 
@@ -46,6 +47,12 @@ except:
     stdout.write('Numpy not found:  Not building C extensions\n')
     time.sleep(5)
 
+if platform.system()=='Darwin':
+    extra_compile_args=['-arch','i386','-arch','x86_64']
+    extra_link_args=['-arch','i386','-arch','x86_64']
+else:
+    extra_compile_args=[]
+    extra_link_args=[]
 
 
 if have_numpy:
@@ -53,6 +60,8 @@ if have_numpy:
     recfile_sources = ['esutil/recfile/records.cpp',
                        'esutil/recfile/records_wrap.cpp']
     recfile_module = Extension('esutil.recfile._records', 
+                               extra_compile_args=extra_compile_args, 
+                               extra_link_args=extra_link_args,
                                sources=recfile_sources)
     ext_modules.append(recfile_module)
     packages.append('esutil.recfile')
@@ -60,6 +69,8 @@ if have_numpy:
     # cosmology package
     cosmo_sources = glob('esutil/cosmology/*.c')
     cosmo_module = Extension('esutil.cosmology._cosmolib', 
+                             extra_compile_args=extra_compile_args, 
+                             extra_link_args=extra_link_args,
                              sources=cosmo_sources)
     ext_modules.append(cosmo_module)
     packages.append('esutil.cosmology')
@@ -71,6 +82,8 @@ if have_numpy:
     htm_sources = glob('esutil/htm/htm_src/*.cpp')
     htm_sources += ['esutil/htm/htmc.cc','esutil/htm/htmc_wrap.cc']
     htm_module = Extension('esutil.htm._htmc',
+                           extra_compile_args=extra_compile_args, 
+                           extra_link_args=extra_link_args,
                            sources=htm_sources)
 
     ext_modules.append(htm_module)
@@ -83,6 +96,8 @@ if have_numpy:
     #include_dirs += ['esutil/stat']
     chist_sources = glob('esutil/stat/*.cc')
     chist_module = Extension('esutil.stat._chist', 
+                             extra_compile_args=extra_compile_args, 
+                             extra_link_args=extra_link_args,
                              sources=chist_sources)
     ext_modules.append(chist_module)
     packages.append('esutil.stat')
@@ -92,6 +107,8 @@ if have_numpy:
     #include_dirs += ['esutil/integrate']
     cgauleg_sources = glob('esutil/integrate/*.cc')
     cgauleg_module = Extension('esutil.integrate._cgauleg', 
+                               extra_compile_args=extra_compile_args, 
+                               extra_link_args=extra_link_args,
                                sources=cgauleg_sources)
     ext_modules.append(cgauleg_module)
     packages.append('esutil.integrate')
