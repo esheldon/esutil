@@ -91,7 +91,8 @@ class HTM(htmc.HTMC):
 
             maxmatch=1: 
                 The maximum number of allowed matches per point. Defaults to
-                return the closest match, maxmatch=1
+                return the closest match, maxmatch=1.  Use maxmatch<=0 to
+                return all matches
 
             htmid2=None: 
                 the htm indexes for the second list.  If not sent they are
@@ -148,7 +149,7 @@ class HTM(htmc.HTMC):
 
         
         Restrictions:
-            The C++ wrapper must be compiled.  This will happend automatically
+            The C++ wrapper must be compiled.  This will happen automatically
             during installation of esutil.
         
 
@@ -167,7 +168,7 @@ class HTM(htmc.HTMC):
             ra2 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 55.25])
             dec2 = numpy.array( [24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])
 
-            m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two)
+            m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,maxmatch=0)
 
             for i in range(m1.size):
                 print m1[i],m2[i],d12[i]
