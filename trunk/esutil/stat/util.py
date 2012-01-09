@@ -121,12 +121,13 @@ class Binner(dict):
 
 
 
-    def dohist(self, binsize=None, nbin=None, nperbin=None, min=None, max=None, rev=False):
+    def dohist(self, binsize=None, nbin=None, nperbin=None, min=None, max=None, rev=False, mergelast=True):
         """
         Perform the basic histogram, optionally getting reverse indices. Note
         if weights were sent, reverse indices will always be calculated
         """
 
+        # this method inherited from dict
         self.clear()
 
         # if y is sent, we use rev to get mean y in the bins
@@ -137,7 +138,7 @@ class Binner(dict):
         self._get_minmax_and_indices(min=min, max=max)
 
         if nperbin is not None:
-            self._hist_by_num(nperbin)
+            self._hist_by_num(nperbin, mergelast=mergelast)
         elif nbin is not None or binsize is not None:
             self._hist_by_binsize_or_nbin(binsize, nbin, rev)
         else:
@@ -160,7 +161,7 @@ class Binner(dict):
         if r is not None:
             self['rev'] = r
 
-    def _hist_by_num(self, nperbin):
+    def _hist_by_num(self, nperbin, mergelast=True):
         
         # histogram indices into array
         # binsize is nperbin
@@ -179,6 +180,7 @@ class Binner(dict):
         for i in xrange(nbin):
             if rev[i] != rev[i+1]:
                 w = rev[ rev[i]:rev[i+1] ]
+
                 w = self['wsort'][w]
 
                 rev[ rev[i]:rev[i+1] ] = w
@@ -186,10 +188,35 @@ class Binner(dict):
                 self['low'][i] = self.x[w[0]]
                 self['high'][i] = self.x[w[-1]]
 
+
         self['hist'] = hist
-        if rev is not None:
-            self['rev'] = rev
+        self['rev'] = rev
         self['nperbin'] = nperbin
+
+        if hist[-1] != nperbin and mergelast:
+            self._merge_last()
+
+    def _merge_last(self):
+        rev=self['rev']
+
+        nbin = self['hist'].size
+        hist=self['hist'][0:nbin-1]
+        low=self['low'][0:nbin-1]
+        high=self['high'][0:nbin-1]
+
+        hist[-1] = self['hist'][-2] + self['hist'][-1]
+        low[-1] = self['low'][-2]
+        high[-1] = self['high'][-1]
+
+        r2 = rev[0:rev.size-1]
+        r2[nbin-1] = rev[nbin]
+        r2[nbin:] = rev[nbin+1:]
+        r2[0:nbin] -= 1
+
+        self['hist'] = hist
+        self['rev'] = r2
+        self['low'] = low
+        self['high'] = high
 
     def _do_hist(self, data, dmin, s, bsize, nbin, rev=False):
         dorev = rev
@@ -399,7 +426,8 @@ class Binner(dict):
 
 
 
-def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None, 
+def histogram(data, weights=None, binsize=1., nbin=None, 
+              nperbin=None, mergelast=True,
               min=None, max=None, 
               rev=False, more=False, **keys):
     """
@@ -487,7 +515,8 @@ def histogram(data, weights=None, binsize=1., nbin=None, nperbin=None,
         rev=True
 
     b = Binner(data, weights=weights)
-    b.dohist(binsize=binsize, nbin=nbin, nperbin=nperbin, min=min, max=max, rev=rev)
+    b.dohist(binsize=binsize, nbin=nbin, nperbin=nperbin, mergelast=mergelast,
+             min=min, max=max, rev=rev)
 
     if more or weights is not None:
         b.calc_stats()
