@@ -1,4 +1,4 @@
-v0.5.0 (not yet tagged)
+v0.5.0 (2012-01-15)
 ----------------------------------------------------------------------
 New files:
     esutil/hdfs.py: routines to get files in and out of the hadoop
@@ -7,7 +7,8 @@ New files:
         Now using simplified cosmology package written in C.
     esutil/fits.py: 
         This is a workaround for reading subsets of columns and rows from fits
-        files when only pyfits is available.  Prefer just using fitsio!
+        files when only pyfits is available.  Note you should use
+        the fitsio package instead:  https://github.com/esheldon/fitsio
     esutil/sqlite_util.py:
         Wrapper class and functions to read/write from sqlite.
 
@@ -22,6 +23,9 @@ Updates:
         as as format() functions for strings and importing print function
         from future.
 
+    esutil/cosmology:
+        - The comoving volume is now for the whole sky.  Previously it
+          was per steradian.  To get the old behavior, divide by 4*pi
     esutil/coords.py:
         - added more optionals units to sphdist
     esutil/plotting.py: 
@@ -55,6 +59,7 @@ Updates:
         - added arr2str function, which uses ArrayWriter
         - added where1 convenience function, which uses w,=numpy.where() for 1D
           arrays.
+        - replicate is now smarter, determining the data type from the input.
 
     esutil/stat:
         - Added Binner class to handle all histogramming, including
@@ -62,6 +67,9 @@ Updates:
         - updated histogram to use binner
         - added qgauss convenience function.
         - added nbin= keyword for histograms
+    esutil/ostools.py:
+        - added makedirs_fromfile procedure; grabs the directory name
+          and creates it if it doesn't exist.
 Bugs:
 
     esutil/numpy_util.py:
