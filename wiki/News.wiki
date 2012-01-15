@@ -1,5 +1,8 @@
 = News for esutil =
 
+??-??-??: Updated cosmology package to use fast C code.  You should remove an old
+  install before installing because of some old files that may be left in place.
+
 2010-11-19: The module [http://code.google.com/p/esutil/source/browse/trunk/esutil/sqlite_util.py sqlite_util] is ready for prime time.
 
 *Note:* The bug in released versions of scipy.weave with gcc >= 4.3 compilers has now been circumvented by writing histogram and gauleg as direct C++ extensiosn rather than using weave.  Also, all code works now on OS X 10.5 and 10.6 when using the default compilers, at least for ESS and BG in their tests.
