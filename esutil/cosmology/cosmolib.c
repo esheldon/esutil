@@ -113,7 +113,7 @@ double V(struct cosmo* c, double zmin, double zmax) {
         v += f1*dv*c->vw[i];
     }
 
-    return v;
+    return v*4.*M_PI;
 
 }
 

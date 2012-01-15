@@ -317,6 +317,9 @@ class Cosmo:
         """
         Calculate the comoving volume between zmin and zmax.
 
+        Note this function previously returned the volume per steradian.  To
+        get the old behavior divide by 4*pi
+
         Parameters
         ----------
         zmin, zmax: scalars
