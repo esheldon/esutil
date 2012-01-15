@@ -9,6 +9,7 @@ New files:
         This is a workaround for reading subsets of columns and rows from fits
         files when only pyfits is available.  Note you should use
         the fitsio package instead:  https://github.com/esheldon/fitsio
+        The io module will select fitsio if available, otherwise pyfits.
     esutil/sqlite_util.py:
         Wrapper class and functions to read/write from sqlite.
 
