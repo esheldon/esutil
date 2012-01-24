@@ -287,23 +287,21 @@ def exec_process(command,
     # if a list was entered, convert to a string.  Also print the command
     # if requested
     if verbose:
-        stdout.write('Executing command: \n')
+        print >>stderr,'Executing command'
     if isinstance(command, list):
         cmd = ' '.join(command)
         if verbose:
-            stdout.write(command[0] + '    \\\n')
+            print >>stderr,command[0],'   \\'
             for c in command[1:]:
-                stdout.write('    '+c+'    \\\n')
-        #print 'actual cmd:',cmd
+                print >>stderr,'   '+c+'    \\'
     else:
         cmd=command
         if verbose:
-            stdout.write('%s\n' % cmd)
+            print >>stderr,cmd
 
 
 
     stdout.flush()
-    stderr.flush()
     pobj = subprocess.Popen(cmd, 
                             stdout=stdout_fileobj, 
                             stderr=stderr_fileobj, 
