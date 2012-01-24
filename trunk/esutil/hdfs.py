@@ -1,4 +1,5 @@
 import os
+from sys import stderr
 
 def exists(hdfs_url):
     """
@@ -114,13 +115,17 @@ def read(hdfs_url, reader, verbose=False, **keys):
     with HDFSFile(hdfs_url, verbose=verbose) as fobj:
         return fobj.read(reader, **keys)
 
-def put(local_file, hdfs_url, verbose=False):
+def put(local_file, hdfs_url, verbose=False, force=False):
     """
     Copy the local file to the hdfs_url.
     """
 
     if verbose:
-        print 'hdfs',local_file,'->',hdfs_url
+        print >>stderr,'hdfs',local_file,'->',hdfs_url
+
+    if force:
+        if exists(hdfs_url):
+            rm(hdfs_url, verbose=verbose)
 
     command = 'hadoop fs -put %s %s' % (local_file, hdfs_url)
     exit_code, stdo, stde = exec_command(command)
@@ -141,7 +146,7 @@ def opent(hdfs_url, tmpdir=None, verbose=False):
     temp_file = tempfile.NamedTemporaryFile(prefix='hdfs-', suffix='-'+bname, dir=tmpdir)
 
     if verbose:
-        print 'hdfs opening: ',hdfs_url,'for reading, staging in temp file:',temp_file.name
+        print >>stderr,'opening: ',hdfs_url,'for reading, staging in temp file:',temp_file.name
 
     command = 'hadoop fs -cat %s' % hdfs_url
     pobj = subprocess.Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
@@ -165,7 +170,7 @@ def rm(hdfs_url, recurse=False, verbose=False):
     """
     Remove the specified hdfs url
     """
-    mess='hdfs removing '+hdfs_url
+    mess='removing '+hdfs_url
         
 
     if recurse:
@@ -175,7 +180,7 @@ def rm(hdfs_url, recurse=False, verbose=False):
         cmd='rm'
 
     if verbose:
-        print mess
+        print >>stderr,mess
 
     command = 'hadoop fs -%s %s' % (cmd, hdfs_url)
     exit_code, stdo, stde = exec_command(command)
@@ -195,7 +200,7 @@ def mkdir(hdfs_url, verbose=False):
     Equivalent of mkdir -p in unix
     """
     if verbose:
-        print 'hdfs mkdir',hdfs_url
+        print >>stderr,'mkdir',hdfs_url
 
     command = 'hadoop fs -mkdir '+hdfs_url
     exit_code, stdo, stde = exec_command(command)
@@ -274,34 +279,50 @@ class HDFSFile:
 
     """
 
-    def __init__(self, hdfs_url, verbose=False):
+    def __init__(self, hdfs_url, verbose=False, tmpdir=None):
         self.hdfs_url = hdfs_url
-        self.verbose=verbose
+        self.verbose = verbose
+        self.tmpdir=tmpdir
 
-        self.localfile=None
+        self.set_localfile()
 
-    def stage(self, tmpdir=None):
+    def set_localfile(self):
+        self.localfile = self.temp_filename(self.hdfs_url, tmpdir=self.tmpdir)
+
+    def stage(self):
         """
         Stage a file out of hdfs to a temporary file.
         """
         import subprocess
 
-        local_file = self.temp_filename(self.hdfs_url, tmpdir=tmpdir)
-        command = 'hadoop fs -get %s %s' % (self.hdfs_url,local_file)
+        command = 'hadoop fs -get %s %s' % (self.hdfs_url,self.localfile)
 
         if self.verbose:
-            print "hdfs staging",self.hdfs_url,"->",local_file
+            print >>stderr,"staging",self.hdfs_url,"->",self.localfile
 
         exit_code, stdo, stde = exec_command(command)
 
         if exit_code != 0:
-            raise RuntimeError("Failed to copy from hdfs %s -> %s: %s" % (self.hdfs_url,local_file,stde))
+            raise RuntimeError("Failed to copy from hdfs %s -> %s: %s" % (self.hdfs_url,self.localfile,stde))
 
-        if not os.path.exists(local_file):
-            raise RuntimeError("In copy from hdfs %s -> %s, local copy not found" % (self.hdfs_url,local_file))
+        if not os.path.exists(self.localfile):
+            raise RuntimeError("In copy from hdfs %s -> %s, local copy not found" % (self.hdfs_url,self.localfile))
 
-        self.localfile = local_file
-        return local_file
+        return self.localfile
+
+    def put(self, **keys):
+        """
+        This is when we have some data written by an external program, just need
+        to put it
+
+        Might want to rethink the cleanup=True default
+        """
+        try:
+            put(self.localfile, self.hdfs_url, verbose=self.verbose, **keys)
+        finally:
+            cleanup=keys.get('cleanup',True)
+            if cleanup:
+                self.cleanup()
 
 
     def read(self, reader, **keys):
@@ -361,14 +382,13 @@ class HDFSFile:
             clobber=keys.get('clobber',False)
             if clobber:
                 if self.verbose:
-                    print 'removing existing hdfs file:',self.hdfs_url
+                    print >>stderr,'removing existing hdfs file:',self.hdfs_url
                 rm(self.hdfs_url)
             else:
                 raise ValueError("hdfs file already exists: %s, "
                                  "send clobber=True to remove" % self.hdfs_url)
             
         tmpdir=keys.get('tmpdir',None)
-        self.localfile = self.temp_filename(self.hdfs_url, tmpdir=tmpdir)
 
         try:
             writer(self.localfile, data, **keys)
@@ -389,7 +409,7 @@ class HDFSFile:
         if self.localfile is not None:
             if os.path.exists(self.localfile):
                 if self.verbose:
-                    print "hdfs removing staged file", self.localfile
+                    print >>stderr,"removing staged file", self.localfile
                 os.remove(self.localfile)
 
             self.localfile=None
