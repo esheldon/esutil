@@ -222,7 +222,7 @@ def read(fileobj, **keywords):
                     # this will only work if the all data has the 
                     # same structure
                     if verbose:
-                        stdout.write("Combining arrays\n")
+                        stderr.write("Combining arrays\n")
                     alldata = numpy_util.combine_arrlist(alldata)
         return alldata
 
@@ -235,7 +235,7 @@ def read(fileobj, **keywords):
         return data
     else:
         if verbose:
-            stdout.write("Reading: %s\n" % fname)
+            stderr.write("Reading: %s\n" % fname)
 
     # pick the right reader based on type
     try:
@@ -516,7 +516,7 @@ def write_fits(fileobj, data, **keys):
         else:
             name=fileobj
 
-        stdout.write("Writing to: %s\n" % name)
+        stderr.write("Writing to: %s\n" % name)
 
     if fits_package == 'fitsio':
         write_fits_fitsio(fileobj, data, **keys)
@@ -705,3 +705,11 @@ def is_in_hdfs(fname):
         return True
     else:
         return False
+
+def fexists(fname):
+    if is_in_hdfs(fname):
+        return hdfs.exists(fname)
+    else:
+        return os.path.exists(fname)
+
+
