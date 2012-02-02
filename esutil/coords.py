@@ -1063,7 +1063,8 @@ def randsphere(num, system='lonlat'):
     else:
         return lon, lat
 
-def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg']):
+def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg'], 
+            get_radius=False):
     """
     Generate random points in a sherical cap
 
@@ -1072,18 +1073,20 @@ def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg']):
 
     nrand:
         The number of random points
-    long,lat:
+    lon,lat:
         The center of the cap in degrees.  The
         longitide should go from [0,360) and
         lat from [0,180]
     rad:
-        radius of the cap in degrees
+        radius of the cap, same units as lon,lat
 
     system: string, optional
         Only equatorial 'eq' allowed for now 
     units: list of strings
         Units of input and output, default ['deg','deg'] but units can also be
         'rad' for both input and output
+    get_radius: bool, optional
+        if true, return radius of each point in radians
     """
     # generate uniformly in r**2
     rand_r = numpy.random.random(nrand)
@@ -1124,6 +1127,7 @@ def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg']):
 
     cosDphi = (cosr - costheta*costheta2)/(sintheta*sintheta2)
 
+    numpy.clip(cosDphi, -1, 1, cosDphi)                    
     Dphi = arccos(cosDphi)
 
     # note fancy usage of where
@@ -1138,5 +1142,8 @@ def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg']):
         rand_lon  = phi2
         rand_lat = theta2-numpy.pi/2.
 
-    return rand_lon, rand_lat
+    if get_radius:
+        return rand_lon, rand_lat, rand_r
+    else:
+        return rand_lon, rand_lat
 
