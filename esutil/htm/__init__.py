@@ -47,7 +47,7 @@ Methods:
         are square degrees.
 
     match(ra1,dec1,ra2,dec2,radius,
-          maxmatch=0,
+          maxmatch=1,
           htmid2=None,
           htmrev2=None,
           minid=None,
