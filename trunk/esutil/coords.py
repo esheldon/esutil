@@ -394,8 +394,8 @@ def _thetaphi2xyz(theta, phi):
     theta and phi in radians relative to the SDSS node at ra=95 degrees
     """
     x = cos(theta)*cos(phi)
-    y = sin(theta)*cos(phi);
-    z = sin(phi);
+    y = sin(theta)*cos(phi)
+    z = sin(phi)
 
     return x,y,z
 
@@ -1063,4 +1063,80 @@ def randsphere(num, system='lonlat'):
     else:
         return lon, lat
 
+def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg']):
+    """
+    Generate random points in a sherical cap
+
+    parameters
+    ----------
+
+    nrand:
+        The number of random points
+    long,lat:
+        The center of the cap in degrees.  The
+        longitide should go from [0,360) and
+        lat from [0,180]
+    rad:
+        radius of the cap in degrees
+
+    system: string, optional
+        Only equatorial 'eq' allowed for now 
+    units: list of strings
+        Units of input and output, default ['deg','deg'] but units can also be
+        'rad' for both input and output
+    """
+    # generate uniformly in r**2
+    rand_r = numpy.random.random(nrand)
+    rand_r = sqrt(rand_r)*rad
+
+    if units[0] == 'deg':
+        numpy.deg2rad(rand_r,rand_r)
+
+    # generate position angle uniformly 0,2*PI
+    rand_posangle = numpy.random.random(nrand)*2*PI
+
+    if system == 'eq':
+        # [0,180]
+        theta = numpy.array(lat + 90, dtype='f8',ndmin=1,copy=True)
+        phi = numpy.array(lon,dtype='f8',ndmin=1,copy=True)
+    else:
+        raise ValueError("Only system='eq' supported")
+
+    if units[0] == 'deg':
+        numpy.deg2rad(theta,theta)
+        numpy.deg2rad(phi,phi)
+
+    sintheta = sin(theta)
+    costheta = cos(theta)
+    sinphi = sin(phi)
+    cosphi = cos(phi)
+
+    sinr = sin(rand_r)
+    cosr = cos(rand_r)
+
+    cospsi = cos(rand_posangle)
+    costheta2 = costheta*cosr + sintheta*sinr*cospsi
+
+    numpy.clip(costheta2, -1, 1, costheta2)                    
+
+    theta2 = arccos(costheta2)
+    sintheta2 = sin(theta2)
+
+    cosDphi = (cosr - costheta*costheta2)/(sintheta*sintheta2)
+
+    Dphi = arccos(cosDphi)
+
+    # note fancy usage of where
+    phi2=numpy.where(rand_posangle > PI, phi+Dphi, phi-Dphi)
+
+    if units[1] == 'deg':
+        numpy.rad2deg(phi2,phi2)
+        numpy.rad2deg(theta2,theta2)
+        rand_lon  = phi2
+        rand_lat = theta2-90.0
+    else:
+        rand_lon  = phi2
+        rand_lat = theta2-numpy.pi/2.
+
+    return rand_lon, rand_lat
 
