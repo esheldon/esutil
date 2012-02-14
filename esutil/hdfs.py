@@ -83,26 +83,62 @@ def ls(hdfs_url='', recurse=False):
 
     return flist
 
+def du(hdfs_url='', total=False, dict=False):
     """
-    proc = subprocess.Popen(command, stdout=PIPE, shell=True)
+    List the hdfs URL.  The url can be a pattern.
 
-    flist=[]
-    while True:
-        line = proc.stdout.readline()
-        if line != '':
-            ls = line.split()
-            if len(ls) == 8:
-                # this is a file description line
-                fname=ls[-1]
-                flist.append(fname)
-        else:
-            break
-    print flist
-    exit_code = proc.returncode
+    parameters
+    ----------
+    hdfs_url: string, optional
+        The url
+    total: bool, optional
+        If True, return tuple (flist, total_bytes)
+    dict:
+        if True, returna dict keyed by name instead of a list
+
+    outputs
+    -------
+    The result is a list of dictionaries with name and size, unless
+    dict=True is sent
+    """
+    import subprocess
+    from subprocess import PIPE
+
+    command = "hadoop fs -du %s" % hdfs_url
+
+    exit_code, stdo, stde = exec_command(command)
     if exit_code != 0:
         raise ValueError("command failed with code %s: %s" % (exit_code,command))
-    print flist
-    """
+
+    if dict:
+        flist={}
+    else:
+        flist = []
+    if len(stdo) == 0:
+        return flist
+
+    lines = stdo.split('\n')
+
+    tot=0
+    for line in lines:
+        if len(line) == 0:
+            continue
+        ls = line.split()
+        if len(ls) != 2:
+            # for the header
+            continue
+
+        sz,name = ls
+        sz = int(sz)
+        if dict:
+            flist[name] = sz
+        else:
+            flist.append({'name':name,'size':sz})
+        tot += sz
+
+    if total:
+        return flist, tot
+    return flist
 
 
 def lsr(hdfs_url=''):
@@ -115,15 +151,19 @@ def read(hdfs_url, reader, verbose=False, **keys):
     with HDFSFile(hdfs_url, verbose=verbose) as fobj:
         return fobj.read(reader, **keys)
 
-def put(local_file, hdfs_url, verbose=False, force=False):
+def put(local_file, hdfs_url, verbose=False, clobber=False, force=False):
     """
     Copy the local file to the hdfs_url.
+
+    Note, unlike posix cp, intermediate dirs are made automatically as needed
+
+    Ugh, keeping both clobber and force
     """
 
     if verbose:
         print >>stderr,'hdfs',local_file,'->',hdfs_url
 
-    if force:
+    if force or clobber:
         if exists(hdfs_url):
             rm(hdfs_url, verbose=verbose)
 
@@ -421,6 +461,7 @@ class HDFSFile:
         self.cleanup()
     def __del__(self):
         self.cleanup()
+
 
 
 
