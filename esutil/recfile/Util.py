@@ -215,26 +215,11 @@ Classes
        _examples_docs,
        _tests_docs)
 
-def Open(fileobj, 
-         mode="r", 
-         delim=None, 
-         dtype=None, 
-         nrows=-9999, 
-         offset=None, 
-         skiplines=None,
-         padnull=False, 
-         ignorenull=False, 
-         bracket_arrays=False,
-         verbose=False):
-
+def Open(fileobj, **keys):
     # doc string generated dynamically below
 
     # make sure it's a dtype and not just a descr
-    return Recfile(fileobj, mode=mode, delim=delim, dtype=dtype, 
-                   nrows=nrows, offset=offset, skiplines=skiplines,
-                   padnull=padnull, ignorenull=ignorenull, 
-                   bracket_arrays=bracket_arrays,
-                   verbose=verbose)
+    return Recfile(fileobj, **keys)
 
 Open.__doc__="""
 %s
@@ -251,38 +236,19 @@ Open.__doc__="""
 class Recfile(object):
     __doc__=Open.__doc__
 
-    def __init__(self, fobj=None, mode="r", delim=None, dtype=None, 
-                 nrows=-9999, offset=None, skiplines=None,
-                 padnull=False, ignorenull=False, 
-                 bracket_arrays=False,
-                 verbose=False):
-
-        # an alias
+    def __init__(self, fobj, **keys):
+        # aliases
         self.Read = self.read
         self.Write = self.write
-        self.open(fobj, mode=mode, delim=delim, dtype=dtype, 
-                  nrows=nrows, offset=offset, skiplines=skiplines,
-                  padnull=padnull, ignorenull=ignorenull, 
-                  bracket_arrays=bracket_arrays,
-                  verbose=verbose)
+
+        self.open(fobj, **keys)
 
     def __enter__(self):
         return self
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def open(self, 
-             fobj, 
-             mode='r', 
-             delim=None, 
-             dtype=None, 
-             nrows=-9999, 
-             offset=None, 
-             skiplines=None,
-             padnull=False, 
-             ignorenull=False, 
-             bracket_arrays=False,
-             verbose=False):
+    def open(self, fobj, **keys):
         """
         Class:
             Recfile
@@ -296,16 +262,20 @@ class Recfile(object):
             which has identical syntax to this open() method.
         """
 
-        self.verbose=verbose
+        mode=keys.get('mode','r')
+        dtype=keys.get('dtype',None)
+        nrows=keys.get('nrows',-9999)
 
-        self.bracket_arrays=bracket_arrays
+        self.verbose=keys.get('verbose',False)
+
+        self.bracket_arrays=keys.get('bracket_arrays',False)
 
         self.close()
-        self.padnull=padnull
-        self.ignorenull=ignorenull
-        self.delim = delim
-        self.skiplines=skiplines
-        self.offset=offset
+        self.padnull=keys.get('padnull',False)
+        self.ignorenull=keys.get('ignorenull',False)
+        self.delim = keys.get('delim',None)
+        self.skiplines=keys.get('skiplines',None)
+        self.offset=keys.get('offset',None)
 
         if self.skiplines is None:
             self.skiplines = 0
