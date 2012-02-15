@@ -550,15 +550,20 @@ def write_rec(fileobj, data, **keys):
 
 
 
-def read_rec(fileobj, **keywords):
+def read_rec(fileobj, **keys):
     import numpy
-    header=keywords.get('header',False)
-    view=keywords.get('view',numpy.ndarray)
-    rows=keywords.get('rows',None)
-    columns=keywords.get('columns',None)
-    fields=keywords.get('fields',None)
-    ensure_native = keywords.get('ensure_native',False)
+    header=keys.get('header',False)
+    view=keys.get('view',numpy.ndarray)
+    rows=keys.get('rows',None)
+    columns=keys.get('columns',None)
+    fields=keys.get('fields',None)
+    ensure_native = keys.get('ensure_native',False)
 
+    # if dtype is sent, we assume there is no header at all
+    dtype = keys.get('dtype',None)
+    if dtype is not None:
+        return read_rec_plain(fileobj, **keys)
+    
     if header == 'only':
         return sfile.read_header(fileobj)
 
@@ -576,6 +581,11 @@ def read_rec(fileobj, **keywords):
     else:
         return data
 
+def read_rec_plain(fileobj, **keys):
+    from . import recfile
+    with recfile.Recfile(fileobj,**keys) as rf:
+        data = rf.read(**keys)
+    return data
 
 def read_xml(fileobj, **keywords):
     noroot=keywords.get('noroot',True)
