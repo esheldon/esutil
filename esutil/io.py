@@ -559,20 +559,22 @@ def read_rec(fileobj, **keys):
     fields=keys.get('fields',None)
     ensure_native = keys.get('ensure_native',False)
 
-    # if dtype is sent, we assume there is no header at all
-    dtype = keys.get('dtype',None)
-    if dtype is not None:
-        return read_rec_plain(fileobj, **keys)
     
     if header == 'only':
         return sfile.read_header(fileobj)
 
-    if header:
-        data,hdr = sfile.read(fileobj, header=header, view=view, 
-                              rows=rows, fields=fields, columns=columns)
+    # if dtype is sent, we assume there is no header at all
+    dtype = keys.get('dtype',None)
+    if dtype is not None:
+        data = read_rec_plain(fileobj, **keys)
+        header=False
     else:
-        data = sfile.read(fileobj, header=header, view=view, 
-                          rows=rows, fields=fields, columns=columns)
+        if header:
+            data,hdr = sfile.read(fileobj, header=header, view=view, 
+                                  rows=rows, fields=fields, columns=columns)
+        else:
+            data = sfile.read(fileobj, header=header, view=view, 
+                              rows=rows, fields=fields, columns=columns)
     if ensure_native:
         numpy_util.to_native(data, inplace=True)
 
