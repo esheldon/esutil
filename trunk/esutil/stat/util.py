@@ -20,6 +20,10 @@ Methods:
         Perform linear interpolation.  This function is less powerful than
         scipy.interpolate.interp1d but behaves like the IDL interpol()
         function, including extrapolation beyond boundaries.
+    cov2cor(cov)
+        Convert the input covariance matrix to a correlation matrix
+    cor2cov(cor, diagerr)
+        Convert a correlation matrix and diagonal errors to a covariance matrix.
 """
 license="""
   Copyright (C) 2010  Erin Sheldon
@@ -39,6 +43,7 @@ license="""
 
 """
 
+from sys import stdout, stderr
 
 # the external C++ code for doing 
 # histograms.
@@ -53,6 +58,7 @@ from types import *
 
 try:
     import numpy
+    from numpy import zeros, sqrt
     have_numpy=True
 except:
     have_numpy=False
@@ -200,6 +206,8 @@ class Binner(dict):
         rev=self['rev']
 
         nbin = self['hist'].size
+        if nbin < 2:
+            return
         hist=self['hist'][0:nbin-1]
         low=self['low'][0:nbin-1]
         high=self['high'][0:nbin-1]
@@ -886,7 +894,6 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={},
       Added silent keyword, to shut off error messages.  BFG 2010-09-13
 
     """
-    from sys import stdout, stderr
     arr = numpy.array(arrin, ndmin=1, copy=False)
 
     index = numpy.arange( arr.size )
@@ -964,3 +971,66 @@ def interplin(vin, xin, uin):
     return (u-x[xm])*(v[xmp1] - v[xm])/(x[xmp1] - x[xm]) + v[xm]
 
 
+def cor2cov(cor, diagerr):
+    """
+    Convert a correlation matrix and diagonal errors to a covariance matrix.
+
+    parameters
+    ----------
+    cor: square array
+        The correlation matrix, NxN
+    diagerr: array
+        The diagonal errors, must be size N
+
+    outputs
+    -------
+    cov: square array
+        The NxN covariance matrix
+    """
+    if len(diagerr.shape) != 1:
+        raise ValueError("expected 1-d diag errors, got %s" % diagerr.shape)
+    if len(cor.shape) != 2:
+        raise ValueError("expected 2-d correlation matrix, got %s" % cor.shape)
+    if cor.shape[0] != cor.shape[1]:
+        raise ValueError("expected square correlation matrix, got %s" % cor.shape)
+    if cor.shape[0] != diagerr.shape[0]:
+        raise ValueError("expected shape agreement for cor (%s) and "
+                         "errors (%s) " % (cor.shape,diagerr.shape))
+
+    cov=numpy.zeros(cor.shape, dtype='f8')
+
+    for ix in xrange(diagerr.shape[0]):
+        for iy in xrange(diagerr.shape[0]):
+            cov[ix,iy] = cor[ix,iy]*diagerr[ix]*diagerr[iy]
+
+    return cov
+
+def cov2cor(cov):
+    """
+    Convert the input covariance matrix to a correlation matrix
+
+    corr[i,j] = cov[i,j]/sqrt(cov[i,i]*cov[j,j])
+
+    parameters
+    ----------
+    cov: square array
+        An NxN covariance matrix
+
+    outputs
+    -------
+    cor: square array
+        The NxN correlation matrix
+    """
+    cor = zeros(cov.shape)
+
+    for ix in xrange(cov.shape[0]):
+        cxx=cov[ix,ix]
+        if cxx <= 0.0:
+            raise ValueError("diagonal cov[%d,%d]=%e is not positive" % (ix,ix,cxx))
+        for iy in xrange(cov.shape[1]):
+            cyy=cov[iy,iy]
+            if cyy <= 0.0:
+                raise ValueError("diagonal cov[%d,%d]=%e is not positive" % (iy,iy,cyy))
+            cor[ix,iy] = cov[ix,iy]/sqrt(cxx*cyy)
+
+    return cor
