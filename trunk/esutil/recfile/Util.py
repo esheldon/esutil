@@ -262,7 +262,6 @@ class Recfile(object):
             which has identical syntax to this open() method.
         """
 
-        #mode=keys.get('mode','r')
         dtype=keys.get('dtype',None)
         nrows=keys.get('nrows',-9999)
 
