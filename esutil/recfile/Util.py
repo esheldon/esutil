@@ -215,11 +215,11 @@ Classes
        _examples_docs,
        _tests_docs)
 
-def Open(fileobj, **keys):
+def Open(fileobj, mode='r', **keys):
     # doc string generated dynamically below
 
     # make sure it's a dtype and not just a descr
-    return Recfile(fileobj, **keys)
+    return Recfile(fileobj, mode=mode, **keys)
 
 Open.__doc__="""
 %s
@@ -236,19 +236,19 @@ Open.__doc__="""
 class Recfile(object):
     __doc__=Open.__doc__
 
-    def __init__(self, fobj, **keys):
+    def __init__(self, fobj, mode='r', **keys):
         # aliases
         self.Read = self.read
         self.Write = self.write
 
-        self.open(fobj, **keys)
+        self.open(fobj, mode=mode, **keys)
 
     def __enter__(self):
         return self
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def open(self, fobj, **keys):
+    def open(self, fobj, mode='r', **keys):
         """
         Class:
             Recfile
@@ -262,7 +262,7 @@ class Recfile(object):
             which has identical syntax to this open() method.
         """
 
-        mode=keys.get('mode','r')
+        #mode=keys.get('mode','r')
         dtype=keys.get('dtype',None)
         nrows=keys.get('nrows',-9999)
 
