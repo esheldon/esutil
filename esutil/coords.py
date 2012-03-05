@@ -63,10 +63,11 @@
             parse a colon separated string representing right ascension ito
             degrees.
 
-        randsphere(numrand, system='lonlat'):
-            Generate random points on the sphere.  By default lon,lat are
+        randsphere(numrand, system='eq', ra_range=[0,360], dec_range=[-90,90]):
+            Generate random points on the sphere.  By default ra,dec are
             returned.  If system='xyz' then x,y,z are returned.
 
+        randcap(
 """
 license="""
   Copyright (C) 2009  Erin Sheldon
@@ -1021,55 +1022,80 @@ def radec2aitoff(ra, dec):
 
     return x,y
 
-def randsphere(num, system='lonlat'):
+def _check_range(rng, allowed):
+    if rng is None:
+        rng = allowed
+    else:
+        if not hasattr(rng,'__len__'):
+            raise ValueError("range object does not have len() method")
+
+        if rng[0] < allowed[0] or rng[1] > allowed[1]:
+            raise ValueError("lon_range should be within [%s,%s]" % allowed)
+    return rng
+
+def randsphere(num, ra_range=None, dec_range=None, system='eq'):
     """
-    Name:
-        randsphere
-    Purpose:
-        Generate random points all over the sphere
+    Generate random points on the sphere
 
-    Calling Sequence:
-        lon, lat = randsphere(num, system='lonlat')
+    You can limit the range in ra and dec.  To generate on a spherical cap, see
+    randcap() 
 
-    Inputs:
-        num: The number of randoms to generate
-    Keywords:
-        system: Default is 'lonlat' for longitude
-            and latitude system.  Can also be 'xyz'.
+    parameters
+    ----------
+    num: integer 
+        The number of randoms to generate
+    ra_range: list, optional
+        Should be within range [0,360].  Default [0,360]
+    dec_range: list, optional
+        Should be within range [-90,90].  Default [-90,90]
+    system: string
+        Default is 'eq' for the ra-dec system.  Can also be 'xyz'.
 
-    Outputs:
-        longitude on [0,360) and ,latitude on [-90,90)
-        or x,y,z for system='xyz'
+    output
+    ------
+        for system == 'eq' the return is a tuple
+            ra,dec = randsphere(...)
+        for system == 'xyz' the return is a tuple
+            x,y,z = randsphere(...)
 
-        lon,lat = randsphere(2000)
+    examples
+    --------
+        ra,dec = randsphere(2000, ra_range=[10,35], dec_range=[-25,15])
         x,y,z = randsphere(2000, system='xyz')
 
     """
 
-    # longitude [0,360)
-    lon = numpy.random.random(num)*360.0
+    ra_range = _check_range(ra_range, [0.0,360.0])
+    dec_range = _check_range(dec_range, [-90.0,90.0])
+
+    ra = numpy.random.random(num)
+    ra *= (ra_range[1]-ra_range[0])
+    if ra_range[0] > 0:
+        ra += ra_range[0]
 
     # number [-1,1)
+    cosdec_min = cos(deg2rad(90.0+dec_range[0]))
+    cosdec_max = cos(deg2rad(90.0+dec_range[1]))
     v = numpy.random.random(num)
-    v *= 2
-    v -= 1
+    v *= (cosdec_max-cosdec_min)
+    v += cosdec_min
 
+    numpy.clip(v,-1.0,1.0,v)
     # Now this generates on [0,pi)
-    lat = numpy.arccos(v)
+    dec = numpy.arccos(v)
 
     # convert to degrees
-    numpy.rad2deg(lat,lat)
+    rad2deg(dec,dec)
     # now in range [-90,90.0)
-    lat -= 90.0
+    dec -= 90.0
     
     if system == 'xyz':
-        x,y,z = eq2xyz(lon, lat)
+        x,y,z = eq2xyz(ra, dec)
         return x,y,z
     else:
-        return lon, lat
+        return ra, dec
 
-def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg'], 
-            get_radius=False):
+def randcap(nrand, ra, dec, rad, get_radius=False):
     """
     Generate random points in a sherical cap
 
@@ -1078,18 +1104,12 @@ def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg'],
 
     nrand:
         The number of random points
-    lon,lat:
-        The center of the cap in degrees.  The
-        longitide should go from [0,360) and
-        lat from [0,180]
+    ra,dec:
+        The center of the cap in degrees.  The ra should be within [0,360) and
+        dec from [-90,90]
     rad:
-        radius of the cap, same units as lon,lat
+        radius of the cap, same units as ra,dec
 
-    system: string, optional
-        Only equatorial 'eq' allowed for now 
-    units: list of strings
-        Units of input and output, default ['deg','deg'] but units can also be
-        'rad' for both input and output
     get_radius: bool, optional
         if true, return radius of each point in radians
     """
@@ -1097,22 +1117,18 @@ def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg'],
     rand_r = numpy.random.random(nrand)
     rand_r = sqrt(rand_r)*rad
 
-    if units[0] == 'deg':
-        numpy.deg2rad(rand_r,rand_r)
+    # put in degrees
+    numpy.deg2rad(rand_r,rand_r)
 
     # generate position angle uniformly 0,2*PI
     rand_posangle = numpy.random.random(nrand)*2*PI
 
-    if system == 'eq':
-        # [0,180]
-        theta = numpy.array(lat + 90, dtype='f8',ndmin=1,copy=True)
-        phi = numpy.array(lon,dtype='f8',ndmin=1,copy=True)
-    else:
-        raise ValueError("Only system='eq' supported")
+    theta = numpy.array(dec, dtype='f8',ndmin=1,copy=True)
+    phi = numpy.array(ra,dtype='f8',ndmin=1,copy=True)
+    theta += 90
 
-    if units[0] == 'deg':
-        numpy.deg2rad(theta,theta)
-        numpy.deg2rad(phi,phi)
+    numpy.deg2rad(theta,theta)
+    numpy.deg2rad(phi,phi)
 
     sintheta = sin(theta)
     costheta = cos(theta)
@@ -1127,6 +1143,7 @@ def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg'],
 
     numpy.clip(costheta2, -1, 1, costheta2)                    
 
+    # gives [0,pi)
     theta2 = arccos(costheta2)
     sintheta2 = sin(theta2)
 
@@ -1138,17 +1155,13 @@ def randcap(nrand, lon, lat, rad, system='eq', units=['deg','deg'],
     # note fancy usage of where
     phi2=numpy.where(rand_posangle > PI, phi+Dphi, phi-Dphi)
 
-    if units[1] == 'deg':
-        numpy.rad2deg(phi2,phi2)
-        numpy.rad2deg(theta2,theta2)
-        rand_lon  = phi2
-        rand_lat = theta2-90.0
-    else:
-        rand_lon  = phi2
-        rand_lat = theta2-numpy.pi/2.
+    numpy.rad2deg(phi2,phi2)
+    numpy.rad2deg(theta2,theta2)
+    rand_ra  = phi2
+    rand_dec = theta2-90.0
 
     if get_radius:
-        return rand_lon, rand_lat, rand_r
+        return rand_ra, rand_dec, rand_r
     else:
-        return rand_lon, rand_lat
+        return rand_ra, rand_dec
 
