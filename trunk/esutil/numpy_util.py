@@ -339,10 +339,11 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
         #stdout.write(l)
 
         if hasfields and recurse:
-            new_nspace = nspace + nname + 1 + ntype + 2
-            morelines = _print_field_info(array[n], 
-                                          nspace=new_nspace, 
-                                          recurse=recurse)
+            #new_nspace = nspace + nname + 1 + ntype + 2
+            new_nspace = nspace + 4
+            morelines = _get_field_info(array[n], 
+                                        nspace=new_nspace, 
+                                        recurse=recurse)
             lines += morelines
 
     return lines
@@ -1108,7 +1109,7 @@ def replicate(value, shape, dtype=None):
         data = numpy.empty(shape,dtype=tmp.dtype)
     else:
         data = numpy.empty(shape,dtype=dtype)
-    data[:] = value
+    data.fill(value)
     return data
 
 def is_big_endian(array):
