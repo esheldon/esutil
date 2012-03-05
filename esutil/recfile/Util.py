@@ -541,7 +541,7 @@ class Recfile(object):
 
         # read subset of rows *and* columns.
         data = sf['fieldname'][3:58]
-        data = sf[rowlist][fieldlist]
+        data = sf[fieldlist][rowlist]
 
         # Note, if you send just columns, a RecfileColumnSubset object is
         # returned
@@ -682,7 +682,7 @@ class Recfile(object):
                 raise IndexError("Index out of bounds")
 
         if stop < 0:
-            stop = self.nrows + start + 1
+            stop = self.nrows + stop
 
         if stop < start:
             # will return an empty struct

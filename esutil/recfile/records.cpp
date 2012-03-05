@@ -1137,7 +1137,7 @@ PyObject* Records::ExtractSubDescr(
 
 	if (mDebug) {cout<<"Extracting sub descr"<<endl;fflush(stdout);}
 	for (unsigned long long i=0; i<names.size(); i++) {
-		PyObject* item=
+		PyObject* item =
 			PyDict_GetItemString(descr->fields, names[i].c_str());
 
 		if (item!=NULL) {

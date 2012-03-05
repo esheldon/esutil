@@ -90,7 +90,7 @@ license="""
 
 try:
     import numpy
-    from numpy import where, sin, cos, arccos, arcsin, arctan2, sqrt
+    from numpy import where, sin, cos, arccos, arcsin, arctan2, sqrt, rad2deg, deg2rad
     have_numpy=True
 except:
     have_numpy=False
@@ -497,22 +497,27 @@ def sphdist(ra1, dec1, ra2, dec2, units=['deg','deg']):
     return theta
 
 
-def gcirc(ra1,dec1,ra2,dec2,getangle=False):
+def gcirc(ra1deg,dec1deg,ra2deg,dec2deg,getangle=False):
     """
     This is currently very inflexible: degrees in, radians out
     """
-    ra1  = numpy.array(ra1, dtype='f8',ndmin=1,copy=False)
-    dec1 = numpy.array(dec1,dtype='f8',ndmin=1,copy=False)
-    ra2  = numpy.array(ra2, dtype='f8',ndmin=1,copy=False)
-    dec2 = numpy.array(dec2,dtype='f8',ndmin=1,copy=False)
+    ra1  = numpy.array(ra1deg, dtype='f8',ndmin=1)
+    dec1 = numpy.array(dec1deg,dtype='f8',ndmin=1)
+    ra2  = numpy.array(ra2deg, dtype='f8',ndmin=1)
+    dec2 = numpy.array(dec2deg,dtype='f8',ndmin=1)
 
-    sindec1 = sin(dec1*D2R)
-    cosdec1 = cos(dec1*D2R)
+    deg2rad(ra1,ra1)
+    deg2rad(dec1,dec1)
+    deg2rad(ra2,ra2)
+    deg2rad(dec2,dec2)
 
-    sindec2 = sin(dec2*D2R)
-    cosdec2 = cos(dec2*D2R)
+    sindec1 = sin(dec1)
+    cosdec1 = cos(dec1)
 
-    radiff = (ra2-ra1)*D2R
+    sindec2 = sin(dec2)
+    cosdec2 = cos(dec2)
+
+    radiff = (ra2-ra1)
     cosradiff = cos(radiff)
     cosdis = sindec1*sindec2 + cosdec1*cosdec2*cosradiff
 
