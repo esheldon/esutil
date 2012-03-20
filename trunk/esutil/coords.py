@@ -1165,3 +1165,17 @@ def randcap(nrand, ra, dec, rad, get_radius=False):
     else:
         return rand_ra, rand_dec
 
+
+def rect_area(lon_min, lon_max, lat_min, lat_max):
+    """
+    Calculate the area of a rectangle on the sphere.
+
+    parameters
+    ----------
+    lon_min, lon_max, lat_min, lat_max:
+        Definition of the rectangle, in degrees
+    """
+    smax = sin(deg2rad(lat_max))
+    smin = sin(deg2rad(lat_min))
+    area = (smax-smin)*(lon_max-lon_min)
+    return numpy.abs(area)*R2D
