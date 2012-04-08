@@ -67,7 +67,9 @@
             Generate random points on the sphere.  By default ra,dec are
             returned.  If system='xyz' then x,y,z are returned.
 
-        randcap(
+        randcap(nrand,ra,dec,rad,get_radius=False):
+            Create random points in a cap, or disc, centered at the
+            input ra,dec location and with radius rad.
 """
 license="""
   Copyright (C) 2009  Erin Sheldon
@@ -409,18 +411,21 @@ def _xyz2thetaphi(x,y,z):
 
     return theta, phi
 
-def eq2xyz(ra, dec, dtype='f8'):
+def eq2xyz(ra, dec, dtype='f8', units='deg'):
     """
-    Name:
-        eq2xyz
-    Purpose:
-        Convert equatorial coordinates RA and DEC to x,y,z on
-        the unit sphere
-    Calling Sequence:
-        x,y,z = eq2xyz(ra,dec)
+    Convert equatorial coordinates RA and DEC to x,y,z on the unit sphere
+
+    parameters
+    ----------
+    ra: scalar or array
+        Right ascension. Can be an array
+    dec: scalar or array
+        Declination. Can be an array
+    units: string, optional
+        'deg' if the input is degrees, 'rad' if input
+        is in radians.  Default is degrees.
 
     Notes:
-        Inputs and outputs are degrees.
         This follows the same convention as the STOMP package.
     """
 
@@ -428,14 +433,30 @@ def eq2xyz(ra, dec, dtype='f8'):
     phi = numpy.array(dec, ndmin=1, copy=True, dtype=dtype)
 
     # in place is more efficient
-    theta *= D2R
-    phi *= D2R
+    if units == 'deg':
+        numpy.deg2rad(theta,theta)
+        numpy.deg2rad(phi,phi)
 
     theta -= _sdsspar['node']
 
     return _thetaphi2xyz(theta, phi)
 
-def xyz2eq(xin,yin,zin):
+def xyz2eq(xin,yin,zin, units='deg'):
+    """
+    Convert x,y,z on the unit sphere to RA DEC.
+
+    parameters
+    ----------
+    x,y,z: 
+        scalars or arrays as given by eq2xyz
+    units: string, optional
+        'deg' if the output is to be degrees, 'rad' if it is to be radians.
+        Default is degrees.
+
+    Notes:
+        This follows the same convention as the STOMP package.
+    """
+
     x = numpy.array(xin, ndmin=1, copy=False)
     y = numpy.array(yin, ndmin=1, copy=False)
     z = numpy.array(zin, ndmin=1, copy=False)
@@ -443,9 +464,9 @@ def xyz2eq(xin,yin,zin):
     theta,phi = _xyz2thetaphi(x,y,z)
     theta += _sdsspar['node']
 
-
-    theta *= R2D
-    phi *= R2D
+    if units == 'deg':
+        numpy.rad2deg(theta,theta)
+        numpy.rad2deg(phi,phi)
 
     atbound(theta, 0.0, 360.0)
 
@@ -456,41 +477,28 @@ def xyz2eq(xin,yin,zin):
 
 def sphdist(ra1, dec1, ra2, dec2, units=['deg','deg']):
     """
-    Name:
-        sphdist
-    Purpose:
-        Get the arc length between two points on the unit sphere
-    Calling Sequence:
-        d = sphdist(ra1,dec1,ra2,dec2,units=['deg','deg'])
-    Inputs:
-        ra1,dec1,ra2,dec2: 
-            Scalars or arrays.  Must be the same length.
-    Keywords:
-        units: 
-            A sequence containing the units of the in put and output.  Default
-            ['deg',deg'], which means inputs and outputs are in degrees.  Units
-            can be 'deg' or 'rad'
+    Get the arc length between two points on the unit sphere
 
+    parameters
+    ----------
+    ra1,dec1,ra2,dec2: scalar or array
+        Coordinates of two points or sets of points. 
+        Must be the same length.
+    units: sequence
+        A sequence containing the units of the input and output.  Default
+        ['deg',deg'], which means inputs and outputs are in degrees.  Units
+        can be 'deg' or 'rad'
     """
     
     units_in,units_out = units
 
     # note x,y,z from eq2xyz always returns 8-byte float
-    if units_in == 'rad':
-        x1,y1,z1 = eq2xyz(ra1, numpy.rad2deg(dec1))
-        x2,y2,z2 = eq2xyz(ra2, numpy.rad2deg(dec2))
-    else:
-        x1,y1,z1 = eq2xyz(ra1, dec1)
-        x2,y2,z2 = eq2xyz(ra2, dec2)
+    x1,y1,z1 = eq2xyz(ra1, dec1, units=units_in)
+    x2,y2,z2 = eq2xyz(ra2, dec2, units=units_in)
 
     costheta = x1*x2 + y1*y2 + z1*z2
-    w,=where(costheta > 1.0)
-    if w.size > 0:
-        costheta[w] = 1.0
+    costheta.clip(-1.0,1.0,out=costheta)
 
-    w,=where(costheta < -1.0)
-    if w.size > 0:
-        costheta[w] = -1.0
     theta = arccos(costheta)
 
     if units_out == 'deg':
@@ -522,13 +530,7 @@ def gcirc(ra1deg,dec1deg,ra2deg,dec2deg,getangle=False):
     cosradiff = cos(radiff)
     cosdis = sindec1*sindec2 + cosdec1*cosdec2*cosradiff
 
-    ww,=where(cosdis < -1.)
-    if ww.size > 0:
-        cosdis[ww] = -1
-    ww,=where(cosdis >  1.)
-    if ww.size > 0:
-        cosdis[ww] =  1
-
+    cosdis.clip(-1.0,1.0,out=cosdis)
     dis = arccos(cosdis)
 
     if getangle:
@@ -537,10 +539,6 @@ def gcirc(ra1deg,dec1deg,ra2deg,dec2deg,getangle=False):
         return dis,theta
     else:
         return dis
-
-#
-# SDSS specific conversions
-#
 
 # utility functions
 def atbound(longitude, minval, maxval):
@@ -572,6 +570,10 @@ def atbound2(theta, phi):
     if w.size > 0:
         phi[w] = 0.0
            
+#
+# SDSS specific conversions
+#
+
 
 def eq2sdss(ra_in, dec_in, dtype='f8'):
     """
