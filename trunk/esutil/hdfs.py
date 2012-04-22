@@ -1,6 +1,15 @@
 import os
 from sys import stderr
 
+def is_in_hdfs(fname):
+    """
+    Return true if the file name starts with hdfs://
+    """
+    if fname.find('hdfs://') == 0:
+        return True
+    else:
+        return False
+
 def exists(hdfs_url):
     """
     Test if the url exists.
@@ -55,9 +64,10 @@ def stat(hdfs_url):
         return eval(stdo.strip())
 
 
-def ls(hdfs_url='', recurse=False):
+def ls(hdfs_url='', recurse=False, full=False):
     """
     List the hdfs URL.  If the URL is a directory, the contents are returned.
+    full=True ensures hdfs:// is prepended
     """
     import subprocess
     from subprocess import PIPE
@@ -79,6 +89,8 @@ def ls(hdfs_url='', recurse=False):
         if len(ls) == 8:
             # this is a file description line
             fname=ls[-1]
+            if full:
+                fname = 'hdfs://'+fname
             flist.append(fname)
 
     return flist
