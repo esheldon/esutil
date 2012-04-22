@@ -177,8 +177,8 @@ class Generator(object):
             # points were entered
             self.isfunc=False
             self.pofx = numpy.array(pofx, ndmin=1, copy=False)
-            if self.xinput.size != self.pofx.size:
-                raise ValueError("x and pofx must be same size")
+            if self.xinput.shape != self.pofx.shape:
+                raise ValueError("x and pofx must be same shape")
 
             self.initialize_points()
 
