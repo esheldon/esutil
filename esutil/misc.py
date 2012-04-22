@@ -52,6 +52,14 @@ except:
 import pydoc
 
 
+def wlog(*args):
+    narg = len(args)
+    for i,arg in enumerate(args):
+        stderr.write("%s" % arg)
+        if i < (narg-1):
+            stderr.write(" ")
+    stderr.write('\n')
+
 def center_text(text, width):
     text = text.strip()
     space = width - len(text)
