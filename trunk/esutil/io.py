@@ -46,6 +46,7 @@ from esutil import xmltools
 from esutil import sfile
 from esutil import ostools
 from esutil import hdfs
+from esutil.hdfs import is_in_hdfs
 import os
 
 import copy
@@ -711,12 +712,6 @@ def get_ftype(filename):
     typ = fext2ftype(fext)
     return typ
 
-
-def is_in_hdfs(fname):
-    if fname.find('hdfs://') == 0:
-        return True
-    else:
-        return False
 
 def fexists(fname):
     if is_in_hdfs(fname):
