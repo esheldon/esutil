@@ -115,7 +115,7 @@ class DirStack(object):
             that directory.
         """
         if len(self._dirs) == 0:
-            stdout.write("Directory stack is empty\n")
+            stderr.write("Directory stack is empty\n")
             return
 
         dir = self._dirs.pop()
@@ -274,13 +274,17 @@ def exec_process(command,
 
     # the user can send file names, PIPE, or a file object
     if isinstance(stdout_file, str):
+        stdout_was_entered=False
         stdout_fileobj = open(stdout_file, 'w')
     else:
+        stdout_was_entered=True
         stdout_fileobj=stdout_file
 
     if isinstance(stderr_file, str):
+        stderr_was_entered=False
         stderr_fileobj = open(stderr_file, 'w')
     else:
+        stderr_was_entered=True
         stderr_fileobj = stderr_file
 
 
@@ -315,10 +319,10 @@ def exec_process(command,
         # this is not set until we call pobj.communicate()
         exit_status = pobj.returncode
 
-    # If they were opened files, close them
-    if isinstance(stdout_fileobj, file):
+    # close them if we opened them
+    if isinstance(stdout_fileobj, file) and not stdout_was_entered:
         stdout_fileobj.close()
-    if isinstance(stderr_fileobj, file):
+    if isinstance(stderr_fileobj, file) and not stderr_was_entered:
         stderr_fileobj.close()
 
     return exit_status, stdout_ret, stderr_ret
@@ -351,7 +355,7 @@ def _poll_subprocess(pobj, timeout, poll):
     # exit status will not be None upon completion.  If we passed
     # the timeout we want to kill the process.
     if exit_status is None:
-        stdout.write("Process is taking longer than %s seconds.  "
+        stderr.write("Process is taking longer than %s seconds.  "
                      "Ending process\n" % timeout)
         os.kill(pobj.pid, signal.SIGTERM)
         exit_status = 1024
@@ -374,8 +378,15 @@ def makedirs_fromfile(f, verbose=False):
     verbose: boolean, optional
         Optionally print that the dir is being created.
     """
+    from esutil import hdfs
     d=os.path.dirname(f)
-    if not os.path.exists(d):
-        if verbose:
-            print 'creating dir:',d
-        os.makedirs(d)
+    if hdfs.is_in_hdfs(f):
+        if not hdfs.exists(d):
+            if verbose:
+                print 'creating dir:',d
+            hdfs.mkdir(d)
+    else:
+        if not os.path.exists(d):
+            if verbose:
+                print 'creating dir:',d
+            os.makedirs(d)
