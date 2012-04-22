@@ -170,7 +170,7 @@ class HTM(htmc.HTMC):
 
             m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,maxmatch=0)
 
-            for i in range(m1.size):
+            for i in xrange(m1.size):
                 print m1[i],m2[i],d12[i]
 
             # this produces
