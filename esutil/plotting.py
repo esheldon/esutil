@@ -41,7 +41,7 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
                  yerr=None,
                  xrange=None,
                  yrange=None,
-                 type='filled_circle', 
+                 type='filled circle', 
                  color=None,
                  xlabel=None, 
                  ylabel=None, 
@@ -105,6 +105,8 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
     if 'color' in keywords:
         pkeywords['color'] = keywords['color']
 
+    if 'width' in keywords:
+        pkeywords['width'] = keywords['width']
     if type in ["solid","dotted","dotdashed","shortdashed",
                 "longdashed","dotdotdashed","dotdotdotdashed"]:
         if 'width' in keywords:
@@ -349,12 +351,18 @@ def bhist_vs(data, *fields, **keys):
         A set of fields names to plot.  The first is the "x" variable The data
         are binned according to this variable.  If only a single field is sent,
         a simple histogram is shown.  If multiple are given, the average as a
-        function of x is shown in separate plots.  Note if nperbin= is given,
-        no histogram is shown.
+        function of x is shown in separate plots.  
+        
+        Note if nperbin= is given, no histogram is shown unless binsize is
+        *also* given (to be implemented).  In that case a histogram of "x" is
+        also shown in light grey on the background.
+
     stype: string
         The type of statistic to plot
-            if 'mean', plot the mean with errors as a function of the binning field.
-            if 'sdev', plot the standard deviation as a function of the binning field.
+            if 'mean', plot the mean with errors as a function of the 
+                binning field.
+            if 'sdev', plot the standard deviation as a function of the 
+                binning field.
     names: dict
         Dictionary with names for plotting, e.g. if a field name is 'x'
         this could be {'x':'new name for x'}.
