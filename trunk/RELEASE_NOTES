@@ -1,3 +1,24 @@
+v0.5.1 (2012-04-27)
+----------------------------------------------------------------------
+
+Updates:
+    Updated a number of places to use stderr for messages.
+
+    esutil/coords.py: Added randcap function to produce random
+        points in a spherical cap.  Use clip() instead of
+        where in sphdist(), gcirc().  Added rec_area() to
+        calculate the area of a rectangle in longitude and
+        latitude.
+    esutil/hfds.py: Added "du" function to calculate disk usage.
+        Added is_in_hdfs() function.  File listings now include
+        the hdfs:// in front by default.
+    esutil/io.py: In read() Added ability to read rec file with
+        no header of dtype is sent.
+    esutil.stat: Added cov2cor and cor2cov functions to convert
+        between covariance matrices and correlation matrices.
+    esutil/misc.py: Added wlog() for quick logging to stderr.
+    esutil/plotting.py: Added width keyword to bscatter.
+
 v0.5.0 (2012-01-15)
 ----------------------------------------------------------------------
 New files:

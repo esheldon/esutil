@@ -70,6 +70,11 @@
         randcap(nrand,ra,dec,rad,get_radius=False):
             Create random points in a cap, or disc, centered at the
             input ra,dec location and with radius rad.
+
+        rect_area(lon_min, lon_max, lat_min, lat_max)
+            Calculate the area of a rectangle on the sphere.
+
+
 """
 license="""
   Copyright (C) 2009  Erin Sheldon
