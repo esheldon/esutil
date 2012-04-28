@@ -1,5 +1,6 @@
 import sys
 
+have_element_tree=True
 try:
     # works in python 2.5
     from xml.etree import cElementTree as ElementTree
@@ -8,6 +9,7 @@ except:
         # works in python 2.4
         import cElementTree as ElementTree
     except:
+        have_element_tree=False
         stderr.write('Failed to import ElementTree')
 
 # calling example
