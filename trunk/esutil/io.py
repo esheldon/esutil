@@ -316,7 +316,9 @@ def write(fileobj, data, **keywords):
                     useful for things like sqlite database input.
 
         xml
-            Extensible Markup Language
+            Extensible Markup Language.  Extra keyword roottag= gives
+            a root tag name.  If not sent, it is assumed the input
+            is a dict and the first key found is the root.
         json
             JavaScript Object Notation.  Less flexible than XML but more useful
             in most practical situations such as storing inhomogeneous data in
@@ -350,6 +352,8 @@ def write(fileobj, data, **keywords):
             write_fits(fobj, data, **keywords)
         elif type == 'yaml':
             write_yaml(fobj, data, **keywords)
+        elif type == 'xml':
+            write_xml(fobj, data, **keywords)
         elif type == 'json':
             json_util.write(data, fobj, **keywords)
         elif type == 'rec':
@@ -595,6 +599,10 @@ def read_xml(fileobj, **keywords):
     seproot=keywords.get('seproot',False)
     data = xmltools.xml2dict(fileobj, noroot=noroot, seproot=seproot)
     return data
+
+def write_xml(fileobj, data, **keywords):
+    roottag=keywords.get('roottag',None)
+    xmltools.dict2xml(data, fileobj, roottag=roottag)
 
 def read_yaml(fileobj, **keywords):
     if isinstance(fileobj, (str,unicode)):
