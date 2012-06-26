@@ -24,6 +24,12 @@ Methods:
         Convert the input covariance matrix to a correlation matrix
     cor2cov(cor, diagerr)
         Convert a correlation matrix and diagonal errors to a covariance matrix.
+    cholesky_sample(cov, n, means=None):
+        Sample the input covariance using a cholesky decomposition
+
+        This can be used to produce the mean and errors on combined parameters,
+        taking into account the covariance.
+
 """
 license="""
   Copyright (C) 2010  Erin Sheldon
@@ -1034,3 +1040,135 @@ def cov2cor(cov):
             cor[ix,iy] = cov[ix,iy]/sqrt(cxx*cyy)
 
     return cor
+
+def cholesky_sample(cov, n, means=None):
+    """
+    Sample the input covariance using a cholesky decomposition
+
+    This can be used to produce the mean and errors on combined parameters,
+    taking into account the covariance.
+
+    parameters
+    ----------
+    cov: array
+        A 2-d array representing the covariance of the parameters
+    n: integer
+        The number of random points to generate
+    means: array, optional
+        The mean values to add to the random points; by default
+        the randoms are centered on 0
+    
+    example:
+        cov = array([[1.5,0.3],
+                     [0.3,2.7]])
+        means=array([5.6, 12.3])
+        r = cholesky_sample(cov, 100000, means=means)
+
+        x = (r[0,:]
+        erand = (r[1,:]-r[0,:])/(r[1,:]+r[0,:])
+        e_mean = erand.mean()
+        e_err = erand.std()
+    """
+    npar = cov.shape[0]
+    if means is not None:
+        nm=len(means)
+        if nm != cov.shape[0]:
+            raise ValueError("expected %d mean values, got %d" % (npar,nm))
+
+    M = numpy.linalg.cholesky(cov)
+
+    r=numpy.random.randn(npar*n).reshape(npar,n)
+
+    V = numpy.dot(M,r)
+
+    if means is not None:
+        for i in xrange(npar):
+            V[i,:] += means[i]
+
+    return V
+
+def test_cholesky():
+    import esutil as eu
+    cov=array([[1.0,0.1,0.1],
+               [0.1,2.0,0.1],
+               [0.1,0.1,3.0]])
+    means = [5.0,4.0,8.0]
+
+    n = 100000
+
+    r = cholesky_sample(cov,n,means=means)
+
+    npar = len(means)
+
+    tmp=('mean: %10.6g +/- %10.6g meas: %10.6g +/- %10.6g '
+         'emean: %10.6g efrac: %10.6g')
+    print 'n:',n
+    for i in xrange(npar):
+        mtrue=means[i]
+        etrue=sqrt(cov[i,i])
+        m = r[i,:].mean()
+        e = r[i,:].std()
+        emean = e/sqrt(n)
+        efrac= emean/m
+        text = tmp % (mtrue,etrue,m,e,emean,efrac)
+        print text
+
+    # sum
+    mtrue = means[0] + means[1]
+    etrue = sqrt(cov[0,0] + cov[1,1] + 2*cov[0,1])
+    sum_0_1 = r[0,:] + r[1,:]
+    #eu.plotting.bhist(sum_0_1, binsize=0.2*etrue)
+    m_sum_0_1 = sum_0_1.mean()
+    e_sum_0_1 = sum_0_1.std()
+    emean_sum_0_1 = e_sum_0_1/sqrt(n)
+    efrac_sum_0_1 = emean_sum_0_1/m_sum_0_1 
+    
+    print 'sum 0/1'
+    text = tmp % (mtrue,etrue,m_sum_0_1,e_sum_0_1,emean_sum_0_1,efrac_sum_0_1)
+    print text
+
+    
+    mexp = (means[2]-means[0])/(means[2]+means[0])
+    eexp = -9999
+
+    ellip_01 = (r[2,:]-r[0,:])/(r[2,:]+r[0,:])
+    m_01 = ellip_01.mean()
+    e_01 = ellip_01.std()
+    emean_01 = e_01/sqrt(n)
+    efrac_01 = emean_01/m_01 
+ 
+    eu.plotting.bhist(ellip_01, binsize=0.2*e_01)
+
+    print 'ellip (mean and err can be different)'
+    text = tmp % (mexp,eexp,m_01,e_01,emean_01,efrac_01)
+    print text
+
+    m_01, e_01 = eu.stat.sigma_clip(ellip_01,nsig=5)
+    emean_01 = e_01/sqrt(n)
+    efrac_01 = emean_01/m_01 
+    print 'ellip with sigma clip 5'
+    text = tmp % (mexp,eexp,m_01,e_01,emean_01,efrac_01)
+    print text
+
+    return
+
+    # ratio
+    mexp = means[0]/means[1]
+    eexp = mexp*sqrt(cov[0,0]/means[0]**2 
+                       + cov[1,1]/means[1]**2
+                       - 2*cov[0,1]/means[0]/means[1])
+
+    w,=where( numpy.abs(r[1,:] > 1.e-2))
+    rat_0_1 = r[0,w]/r[1,w]
+    #m_rat_0_1 = rat_0_1.mean()
+    #e_rat_0_1 = rat_0_1.std()
+    ex={}
+    m_rat_0_1, e_rat_0_1 = eu.stat.sigma_clip(rat_0_1,extra=ex,nsig=5)
+    w=ex['index']
+    eu.plotting.bhist(rat_0_1[w], binsize=0.2*eexp)
+    emean_rat_0_1 = e_rat_0_1/sqrt(w.size)
+    efrac_rat_0_1 = emean_rat_0_1/m_rat_0_1 
+    
+    print 'ratio 0/1 (mean and err can be different)'
+    text = tmp % (mexp,eexp,m_rat_0_1,e_rat_0_1,emean_rat_0_1,efrac_rat_0_1)
+    print text
