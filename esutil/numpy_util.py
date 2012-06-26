@@ -1657,10 +1657,12 @@ def randind(nmax, nrand, dtype=None):
         else:
             dtype = 'u4'
 
-    ind=numpy.zeros(nrand,dtype=dtype)
-
     rnd = numpy.random.random(nrand)
-    ind[:] = arrscl( rnd, 0, nmax-1, arrmin=0.0, arrmax=1.0 )
+    if nrand == 1:
+        ind = int(rnd*nmax)
+    else:
+        ind=numpy.zeros(nrand,dtype=dtype)
+        ind[:] = arrscl( rnd, 0, nmax-1, arrmin=0.0, arrmax=1.0 )
 
     return ind
 
