@@ -119,12 +119,6 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         Split up an array into chunks of at least a given size.  Return a
         list of these subarrays.  The ordering is perserved.
 
- 
-    randind(nmax, nrand)
-        Return nrand random indices, with replacement, in the open 
-        range [0,nmax)
-
-
 """ 
 
 license="""
@@ -149,9 +143,6 @@ import os
 import sys
 from sys import stdout, stderr
 import copy
-import stat
-import esutil
-import esutil as eu
 import pydoc
 
 try:
@@ -159,6 +150,12 @@ try:
     have_numpy=True
 except:
     have_numpy=False
+
+# for backwards compatibility
+from stat.util import random_indices as random_subset
+
+import esutil
+import misc as eu_misc
 
 def where1(conditional_expression):
     """
@@ -1635,6 +1632,8 @@ def splitarray(nper, var_input):
 
 def randind(nmax, nrand, dtype=None):
     """
+    OBSOLETE, use numpy.random.randint
+
     Name:
         randind
     Calling Sequence:
@@ -1666,63 +1665,6 @@ def randind(nmax, nrand, dtype=None):
 
     return ind
 
-
-def random_subset(imax, nrand, unique=True, verbose=False, method='iter'):
-    """
-    Name:
-        random_subset
-    Calling Sequence:
-        ind = random_subset(imax, nrand)
-    Purpose:
-        Return a random selection of indices in [0,imax) of
-        size nrand
-    Inputs:
-        imax: range to draw from is [0,imax)
-        nrand: Number of randoms to create.
-
-    """
-
-    nrand=int(nrand)
-    if nrand > imax:
-        raise ValueError("number of requested randoms must be "
-                         "<= imax")
-
-    if method=='sort':
-        r=numpy.random.sample(imax)
-        s=r.argsort()
-        return s[0:nrand]
-    elif method=='iter':
-        r = numpy.random.randint(0, imax, nrand)
-        if not unique:
-            return
-
-        ur = numpy.unique(r)
-        nkeep = ur.size
-
-        nkeep = 0
-        while nkeep < nrand:
-            tmp = numpy.random.randint(0, imax, nrand-nkeep)
-            if not unique:
-                return tmp
-
-            if r is None:
-                r = tmp.copy()
-            else:
-                r[nkeep:nrand] = tmp[:]
-            
-            ur = numpy.unique(r)
-            nkeep = ur.size
-
-            if verbose:
-                stdout.write('  nkeep: %s/%s\n' % (nkeep,nrand))
-
-            if nkeep != nrand:
-                r[0:nkeep] = ur[:]
-            else:
-                return r
-
-    else:
-        raise ValueError("method should be sort or iter")
 
 
 class ArrayWriter:
@@ -1983,7 +1925,7 @@ class ArrayWriter:
         format = keys.get('format',None)
 
 
-        if esutil.misc.isstring(names_in[0]):
+        if eu_misc.isstring(names_in[0]):
             names = names_in
         else:
             names = []
@@ -1994,7 +1936,7 @@ class ArrayWriter:
         
         nnames = len(names)
 
-        if header == True or esutil.misc.isstring(header):
+        if header == True or eu_misc.isstring(header):
             if header==True:
                 # create a header from the names
                 if altnames is not None:
@@ -2083,7 +2025,7 @@ class ArrayWriter:
 
         format = keys.get('format',None)
 
-        if esutil.misc.isstring(names_in[0]):
+        if eu_misc.isstring(names_in[0]):
             names = names_in
         else:
             names = []
@@ -2198,10 +2140,10 @@ class ArrayWriter:
         for i in xrange(len(fields)): 
             n=fields[i]
             pname=printnames[i]
-            header += forms[n] % eu.misc.center_text(pname,max_lens[n])
+            header += forms[n] % eu_misc.center_text(pname,max_lens[n])
 
         if title is not None:
-            title = eu.misc.center_text(title, len(header))
+            title = eu_misc.center_text(title, len(header))
 
         if self._page:
             if title is not None:

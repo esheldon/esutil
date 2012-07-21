@@ -69,7 +69,7 @@ try:
 except:
     have_numpy=False
 
-import esutil.numpy_util as numpy_util
+import _stat_util
 
 class Binner(dict):
     """
@@ -1172,3 +1172,29 @@ def test_cholesky():
     print 'ratio 0/1 (mean and err can be different)'
     text = tmp % (mexp,eexp,m_rat_0_1,e_rat_0_1,emean_rat_0_1,efrac_rat_0_1)
     print text
+
+
+
+
+def random_indices(imax, nrand, **keys):
+    """
+    Get a unique random selection of indices in [0,imax)
+
+    parameters
+    ----------
+    imax: 
+        range to draw from is [0,imax)
+    nrand:
+        Number of randoms to create.
+    unique:
+        If False, the sample will have replacement, and nrand
+        can be greater than imax
+    """
+
+    unique = keys.get('unique',True)
+
+    if not unique:
+        return numpy.random.randint(0, imax, nrand)
+    else:
+        return _stat_util.random_sample(imax, nrand)
+
