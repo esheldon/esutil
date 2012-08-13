@@ -2,6 +2,10 @@ Updates:
     esutil/io.py: 
         Added writing of xml files.
 
+New methods:
+    esutil/numpy_util.py: descr_to_native. New function to
+        remove byte order information from numpy type descriptor.
+
 v0.5.1 (2012-04-27)
 ----------------------------------------------------------------------
 

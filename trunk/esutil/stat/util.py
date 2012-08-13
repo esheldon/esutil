@@ -4,31 +4,40 @@ Package:
 
 This is a sub-package of the esutil package. The full reference is esutil.stat
 
-Methods:
-    histogram:  
-        Calculate the histogram of the input data.  The reverse indices are
-        also optionally calculated.  This function behaves similarly to the
-        IDL histogram function.  Also has the option to use weights, and
-        to tabulate a large number of statistics for each bin.
-    histogram2d:  
-        Histgram two variables.
-    wmom:  
-        Calculate weighted mean and error for the given input data.
-    sigma_clip:  
-        Return the sigma-clipped mean and error for the input data.
-    interplin:  
-        Perform linear interpolation.  This function is less powerful than
-        scipy.interpolate.interp1d but behaves like the IDL interpol()
-        function, including extrapolation beyond boundaries.
-    cov2cor(cov)
-        Convert the input covariance matrix to a correlation matrix
-    cor2cov(cor, diagerr)
-        Convert a correlation matrix and diagonal errors to a covariance matrix.
-    cholesky_sample(cov, n, means=None):
-        Sample the input covariance using a cholesky decomposition
+classes
+-------
+Binner: 
+    A class for binning data.
 
-        This can be used to produce the mean and errors on combined parameters,
-        taking into account the covariance.
+functions
+-------
+histogram:  
+    Calculate the histogram of the input data.  The reverse indices are
+    also optionally calculated.  This function behaves similarly to the
+    IDL histogram function.  Also has the option to use weights, and
+    to tabulate a large number of statistics for each bin.
+histogram2d:  
+    Histgram two variables.
+wmom:  
+    Calculate weighted mean and error for the given input data.
+sigma_clip:  
+    Return the sigma-clipped mean and error for the input data.
+interplin:  
+    Perform linear interpolation.  This function is less powerful than
+    scipy.interpolate.interp1d but behaves like the IDL interpol()
+    function, including extrapolation beyond boundaries.
+cov2cor(cov)
+    Convert the input covariance matrix to a correlation matrix
+cor2cov(cor, diagerr)
+    Convert a correlation matrix and diagonal errors to a covariance matrix.
+cholesky_sample(cov, n, means=None):
+    Sample the input covariance using a cholesky decomposition
+
+    This can be used to produce the mean and errors on combined parameters,
+    taking into account the covariance.
+
+random_sample:
+    Get a unique random selection of indices in [0,imax)
 
 """
 license="""
@@ -80,7 +89,7 @@ class Binner(dict):
     Examples
     --------
     For more examples, see the dohist() and calc_stats() methods.
-    1-d:
+    1 variable:
         b=Binner(x)
         # few ways to calculate hist
         b.dohist(binsize=0.1)
@@ -100,7 +109,7 @@ class Binner(dict):
         b.dohist(binsize=0.1)
         b.calc_stats()
 
-    2-d:
+    2 variables (get averages of the second in the bins of the first):
         b=Binner(x,y)
         b.dohist(nperbin=10)
         b.calc_stats()

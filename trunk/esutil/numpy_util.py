@@ -1226,6 +1226,24 @@ def to_native(array, inplace=False, keep_dtype=False):
     return outdata
 
 
+def descr_to_native(descr):
+    """
+    Remove byte order information from the input numpy dtype
+    descriptor.
+
+    parameters
+    ----------
+    descr:
+        Numpy type descriptor.  Note a dtype object.
+    """
+    newd=[]
+    for d in descr:
+        nd = list(copy.deepcopy(d))
+        # remove any byte order info from front of type
+        nd[1] = nd[1][1:]
+        nd = tuple(nd)
+        newd.append(nd)
+    return newd
 
 
 def to_big_endian(array, inplace=False, keep_dtype=False):
