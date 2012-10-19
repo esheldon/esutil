@@ -45,6 +45,7 @@ Modification History:
 """
 try:
     import numpy
+    from numpy import log,exp,sqrt,any,pi
     have_numpy=True
 except:
     have_numpy=False
@@ -93,8 +94,9 @@ class Generator(object):
         xrange=[xmin,xmax]:  If p(x) is a function, you can enter xrange and nx
             and a set of x values will be generated.
         nx:  The number of points to generate in [xmin,xmax].  If p(x) is a
-            function you can enter xrange and nx and a set of x values will
-            be generated.
+            function you must enter xrange and nx and a set of x values will
+            be generated to find max(p(x)).  This could also be done with
+            a maximizer from scipy
 
         method:  The method used for getting random points. 
 
@@ -393,6 +395,48 @@ class Generator(object):
         plt.add(py,ph)
         plt.show()
 
+
+class LogNormal:
+    """
+    parameters
+    ----------
+    mean:
+        such that <x> in linear space is mean.  This implies the mean in log(x)
+        is 
+            <log(x)> = log(mean) - 0.5*log( 1 + sigma**2/mean**2 )
+    sigma:
+        such than the variace in linear space is sigma**2.  This implies
+        the variance in log space is
+            var(log(x)) = log( 1 + sigma**2/mean**2 )
+    """
+    def __init__(self, mean, sigma):
+        self.mean=mean
+        self.sigma=sigma
+
+        self.logmean = log(mean) - 0.5*log( 1 + sigma**2/mean**2 )
+        self.logvar = log(1 + sigma**2/mean**2 )
+        self.logivar = 1./self.logvar
+
+        self.norm = 1/sqrt(2*pi*self.logvar)
+        self.logofnorm = log(self.norm)
+
+    def lnprob(self, x):
+        if isinstance(x,numpy.ndarray):
+            if any(x <= 0):
+                raise ValueError("values of x must be > 0")
+        else:
+            if x <= 0:
+                raise ValueError("values of x must be > 0")
+
+        logx = log(x)
+
+        chi2 = -0.5*self.logivar*(logx-self.logmean)**2
+
+        lnprob = self.logofnorm + chi2 - logx
+        return lnprob
+
+    def prob(self, x):
+        return exp(self.lnprob(x))
         
 def test_generator(doplot=False):
     """
