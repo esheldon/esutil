@@ -410,6 +410,8 @@ class LogNormal:
             var(log(x)) = log( 1 + sigma**2/mean**2 )
     """
     def __init__(self, mean, sigma):
+        mean=float(mean)
+        sigma=float(sigma)
         self.mean=mean
         self.sigma=sigma
 
