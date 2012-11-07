@@ -141,8 +141,14 @@ class Generator(object):
     """
 
 
-    def __init__(self, pofx, x=None, xrange=None, nx=None, 
-                 method='accum', cumulative=False, seed=None):
+    def __init__(self, 
+                 pofx, 
+                 x=None, 
+                 xrange=None, 
+                 nx=None, 
+                 method='accum', 
+                 cumulative=False, 
+                 seed=None):
 
         # make sure the method is valid
         self._check_method(method)
@@ -396,6 +402,137 @@ class Generator(object):
         plt.show()
 
 
+class CutGenerator(object):
+    """
+    Generate random points from an arbitrary input probability distribution.
+
+    The method is the "cut" method: Points are generated in the plane
+    [xmin,xmax] [0,max(pofx)] and points below the curve are kept.
+
+    This class is specialized to the case where you have a function for pofx
+    and you know the maximum of the function.
+
+    parameters
+    ----------
+    pofx: Either an array of points or a function.  If p(x) is an array sample
+        from the p(x) you must also enter the corresponding x values.
+    xrange: 2-element sequence
+        The range over which random points will be generated.
+        [xmin,xmax]
+    pofx_max:
+        The maximum of the function over the input range.
+    seed: bool,optional
+        the seed for the random number generator
+
+    Examples:
+        import esutil
+        def gaussfunc(x):
+            return numpy.exp(-0.5*x**2)
+        pofx_max=1.0
+        gen = esutil.random.CutGenerator(gaussfunc, [-5,5], 1.0)
+        rand = gen.genrand(1000000)
+
+    Revision History:
+        2012-11-06: Created, Erin Sheldon, BNL.
+    """
+
+
+    def __init__(self, 
+                 pofx, 
+                 xrange,
+                 pofx_max,
+                 seed=None):
+
+        self.pofx=pofx
+        self.xmin=xrange[0]
+        self.xmax=xrange[1]
+        self.xwidth=xrange[1]-xrange[0]
+        self.pofx_max=pofx_max
+        self.seed=seed
+    
+        if self.seed is not None:
+            numpy.random.seed(seed=seed)
+
+    def genrand(self, numrand, seed=None):
+        """
+        Generate random points from the input probability distribution.
+
+        parameters
+        ----------
+        numrand: integer
+            The number of randoms to generate
+        seed: integer, optional
+            A new seed for the random number generator
+        """
+
+        if seed is not None:
+            numpy.random.seed(seed=seed)
+
+        rand = numpy.zeros(numrand,dtype='f8')
+
+        nleft=numrand
+        ngood=0
+        nleft=numrand
+        while nleft > 0:
+
+            # generate x,y values in a plane covering [xmin,xmax] [0,max(p(x))]
+            randx, randy, pvals = self.generate_cut_values(nleft)
+
+            # keep ones where the random y values lie under the interpolated
+            # curve
+            w,=numpy.where(randy < pvals)
+            if w.size > 0:
+                rand[ngood:ngood+w.size] = randx[w]
+                ngood += w.size
+                nleft -= w.size
+
+        return rand
+
+    def generate_cut_values(self, num):
+        randx = numpy.random.random(num)
+        randy = numpy.random.random(num)
+
+        # get x,y on the right range and evaluate function
+        randx *= self.xwidth
+        randx += self.xmin
+        randy *= self.pofx_max
+        pvals = self.pofx(randx)
+
+        return randx, randy, pvals
+
+    def test(self, nrand=500000):
+        """
+        Generate some randoms and compare to input distribution
+        """
+
+        import biggles
+
+        # generate some randoms
+        rand = self.genrand(nrand)
+
+        std=rand.std()
+        binsize=std*0.2
+
+        xvals = numpy.arange(self.xmin, self.xmax, binsize)
+        yvals = self.pofx(xvals)
+        h = eu.stat.histogram(rand, 
+                              min=xvals[0]-binsize/2, 
+                              max=xvals[-1]+binsize/2, 
+                              binsize=binsize)
+
+        # since on same grid can normalize simply
+        h = h/float(h.sum())
+        yvals = yvals/float(yvals.sum())
+
+        plt=biggles.FramedPlot()
+        py = biggles.Histogram(yvals, x0=xvals[0], binsize=binsize)
+        ph = biggles.Histogram(h, x0=xvals[0], binsize=binsize, color='red')
+            
+        plt.add(py,ph)
+        plt.show()
+
+
+
 class LogNormal:
     """
     parameters
@@ -410,6 +547,7 @@ class LogNormal:
             var(log(x)) = log( 1 + sigma**2/mean**2 )
     """
     def __init__(self, mean, sigma):
+        from math import log,exp,sqrt
         mean=float(mean)
         sigma=float(sigma)
         self.mean=mean
@@ -421,6 +559,9 @@ class LogNormal:
 
         self.norm = 1/sqrt(2*pi*self.logvar)
         self.logofnorm = log(self.norm)
+
+        self.mode=exp(self.logmean - self.logvar)
+        self.maxval = self.prob(self.mode)
 
     def lnprob(self, x):
         if isinstance(x,numpy.ndarray):
