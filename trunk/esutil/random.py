@@ -511,7 +511,7 @@ class CutGenerator(object):
         rand = self.genrand(nrand)
 
         std=rand.std()
-        binsize=std*0.2
+        binsize=std*0.05
 
         xvals = numpy.arange(self.xmin, self.xmax, binsize)
         yvals = self.pofx(xvals)
@@ -532,9 +532,10 @@ class CutGenerator(object):
         plt.show()
 
 
-
 class LogNormal:
     """
+    Lognormal distribution
+
     parameters
     ----------
     mean:
@@ -545,6 +546,15 @@ class LogNormal:
         such than the variace in linear space is sigma**2.  This implies
         the variance in log space is
             var(log(x)) = log( 1 + sigma**2/mean**2 )
+    methods
+    -------
+    sample(nrand):
+        Get nrand random deviates from the distribution
+    lnprob(x):
+        Get the natural logarithm of the probability of x.  x can
+        be an array
+    prob(x):
+        Get the probability of x.  x can be an array
     """
     def __init__(self, mean, sigma):
         from math import log,exp,sqrt
@@ -555,6 +565,7 @@ class LogNormal:
 
         self.logmean = log(mean) - 0.5*log( 1 + sigma**2/mean**2 )
         self.logvar = log(1 + sigma**2/mean**2 )
+        self.logsigma = sqrt(self.logvar)
         self.logivar = 1./self.logvar
 
         self.norm = 1/sqrt(2*pi*self.logvar)
@@ -564,6 +575,10 @@ class LogNormal:
         self.maxval = self.prob(self.mode)
 
     def lnprob(self, x):
+        """
+        Get the natural logarithm of the probability of x.  x can
+        be an array
+        """
         if isinstance(x,numpy.ndarray):
             if any(x <= 0):
                 raise ValueError("values of x must be > 0")
@@ -579,8 +594,21 @@ class LogNormal:
         return lnprob
 
     def prob(self, x):
+        """
+        Get the probability of x.  x can be an array
+        """
         return exp(self.lnprob(x))
-        
+
+    def sample(self, nrand):
+        """
+        Get nrand random deviates from the distribution
+
+        If z is drawn from a normal random distribution, then exp(logmean+logsigma*z)
+        is drawn from lognormal
+        """
+        z=numpy.random.randn(nrand)
+        return exp(self.logmean + self.logsigma*z)
+       
 def test_generator(doplot=False):
     """
     Do some tests of the random generator
