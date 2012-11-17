@@ -102,7 +102,6 @@ import shutil
 import sys
 from sys import stdout
 
-import esutil
 
 try:
     import sqlite3 as sqlite
@@ -162,12 +161,14 @@ class SqliteConnection(sqlite.Connection):
     __doc__=_instantiate_docs
     def __init__(self, dbfile, verbose=False, tmpdir=None, **keys):
 
-        dbpath=esutil.ostools.expand_path(dbfile)
-        self.dbfile = dbpath
+        dbfile=os.path.expandvars(dbfile)
+        dbfile=os.path.expanduser(dbfile)
+
+        self.dbfile = dbfile
         self.verbose = verbose
         self.tmpdir = tmpdir
 
-        sqlite.Connection.__init__(self, dbpath, **keys)
+        sqlite.Connection.__init__(self, dbfile, **keys)
 
         self.row_factory = sqlite.Row
 
@@ -546,6 +547,7 @@ class SqliteConnection(sqlite.Connection):
 
 
     def import_file(self, filename, tablename):
+        import esutil
         command="""
             sqlite3 -separator '\t' %s ".import %s %s" 
         """ % (self.dbfile, filename, tablename)
@@ -936,6 +938,7 @@ def dict2table(data, dbfile, tablename,
     needed.  If the table exists, the data are appended.
 
     """
+    import esutil
     
     # ensure we have a list of dicts
     data = dict_ensurelist(data)
