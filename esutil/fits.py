@@ -1,3 +1,7 @@
+"""
+    DEPRECATED: use the fitsio package
+        https://github.com/esheldon/fitsio
+"""
 import numpy
 
 try:
@@ -13,7 +17,11 @@ modemap={'r':'readonly'}
 
 def read(filename, ext, **keys):
     """
+    DEPRECATED: use the fitsio package
+        https://github.com/esheldon/fitsio
+
     Read data from a FITS file using the FITS class.
+    
 
     Currently this is a wrapper for pyfits designed to allow reading subsets of
     rows and columns from binary tables.  The recfile package is used for this
