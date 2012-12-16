@@ -2,6 +2,11 @@
 Module:
     random
 
+functions:
+    srandu(num=1)
+        Generate random numbers in the symmetric distribution [-1,1]
+
+
 Classes:
 
     Class Name:
@@ -421,7 +426,7 @@ class CutGenerator(object):
         [xmin,xmax]
     pofx_max:
         The maximum of the function over the input range.
-    seed: bool,optional
+    seed: optional
         the seed for the random number generator
 
     Examples:
@@ -429,7 +434,8 @@ class CutGenerator(object):
         def gaussfunc(x):
             return numpy.exp(-0.5*x**2)
         pofx_max=1.0
-        gen = esutil.random.CutGenerator(gaussfunc, [-5,5], 1.0)
+        xrange=[-5,5]
+        gen = esutil.random.CutGenerator(gaussfunc, xrange, pofx_max)
         rand = gen.genrand(1000000)
 
     Revision History:
@@ -609,6 +615,15 @@ class LogNormal:
         z=numpy.random.randn(nrand)
         return exp(self.logmean + self.logsigma*z)
        
+
+
+def srandu(num=1):
+    """
+    Generate random numbers in the symmetric distribution [-1,1]
+    """
+    return 2*(numpy.random.random(num)-0.5)
+
+
 def test_generator(doplot=False):
     """
     Do some tests of the random generator
