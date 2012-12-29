@@ -110,6 +110,9 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         no matches are found.  This means arr1[ind1] == arr2[ind2] is true for
         all corresponding pairs. Arrays must contain only unique elements
 
+    strmatch(arr, regex)
+        Match the string array to the input regular expression.  Returns
+        a boolean array.
 
     dict2array(dict, sort=False, keys=None)
         Convert a dictionary to a numpy array.  Works for simple typs such as
@@ -1517,6 +1520,31 @@ def match(arr1input, arr2input):
     sub1 = ind[ numpy.where( vec == 0 ) ]
     sub2 = ind[ numpy.where( vec != 0 ) ]
     return sub1, sub2
+
+
+def strmatch(arr, regex):
+    """
+    Match the input string array to the regular expression
+
+    parameters
+    ----------
+    arr: numpy array
+        A numpy array of strings
+    regex: string
+        The regular expression
+
+    examples
+    --------
+    regex='.*hello.*'
+    logic=strmatch(arr, regex)
+    keep=where(logic)
+    print arr[keep]
+    """
+    import re
+
+    r = re.compile(regex)
+    vmatch = numpy.vectorize(lambda x:bool(r.match(x)))
+    return vmatch(arr)
 
 
 def dict2array(d, sort=False, keys=None):
