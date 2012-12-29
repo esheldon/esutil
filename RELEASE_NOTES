@@ -3,8 +3,11 @@ Updates:
         Added writing of xml files.
 
 New methods:
-    esutil/numpy_util.py: descr_to_native. New function to
-        remove byte order information from numpy type descriptor.
+    esutil/numpy_util.py: 
+        descr_to_native:
+            Remove byte order information from numpy type descriptor.
+        strmatch: 
+            string a string array to a regular expression
 
 v0.5.1 (2012-04-27)
 ----------------------------------------------------------------------
