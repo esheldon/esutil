@@ -873,7 +873,32 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
     else:
         return wmean,werr
 
+def wmedian(arr_in, weights_in):
+    """
+    Calculate the weighted median.  The routine is from
 
+    http://stackoverflow.com/questions/9794558/weighted-median-computation
+    """
+    # no copy made if they are already arrays
+    arr = numpy.array(arr_in, ndmin=1, copy=False)
+
+    sind=arr.argsort()
+    
+    # Weights is forced to be type double. All resulting calculations
+    # will also be double
+    weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
+
+    wtot = weights.sum()
+    wtot2 = wtot/2.
+
+    k=0
+    sum = wtot-weights[sind[0]]
+
+    while sum > wtot2:
+        k += 1
+        sum -= weights[sind[k]]
+
+    return arr[sind[k]]
 
 
 def sigma_clip(arrin, niter=4, nsig=4, extra={}, 
