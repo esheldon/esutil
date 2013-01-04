@@ -8,6 +8,8 @@ New methods:
             Remove byte order information from numpy type descriptor.
         strmatch: 
             string a string array to a regular expression
+    esutil/stats/util.py:
+        wmedian: calculate the weighted median
 
 v0.5.1 (2012-04-27)
 ----------------------------------------------------------------------
