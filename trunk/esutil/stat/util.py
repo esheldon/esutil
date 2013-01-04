@@ -20,6 +20,8 @@ histogram2d:
     Histgram two variables.
 wmom:  
     Calculate weighted mean and error for the given input data.
+wmedian:
+    Calculate the weighted median.
 sigma_clip:  
     Return the sigma-clipped mean and error for the input data.
 interplin:  
