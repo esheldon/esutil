@@ -1,6 +1,7 @@
 Updates:
     esutil/io.py: 
         Added writing of xml files.
+        Added bunzipping of fits files that end in .bz2
 
 New methods:
     esutil/numpy_util.py: 
