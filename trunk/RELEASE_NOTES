@@ -2,6 +2,8 @@ Updates:
     esutil/io.py: 
         Added writing of xml files.
         Added bunzipping of fits files that end in .bz2
+    esutil/wcsutil.py:
+        Now allow any header object that supports iteration
 
 New methods:
     esutil/numpy_util.py: 
