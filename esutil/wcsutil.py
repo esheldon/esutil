@@ -142,12 +142,12 @@ class WCS(object):
     wcs = wcsutil.WCS(wcs_structure, longpole=180.0, latpole=90.0, theta0=90.0)
 
     The input is a wcs structure.  This could be a dictionary or numpy array
-    that can be addressed like wcs['cunit1'] for example, or have an items()
-    method such as for a pyfits header.  It is converted to a dictionary 
-    internally.  The structure is exactly that as would be written to a
-    FITS header, so for example distortion fields are not converted to a
-    matrix form, rather each field in the header gets a field in this
-    structure.
+    that can be addressed like wcs['cunit1'] for example, or something that
+    supports iteration like a fitsio header, or have an items() method such as
+    for a pyfits header.  It is converted to a dictionary internally.  The
+    structure is exactly that as would be written to a FITS header, so for
+    example distortion fields are not converted to a matrix form, rather each
+    field in the header gets a field in this structure.
 
     When there is a distortion model the inverse transformation is gotten
     by solving the for the roots of the transformation by default.  This
@@ -834,6 +834,10 @@ class WCS(object):
 
         elif type(wcs_in) == type({}):
             wcs = wcs_in.copy()
+        elif hasattr(wcs_in, '__iter__'):
+            wcs={}
+            for k in wcs_in:
+                wcs[k.lower()] = wcs_in[k]
         else:
             # Try to use the items() method to get what we want
             wcs={}
@@ -842,8 +846,8 @@ class WCS(object):
                     wcs[k.lower()] = v
             except:
                 raise ValueError('Input wcs must be a numpy array '+\
-                                 'with fields or a dictionary or have an '+
-                                 'items() method')
+                                 'with fields or a dictionary or support '+
+                                 'iteration or an items() method')
 
 
         return wcs
