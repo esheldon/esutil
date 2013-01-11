@@ -369,6 +369,33 @@ def write(fileobj, data, **keywords):
     finally:
         pass
 
+def read_fits_bz2(filename, **keys):
+    import tempfile
+    verbose=keys.get('verbose',False)
+
+    bname=os.path.basename(filename)
+    bname=bname.replace('.fits.bz2','')
+    bname=bname.replace('.fit.bz2','')
+
+    prefix=bname+'-'
+    suffix='.fits'
+    tmp_name=tempfile.mktemp(prefix=prefix, suffix=suffix)
+
+    tmp_name=tmp_name.replace('.bz2','')
+
+    if verbose > 1:
+        print 'unzipping to:',tmp_name
+    os.system('bzcat %s > %s' % (filename, tmp_name))
+
+    try:
+        res=read_fits(tmp_name, **keys)
+    finally:
+        if verbose > 1:
+            print 'cleaning up:',tmp_name
+        os.remove(tmp_name)
+    
+    return res
+
 def read_fits(fileobj, **keywords):
     """
     Name:
@@ -396,6 +423,9 @@ def read_fits(fileobj, **keywords):
     """
 
     import numpy
+
+    if isinstance(fileobj,basestring) and 'bz2' in fileobj:
+        return read_fits_bz2(fileobj, **keywords)
 
     if fits_package is None:
         raise ImportError("Could not import fitsio or pyfits")
