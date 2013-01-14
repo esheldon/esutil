@@ -98,7 +98,7 @@ _scamp_map['pv2_8'] = (1,2)
 _scamp_map['pv2_9'] = (2,1)
 _scamp_map['pv2_10'] = (3,0)
 
-_allowed_projections = ['-TAN','-TAN-SIP']
+_allowed_projections = ['-TAN','-TPV','-TAN-SIP']
 
 _ap = {}
 dname='-TAN'
@@ -108,6 +108,8 @@ _ap[dname]['aprefix'] = 'pv1'
 _ap[dname]['bprefix'] = 'pv2'
 _ap[dname]['apprefix'] = 'pvi1'
 _ap[dname]['bpprefix'] = 'pvi2'
+
+_ap['-TPV'] = _ap['-TAN']
 
 dname='-TAN-SIP'
 _ap[dname] = {}
@@ -234,7 +236,7 @@ class WCS(object):
         ydiff = y - self.crpix[1]
 
         p=self.projection.upper()
-        if p == '-TAN':
+        if p in ['-TAN','-TPV']:
             u,v = self.ApplyCDMatrix(xdiff, ydiff)
             if distort:
                 # Assuming PV distortions
@@ -291,7 +293,7 @@ class WCS(object):
             u, v = self.sph2image(longitude, latitude)
 
             p=self.projection.upper()
-            if p == '-TAN':
+            if p in ['-TAN','-TPV']:
                 if distort:
                     u,v = self.Distort(u, v, inverse=True)
                 xdiff, ydiff = self.ApplyCDMatrix(u, v, inverse=True)
@@ -316,8 +318,9 @@ class WCS(object):
     def ExtractProjection(self, wcs):
         projection = wcs['ctype1'][4:].upper()
         if projection not in _allowed_projections:
-            err="Projection type %s unsupported.  Only [%s] projections " + \
-                    "currently supported" % (projection,', '.join(_allowed_projections))
+            err=("Projection type %s unsupported.  Only [%s] projections "
+                 "currently supported")
+            err = err % (projection,', '.join(_allowed_projections))
             raise ValueError(err)
 
         return projection
@@ -342,36 +345,31 @@ class WCS(object):
         Works in the native system currently
         """
 
-        p = self.projection.upper()
-        if p == '-TAN' or p == '-TAN-SIP':
-            # Make sure ndmin=1 to avoid messed up scalar arrays
-            x = numpy.array(xin, ndmin=1, dtype='f8')
-            y = numpy.array(yin, ndmin=1, dtype='f8')
+        # Make sure ndmin=1 to avoid messed up scalar arrays
+        x = numpy.array(xin, ndmin=1, dtype='f8')
+        y = numpy.array(yin, ndmin=1, dtype='f8')
 
-            if x.size != y.size:
-                raise ValueError('x and y must be the same size')
+        if x.size != y.size:
+            raise ValueError('x and y must be the same size')
 
-            latitude = numpy.zeros_like(x)
-            longitude   = numpy.zeros_like(x)
+        latitude = numpy.zeros_like(x)
+        longitude   = numpy.zeros_like(x)
 
-            latitude[:] = math.pi/2
+        latitude[:] = math.pi/2
 
-            # radius in radians
-            r = numpy.sqrt(x*x + y*y)*math.pi/180.0
+        # radius in radians
+        r = numpy.sqrt(x*x + y*y)*math.pi/180.0
 
-            w, = numpy.where( r > 0 )
-            if w.size > 0:
-                latitude[w] = numpy.arctan(1.0/r[w])
+        w, = numpy.where( r > 0 )
+        if w.size > 0:
+            latitude[w] = numpy.arctan(1.0/r[w])
 
-            longitude = numpy.arctan2(x,-y)
+        longitude = numpy.arctan2(x,-y)
 
-            longitude *= r2d
-            latitude *= r2d
+        longitude *= r2d
+        latitude *= r2d
 
-            longitude,latitude=self.Rotate(longitude,latitude,reverse=True)    
-        else:
-            raise ValueError('Unsupported projection type: %s' %
-                             self.projection)
+        longitude,latitude=self.Rotate(longitude,latitude,reverse=True)    
 
 
         # Make sure the result runs from 0 to 360
@@ -386,31 +384,28 @@ class WCS(object):
 
     
     def sph2image(self, longitude_in, latitude_in):
-        p=self.projection.upper()
-        if p == '-TAN' or p == '-TAN-SIP':
-            longitude=numpy.array(longitude_in, ndmin=1, dtype='f8')
-            latitude =numpy.array(latitude_in,  ndmin=1, dtype='f8')
+        """
+        Must be a tangent plane projection
+        """
+        longitude=numpy.array(longitude_in, ndmin=1, dtype='f8')
+        latitude =numpy.array(latitude_in,  ndmin=1, dtype='f8')
 
-            longitude,latitude = \
-                    self.Rotate(longitude, latitude)
-            longitude *= d2r
-            latitude  *= d2r
+        longitude,latitude = \
+                self.Rotate(longitude, latitude)
+        longitude *= d2r
+        latitude  *= d2r
 
-            if longitude.size != latitude.size:
-                raise ValueError('long,lat must be the same size')
+        if longitude.size != latitude.size:
+            raise ValueError('long,lat must be the same size')
 
-            x = numpy.zeros_like(longitude)
-            y = numpy.zeros_like(longitude)
+        x = numpy.zeros_like(longitude)
+        y = numpy.zeros_like(longitude)
 
-            w, = numpy.where(latitude > 0.0)
-            if w.size > 0:
-                rdiv= r2d/numpy.tan(latitude[w])
-                x[w] =  rdiv*numpy.sin(longitude[w])
-                y[w] = -rdiv*numpy.cos(longitude[w])
-
-        else:
-            raise ValueError('Unsupported projection type: %s' % 
-                             self.projection)
+        w, = numpy.where(latitude > 0.0)
+        if w.size > 0:
+            rdiv= r2d/numpy.tan(latitude[w])
+            x[w] =  rdiv*numpy.sin(longitude[w])
+            y[w] = -rdiv*numpy.cos(longitude[w])
 
         return x,y
 
