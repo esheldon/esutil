@@ -532,7 +532,7 @@ class WCS(object):
         x = numpy.array(xin, ndmin=1, dtype='f8')
         y = numpy.array(yin, ndmin=1, dtype='f8')
         # Sometimes there is no distortion model present
-        if self.distort is None:
+        if self.distort is None or self.distort['name'] == 'none':
             return x, y
     
         if x.size != y.size:

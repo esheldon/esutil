@@ -476,11 +476,14 @@ def read_fits_fitsio(filename, **keywords):
     if columns is None and fields is not None:
         columns=fields
 
-    return fitsio.read(filename,
-                       ext=ext,
-                       rows=rows,
-                       columns=columns,
-                       header=header)
+    if header=='only':
+        return fitsio.read_header(filename, **keywords)
+    else:
+        return fitsio.read(filename,
+                           ext=ext,
+                           rows=rows,
+                           columns=columns,
+                           header=header)
 
 def read_fits_pyfits(fileobj, **keywords):
     import numpy
