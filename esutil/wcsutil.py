@@ -134,9 +134,14 @@ for key in smkeys:
 class WCS(object):
     """
     A class to do WCS transformations.  Currently supports TAN projections
-    for RA---TAN and DEC--TAN and RA---TAN--SIP,DEC--TAN--SIP ctypes in 
-    degrees.  Supports distortion models in the SCAMP PV polynomial formalism 
-    and SIP.
+    for 
+
+        RA--TPV, DEC-TPV
+        RA---TAN and DEC--TAN
+        RA---TAN--SIP,DEC--TAN--SIP
+
+    ctypes in degrees.  The first two are both actually TPV, but old versions
+    of scamp wrote them simply as TAN.
 
     Usage:
 
@@ -1016,55 +1021,6 @@ class WCS(object):
 
         # Extract the distortion model
         self.ExtractDistortionModel()
-
-        crap="""
-        if self.projection == '-TAN':
-            # Look for the PV terms for scamp style distortions
-            a,ca = self.ExtractPVCoeffs(wcs,'pv1')
-            if ca != 0:
-                self.distort['name'] = 'scamp'
-
-                b,cb = self.ExtractPVCoeffs(wcs,'pv2')
-                ap,cap = self.ExtractPVCoeffs(wcs,'pvi1')
-                bp,cbp = self.ExtractPVCoeffs(wcs,'pvi2')
-
-                self.distort['a'] = a
-                self.distort['b'] = b
-                # these will be zeros if not found above
-                self.distort['ap'] = ap
-                self.distort['bp'] = bp
-
-                # If inverse not there, calculate it
-                if cap == 0 or cbp == 0:
-                    print 'Inverst distortion transformation not '+\
-                            'found, attempting to calculate'
-                    InvertDistortion()
-
-        elif self.projection == '-TAN-SIP': 
-            # Sip style distortions
-            a,ca = self.ExtractSIPCoeffs(wcs, 'a')
-            if ca != 0:
-                self.distort['name'] = 'sip'
-
-                b,cb = self.ExtractSIPCoeffs(wcs, 'b')
-                ap,cap = self.ExtractSIPCoeffs(wcs, 'ap')
-                bp,cbp = self.ExtractSIPCoeffs(wcs, 'bp')
-
-                self.distort['a'] = a
-                self.distort['b'] = b
-                # these will be zeros if not found above
-                self.distort['ap'] = ap
-                self.distort['bp'] = bp
-
-                # If inverse not there, calculate it
-                if cap == 0 or cbp == 0:
-                    print 'Inverst distortion transformation not '+\
-                            'found, attempting to calculate'
-                    InvertDistortion()
-                    self.distort['ap_order'] = self.distort['a_order']+1
-                    self.distort['bp_order'] = self.distort['b_order']+1
-        """
-
 
 def _dict_get(d, key, default=None):
     if key not in d:
