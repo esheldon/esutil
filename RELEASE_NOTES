@@ -13,6 +13,9 @@ New methods:
             string a string array to a regular expression
     esutil/stats/util.py:
         wmedian: calculate the weighted median
+    esutil/plotting.py:
+        get_grid Get a 2-d grid layout given the total number of plots
+        
 
 v0.5.1 (2012-04-27)
 ----------------------------------------------------------------------

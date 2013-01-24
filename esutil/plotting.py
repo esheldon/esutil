@@ -628,6 +628,35 @@ def bwhiskers(xin, yin, uin, vin,
 
     return plt
 
+def get_grid(ntot):
+    """
+    Get a 2-d grid layout given the total number of plots
+
+    returns nrow,ncol
+
+    e.g.
+       p1 p2
+       
+       p1 p2
+       p3
+
+       p1 p2
+       p3 p4
+
+       p1 p2 p3
+       p4 p5
+
+       etc.
+    """
+    sq=int(sqrt(ntot))
+    if ntot==sq*sq:
+        return (sq,sq)
+    elif ntot <= sq*(sq+1):
+        return (sq,sq+1)
+    else:
+        return (sq+1,sq+1)
+
+
 
 
 # matplotlib related routines
