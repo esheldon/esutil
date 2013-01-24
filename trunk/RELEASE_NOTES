@@ -10,7 +10,7 @@ New methods:
         descr_to_native:
             Remove byte order information from numpy type descriptor.
         strmatch: 
-            string a string array to a regular expression
+            match a string array to a regular expression
     esutil/stats/util.py:
         wmedian: calculate the weighted median
     esutil/plotting.py:
