@@ -552,6 +552,10 @@ class LogNormal:
         such than the variace in linear space is sigma**2.  This implies
         the variance in log space is
             var(log(x)) = log( 1 + sigma**2/mean**2 )
+    norm: optional
+        When calling eval() the return value will be norm*prob(x)
+
+
     methods
     -------
     sample(nrand):
@@ -561,11 +565,19 @@ class LogNormal:
         be an array
     prob(x):
         Get the probability of x.  x can be an array
+    scaled(x):
+        norm*prob(x)
     """
-    def __init__(self, mean, sigma):
+    def __init__(self, mean, sigma, norm=1):
         from math import log,exp,sqrt
         mean=float(mean)
         sigma=float(sigma)
+
+        if mean <= 0:
+            raise ValueError("mean %s is < 0" % mean)
+
+        self.norm=norm
+
         self.mean=mean
         self.sigma=sigma
 
@@ -574,11 +586,14 @@ class LogNormal:
         self.logsigma = sqrt(self.logvar)
         self.logivar = 1./self.logvar
 
-        self.norm = 1/sqrt(2*pi*self.logvar)
-        self.logofnorm = log(self.norm)
+        self.nconst = 1/sqrt(2*pi*self.logvar)
+        self.logofnconst = log(self.nconst)
 
         self.mode=exp(self.logmean - self.logvar)
         self.maxval = self.prob(self.mode)
+
+    def __eval__(self, x):
+        return self.prob(x)
 
     def lnprob(self, x):
         """
@@ -591,12 +606,17 @@ class LogNormal:
         else:
             if x <= 0:
                 raise ValueError("values of x must be > 0")
+        return self._lnprob(x)
 
+    def _lnprob(self, x):
+        """
+        This one no error checking
+        """
         logx = log(x)
 
-        chi2 = -0.5*self.logivar*(logx-self.logmean)**2
+        chi2 = self.logivar*(logx-self.logmean)**2
 
-        lnprob = self.logofnorm + chi2 - logx
+        lnprob = self.logofnconst - 0.5*chi2 - logx
         return lnprob
 
     def prob(self, x):
@@ -604,6 +624,12 @@ class LogNormal:
         Get the probability of x.  x can be an array
         """
         return exp(self.lnprob(x))
+
+    def scaled(self, x):
+        """
+        norm*prob(x)
+        """
+        return self.norm*self.prob(x)
 
     def sample(self, nrand):
         """
@@ -614,14 +640,15 @@ class LogNormal:
         """
         z=numpy.random.randn(nrand)
         return exp(self.logmean + self.logsigma*z)
-       
-
 
 def srandu(num=1):
     """
     Generate random numbers in the symmetric distribution [-1,1]
     """
-    return 2*(numpy.random.random(num)-0.5)
+    if num==1:
+        return 2*(numpy.random.random()-0.5)
+    else:
+        return 2*(numpy.random.random(num)-0.5)
 
 
 def test_generator(doplot=False):
