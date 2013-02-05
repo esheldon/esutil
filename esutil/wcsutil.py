@@ -607,6 +607,9 @@ class WCS(object):
         Invert the distortion model.  Must contain a,b matrices
         """
 
+        self.naxis = numpy.array([wcs['naxis1'],
+                                  wcs['naxis2']])
+
         if 'ap' in self.distort:
             apold = self.distort['ap']
             bpold = self.distort['bp']
@@ -670,6 +673,9 @@ class WCS(object):
         """
         Invert the distortion model.  Must contain a,b matrices
         """
+
+        self.naxis = numpy.array([wcs['naxis1'],
+                                  wcs['naxis2']])
 
         # Order of polynomial
         sx,sy = self.distort['a'].shape
@@ -873,10 +879,13 @@ class WCS(object):
 
     def ExtractUnits(self, wcs):
 
-        units  =wcs['cunit1'].strip().lower() 
-        if units not in _allowed_units:
-            err='Unsupported units %s.  Only [%s] supported'
-            raise ValueError(err % (units, ', '.join(_allowed_units)))
+        if 'cunit1' in wcs:
+            units  = wcs['cunit1'].strip().lower() 
+            if units not in _allowed_units:
+                err='Unsupported units %s.  Only [%s] supported'
+                raise ValueError(err % (units, ', '.join(_allowed_units)))
+        else:
+            units=None
         return units
 
     def ExtractDistortCoeffs(self, dname, wcs, prefix):
@@ -971,8 +980,6 @@ class WCS(object):
                                   wcs['crval2']], dtype='f8')
         self.ctype = numpy.array([wcs['ctype1'],
                                   wcs['ctype2']])
-        self.naxis = numpy.array([wcs['naxis1'],
-                                  wcs['naxis2']])
 
         # Get the projection from ctype
         self.projection = self.ExtractProjection(wcs)
