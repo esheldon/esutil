@@ -255,7 +255,10 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         miny = yrng[0]
     else:
         wy=numpy.arange(h.size)
-        miny = h.min()
+        miny = 0
+
+        if yrng is None:
+            yrng=[0, 1.1*hout['hist'].max()]
 
     if len(wy) != len(x):
         hplot = numpy.zeros(h.size,dtype='f8') + miny
@@ -522,52 +525,57 @@ def bwhiskers(xin, yin, uin, vin,
               ysize=512,
               show=None, 
               plt=None, 
-              **plotting_keywords):
+              **keys):
     """
-    Name:
-        bwhiskers
-    Calling Sequence:
-        whiskers(plt, x, y, u, v, scale=1, plt=None, **plotting_keywords)
-    Plotting Context:
-        biggles.  Make whiskers using matplotlib use the mwhiskers function
-            Add them to the entered plot object, otherwise create a
-            new plot object and display the plot (or save to a file).
+    Create a "whisker" plot from the input polarizations 
+    
+    Polarizations are headless vectors, rotating as 2*theta, as found in weak
+    lensing (e1,e2).
 
-    Purpose:
-        Using biggles, create lines centered a the input x,y positions, with
-        length 
-            sqrt(u**2 + v**2) 
-        and angle 
-            arctan(v,u)
+    The plot is made using biggles.
 
-    Inputs:
-        x,y: The x,y positions for the midpoint of each whisker.
-        u,v: The vectors to draw.  You can create these vectors from
-            shears, or polarizations, using the polar2whisker function.
-    Optional Inputs:
-        plt: A biggles plot object.  If not sent, a FramedPlot() instance 
-            is created.
-        show: Show the plot in a window.  
+    parameters
+    ----------
+    x,y: 
+        The x,y positions for the midpoint of each whisker.
+    u,v: 
+        The vectors to draw.  You can create these vectors from shears, or
+        polarizations, using the polar2whisker function in this module.
+
+    scale: 
+        A scale to multiply the length of each whisker.  Default 1.
+    wkeyval:
+        Make a key for the plot showing a whisker of this length.
+        This value will get multiplied by scale.
+
+    plt: optional 
+        A biggles plot object on which to draw.  If not sent, a new
+        FramedPlot() instance is created.
+
+    show: bool, optional 
+        Show the plot in a window.  
         
-            If this keyword is not sent, the plot will only be shown in a
-            window if these conditions hold
+        If this keyword is not sent, the plot will only be shown in a
+        window if these conditions hold
+            1) The file keyword is not sent.
+            2) A plt object is not sent.  If a plot object is entered it is
+            assumed you only want to add the whiskers to the existing object
+            but not show it.
 
-                1) The file keyword is not sent.
-                2) A plt object is not sent.  If a plot object is
-                    entered it is assumed you only want to add the
-                    whiskers to the existing object but not show it.
+    file: string, optional
+        A filename to write the image, should be .eps or .png
+    xsize, ysize:
+        Keywords indicating the size of a png file in x and y.  Defaults are
+        each 512.
 
-        file: A filename to write the image, should be .eps or .png
-        xsize, ysize: Keywords indicating the size of a png file in x and y.
-            Defaults are each 512.
 
-        scale: A scale to multiply the length of each whisker.  Default 1.
-        **plotting keywords:  keywords to be used when creating each
-            whisker.  Each whisker is represented by a biggles Curve()
-            object.
+    **keys:  
+        keywords to be used when creating each whisker.  Each whisker is
+        represented by a biggles Curve() object.
 
-    Outputs:
-        The biggles plot instance.
+    return value
+    ------------
+    The biggles plot instance.
 
     """
 
@@ -579,21 +587,21 @@ def bwhiskers(xin, yin, uin, vin,
     if plt is None:
         plt = biggles.FramedPlot()
 
-    if 'xrange' in plotting_keywords:
-        plt.xrange = plotting_keywords['xrange']
-    if 'yrange' in plotting_keywords:
-        plt.yrange = plotting_keywords['yrange']
+    if 'xrange' in keys:
+        plt.xrange = keys['xrange']
+    if 'yrange' in keys:
+        plt.yrange = keys['yrange']
 
-    if 'xlabel' in plotting_keywords:
-        plt.xlabel = plotting_keywords['xlabel']
-    if 'ylabel' in plotting_keywords:
-        plt.ylabel = plotting_keywords['ylabel']
+    if 'xlabel' in keys:
+        plt.xlabel = keys['xlabel']
+    if 'ylabel' in keys:
+        plt.ylabel = keys['ylabel']
 
-    if 'title' in plotting_keywords:
-        plt.title=plotting_keywords['title']
+    if 'title' in keys:
+        plt.title=keys['title']
 
-    if 'aspect_ratio' in plotting_keywords:
-        plt.aspect_ratio =plotting_keywords['aspect_ratio']
+    if 'aspect_ratio' in keys:
+        plt.aspect_ratio =keys['aspect_ratio']
  
 
     x = numpy.array(xin, copy=False, ndmin=1)
@@ -605,12 +613,29 @@ def bwhiskers(xin, yin, uin, vin,
         raise ValueError("Sizes don't match: "
                          "%s %s %s %s\n" % (x.size,y.size,u.size,v.size))
 
+    if 'wkeyval' in keys:
+        minx=x.min()
+        maxx=x.max()
+        miny=y.min()
+        maxy=y.max()
+
+        px=minx + 0.05*(maxx-minx)
+        py=miny + 0.95*(maxy-miny)
+        laby=miny + 0.925*(maxy-miny)
+
+        kc=biggles.Curve([px,px+keys['wkeyval']*scale],
+                         [py,py],
+                         color='red')
+        kclab=biggles.PlotLabel(0.05,0.925,'%.2g' % keys['wkeyval'],
+                                halign='left')
+        plt.add(kc,kclab)
+
     for i in range(x.size):
         # create the line to draw.
         xvals = x[i] + numpy.array([ -u[i]/2.0, u[i]/2.0], dtype='f4')*scale
         yvals = y[i] + numpy.array([ -v[i]/2.0, v[i]/2.0], dtype='f4')*scale
 
-        c = biggles.Curve(xvals, yvals, **plotting_keywords)
+        c = biggles.Curve(xvals, yvals, **keys)
         plt.add(c)
 
     if file is not None:
@@ -628,6 +653,42 @@ def bwhiskers(xin, yin, uin, vin,
 
     return plt
 
+def get_binned_whiskers(x, y, u, v, **keys):
+    import esutil as eu
+
+    keys['more']=True
+    keys['rev']=True
+    hdict=eu.stat.histogram2d(x, y, **keys)
+
+    nbin=hdict['hist'].size
+    rev=hdict['rev']
+
+
+    xcen=hdict['xcenter']
+    ycen=hdict['ycenter']
+
+    xmeans=numpy.zeros(nbin)
+    ymeans=numpy.zeros(nbin)
+    umeans=numpy.zeros(nbin)
+    vmeans=numpy.zeros(nbin)
+
+    i=0
+    for ix in xrange(len(xcen)):
+        for iy in xrange(len(ycen)):
+
+            xmeans[i] = xcen[ix]
+            ymeans[i] = ycen[iy]
+
+            if rev[i] != rev[i+1]:
+                w=rev[ rev[i]:rev[i+1] ]
+
+                umeans[i] = u[w].mean()
+                vmeans[i] = v[w].mean()
+
+            i += 1
+
+    return xmeans, ymeans, umeans, vmeans
+            
 def get_grid(ntot):
     """
     Get a 2-d grid layout given the total number of plots
