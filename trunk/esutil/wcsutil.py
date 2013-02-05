@@ -291,7 +291,7 @@ class WCS(object):
         latitude = numpy.array(lat, ndmin=1, dtype='f8', copy=False)
  
         # Only do this if there is distortion
-        if find and (self.distort is not None):
+        if find and (self.distort is not None) and (self.distort['name'] != 'none'):
             x,y = self._findxy(longitude, latitude)
         else:
 
