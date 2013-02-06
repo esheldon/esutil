@@ -211,26 +211,27 @@ class WCS(object):
 
     def image2sky(self, x, y, distort=True):
         """
-        Usage:
-            lon,lat = image2sky(x,y, distort=True)
+        Convert between image x,y and sky coordinates lon,lat e.g. ra,dec.
 
-        Purpose:
-            Convert between image (x,y) and sky coordinates (lon,lat) which
-            is probably (ra,dec).  
+        parameters
+        ----------
+        x,y: scalars or arrays
+            x and y coords in the image
+        distort:  bool, optional
+            Use the distortion model if present.  Default is True
 
-        Inputs:
-            x,y: x and y coords in the image.  Can be arrays.
-        Optional Inputs:
-            distort:  Use the distortion model if present.  Default is True
-        Outputs:
-            longitude,latitude:  Probably ra,dec.  Will have the same shape
-                as x,y
-        Example:
-            import wcsutil
-            import pyfits
-            hdr=pyfits.getheader(fname)
-            wcs = wcsutil.WCS(hdr)
-            ra,dec = wcs.image2sky(x,y)
+        returned values
+        ---------------
+        longitude,latitude:  tupple of arrays
+            Probably ra,dec.  Will have the same shape as x,y
+
+        examples
+        --------
+        import wcsutil
+        import fitsio
+        hdr=fitsio.read_header(fname)
+        wcs = wcsutil.WCS(hdr)
+        ra,dec = wcs.image2sky(x,y)
         """
         
         arescalar=isscalar(x)
@@ -243,12 +244,12 @@ class WCS(object):
         p=self.projection.upper()
         if p in ['-TAN','-TPV']:
             u,v = self.ApplyCDMatrix(xdiff, ydiff)
-            if distort:
+            if distort and self.distort['name'] != 'none':
                 # Assuming PV distortions
                 u, v = self.Distort(u, v)
 
         elif p == '-TAN-SIP':
-            if distort:
+            if distort and self.distort['name'] != 'none':
                 u,v = self.Distort(xdiff, ydiff)
             u, v = self.ApplyCDMatrix(u,v)
         else:
@@ -289,9 +290,9 @@ class WCS(object):
         arescalar=isscalar(lon)
         longitude  = numpy.array(lon, ndmin=1, dtype='f8', copy=False)
         latitude = numpy.array(lat, ndmin=1, dtype='f8', copy=False)
- 
+
         # Only do this if there is distortion
-        if find and (self.distort is not None) and (self.distort['name'] != 'none'):
+        if find and self.distort['name'] != 'none':
             x,y = self._findxy(longitude, latitude)
         else:
 
@@ -299,13 +300,13 @@ class WCS(object):
 
             p=self.projection.upper()
             if p in ['-TAN','-TPV']:
-                if distort:
+                if distort and self.distort['name'] != 'none':
                     u,v = self.Distort(u, v, inverse=True)
                 xdiff, ydiff = self.ApplyCDMatrix(u, v, inverse=True)
 
             elif p == '-TAN-SIP':
                 u,v = self.ApplyCDMatrix(u, v, inverse=True)
-                if distort:
+                if distort and self.distort['name'] != 'none':
                     xdiff, ydiff = self.Distort(u, v, inverse=True)
                 else:
                     xdiff,ydiff = u,v
