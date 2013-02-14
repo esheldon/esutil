@@ -38,7 +38,7 @@ cholesky_sample(cov, n, means=None):
     This can be used to produce the mean and errors on combined parameters,
     taking into account the covariance.
 
-random_sample:
+random_indices:
     Get a unique random selection of indices in [0,imax)
 
 """
