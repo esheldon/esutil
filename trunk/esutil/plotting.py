@@ -844,6 +844,8 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     if x.size != y.size:
         raise ValueError("x,y must be same size")
     nrand = int(x.size*frac)
+    if nrand < 1:
+        nrand=1
 
     ind = numpy_util.random_subset(x.size, nrand)
 
@@ -858,12 +860,17 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     if 'ylabel' in keys:
         plt.ylabel = keys['ylabel']
 
+    if 'aspect_ratio' in keys:
+        plt.aspect_ratio=keys['aspect_ratio']
 
     show = keys.get('show',True)
     if show:
         plt.show()
 
-    return plt
+    if 'get_indices' in keys and keys['get_indices']:
+        return plt, ind
+    else:
+        return plt
 
 def transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys, **keys):
     """
