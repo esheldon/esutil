@@ -836,6 +836,7 @@ def polar2whisker(e1, e2, angle=False, degrees=False):
 def plotrand(x, y, frac=0.1, plt=None, **keys):
     import biggles
     from biggles import FramedPlot, Points
+
     if plt is None:
         plt = FramedPlot()
 
@@ -847,7 +848,7 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     if nrand < 1:
         nrand=1
 
-    ind = numpy_util.random_subset(x.size, nrand)
+    ind = esutil.stat.util.random_indices(x.size, nrand, **keys)
 
     if 'type' not in keys:
         keys['type'] = 'dot'

@@ -6,12 +6,11 @@ PyStatUtil_random_sample(PyObject *self, PyObject *args)
 {
     PyObject* randind_obj=NULL;
     npy_intp *randind=NULL;
-    long int nmax=0, nrand=0;
+    long int nmax=0, nrand=0, seed=0;
     npy_intp dims[1];
     long int i=0, ntoselect=0, ntocheck=0;
     double prob=0;
-    struct timeval tm;
-    if (!PyArg_ParseTuple(args, (char*)"ll", &nmax, &nrand)) {
+    if (!PyArg_ParseTuple(args, (char*)"lll", &nmax, &nrand, &seed)) {
         return NULL;
     }
 
@@ -25,8 +24,7 @@ PyStatUtil_random_sample(PyObject *self, PyObject *args)
     }
 
 
-    gettimeofday(&tm, NULL); 
-    srand48((long) (tm.tv_sec * 1000000 + tm.tv_usec));
+    srand48(seed);
 
     dims[0] = nrand;
     randind_obj = PyArray_SimpleNew(1, dims, NPY_INTP);
