@@ -1225,12 +1225,17 @@ def random_indices(imax, nrand, **keys):
     unique:
         If False, the sample will have replacement, and nrand
         can be greater than imax
+    seed: int
+        A seed for the random number generator
     """
-
     unique = keys.get('unique',True)
+    seed=keys.get('seed',None)
+    if seed is None:
+        import time
+        seed=int( time.time() )
 
     if not unique:
         return numpy.random.randint(0, imax, nrand)
     else:
-        return _stat_util.random_sample(imax, nrand)
+        return _stat_util.random_sample(imax, nrand, seed)
 
