@@ -832,17 +832,31 @@ def _survey2eq(ra, dec, dtype='f8'):
 
 def dec_parse(decstring):
     """
-    dec = dec_parse(decstring)
-
-    parse a colon separated string representing declination ito
+    parse a colon separated string representing declination into
     degrees.
+
+    parameters
+    ----------
+    decstring: string
+        DD:MM:SS.sss the value is specified in degrees, minutes, seconds
+
+        Only the degrees are required. Additional
+        precision (minutes, seconds) are optional in the string (i.e. "12" or
+        "12:34" or "12:34:56" are all valid input strings)
+
+    Corrections by Paul Ray and Dave Smith, NRL, 2013-03-19
     """
     dec = 0.0
+    sign = 1.0
 
+    # Grab sign here                                                            
+    if decstring.find("-") >= 0:
+        sign = -1.0
     ds = decstring.split(':')
     lds = len(ds)
     if lds >= 1:
-        deg = float(ds[0])
+        # Take sign away                                                        
+        deg = abs(float(ds[0]))
         dec += deg
     if lds >= 2:
         minutes = float(ds[1])
@@ -854,26 +868,36 @@ def dec_parse(decstring):
 
 def ra_parse(rastring, hours=True):
     """
-    ra = ra_parse(decstring)
+    parse a colon separated string representing right ascension into
+    decimal degrees.
 
-    parse a colon separated string representing right ascension ito
-    degrees.
+    parameters
+    ----------
+    rastring: string
+        "HH:MM:SS.sss" if hours is True and                                         
+        "DD:MM:SS.sss" if hours is False (indicating that                           
+            the value is specified in degrees, minutes, seconds)
+
+        In all cases,  only the hours (or degrees) are required. Additional
+        precision (minutes, seconds) are optional in the string (i.e. "12" or
+        "12:34" or "12:34:56" are all valid input strings)
+
+    Corrections by Paul Ray and Dave Smith, NRL, 2013-03-19
     """
     ra = 0.0
 
     rs = rastring.split(':')
     lrs = len(rs)
     if lrs >= 1:
-        deg = float(rs[0])
-        ra += deg
-        if hours:
-            ra *= 15
+        ra +=  float(rs[0])
     if lrs >= 2:
         minutes = float(rs[1])
         ra += minutes/60.0
     if lrs >= 3:
         sec = float(rs[2])
         ra += sec/3600.0
+    if hours:
+        ra *= 15
     return ra
 
 
