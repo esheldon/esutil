@@ -368,6 +368,13 @@ class HDFSFile:
         to put it
 
         Might want to rethink the cleanup=True default
+
+        parameters
+        ----------
+        clobber: bool, optional
+            Over-write file in hdfs if already exists
+        verbose: bool, optional
+            print information
         """
         try:
             put(self.localfile, self.hdfs_url, verbose=self.verbose, **keys)
