@@ -975,8 +975,9 @@ def get_log_plot_range(x, err=None, input_range=None, get_good=False):
     minval = min(x[w])
     if err is not None:
         w2, = where( (x[w] - err[w]) > 0 )
-        minval2 =  min(x[w[w2]] - err[w[w2]])
-        minval = min(minval,minval2)
+        if w2.size > 0:
+            minval2 =  min(x[w[w2]] - err[w[w2]])
+            minval = min(minval,minval2)
 
         maxval = max(x+err)
     else:

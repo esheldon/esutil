@@ -341,6 +341,7 @@ class Binner(dict):
             self[xpref+'high'] = high
             self[xpref+'center'] = center
 
+
         if 'rev' in self:
             revind = self['rev']
             # calculate the mean in the bins
@@ -471,7 +472,8 @@ def histogram(data, weights=None, binsize=1., nbin=None,
     weights: optional
         A set of weights to use for calculating some statistics.  If weights
         are sent, more=True is implied and a dictionary is returned containing
-        a wide variety of statistics.  See docs for the more keyword below.
+        a wide variety of statistics, including 'whist' the weighted histogram.
+        See docs for the more keyword below.
 
     binsize: number, optional
         Default 1.0.  The bin size for histogramming.
