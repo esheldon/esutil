@@ -905,7 +905,7 @@ def wmedian(arr_in, weights_in):
     return arr[sind[k]]
 
 
-def sigma_clip(arrin, niter=4, nsig=4, extra={}, 
+def sigma_clip(arrin, niter=4, nsig=4, get_indices=False, extra={}, 
                verbose=False, silent=False):
     """
     NAME:
@@ -925,6 +925,8 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={},
     OPTIONAL INPUTS:
       niter: number of iterations, defaults to 4
       nsig: number of sigma, defaults to 4
+      get_indices: bool,optional
+        if True return mean,stdev,indices
 
     OUTPUTS:
       mean,stdev: A tuple containing mean and standard deviation.
@@ -967,7 +969,10 @@ def sigma_clip(arrin, niter=4, nsig=4, extra={},
     asig = arr[index].std()
 
     extra['index'] = index
-    return amean, asig
+    if get_indices:
+        return amean, asig, index
+    else:
+        return amean, asig
      
 
 def interplin(vin, xin, uin):
