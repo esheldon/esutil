@@ -944,6 +944,8 @@ def sigma_clip(arrin, niter=4, nsig=4, get_indices=False, extra={},
 
     index = numpy.arange( arr.size )
 
+    res=[None,None,None]
+
     for i in numpy.arange(niter):
         m = arr[index].mean()
         s = arr[index].std()
@@ -954,13 +956,15 @@ def sigma_clip(arrin, niter=4, nsig=4, get_indices=False, extra={},
 
         clip = nsig*s
 
-        w, = numpy.where( (numpy.abs(arr[index]) - m) < clip )
+        w, = numpy.where( (numpy.abs(arr[index] - m)) < clip )
 
         if (w.size == 0):
             if (not silent):
                 stderr.write("nsig too small. Everything clipped on "
                              "iteration %d\n" % (i+1))
-            return m,s
+            res[0]=m
+            res[1]=s
+            return res
 
         index = index[w]
 
@@ -968,12 +972,13 @@ def sigma_clip(arrin, niter=4, nsig=4, get_indices=False, extra={},
     amean = arr[index].mean()
     asig = arr[index].std()
 
+    res[0]=m
+    res[1]=s
     extra['index'] = index
     if get_indices:
-        return amean, asig, index
-    else:
-        return amean, asig
-     
+        res[2] = index
+
+    return res 
 
 def interplin(vin, xin, uin):
     """
