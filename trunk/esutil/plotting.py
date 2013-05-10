@@ -230,6 +230,9 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
 
     if plt is None:
         plt = biggles.FramedPlot()
+        pltsent=False
+    else:
+        pltsent=True
 
     pkeywords = {}
     if 'color' in keywords:
@@ -257,7 +260,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         wy=numpy.arange(h.size)
         miny = 0
 
-        if yrng is None:
+        if yrng is None and not pltsent:
             yrng=[0, 1.1*hout['hist'].max()]
 
     if len(wy) != len(x):
@@ -285,7 +288,6 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
 
 
     if xlog:
-        print 'sending xrng:',xrng
         xrng,wx = get_log_plot_range(xvals, input_range=xrng, get_good=True)
         ph = biggles.Curve(xvals[wx], yvals[wx], **pkeywords)
         plt.xlog=True
@@ -298,7 +300,6 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
     plt.add(ph)
 
     if xrng is not None:
-        print 'setting xrng:',xrng
         plt.xrange = xrng
     if yrng is not None:
         plt.yrange = yrng

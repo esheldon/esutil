@@ -944,7 +944,10 @@ def sigma_clip(arrin, niter=4, nsig=4, get_indices=False, extra={},
 
     index = numpy.arange( arr.size )
 
-    res=[None,None,None]
+    if get_indices:
+        res=[None,None,None]
+    else:
+        res=[None,None]
 
     for i in numpy.arange(niter):
         m = arr[index].mean()
