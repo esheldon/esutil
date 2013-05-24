@@ -3,25 +3,7 @@ Package:
     stat
 
 This is a sub-package of the esutil package. The full reference is esutil.stat
-
-Methods:
-    (for full docs, see the individual methods.  E.g. esutil.stat.histogram
-
-    histogram:  
-        Calculate the histogram of the input data.  The reverse indices are
-        also optionally calculated.  This function behaves similarly to the
-        IDL histogram funcion.  Also has the option to use weights, and
-        to tabulate a large number of statistics for each bin.
-    histogram2d:  
-        Histgram two variables.
-    wmom:  
-        Calculate weighted mean and error for the given input data.
-    sigma_clip:  
-        Return the sigma-clipped mean and error for the input data.
-    interplin:  
-        Perform linear interpolation.  This function is less powerful than
-        scipy.interpolate.interp1d but behaves like the IDL interpol()
-        function, including extrapolation beyond boundaries.
+See esutil.stat.util for documentation
 """
 license="""
   Copyright (C) 2010  Erin Sheldon
