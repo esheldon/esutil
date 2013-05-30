@@ -641,14 +641,11 @@ class LogNormal:
         z=numpy.random.randn(nrand)
         return exp(self.logmean + self.logsigma*z)
 
-def srandu(num=1):
+def srandu(num=None):
     """
     Generate random numbers in the symmetric distribution [-1,1]
     """
-    if num==1:
-        return 2*(numpy.random.random()-0.5)
-    else:
-        return 2*(numpy.random.random(num)-0.5)
+    return 2*(numpy.random.random(num)-0.5)
 
 
 def test_generator(doplot=False):
