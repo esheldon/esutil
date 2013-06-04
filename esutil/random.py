@@ -623,7 +623,19 @@ class LogNormal:
         """
         Get the probability of x.  x can be an array
         """
-        return exp(self.lnprob(x))
+        if isinstance(x,numpy.ndarray):
+            prob=numpy.zeros(x.size)
+            w,=numpy.where(x > 0)
+            if w.size > 0:
+                lnprob = self._lnprob(x[w])
+                prob[w] = exp(lnprob)
+        else:
+            if x <= 0:
+                prob=0.0
+            else:
+                prob=exp(self.lnprob(x))
+
+        return prob
 
     def scaled(self, x):
         """
