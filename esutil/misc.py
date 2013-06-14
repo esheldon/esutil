@@ -330,3 +330,20 @@ def isstring(obj):
         return False
 
 
+def collect_keyby(data, key):
+    """
+    Create a new dictionary from the input collection, keyed by the
+    values specified by the input key name.
+
+    The  elements of the collection must support key access
+    """
+
+    d={}
+    for di in data:
+        key_val = di[key]
+        if key_val not in d:
+            d[key_val]=[di]
+        else:
+            d[key_val].append(di)
+
+    return d
