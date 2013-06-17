@@ -537,6 +537,74 @@ class CutGenerator(object):
         plt.add(py,ph)
         plt.show()
 
+def get_dist(typ, pars):
+    typ=typ.lower()
+    if typ=="normal":
+        return Normal(pars[0], pars[1])
+    elif typ=="lognormal":
+        return LogNormal(pars[0], pars[1])
+    else:
+        raise ValueError("unsupported dist: %s" % typ)
+
+class Normal:
+    """
+    Lognormal distribution
+
+    parameters
+    ----------
+    mean, sigma
+
+    methods
+    -------
+    sample(nrand):
+        Get nrand random deviates from the distribution
+    lnprob(x):
+        Get the natural logarithm of the probability of x.  x can
+        be an array
+    prob(x):
+        Get the probability of x.  x can be an array
+    """
+    def __init__(self, mean, sigma):
+        self.mean=float(mean)
+        self.sigma=float(sigma)
+        self.ivar = 1.0/sigma**2
+
+        self.dist="Normal"
+
+    def __eval__(self, x):
+        return self.prob(x)
+
+    def lnprob(self, x):
+        """
+        Get the natural logarithm of the probability of x.  x can
+        be an array
+        """
+
+        lnp = -0.5*self.ivar*(x-self.mean)**2
+        return lnp
+
+    def prob(self, x):
+        """
+        Get the probability of x.  x can be an array
+        """
+        
+        return exp(self.lnprob(x))
+
+    def sample(self, nrand=None):
+        """
+        Get nrand random deviates from the distribution
+
+        If z is drawn from a normal random distribution, then exp(logmean+logsigma*z)
+        is drawn from lognormal
+        """
+        if nrand is None:
+            z=numpy.random.randn()
+        else:
+            z=numpy.random.randn(nrand)
+        z *= self.sigma
+        z += self.mean
+        return z
+
 
 class LogNormal:
     """
@@ -573,6 +641,8 @@ class LogNormal:
         mean=float(mean)
         sigma=float(sigma)
 
+        self.dist="LogNormal"
+
         if mean <= 0:
             raise ValueError("mean %s is < 0" % mean)
 
@@ -601,7 +671,7 @@ class LogNormal:
         be an array
         """
         if isinstance(x,numpy.ndarray):
-            if any(x <= 0):
+            if numpy.any(x <= 0):
                 raise ValueError("values of x must be > 0")
         else:
             if x <= 0:
@@ -622,6 +692,7 @@ class LogNormal:
     def prob(self, x):
         """
         Get the probability of x.  x can be an array
+        and can go < 0 since no logs are taken
         """
         if isinstance(x,numpy.ndarray):
             prob=numpy.zeros(x.size)
@@ -643,14 +714,17 @@ class LogNormal:
         """
         return self.norm*self.prob(x)
 
-    def sample(self, nrand):
+    def sample(self, nrand=None):
         """
         Get nrand random deviates from the distribution
 
         If z is drawn from a normal random distribution, then exp(logmean+logsigma*z)
         is drawn from lognormal
         """
-        z=numpy.random.randn(nrand)
+        if nrand is None:
+            z=numpy.random.randn()
+        else:
+            z=numpy.random.randn(nrand)
         return exp(self.logmean + self.logsigma*z)
 
 def srandu(num=None):
