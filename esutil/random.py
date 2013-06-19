@@ -571,8 +571,18 @@ class Normal:
 
         self.dist="Normal"
 
-    def __eval__(self, x):
+    def __call__(self, x):
         return self.prob(x)
+
+    def get_mean(self):
+        return self.mean
+
+    def get_sigma(self):
+        return self.sigma
+
+    def get_mode(self):
+        return self.mean
+
 
     def lnprob(self, x):
         """
@@ -662,8 +672,18 @@ class LogNormal:
         self.mode=exp(self.logmean - self.logvar)
         self.maxval = self.prob(self.mode)
 
-    def __eval__(self, x):
+    def __call__(self, x):
         return self.prob(x)
+
+    def get_mean(self):
+        return self.mean
+
+    def get_sigma(self):
+        return self.sigma
+
+    def get_mode(self):
+        return self.mode
+
 
     def lnprob(self, x):
         """
