@@ -704,7 +704,7 @@ class LogNormal:
             if x <= 0:
                 prob=0.0
             else:
-                prob=exp(self.lnprob(x))
+                prob=exp(self._lnprob(x))
 
         return prob
 
