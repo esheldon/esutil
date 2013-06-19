@@ -574,6 +574,9 @@ class Normal:
     def __call__(self, x):
         return self.prob(x)
 
+    def get_dist(self):
+        return self.dist
+
     def get_mean(self):
         return self.mean
 
