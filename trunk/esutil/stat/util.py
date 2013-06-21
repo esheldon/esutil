@@ -1092,9 +1092,11 @@ def cov2cor(cov):
 
     return cor
 
-def cholesky_sample(cov, n, means=None):
+def cholesky_sample(cov, n, means=None, dist=None):
     """
-    Sample the input covariance using a cholesky decomposition
+    Sample the input covariance using a cholesky decomposition.  The idea is
+    that in each dimension we draw from the standard distribution, and then
+    transform them to have the specified covariance matrix.
 
     This can be used to produce the mean and errors on combined parameters,
     taking into account the covariance.
@@ -1108,6 +1110,8 @@ def cholesky_sample(cov, n, means=None):
     means: array, optional
         The mean values to add to the random points; by default
         the randoms are centered on 0
+    dist: function, optional
+        The distribution function.  Default is numpy.random.randn.
     
     example:
         cov = array([[1.5,0.3],
@@ -1119,7 +1123,14 @@ def cholesky_sample(cov, n, means=None):
         erand = (r[1,:]-r[0,:])/(r[1,:]+r[0,:])
         e_mean = erand.mean()
         e_err = erand.std()
+
+    History
+        - output is now (npoints,npar) instead of (npar,npoints) to match
+        expectation from rec arrays
     """
+    if dist is None:
+        dist=numpy.random.randn
+
     npar = cov.shape[0]
     if means is not None:
         nm=len(means)
@@ -1128,7 +1139,7 @@ def cholesky_sample(cov, n, means=None):
 
     M = numpy.linalg.cholesky(cov)
 
-    r=numpy.random.randn(npar*n).reshape(npar,n)
+    r=dist(npar*n).reshape(npar,n)
 
     V = numpy.dot(M,r)
 
@@ -1136,7 +1147,7 @@ def cholesky_sample(cov, n, means=None):
         for i in xrange(npar):
             V[i,:] += means[i]
 
-    return V
+    return V.T
 
 def test_cholesky():
     import esutil as eu
