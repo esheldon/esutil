@@ -710,6 +710,7 @@ def get_grid(ntot):
 
        etc.
     """
+    from math import sqrt
     sq=int(sqrt(ntot))
     if ntot==sq*sq:
         return (sq,sq)
