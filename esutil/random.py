@@ -546,7 +546,7 @@ def get_dist(typ, pars):
     else:
         raise ValueError("unsupported dist: %s" % typ)
 
-class Normal:
+class Normal(object):
     """
     Lognormal distribution
 
@@ -568,23 +568,49 @@ class Normal:
         self.mean=float(mean)
         self.sigma=float(sigma)
         self.ivar = 1.0/sigma**2
+        self.maxval=1.0
+        self.maxval_lnprob=0.0
 
         self.dist="Normal"
 
     def __call__(self, x):
         return self.prob(x)
 
-    def get_dist(self):
+    def get_dist_name(self):
+        """
+        Get the name of this distribution
+        """
         return self.dist
 
     def get_mean(self):
+        """
+        Get the mean of the distribution
+        """
         return self.mean
 
     def get_sigma(self):
+        """
+        Get the width sigma of the distribution
+        """
         return self.sigma
 
     def get_mode(self):
+        """
+        Get the location of the peak
+        """
         return self.mean
+
+    def get_max(self):
+        """
+        Get maximum value of this distribution
+        """
+        return self.maxval
+
+    def get_max_lnprob(self):
+        """
+        Get maximum value ln(prob) of this distribution
+        """
+        return self.maxval_lnprob
 
 
     def lnprob(self, x):
@@ -619,7 +645,7 @@ class Normal:
         return z
 
 
-class LogNormal:
+class LogNormal(object):
     """
     Lognormal distribution
 
@@ -646,10 +672,8 @@ class LogNormal:
         be an array
     prob(x):
         Get the probability of x.  x can be an array
-    scaled(x):
-        norm*prob(x)
     """
-    def __init__(self, mean, sigma, norm=1):
+    def __init__(self, mean, sigma):
         from math import log,exp,sqrt
         mean=float(mean)
         sigma=float(sigma)
@@ -658,8 +682,6 @@ class LogNormal:
 
         if mean <= 0:
             raise ValueError("mean %s is < 0" % mean)
-
-        self.norm=norm
 
         self.mean=mean
         self.sigma=sigma
@@ -674,19 +696,46 @@ class LogNormal:
 
         self.mode=exp(self.logmean - self.logvar)
         self.maxval = self.prob(self.mode)
+        self.maxval_lnprob=log(self.maxval)
 
     def __call__(self, x):
         return self.prob(x)
 
+    def get_dist_name(self):
+        """
+        Get the name of this distribution
+        """
+        return self.dist
+ 
     def get_mean(self):
+        """
+        Get the mean of the distribution
+        """
         return self.mean
 
     def get_sigma(self):
+        """
+        Get the width sigma of the distribution
+        """
         return self.sigma
 
     def get_mode(self):
+        """
+        Get the location of the peak
+        """
         return self.mode
 
+    def get_max(self):
+        """
+        Get maximum value of this distribution
+        """
+        return self.maxval
+
+    def get_max_lnprob(self):
+        """
+        Get maximum value ln(prob) of this distribution
+        """
+        return self.maxval_lnprob
 
     def lnprob(self, x):
         """
@@ -730,12 +779,6 @@ class LogNormal:
                 prob=exp(self._lnprob(x))
 
         return prob
-
-    def scaled(self, x):
-        """
-        norm*prob(x)
-        """
-        return self.norm*self.prob(x)
 
     def sample(self, nrand=None):
         """
