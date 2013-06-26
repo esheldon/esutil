@@ -644,6 +644,49 @@ class Normal(object):
         z += self.mean
         return z
 
+class NormalND:
+    """
+    Currently no covariance
+    """
+    def __init__(self, mean, sigma):
+        self.mean=numpy.array(mean)
+        self.sigma=numpy.array(sigma)
+        self.sigma2=numpy.array( [s**2 for s in sigma] )
+        self.ivar=1.0/self.sigma2
+
+        self.ndim=self.mean.size
+
+    def get_max(self):
+        return 1.0
+
+    def lnprob(self, pos):
+        if len(pos.shape) > 1:
+            lnprob=numpy.zeros(pos.shape[0])
+            for i in xrange(self.ndim):
+                lnprob += -0.5*(self.mean[i]-pos[:,i])**2 * self.ivar[i]
+
+        else:
+            lnprob=0.0
+            for i in xrange(self.ndim):
+                lnprob += -0.5*(self.mean[i]-pos[i])**2 * self.ivar[i]
+
+        return lnprob
+
+    def sample(self, n=None):
+        """
+        Get a single sample
+        """
+        if n is None:
+            rand=self.mean + self.sigma*numpy.random.randn(self.ndim)
+        else:
+            rand = numpy.random.randn(n,self.ndim).reshape(n,self.ndim)
+            for i in xrange(self.ndim):
+                rand[:,i] *= self.sigma[i]
+                rand[:,i] += self.mean[i]
+
+        return rand
+
+
 
 class LogNormal(object):
     """
