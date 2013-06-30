@@ -68,6 +68,8 @@ import numpy_util
 import stat
 import esutil as eu
 
+LOWVAL=-9999.0e47
+
 class Generator(object):
     """
     Class Name:
@@ -723,7 +725,7 @@ class LogNormal(object):
 
         self.dist="LogNormal"
 
-        if mean <= 0:
+        if mean <= 1.e-10:
             raise ValueError("mean %s is < 0" % mean)
 
         self.mean=mean
@@ -735,6 +737,9 @@ class LogNormal(object):
         self.logivar = 1./self.logvar
 
         self.nconst = 1/sqrt(2*pi*self.logvar)
+        if self.nconst <= 1.e-10:
+            raise ValueError("logvar %s is too large" % self.logvar)
+
         self.logofnconst = log(self.nconst)
 
         self.mode=exp(self.logmean - self.logvar)
@@ -786,14 +791,15 @@ class LogNormal(object):
         be an array
         """
         if isinstance(x,numpy.ndarray):
-            if numpy.any(x <= 0):
+            if numpy.any(x <= 1.e-10):
                 raise ValueError("values of x must be > 0")
+            return self._lnprob_array(x)
         else:
-            if x <= 0:
+            if x <= 1.e-10:
                 raise ValueError("values of x must be > 0")
-        return self._lnprob(x)
+            return self._lnprob_scalar(x)
 
-    def _lnprob(self, x):
+    def _lnprob_array(self, x):
         """
         This one no error checking
         """
@@ -804,6 +810,19 @@ class LogNormal(object):
         lnprob = self.logofnconst - 0.5*chi2 - logx
         return lnprob
 
+    def _lnprob_scalar(self, x):
+        """
+        This one no error checking
+        """
+        from math import log
+        logx = log(x)
+
+        chi2 = self.logivar*(logx-self.logmean)**2
+
+        lnprob = self.logofnconst - 0.5*chi2 - logx
+        return lnprob
+
+
     def prob(self, x):
         """
         Get the probability of x.  x can be an array
@@ -813,13 +832,13 @@ class LogNormal(object):
             prob=numpy.zeros(x.size)
             w,=numpy.where(x > 0)
             if w.size > 0:
-                lnprob = self._lnprob(x[w])
+                lnprob = self._lnprob_array(x[w])
                 prob[w] = exp(lnprob)
         else:
             if x <= 0:
                 prob=0.0
             else:
-                prob=exp(self._lnprob(x))
+                prob=exp(self._lnprob_scalar(x))
 
         return prob
 
