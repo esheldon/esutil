@@ -608,6 +608,7 @@ class WCS(object):
         Invert the distortion model.  Must contain a,b matrices
         """
 
+        wcs=self.wcs
         self.naxis = numpy.array([wcs['naxis1'],
                                   wcs['naxis2']])
 
