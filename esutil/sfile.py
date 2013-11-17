@@ -306,6 +306,12 @@ class SFile:
 
         self.open(fobj, mode=mode, delim=delim, verbose=verbose)
 
+    def __enter__(self):
+        return self
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
+
+
     def open(self, fobj, mode='r', delim=None, verbose=False,
              padnull=False, ignorenull=False):
         """
