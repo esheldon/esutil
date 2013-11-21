@@ -105,6 +105,11 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         the unique values.  This is not order preserving.  This is currently
         implemented in a slow fashion, should be updated.
 
+    rem_dup(arr, flag, values=False)
+        Return indices of unique values of an array, selecting the one (when
+        duplicates exist) with the largest value of flag.  Optionally returns
+        the values in the array as well as their indices.
+
     match(arr1, arr2)
         match two numpy arrays.  Return the indices of the matches or [-1] if
         no matches are found.  This means arr1[ind1] == arr2[ind2] is true for
@@ -1419,6 +1424,60 @@ def unique(arr, values=False):
         return keep
 
 
+def rem_dup(arr, flag, values=False):
+    """
+    NAME:
+        rem_dup
+    
+    CALLING SEQUENCE:
+        indices = rem_dup(arr, flag, values=False)
+        indices, values = rem_dup(arr, flag, values=True)
+
+    PURPOSE:
+        Return unique values of an array, and optionally their
+        indices in the array.  Keep the duplicate with the
+        largest value of flag.
+        (If flag is not needed, use numpy.unique() instead.)
+
+    REVISION HISTORY:
+        Created 2013, Amy Kimball, CASS.
+    """
+
+    n = arr.size
+    if n==1:
+        if values:
+            return 0, arr
+        else:
+            return 0
+
+    s = arr.argsort()   # sort indices
+    sarr = arr[s]       # sorted array
+    
+    keep = numpy.zeros(n, dtype='i8')  # indices of values to keep
+    nkeep = 0
+    sflag = flag[s]  # flags to match sorted array
+    
+    val = sarr[0]    # first value to process
+    f = sflag[0]     # flag for first value
+    
+    for i in range(1,n):
+        if sarr[i] != val:
+            val = sarr[i]
+            f = sflag[i]
+            nkeep += 1
+            keep[nkeep] = i
+        else:
+            if sflag[i] > f:
+                f = sflag[i]
+                keep[nkeep] = i
+
+    keep = keep[0:nkeep+1]
+    s = s[keep]
+    s.sort()
+    if values:
+        return s, arr[s]
+    else:
+        return s
 
 
 def match(arr1input, arr2input):
