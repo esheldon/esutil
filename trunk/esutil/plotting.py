@@ -235,6 +235,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
         pltsent=True
 
     pkeywords = {}
+    pkeywords.update(**keywords)
     if 'color' in keywords:
         color = keywords['color']
         if color is not None:
