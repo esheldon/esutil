@@ -655,7 +655,7 @@ def copy_fields(arr1, arr2):
         copy_fields(array1, array2)
 
     PURPOSE:
-        Copy common fields from one numpy array to another.  The name 
+        Copy common fields from one array1 to array2.  The name 
         matching is case senitive.
 
     REVISION HISTORY:
