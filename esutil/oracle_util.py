@@ -587,3 +587,106 @@ def PrintCursor(curs, delim=' ', fname=None, limit=None, maxwidth=30):
             break
 
 
+def Numpy2Tabledef(descr, table_name, def_dict={}):
+    """
+    Convert a numpy descriptor to oracle table def
+
+    array columns are converted to name_{dim1}_{dim2}...{dimn}
+    """
+
+    if def_dict is None:
+        def_dict={}
+
+    defs=[]
+    def_template='%s %s not null'
+    for d in descr:
+        name=d[0]
+        ot=get_oracle_type(d[1])
+
+        if name in def_dict:
+            defs += def_dict[name]
+        elif len(d) == 2:
+            # this is a scalar column... easy!
+            defi=def_template % (name,ot)
+            defs.append(defi)
+        else:
+            dims=d[2]
+            if not isinstance(dims,tuple):
+                dims=(dims,)
+            names=get_arr_colnames(name,dims)
+            
+            for n in names:
+                defi=def_template % (n,ot)
+                defs.append(defi)
+
+    defs=',\n'.join(defs)
+
+    statement="""
+create table {table_name} (
+{defs}
+) compress\n""".format(table_name=table_name, defs=defs)
+
+    return statement
+
+
+def get_arr_colnames(name, dims):
+    """
+    Get db names for an array, naming 
+        name_{num1}_{num2}...
+    """"
+    ndim=len(dims)
+    if ndim==1:
+        names=get_arr1_colnames(name,dims)
+    elif ndim==2:
+        names=get_arr2_colnames(name,dims)
+    else:
+        raise ValueError("only support 1 and 2 d arrays")
+
+    return names
+
+def get_arr1_colnames(name, dims):
+    """
+    Get db names for an array, naming 
+        name_{num}
+    """
+    names=[]
+    for n in xrange(1,dims[0]+1):
+        names.append( '%s_%d' % (name,n) )
+
+    return names
+
+def get_arr2_colnames(name, dims):
+    """
+    Get db names for an array, naming 
+        name_{num1}_{num2}
+    """
+    names=[]
+    for n1 in xrange(1,dims[0]+1):
+        for n2 in xrange(1,dims[1]+1):
+            names.append( '%s_%d_%d' % (name,n1,n2) )
+
+    return names
+
+
+def get_oracle_type(nt):
+    if 'f4' in nt:
+        ot='binary_float'
+    elif 'f8' in nt:
+        ot='binary_double'
+    elif 'i1' in nt or 'u1' in nt:
+        ot='number(3)'
+    elif 'i2' in nt or 'u2' in nt:
+        ot='number(5)'
+    elif 'i4' in nt:
+        ot='number(10)'
+    elif 'i8' in nt:
+        ot='number(19)'
+    elif 'u8' in nt:
+        ot='number(20)'
+    elif 'S' in nt:
+        slen=nt[1:]
+        ot='varchar(%s)' % slen
+    else:
+        raise ValueError("unsupported numpy type: '%s'" % nt)
+
+    return ot
