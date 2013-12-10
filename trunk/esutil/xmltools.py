@@ -1,4 +1,5 @@
 import sys
+from sys import stderr
 
 have_element_tree=True
 try:
