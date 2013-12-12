@@ -632,7 +632,7 @@ create table {table_name} (
 def get_arr_colnames(name, dims):
     """
     Get db names for an array, naming 
-        name_{num1}_{num2}...
+        name_num1_num2...
     """"
     ndim=len(dims)
     if ndim==1:

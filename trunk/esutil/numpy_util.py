@@ -1583,24 +1583,30 @@ def match(arr1input, arr2input):
 
 def match_multi(arr1input, arr2input):
     """
-    NAME:
-        match_multi
+    Match two numpy integer arrays, one of which may be non-unique
+    
+    The first array must be unique, but the second array may have multiple
+    entries.
+        
+    Returns the indices of the matches or empty arrays if no matches are found.
+    This means arr1[sub1] == arr2[sub2] is true for all corresponding pairs.
 
-    CALLING SEQUENCE:
-        sub1,sub2 = match_multi(arr1, arr2)
+    parameters
+    ----------
+    arr1: numpy array, integer type
+        An integer numpy array, must be unique.
+    arr2: numpy array, integer type
+        An integer numpy array, may have duplicate entries.
 
-    PURPOSE:
-        match two numpy integer arrays.  The first array must be unique, but
-        the second array may have multiple entries.  Returns the indices of
-        the matches or empty arrays if no matches are found.  This means
-        arr1[sub1] == arr2[sub2] is true for all corresponding pairs.
+    method
+    ------
+    This uses the method from match_multi.pro from sdssidl.
 
-    METHOD:
-        This uses a dual histogram method adapted from somewhere that Eli
-        Rykoff found years ago.
-
-    REVISION HISTORY:
-        Created 2013, Eli Rykoff, SLAC
+    revision history
+    ----------------
+    Created 12-12-2013, Eli Rykoff, SLAC
+    12-12-2013 raise ValueError for wrong input. Some style changes.
+               Use numpy-style doc.  Erin Sheldon, BNL 
 
     """
 
