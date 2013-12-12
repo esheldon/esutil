@@ -1631,7 +1631,7 @@ def match_multi(arr1input, arr2input):
     # confirm that arr1 is single-valued
     test=numpy.unique(arr1)
     if test.size != n1:
-        raise ValueError("Error: arr1 must be unique")
+        raise ValueError("Error: the first array must be unique")
 
     # check for single-element array
     if (n1 == 1) or (n2 == 1) :
