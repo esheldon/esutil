@@ -152,6 +152,7 @@ import sys
 from sys import stdout, stderr
 import copy
 import pydoc
+import stat
 
 try:
     import numpy
@@ -1579,6 +1580,108 @@ def match(arr1input, arr2input):
     sub1 = ind[ numpy.where( vec == 0 ) ]
     sub2 = ind[ numpy.where( vec != 0 ) ]
     return sub1, sub2
+
+def match_multi(arr1input, arr2input):
+    """
+    NAME:
+        match_multi
+
+    CALLING SEQUENCE:
+        sub1,sub2 = match_multi(arr1, arr2)
+
+    PURPOSE:
+        match two numpy integer arrays.  The first array must be unique, but
+        the second array may have multiple entries.  Returns the indices of
+        the matches or empty arrays if no matches are found.  This means
+        arr1[sub1] == arr2[sub2] is true for all corresponding pairs.
+
+    METHOD:
+        This uses a dual histogram method adapted from somewhere that Eli
+        Rykoff found years ago.
+
+    REVISION HISTORY:
+        Created 2013, Eli Rykoff, SLAC
+
+    """
+
+    dtype = 'i8'
+    sub1 = numpy.array([])
+    sub2 = numpy.array([])
+    
+    arr1 = numpy.array(arr1input, ndmin=1, copy=False)
+    arr2 = numpy.array(arr2input, ndmin=1, copy=False)
+
+    n1 = len(arr1)
+    n2 = len(arr2)
+
+    # only works for integer data
+
+    if (not issubclass(arr1.dtype.type,numpy.integer) or
+            not issubclass(arr2.dtype.type,numpy.integer)) :
+        mess="Error: only works with integer types, got %s %s"
+        mess = mess % (arr1.dtype.type,arr2.dtype.type)
+        raise ValueError(mess)
+
+    # confirm that arr1 is single-valued
+    test=numpy.unique(arr1)
+    if test.size != n1:
+        raise ValueError("Error: arr1 must be unique")
+
+    # check for single-element array
+    if (n1 == 1) or (n2 == 1) :
+        if (n2 > 1) :
+            sub2,=numpy.where(arr2 == arr1[0])
+            if sub2.size > 0:
+                sub1 = numpy.zeros(sub2.size,dtype=dtype)
+        else :
+            sub1,=numpy.where(arr1 == arr2[0])
+            if sub1.size > 0:
+                sub2 = numpy.zeros(sub1.size,dtype=dtype)
+        return sub1,sub2
+
+    min1 = arr1.min()
+    max1 = arr1.max()
+    min2 = arr2.min()
+    max2 = arr2.max()
+    if (min1 < min2) :
+        min12 = min1
+    else :
+        min12 = min2
+    if (max1 > max2):
+        max12 = max1
+    else :
+        max12 = max2
+
+    # are we in range?
+    if (max12 < min12) or (max12 < 0) :
+        return sub1,sub2
+
+    # we need a version of the arrays that are within range and sorted.
+    u,=numpy.where((arr1 >= min12) & (arr1 <= max12))
+    st1=arr1[u]
+    sortind = st1.argsort()
+    st1=st1[sortind]
+
+    h1,rev1=stat.histogram(st1,binsize=1,min=min12,max=max12,rev=True)
+    h2,rev2=stat.histogram(arr2,binsize=1,min=min12,max=max12,rev=True)
+
+    test,=numpy.where((h1 > 0) & (h2 > 0))
+    if test.size == 0:
+        return sub1,sub2
+
+    nsub=numpy.sum(rev2[test+1]-rev2[test])
+    mark=numpy.cumsum(rev2[test+1]-rev2[test])
+    sub1=numpy.zeros(nsub,dtype=dtype)
+    sub2=numpy.zeros(nsub,dtype=dtype)
+    lastmark=0
+    for i in numpy.arange(test.size):
+        sub1[lastmark:mark[i]] = sortind[numpy.repeat(u[rev1[rev1[test[i]]]],h2[test[i]])]
+        sub2[lastmark:mark[i]] = rev2[rev2[test[i]]:rev2[test[i]+1]]
+        lastmark=mark[i]
+
+    return sub1,sub2
+    
+
 
 
 def strmatch(arr, regex):
