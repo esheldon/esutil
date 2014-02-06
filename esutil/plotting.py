@@ -217,6 +217,9 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
 
     import esutil
     import biggles
+
+    norm=keywords.get('norm',None)
+
     hout = esutil.stat.histogram(x, 
                                  binsize=binsize, 
                                  nbin=nbin, 
@@ -242,10 +245,14 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
             pkeywords['color'] = color
 
     if weights is not None:
-        h = hout['whist'].copy()
+        hist = hout['whist'].copy()
     else:
-        h = hout['hist'].copy()
+        hist = hout['hist'].copy()
         
+    if norm is not None:
+        if norm == True:
+            norm=1.0
+        hist = hist.astype('f8')*(1./hist.sum())
 
     xlog = keywords.get('xlog',False)
     ylog = keywords.get('ylog',False)
@@ -254,23 +261,23 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
 
 
     if ylog:
-        yrng,wy = get_log_plot_range(h, input_range=yrng,get_good=True)
+        yrng,wy = get_log_plot_range(hist, input_range=yrng,get_good=True)
         plt.ylog=True
         miny = yrng[0]
     else:
-        wy=numpy.arange(h.size)
+        wy=numpy.arange(hist.size)
         miny = 0
 
         if yrng is None and not pltsent:
-            yrng=[0, 1.1*hout['hist'].max()]
+            yrng=[0, 1.1*hist.max()]
 
     if len(wy) != len(x):
-        hplot = numpy.zeros(h.size,dtype='f8') + miny
-        hplot[wy] = h[wy]
+        hplot = numpy.zeros(hist.size,dtype='f8') + miny
+        hplot[wy] = hist[wy]
         h = hplot
 
-    xvals=numpy.zeros(2*h.size + 2)
-    yvals=numpy.zeros(2*h.size + 2)
+    xvals=numpy.zeros(2*hist.size + 2)
+    yvals=numpy.zeros(2*hist.size + 2)
     for i in xrange(xvals.size):
         if i == 0:
             xvals[i]=hout['low'][0]
@@ -280,12 +287,12 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
             yvals[i]=miny
         elif i == (xvals.size-2):
             xvals[i] = hout['high'][-1]
-            yvals[i] = h[-1]
+            yvals[i] = hist[-1]
         else:
             iix = i/2
             iiy = (i-1)/2
             xvals[i] = hout['low'][iix]
-            yvals[i] = h[iiy]
+            yvals[i] = hist[iiy]
 
 
     if xlog:
@@ -302,8 +309,12 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
 
     if xrng is not None:
         plt.xrange = xrng
+
     if yrng is not None:
         plt.yrange = yrng
+    elif pltsent:
+        # if two data sets are present, we should auto-adjust
+        plt.yrange=None
 
     if 'xlabel' in keywords:
         plt.xlabel = keywords['xlabel']
