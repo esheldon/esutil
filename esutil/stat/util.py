@@ -118,7 +118,6 @@ class Binner(dict):
 
         # reverse indices are always calculated when
         # y is sent, so we have the mean values for x,y
-        b['center']
         b['xmean'], b['xstd'], b['xerr'], b['xerr2']
         b['ymean'], b['ystd'], b['yerr'], b['yerr2']
 
@@ -807,7 +806,20 @@ def histogram2d(x, y,
 
         return output
 
+def boxcar_average(x, N):
+    """
+    convolve the data with a boxcar window of the specified length
 
+    parameters
+    ----------
+    data: array
+        The data
+    N: integer
+        Size of the window
+    """
+    from numpy import convolve, ones
+    kernel=ones((N,))/N
+    return convolve(x, kernel)[(N-1):]
 
 
 def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
