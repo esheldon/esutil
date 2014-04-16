@@ -851,9 +851,6 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     import biggles
     from biggles import FramedPlot, Points
 
-    if plt is None:
-        plt = FramedPlot()
-
     x=numpy.array(x,ndmin=1,copy=False)
     y=numpy.array(y,ndmin=1,copy=False)
     if x.size != y.size:
@@ -864,6 +861,9 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
 
     ind = esutil.stat.util.random_indices(x.size, nrand, **keys)
 
+    return bscatter(x[ind], y[ind], **keys)
+
+    '''    
     if 'type' not in keys:
         keys['type'] = 'dot'
 
@@ -886,6 +886,7 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
         return plt, ind
     else:
         return plt
+    '''
 
 def transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys, **keys):
     """
