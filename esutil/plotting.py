@@ -252,7 +252,7 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
     if norm is not None:
         if norm == True:
             norm=1.0
-        hist = hist.astype('f8')*(1./hist.sum())
+        hist = norm*hist.astype('f8')*(1./hist.sum())
 
     xlog = keywords.get('xlog',False)
     ylog = keywords.get('ylog',False)
