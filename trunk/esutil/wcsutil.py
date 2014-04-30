@@ -8,7 +8,7 @@ See documentation for the WCS class for more information.
 Examples:
     # Use a fits header as initialization to a WCS class and convert
     # image (x,y) to equatorial longitude,latitude (ra,dec)
-    import wcsutil
+    from esutil import wcsutil
     import pyfits
     hdr=pyfits.getheader(fname)
     wcs = wcsutil.WCS(hdr)
@@ -145,7 +145,7 @@ class WCS(object):
 
     Usage:
 
-    import wcsutil
+    from esutil import wcsutil
     wcs = wcsutil.WCS(wcs_structure, longpole=180.0, latpole=90.0, theta0=90.0)
 
     The input is a wcs structure.  This could be a dictionary or numpy array
@@ -167,7 +167,7 @@ class WCS(object):
     Examples:
         # Use a fits header as initialization to a WCS class and convert
         # image (x,y) to equatorial longitude,latitude (ra,dec)
-        import wcsutil
+        from esutil import wcsutil
         import pyfits
         hdr=pyfits.getheader(fname)
         wcs = wcsutil.WCS(hdr)
@@ -227,7 +227,7 @@ class WCS(object):
 
         examples
         --------
-        import wcsutil
+        from esutil import wcsutil
         import fitsio
         hdr=fitsio.read_header(fname)
         wcs = wcsutil.WCS(hdr)
@@ -280,7 +280,7 @@ class WCS(object):
             x,y: x and y coords in the image.  Will have the same shape as
                 lon,lat
         Example:
-            import wcsutil
+            from esutil import wcsutil
             import pyfits
             hdr=pyfits.getheader(fname)
             wcs = wcsutil.WCS(hdr)
