@@ -1,5 +1,9 @@
 = News for esutil =
 
+2012-01-15: Tagged version 0.5.0
+
+2012-01-15: The comoving volume returned by the cosmology class is now for the *whole sky*, whereas previously it was per steradian.  To get the old behavior, divide by 4*pi
+
 ??-??-??: Updated cosmology package to use fast C code.  You should remove an old
   install before installing because of some old files that may be left in place.
 
