@@ -119,6 +119,9 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         Match the string array to the input regular expression.  Returns
         a boolean array.
 
+    match_multi(arr1, arr2)
+        Match two numpy integer arrays, one of which may be non-unique
+
     dict2array(dict, sort=False, keys=None)
         Convert a dictionary to a numpy array.  Works for simple typs such as
         strings, integers, floating.

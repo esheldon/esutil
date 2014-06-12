@@ -123,10 +123,19 @@ if have_numpy:
 
 
 
+long_description=open(os.path.join(os.path.dirname(__file__), "README.md")).read()
+
+classifiers = ["Development Status :: 5 - Production/Stable"
+               ,"License :: OSI Approved :: GNU General Public License (GPL)"
+               ,"Topic :: Scientific/Engineering :: Astronomy"
+               ,"Intended Audience :: Science/Research"
+              ]
 
 
 # data_files copies the ups/esutil.table into prefix/ups
 setup(name='esutil',
+      version="0.5.2",
+      classifiers=classifiers,
       description='Erin Sheldons Python Utilities',
       url='http://code.google.com/p/esutil/',
       packages=packages,
