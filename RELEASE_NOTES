@@ -1,9 +1,15 @@
+v0.5.2 (2014-06-12)
+----------------------------------------------------------------------
+
 Updates:
     esutil/io.py: 
         Added writing of xml files.
         Added bunzipping of fits files that end in .bz2
     esutil/wcsutil.py:
         Now allow any header object that supports iteration
+    esutil/plotting.py
+        - Allow sending norm for histogram plot function bhist.
+        - forward keywords to the underlying biggles routines
 
 New methods:
     esutil/numpy_util.py: 
@@ -11,11 +17,41 @@ New methods:
             Remove byte order information from numpy type descriptor.
         strmatch: 
             match a string array to a regular expression
+        match_multi:
+            code for matching two numpy integer arrays, one
+            of which may be non-unique. Similar to match_multi
+            from sdssidl (from Eli Rykoff)
+        rem_dup:
+            Return indices of unique values of an array, selecting the one
+            (when duplicates exist) with the largest value of flag.  Optionally
+            returns the values in the array as well as their indices. (from Amy
+            Kimball)
+    esutil/random.py:
+        Added some new distributions
+
     esutil/stats/util.py:
         wmedian: calculate the weighted median
     esutil/plotting.py:
         get_grid Get a 2-d grid layout given the total number of plots
-        
+
+    esutil/misc.py
+        collect_keyby:
+            Create a new dictionary from the input collection, keyed by the
+            values specified by the input key name.
+
+
+Bug fixes
+    esutil/xmltools.py stderr used but not imported
+    esutil/plotting.py: deal properly with log plots when values
+        go below zero
+    esutil/coords.py:
+        bug fixes to coords.ra_parse and coords.dec_pars from Paul Ray and Dave
+        Smith, NRL
+    esutil/wcsutil.py
+        - allow scalar structured arrays in wcs
+        - use simple inversion if full distortion is not present
+        - don't use minimozer when distortion is none
+        - don't require npix and cunit1
 
 v0.5.1 (2012-04-27)
 ----------------------------------------------------------------------
