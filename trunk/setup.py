@@ -135,11 +135,15 @@ classifiers = ["Development Status :: 5 - Production/Stable"
 # data_files copies the ups/esutil.table into prefix/ups
 setup(name='esutil',
       version="0.5.2",
+      author="Erin Scott Sheldon",
+      author_email="erin.sheldon@gmail.com",
       classifiers=classifiers,
       description='Erin Sheldons Python Utilities',
       long_description=long_description,
+      license = "GPL",
       url='http://code.google.com/p/esutil/',
       packages=packages,
       data_files=[('ups',['ups/esutil.table'])],
       ext_modules=ext_modules,
+      install_requires=['numpy'],
       include_dirs=include_dirs)
