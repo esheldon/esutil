@@ -92,30 +92,10 @@ _property_headurl='$HeadURL$'
 
 import sys
 
+__version__ = "0.5.2"
+
 def version():
-    from sys import stderr
-
-    thisname='/esutil/__init__.py'
-    badvers="NOTAG: unparseable"
-
-    psplit=_property_headurl.split()
-    if len(psplit) != 3:
-        mess="headurl did not split into 3: '%s'\n" % _property_headurl
-        stderr.write(mess)
-        return badvers
-
-    url=psplit[1]
-
-    if url.find(thisname) == -1:
-        mess="url '%s' does not contain string '%s'\n" % \
-                (_property_headurl, thisname)
-        stderr.write(mess)
-        return badvers
-
-    urlfront = url.replace(thisname, '')
-
-    tag=urlfront.split('/')[-1]
-    return tag
+    return __version__
 
 def get_python_version(numerical=False):
     if numerical:
