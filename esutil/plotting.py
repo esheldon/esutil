@@ -8,7 +8,7 @@ except:
 import esutil
 import numpy_util
 
-# biggles plotting routines.  mostly convenience functions for interactive work
+# biggles plotting routines.
 
 def bbox(x0, x1, y0, y1, **keys):
     """
@@ -26,6 +26,29 @@ def bbox(x0, x1, y0, y1, **keys):
     by = numpy.array( [y0,y1,y1,y0,y0], dtype='f8' )
 
     return biggles.Curve(bx, by, **keys)
+
+def bcircle(x0, y0, rad, npoints=100, **keys):
+    """
+    get a circle represented as a biggles.Curve
+
+    parameters
+    ----------
+    x0, y0:
+        center of the circle
+    rad:
+        radius of the circle
+    npoints: optional
+        Number of points in the circle, default 100
+    **keys:
+        other keys for the Curve object
+    """
+    import biggles
+    # first get a bunch of points on the circle
+    theta = numpy.linspace(0.0, 2*numpy.pi, npoints)
+    x = x0 + rad*numpy.cos(theta)
+    y = y0 + rad*numpy.sin(theta)
+
+    return biggles.Curve(x, y, **keys)
 
 def bscatter(xin, yin, show=True, plt=None, **keywords):
     """
