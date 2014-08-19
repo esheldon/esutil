@@ -656,6 +656,7 @@ def testhist(doplot=False):
 
 
 def histogram2d(x, y, 
+                z=None,
                 nx=None, 
                 ny=None, 
                 xbin=None, 
@@ -673,7 +674,7 @@ def histogram2d(x, y,
         Histogram two-dimensional data.
 
     Calling Sequence:
-        histogram2d(x, y, 
+        histogram2d(x, y, z=None,
                     nx=None, 
                     ny=None, 
                     xbin=None, 
@@ -689,6 +690,9 @@ def histogram2d(x, y,
         x,y:  The x and y values for the data.  Must be same length.
 
     Keywords:
+        z: optional z third dimension.
+            If sent 'zmean' is in the output dictionary
+
         nx: Number of bins in the x direction.
         ny: Number of bins in the y direction.
         xbin: binsize in the x direction.
@@ -703,13 +707,20 @@ def histogram2d(x, y,
             'hist' key, as well as xlow,xhigh,xcenter and other bin
             information.
 
+            If z is sent, more is implied. 
+
     """
 
     x = numpy.array(x, ndmin=1, copy=False)
     y = numpy.array(y, ndmin=1, copy=False)
-
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
+
+    if z is not None:
+        rev=True
+        z = numpy.array(z, ndmin=1, copy=False)
+        if x.size != z.size:
+            raise ValueError("x,y,z must be the same size")
 
     # binsizes will take precedence
     dobinsizes=False
@@ -745,30 +756,26 @@ def histogram2d(x, y,
     xind=numpy.floor((x[w]-xmin)*(nx/(xmax-xmin)))
     yind=numpy.floor((y[w]-ymin)*(ny/(ymax-ymin)))
 
-    ind=xind+nx*yind
+    #ind=xind+nx*yind
+    # fixed so that row,col is the indexing
+    ind=yind+ny*xind
 
+    if rev:
+        hist, revind = histogram(ind, min=0, max=nx*ny-1, rev=True)
+    else:
+        hist = histogram(ind, min=0, max=nx*ny-1)
 
-    result = histogram(ind, min=0, max=nx*ny-1, rev=rev)
+    hist = hist.reshape(nx,ny)
 
-    if not more:
+    if not more and z is None:
         if rev:
-            hist, revind=result
-            hist = hist.reshape(nx,ny)
             return hist, revind
         else:
-            hist = result.reshape(nx,ny)
             return hist
     else:
 
         output={}
-        if rev:
-            hist, revind = result
-            hist = hist.reshape(nx,ny)
-            output['hist'] = hist
-            output['rev'] = revind
-        else:
-            hist = result.reshape(nx,ny)
-            output['hist'] = hist
+        output['hist'] = hist
 
 
         # create the bin edges and centers
@@ -804,6 +811,17 @@ def histogram2d(x, y,
         # useful for biggles
         output['ranges_reverse'] = ( (ymin,xmin), (ymax,xmax) )
 
+        if rev:
+            output['rev'] = revind
+
+        if z is not None:
+            zmean=numpy.zeros(nx*ny)
+            for i in xrange(hist.size):
+                if revind[i] != revind[i+1]:
+                    wbin=revind[ revind[i]:revind[i+1] ]
+                    zmean[i] = z[w[wbin]].mean()
+
+            output['zmean'] = zmean.reshape(nx,ny)
         return output
 
 def boxcar_average(x, N):
