@@ -1883,6 +1883,106 @@ def randind(nmax, nrand, dtype=None):
     return ind
 
 
+def between(arr, lowval, highval, type='[)'):
+    """
+    test values of an array are between the specified values
+
+    parameters
+    ----------
+    arr: array
+        numpy array
+    lowval: scalar
+        lower value
+    highval: scalar
+        high value
+    type: string, optional
+        Interval type, one of [] () [) (]
+
+        default [) mimicking slices for integers.  The distinction is often
+        less meaningful for floating points
+
+    returns
+    -------
+    bool array with True for values in the range and False otherwise
+
+    example
+    -------
+
+    # select elements that equal 3 or are between 10 and 100 with slice
+    # symantics [), e.g. [10,100)
+
+    a=numpy.arange(200)
+    w,=numpy.where( (a==3) | between(a,10,100) )
+
+    # select elements that equal 3 or are between 10 and 100, inclusive, e.g.
+    # [10,100]
+
+    a=numpy.arange(200)
+    w,=numpy.where( (a==3) | between(a,10,100,'[]') )
+    """
+
+    if type=='[)':
+        logic=(arr >= lowval) & (arr <  highval)
+    elif type=='[]':
+        logic=(arr >= lowval) & (arr <= highval)
+    elif type=='()':
+        logic=(arr >  lowval) & (arr <  highval)
+    elif type=='(]':
+        logic=(arr >  lowval) & (arr <= highval)
+    else:
+        raise ValueError("bad range type: '%s'" % type)
+
+    return logic
+
+def outside(arr, lowval, highval, type=')('):
+    """
+    test values of an array are outside the specified values
+
+    parameters
+    ----------
+    arr: array
+        numpy array
+    lowval: scalar
+        lower value
+    highval: scalar
+        high value
+    type: string, optional
+        Interval type, one of )(  ][  ](  )[
+
+        default is )( meaning total exclusion for integers. The
+        distinction is often less meaningful for floating points
+
+    returns
+    -------
+    bool array with True for values outside the range and False otherwise
+
+    example
+    -------
+
+    # select elements that equal 25 or are outside 10 and 100, exclusive
+    a=numpy.arange(200)
+    w,=numpy.where( (a==5) | outside(a,10,100) )
+
+    # select elements that are outside 10 and 100, inclusive
+    a=numpy.arange(200)
+    w,=numpy.where( outside(a,10,100,'][') )
+
+
+    """
+
+    if type==')(':
+        logic=(arr <  lowval) | (arr >  highval)
+    elif type=='][':
+        logic=(arr <= lowval) | (arr >= highval)
+    elif type=='](':
+        logic=(arr <= lowval) | (arr >  highval)
+    elif type==')[':
+        logic=(arr <  lowval) | (arr >= highval)
+    else:
+        raise ValueError("bad range type: '%s'" % type)
+
+    return logic
+
 
 class ArrayWriter:
     """
