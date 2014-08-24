@@ -1054,7 +1054,7 @@ def add_log_error_bars(plt, type, x, y, err, prange, **pkeywords):
         return p
 
 
-def fake_filled_circles(labels, colors=None, x=-9.99e12, y=-9.99e12):
+def fake_filled_circles(labels, colors=None, sizes=None, x=-9.99e12, y=-9.99e12):
     """
 
     When using a dot as plot symbol, the PlotKey is not useful because the dot
@@ -1070,6 +1070,9 @@ def fake_filled_circles(labels, colors=None, x=-9.99e12, y=-9.99e12):
     if colors is not None:
         if len(colors) != len(labels):
             raise ValueError("colors must be same len as labels")
+    if sizes is not None:
+        if len(sizes) != len(labels):
+            raise ValueError("sizes must be same len as labels")
 
     points=[]
     keys={}
@@ -1077,6 +1080,9 @@ def fake_filled_circles(labels, colors=None, x=-9.99e12, y=-9.99e12):
 
         if colors is not None:
             keys['color'] = colors[i]
+
+        if sizes is not None:
+            keys['size'] = sizes[i]
 
         p = Point(x,y,type='filled circle', **keys)
         p.label = labels[i]
