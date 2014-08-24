@@ -4,6 +4,11 @@ v0.5.3 (unreleased)
 Updates:
     esutil/stat.histogram2d
         Now uses proper index order for x,y
+    esutil/plotting.py
+        removed bcircle and bbox since these are actually part
+        of biggles, just not documented.
+
+        Allow sizes= sent to fake_filled_circles
 
 New methods:
     esutil/numpy_util.py:
