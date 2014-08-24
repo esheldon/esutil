@@ -1,3 +1,17 @@
+v0.5.3 (unreleased)
+----------------------------------------------------------------------
+
+Updates:
+    esutil/stat.histogram2d
+        Now uses proper index order for x,y
+
+New methods:
+    esutil/numpy_util.py:
+        between:
+            Test if array elements are within a range
+        outside:
+            Test if array elements are outside a range
+
 v0.5.2 (2014-06-12)
 ----------------------------------------------------------------------
 
