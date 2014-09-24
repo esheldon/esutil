@@ -74,8 +74,7 @@ PyObject* HTMC::lookup_id(
 		throw "ra/dec must be the same size";
 	}
 
-	// The output data.  int32 should be OK for depth=10
-	NumpyVector<npy_int32> htmid(ra.size());
+	NumpyVector<npy_int64> htmid(ra.size());
 
 	for (npy_intp i=0; i<ra.size(); i++) {
 		htmid[i] = mHtmInterface.lookupID(ra[i], dec[i]);
@@ -115,17 +114,17 @@ PyObject* HTMC::cmatch(
 	NumpyVector<double> ra2(ra2_array);
 	NumpyVector<double> dec2(dec2_array);
 
-	NumpyVector<int32_t> htmrev2(htmrev2_array);
+	NumpyVector<int64_t> htmrev2(htmrev2_array);
 
 	// get these as numpyvectors even though they are only length 1
 	// because it does a good job with conversions
-	NumpyVector<int32_t> minidVec(minid_obj);
-	NumpyVector<int32_t> maxidVec(maxid_obj);
-	NumpyVector<int32_t> maxmatchVec(maxmatch_obj);
+	NumpyVector<int64_t> minidVec(minid_obj);
+	NumpyVector<int64_t> maxidVec(maxid_obj);
+	NumpyVector<int64_t> maxmatchVec(maxmatch_obj);
 
-	int32_t minid = minidVec[0];
-	int32_t maxid = maxidVec[0];
-	int32_t maxmatch = maxmatchVec[0];
+	int64_t minid = minidVec[0];
+	int64_t maxid = maxidVec[0];
+	int64_t maxmatch = maxmatchVec[0];
 
 
 	// These will temporarily hold the results
@@ -185,7 +184,7 @@ PyObject* HTMC::cmatch(
 
 		// number of triangles found
 		npy_intp nfound = flist.length() + plist.length();
-		std::vector<int32_t> idlist(nfound);
+		std::vector<int64_t> idlist(nfound);
 		npy_intp idcount=0;
 
 		// We could speed this up when no distance is needed by
@@ -195,13 +194,13 @@ PyObject* HTMC::cmatch(
 		// ----------- FULL NODES -------------
 		for(size_t i = 0; i < flist.length(); i++)
 		{  
-			idlist[idcount] = (uint32 )flist(i);
+			idlist[idcount] = flist(i);
 			idcount++;
 		}
 		// ----------- Partial Nodes ----------
 		for(size_t i = 0; i < plist.length(); i++)
 		{  
-			idlist[idcount] = (uint32 )plist(i);
+			idlist[idcount] = plist(i);
 			idcount++;
 		}
 
@@ -212,20 +211,20 @@ PyObject* HTMC::cmatch(
 
 		for (npy_intp j=0; j<nfound; j++) {
 
-			int32_t leafid = idlist[j];
+			int64_t leafid = idlist[j];
 
 			// Make sure leaf is in list for ra2,dec2
 			if ( leafid >= minid && leafid <= maxid) {
 
-				int32_t leafbin = idlist[j] - minid;
+				int64_t leafbin = idlist[j] - minid;
 
 				// Any found in this leaf?
 				if ( htmrev2[leafbin] != htmrev2[leafbin+1] ) {
 
 					// Now loop over the sources
-					int32_t nLeafBin = htmrev2[leafbin+1] - htmrev2[leafbin];
+					int64_t nLeafBin = htmrev2[leafbin+1] - htmrev2[leafbin];
 
-					for (int32_t ileaf=0; ileaf<nLeafBin;ileaf++) {
+					for (int64_t ileaf=0; ileaf<nLeafBin;ileaf++) {
 
 						npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
 
