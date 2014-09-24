@@ -33,7 +33,29 @@ class HTM(htmc.HTMC):
         area = area0/areadiv*(180.0/pi)**2
         return area
 
+    def intersect(self, ra, dec, radius, inclusive=True):
+        """
+        look up all triangles that are contained within or intersect a circle
+        centered on the input point.
 
+        parameters
+        ----------
+        ra: float
+            RA of central point in degrees
+        dec: float
+            DEC of central point in degrees
+        radius: float
+            radius of circle in degrees
+        inclusive: bool, optional
+            If False, only include triangles fully enclosed within the circle.
+            If True, include those that intersect as well.  Default True.
+        """
+        if inclusive:
+            inc=1
+        else:
+            inc=0
+
+        return super(HTM,self).intersect(ra, dec, radius, inc)
 
     def match(self, ra1, dec1, ra2, dec2, radius,
               maxmatch=1, 

@@ -84,6 +84,60 @@ PyObject* HTMC::lookup_id(
 	return htmidPyObj;
 }
 
+PyObject* HTMC::intersect(
+		double ra, // all in degrees
+        double dec,
+		double radius, // degrees
+        int inclusive
+        ) throw (const char *) {
+
+	static const double D2R=0.0174532925199433;
+    npy_intp nfound;
+
+	// This is used in the basic calculations
+	const SpatialIndex &index = mHtmInterface.index();
+
+	double d = cos( radius*D2R );
+
+    // Declare the domain and the lists
+    SpatialDomain domain;    // initialize empty domain
+    ValVec<uint64> plist, flist;	// List results
+
+    // Find the triangles around this point
+    domain.setRaDecD(ra,dec,d);
+    domain.intersect(&index,plist,flist);
+
+	// number of triangles found
+    if (inclusive) {
+        nfound = flist.length() + plist.length();
+    } else {
+        nfound = flist.length();
+    }
+
+	NumpyVector<int64_t> idlist(nfound);
+
+	npy_intp idcount=0;
+
+    // ----------- FULL NODES -------------
+    for(size_t i = 0; i < flist.length(); i++)
+    {  
+        idlist[idcount] = flist(i);
+        idcount++;
+    }
+    if (inclusive) {
+        // ----------- Partial Nodes ----------
+        for(size_t i = 0; i < plist.length(); i++)
+        {  
+            idlist[idcount] = plist(i);
+            idcount++;
+        }
+    }
+
+	PyObject* idlist_pyobj = idlist.getref();
+	return idlist_pyobj;
+}
+
+
 
 
 /*
