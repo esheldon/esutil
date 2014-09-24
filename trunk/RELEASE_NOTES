@@ -2,6 +2,10 @@ v0.5.3 (unreleased)
 ----------------------------------------------------------------------
 
 Updates:
+    esutil/htm
+        Added intersect() method to look up all triangles that are contained
+        within or intersect a circle centered on the input point.  Use
+        64-bit integer internally to allow higher depths.
     esutil/stat.histogram2d
         Now uses proper index order for x,y
     esutil/plotting.py
