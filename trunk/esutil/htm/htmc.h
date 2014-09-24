@@ -37,6 +37,14 @@ class HTMC {
                 PyObject* ra_array, 
                 PyObject* dec_array) throw (const char *);
 
+        PyObject* intersect(
+                            double ra, // all in degrees
+                            double dec,
+                            double radius, // degrees
+                            int inclusive
+                           ) throw (const char *);
+
+
         // this requires the reverse indices must already be created,
         // and other obscure inputs. The python wrapper takes care of
         // all that.

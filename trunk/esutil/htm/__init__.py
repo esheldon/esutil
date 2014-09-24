@@ -42,6 +42,10 @@ Methods:
         Return the index of the input ra/dec at the current htm depth.
         ra/dec may be arrays.
 
+    intersect(ra, dec, radius, inclusive=True):
+        look up all triangles that are contained within or intersect a circle
+        centered on the input point.
+
     area():
         Return the mean area of triangles at the current depth. The units
         are square degrees.
