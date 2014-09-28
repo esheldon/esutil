@@ -8,6 +8,9 @@ New:
         - Added intersect() method to the HTM class to look up all triangles
           that are contained within or intersect a circle centered on the input
           point.
+    - esutil/numpy_util.py:
+        - between: Test if array elements are within a range
+        - outside: Test if array elements are outside a range
 
 Updates:
     - esutil/htm
@@ -21,11 +24,6 @@ Updates:
         - removed bcircle and bbox since these are actually part of biggles,
           just not documented.
         - Allow sizes= sent to fake_filled_circles
-
-New methods:
-    - esutil/numpy_util.py:
-        - between: Test if array elements are within a range
-        - outside: Test if array elements are outside a range
 
 v0.5.2 (2014-06-12)
 ----------------------------------------------------------------------
