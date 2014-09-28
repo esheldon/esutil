@@ -18,7 +18,7 @@ class HTM(htmc.HTMC):
         """
         get the depth of the HTM tree
         """
-        return self.depth()
+        return super(HTM,self).depth()
 
     def area(self):
         """
@@ -35,7 +35,7 @@ class HTM(htmc.HTMC):
         pi=numpy.pi
         area0=4.0*pi/8.0
 
-        areadiv = 4.0**self.depth()
+        areadiv = 4.0**self.get_depth()
         area = area0/areadiv*(180.0/pi)**2
         return area
 
@@ -187,7 +187,7 @@ class HTM(htmc.HTMC):
 
         if htmrev2 is None:
             # new way using a Matcher
-            depth=self.depth()
+            depth=self.get_depth()
             matcher=Matcher(depth, ra2, dec2)
             return matcher.match(ra1,
                                  dec1,
