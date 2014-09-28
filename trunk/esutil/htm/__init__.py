@@ -139,5 +139,5 @@ MODIFICATION HISTORY:
 
 
 from . import htm
-from .htm import HTM
+from .htm import HTM, Matcher, read_pairs
 from . import unit_tests

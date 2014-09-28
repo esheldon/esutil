@@ -5,6 +5,7 @@
 #include "SpatialInterface.h"
 #include <stdint.h>
 #include <vector>
+#include <map>
 #include "numpy/arrayobject.h"
 
 typedef struct {
@@ -20,7 +21,7 @@ struct PAIR_INFO_ORDERING {
 };
 
 // doesn't seem to work to include it here with swig...
-//#include "../NumpyVector.h"
+#include "../include/NumpyVector.h"
 
 // called HTMC because we will have another python-only class that
 // inherits from this one.
@@ -89,5 +90,39 @@ class HTMC {
         htmInterface mHtmInterface;
         int mDepth;
 };
+
+class Matcher {
+	public:
+
+        Matcher(int depth,
+                PyObject* ra,
+                PyObject* dec) throw (const char *);
+        ~Matcher() {};
+
+        int get_depth() {
+            return depth;
+        }
+
+        PyObject* match(PyObject* radius_array, // degrees
+                        PyObject* ra_array, // degrees
+                        PyObject* dec_array,
+                        PyObject* maxmatch_obj,
+                        PyObject* filename_obj) throw (const char *);
+
+
+    private:
+
+        void init_hmap(void);
+
+        int depth;
+        htmInterface htm_interface;
+
+        NumpyVector<double> ra;
+        NumpyVector<double> dec;
+
+        std::map<int64_t, std::vector<int64_t> > hmap;
+
+};
+
 
 #endif
