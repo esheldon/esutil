@@ -4,18 +4,18 @@ v0.5.3 (unreleased)
 New:
 
     esutil/htm:
-        - introduced the Matcher class, which is much more memory efficient at
+        - introduced the Matcher class, which is much more memory efficient for
           matching than the old "reverse indices" style.
+        - Added intersect() method to the HTM class to look up all triangles
+          that are contained within or intersect a circle centered on the input
+          point.
 
 Updates:
 
     - esutil/htm
         - HTM class:
-            - Added intersect() method to look up all triangles that are
-              contained within or intersect a circle centered on the input
-              point.
-            - Use 64-bit integer internally to allow higher depths.
-            - use a Matcher internally for matching two sets of points
+            - Use 64-bit integer internally to allow higher depth values.
+            - match() uses a Matcher object internally
 
     - esutil/stat.histogram2d
         - Now uses proper index order for x,y
