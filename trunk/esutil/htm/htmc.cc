@@ -199,8 +199,6 @@ PyObject* HTMC::cmatch(
 			err<<"Cannot open file: "<<filename<<" : "<<strerror(errno);
 			throw err.str().c_str();
 		}
-		// zero for starters
-		fwrite(&ntotal, sizeof(int64_t), 1, fptr);
 	}
 
 
@@ -317,9 +315,10 @@ PyObject* HTMC::cmatch(
 			}
 			for (npy_intp ci=0; ci<nkeep; ci++) {
 				if (fptr) {
-					fwrite(&(pair_info[ci].i1), sizeof(int64_t), 1, fptr);
-					fwrite(&(pair_info[ci].i2), sizeof(int64_t), 1, fptr);
-					fwrite(&(pair_info[ci].d12), sizeof(double), 1, fptr);
+                    fprintf(fptr, "%ld %ld %.16g\n", 
+                            pair_info[ci].i1,
+                            pair_info[ci].i2,
+                            pair_info[ci].d12);
 				} else {
 					m1.push_back(pair_info[ci].i1);
 					m2.push_back(pair_info[ci].i2);
@@ -361,12 +360,8 @@ PyObject* HTMC::cmatch(
         return output_tuple;
 
 	} else {
-
-        rewind(fptr);
-        fwrite(&ntotal, sizeof(int64_t), 1, fptr);
         fflush(fptr);
         fclose(fptr);
-
         return PyLong_FromLongLong((long long) ntotal);
 	}
 
@@ -599,20 +594,21 @@ void Matcher::init_hmap(void)
 }
 
 PyObject* Matcher::match(
-		PyObject* radius_array, // degrees
 		PyObject* ra_array, // all in degrees
         PyObject* dec_array,
+		PyObject* radius_array, // degrees
         PyObject* maxmatch_obj,
         PyObject* filename_obj) throw (const char *) {
 
     std::map<int64_t,std::vector<int64_t> >::iterator iter;
 
 	// no copies made if already double vectors
-	NumpyVector<double> radius(radius_array);
-	npy_intp nrad = radius.size();
 
 	NumpyVector<double> ra(ra_array);
 	NumpyVector<double> dec(dec_array);
+
+	NumpyVector<double> radius(radius_array);
+	npy_intp nrad = radius.size();
 
 	// get as NumpyVectors even though they are only length 1
 	// because it does a good job with conversions

@@ -5,10 +5,10 @@ Module:
 
 
 Classes:
-    HTM
+    HTM, Matcher
 
-Purpose:
-
+HTM
+---
     This is a Class to deal with the Hierarchical Triangular Mesh, which is a
     method for breaking the unit sphere into a tree structure where each node
     in the tree is represented by a spherical triangle.  The "depth" of the
@@ -37,6 +37,8 @@ Purpose:
 
 Methods:
 
+    get_depth(): get the depth of the HTM tree
+
     lookup_id(ra, dec):  
 
         Return the index of the input ra/dec at the current htm depth.
@@ -58,13 +60,17 @@ Methods:
           maxid=None,
           file=None)
 
-        Match two sets of ra/dec points using the Hierarchical Triangular
-        Mesh code.  This is very efficient for large search angles and
-        large lists.  May seem slow otherwise due to overhead creating htm
-        indices.  You can optionally write the results to a file.
+        Match two sets of ra/dec points using the Hierarchical Triangular Mesh
+        code.  This is a wrapper using a Matcher object. This is very efficient
+        for large search angles and large lists.  May seem slow otherwise due
+        to overhead creating htm indices.  You can optionally write the results
+        to a file.
+
+        If you need to match the same set multiple times, use a Matcher
+        object
     
     read(filename)
-        Read the binary file format written by the match() code.
+        Read the pairs from a file written by the match() code.
         
     See the docs for each method for more details.  For example, in ipython:
         >>> import esutil
@@ -73,66 +79,18 @@ Methods:
         >>> h.match?
         >>> h.area?
 
-Examples:
+Matcher
+-------
 
-    >>> import esutil
-    >>> depth=10
-    >>> h = esutil.htm.HTM(depth)
-    >>> h.area()*3600 # area in square arcminutes
-    17.703850328673052
+Class to match sets of ra,dec points.  One set is loaded and put
+into a tree structure, and can then be matched quickly to other
+sets of ra,dec points
 
+methods
+-------
 
-    # try looking up the id of an ra/dec position.  Note
-    # ra/dec can also be arrays
-    >>> ra = 200.0
-    >>> dec = 0.0
-    >>> h.lookup_id(ra,dec)
-    array([10518792], dtype=int32)
-
-
-
-    # try matching two lists of ra/dec points
-    # Matching by ra/dec, expect 10 matches ordered by distance....
-    # Use maxmatch<=0 to return ALL matches (default is maxmatch=1 to return
-    # closest match only)
-
-    # match within two arcseconds
-    two = 2.0/3600.
-
-    # offset second list by fraction of 2 arcsec in dec
-    # but last one won't match anything
-    ra1 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 21.36])
-    dec1 = numpy.array( [24.3,          24.3,            24.3,  -28.25, -15.32])
-    ra2 = numpy.array(  [200.0, 200.0, 200.0, 175.23, 55.25])
-    dec2 = numpy.array( [24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])
-
-    m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,maxmatch=0)
-
-    for i in range(m1.size):
-        print m1[i],m2[i],d12[i]
-
-    # this produces
-    0 1 0.00013888984367
-    0 2 0.00018333285694
-    0 0 0.000416666032158
-    1 1 0.00013888984367
-    1 2 0.00018333285694
-    1 0 0.000416666032158
-    2 1 0.00013888984367
-    2 2 0.00018333285694
-    2 0 0.000416666032158
-    3 3 0.000322221232243
-
-
-
-To Perform Unit Tests:
-    import esutil
-    esutil.htm.unit_tests.test()
-
-
-MODIFICATION HISTORY:
-    SWIG Wrapper working 2010-03-03, Erin Sheldon, BNL.
-    Early 2011: Re-write without swig.
+get_depth(): get the depth of the HTM tree
+match(): match against a set of ra,dec points
 
 """
 
