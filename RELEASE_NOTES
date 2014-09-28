@@ -2,8 +2,7 @@ v0.5.3 (unreleased)
 ----------------------------------------------------------------------
 
 New:
-
-    esutil/htm:
+    - esutil/htm:
         - introduced the Matcher class, which is much more memory efficient for
           matching than the old "reverse indices" style.
         - Added intersect() method to the HTM class to look up all triangles
@@ -11,7 +10,6 @@ New:
           point.
 
 Updates:
-
     - esutil/htm
         - HTM class:
             - Use 64-bit integer internally to allow higher depth values.
@@ -25,7 +23,6 @@ Updates:
         - Allow sizes= sent to fake_filled_circles
 
 New methods:
-
     - esutil/numpy_util.py:
         - between: Test if array elements are within a range
         - outside: Test if array elements are outside a range
