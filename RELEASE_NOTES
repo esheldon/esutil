@@ -1,25 +1,34 @@
 v0.5.3 (unreleased)
 ----------------------------------------------------------------------
 
-Updates:
-    esutil/htm
-        Added intersect() method to look up all triangles that are contained
-        within or intersect a circle centered on the input point.  Use
-        64-bit integer internally to allow higher depths.
-    esutil/stat.histogram2d
-        Now uses proper index order for x,y
-    esutil/plotting.py
-        removed bcircle and bbox since these are actually part
-        of biggles, just not documented.
+New:
 
-        Allow sizes= sent to fake_filled_circles
+    esutil/htm:
+        - introduced the Matcher class, which is much more memory efficient at
+          matching than the old "reverse indices" style.
+
+Updates:
+
+    - esutil/htm
+        - HTM class:
+            - Added intersect() method to look up all triangles that are
+              contained within or intersect a circle centered on the input
+              point.
+            - Use 64-bit integer internally to allow higher depths.
+            - use a Matcher internally for matching two sets of points
+
+    - esutil/stat.histogram2d
+        - Now uses proper index order for x,y
+    - esutil/plotting.py
+        - removed bcircle and bbox since these are actually part of biggles,
+          just not documented.
+        - Allow sizes= sent to fake_filled_circles
 
 New methods:
-    esutil/numpy_util.py:
-        between:
-            Test if array elements are within a range
-        outside:
-            Test if array elements are outside a range
+
+    - esutil/numpy_util.py:
+        - between: Test if array elements are within a range
+        - outside: Test if array elements are outside a range
 
 v0.5.2 (2014-06-12)
 ----------------------------------------------------------------------
