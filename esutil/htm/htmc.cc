@@ -564,4 +564,239 @@ PyObject* HTMC::cbincount(
 	return countsPyObject;
 }
 
+Matcher::Matcher(int depth,
+                 PyObject* ra_input,
+                 PyObject* dec_input) throw (const char *)
+{
+    this->depth = depth;
+    this->htm_interface.init(depth);
+
+	// wrap the input ra,dec objects, making sure they are doubles
+	// no copy is made if the are already double arrays
+	this->ra.init(ra_input);
+	this->dec.init(dec_input);
+    
+    init_hmap();
+}
+void Matcher::init_hmap(void)
+{
+    std::map<int64_t,std::vector<int64_t> >::iterator iter;
+    int64_t htmid=0;
+    int64_t num=ra.size();
+    for (int64_t i=0; i<num; i++) {
+        htmid = htm_interface.lookupID(ra[i], dec[i]);
+
+        iter=hmap.find(htmid);
+
+        if (iter==hmap.end()) {
+            std::vector<int64_t> v;
+            v.push_back(i);
+            hmap[htmid] = v;
+        } else {
+            iter->second.push_back(i);
+        }
+    }
+}
+
+PyObject* Matcher::match(
+		PyObject* radius_array, // degrees
+		PyObject* ra_array, // all in degrees
+        PyObject* dec_array,
+        PyObject* maxmatch_obj,
+        PyObject* filename_obj) throw (const char *) {
+
+    std::map<int64_t,std::vector<int64_t> >::iterator iter;
+
+	// no copies made if already double vectors
+	NumpyVector<double> radius(radius_array);
+	npy_intp nrad = radius.size();
+
+	NumpyVector<double> ra(ra_array);
+	NumpyVector<double> dec(dec_array);
+
+	// get as NumpyVectors even though they are only length 1
+	// because it does a good job with conversions
+	NumpyVector<int64_t> maxmatchVec(maxmatch_obj);
+	int64_t maxmatch = maxmatchVec[0];
+
+	// These will temporarily hold the results
+	std::vector<int64_t> m1;
+	std::vector<int64_t> m2;
+	std::vector<double> d12;
+
+	// total number of pairs
+	int64_t ntotal = 0;
+
+	FILE* fptr=NULL;
+	if (PyString_Check(filename_obj)) {
+		char* filename=PyString_AsString(filename_obj);
+		fptr = fopen(filename, "w");
+		if (fptr==NULL) 
+		{
+			std::stringstream err;
+			err<<"Cannot open file: "<<filename<<" : "<<strerror(errno);
+			throw err.str().c_str();
+		}
+	}
+
+
+
+	static const double
+		D2R=0.0174532925199433;
+
+	// This is used in the basic calculations
+	const SpatialIndex &index = this->htm_interface.index();
+
+
+	double rad=0, d=0;
+	if (nrad == 1) {
+		rad = radius[0];
+		d = cos( rad*D2R );
+	}
+
+	npy_intp ninput = ra.size();
+	for (npy_intp i_input=0; i_input<ninput; i_input++) {
+		// Declare the domain and the lists
+		SpatialDomain domain;    // initialize empty domain
+		ValVec<uint64> plist, flist;	// List results
+
+		if (nrad > 1) {
+			rad = radius[i_input];
+			d = cos( rad*D2R );
+		}
+
+		// Find the triangles around this point
+		domain.setRaDecD(ra[i_input],dec[i_input],d); //put in ra,dec,d E.S.S.
+		domain.intersect(&index,plist,flist);	  // intersect with list
+
+
+		// number of triangles found
+		npy_intp nfound = flist.length() + plist.length();
+		std::vector<int64_t> idlist(nfound);
+		npy_intp idcount=0;
+
+		// We could speed this up when no distance is needed by
+		// just keeping everything in the full nodes without
+		// doing a distance calculation
+
+		// ----------- FULL NODES -------------
+		for(size_t i = 0; i < flist.length(); i++)
+		{  
+			idlist[idcount] = flist(i);
+			idcount++;
+		}
+		// ----------- Partial Nodes ----------
+		for(size_t i = 0; i < plist.length(); i++)
+		{  
+			idlist[idcount] = plist(i);
+			idcount++;
+		}
+
+
+		// these are temporary vectors to hold matches to this point
+
+		std::vector<PAIR_INFO> pair_info;
+
+		for (npy_intp j=0; j<nfound; j++) {
+
+			int64_t htmid = idlist[j];
+
+            iter=this->hmap.find(htmid);
+            if (iter != this->hmap.end()) {
+
+                int64_t nleaf =iter->second.size();
+                for (int64_t ileaf=0; ileaf<nleaf; ileaf++) {
+                    int64_t i_this = iter->second[ileaf];
+
+                    // Returns distance in degrees
+                    double dis = gcirc(ra[i_input],
+                                       dec[i_input],
+                                       this->ra[i_this],
+                                       this->dec[i_this],true);
+
+                    // Turns out, this pushing is not a bottleneck!
+                    // Time is negligible compared to the leaf finding
+                    // and the gcirc.
+                    if (dis <= rad) {
+                        PAIR_INFO pi;
+                        pi.i1 = i_input;
+                        pi.i2 = i_this;
+                        pi.d12 = dis;
+                        pair_info.push_back(pi);
+                    } // Within max distance 
+
+                } // loop over objects in leaf 
+
+            } // any in leaf?
+
+		} // loop over input ra,dec
+
+		npy_intp nkeep = pair_info.size();
+		if ( nkeep > 0 ) {
+
+			// Sort the result by distance
+			std::sort( pair_info.begin(), pair_info.end(), PAIR_INFO_ORDERING());
+
+			if ((maxmatch > 0) ) {
+				// setting maxmatch to zero is same as "keep all matches"
+				if (nkeep > maxmatch) {
+					nkeep=maxmatch;
+				}
+			}
+			for (npy_intp ci=0; ci<nkeep; ci++) {
+				if (fptr) {
+                    fprintf(fptr, "%ld %ld %.16g\n", 
+                            pair_info[ci].i1,
+                            pair_info[ci].i2,
+                            pair_info[ci].d12);
+				} else {
+					m1.push_back(pair_info[ci].i1);
+					m2.push_back(pair_info[ci].i2);
+					d12.push_back(pair_info[ci].d12);
+				}
+				// keep track of the total number actually saved or written
+				ntotal += 1;
+			}
+		}
+
+	} // loop over list 1
+
+
+	// This will hold the tuple of match1 and match2 and possibly
+	// d12
+
+
+	if (fptr == NULL) {
+
+        // If we are not writing to a file, we *always* return arrays, even if
+        // they are zero size
+
+        PyObject* output_tuple = PyTuple_New(3);
+
+		NumpyVector<int64_t> m1out(ntotal);
+		NumpyVector<int64_t> m2out(ntotal);
+		NumpyVector<double> d12out(ntotal);
+
+		for (npy_intp i=0; i<ntotal; i++) {
+			m1out[i] = m1[i];
+			m2out[i] = m2[i];
+			d12out[i] = d12[i];
+		}
+
+		PyTuple_SetItem(output_tuple, 0, m1out.getref());
+		PyTuple_SetItem(output_tuple, 1, m2out.getref());
+		PyTuple_SetItem(output_tuple, 2, d12out.getref());
+
+        return output_tuple;
+
+	} else {
+        fflush(fptr);
+        fclose(fptr);
+        return PyLong_FromLongLong((long long) ntotal);
+	}
+
+
+
+
+} // Matcher::match
 

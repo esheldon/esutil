@@ -66,93 +66,82 @@ class HTM(htmc.HTMC):
               file=None,
               verbose=False):
         """
-        Class:
-            HTM
-
-        Method Name:
-            match
+        Match two sets of ra/dec points using the Hierarchical Triangular
+        Mesh code.
+          
+        This is very efficient for large search angles and large lists.
         
-        Purpose:
+        parameters
+        ----------
+        ra1: array or scalar
+        dec1: array or scalar
+        ra2: array or scalar
+        dec2:  array or scalar
+            ra,dec in degrees.  Can be scalars or arrays but require
+            size(ra) == size(dec) in each set.
 
-          Match two sets of ra/dec points using the Hierarchical Triangular
-          Mesh code.  This is very efficient for large search angles and large
-          lists.  May seem slow otherwise due to overhead creating htm indices.
-        
-        
-        Calling Sequence:
-            import esutil
-            depth = 10
-            h=esutil.htm.HTM(depth)
-            m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,radius,
-                                maxmatch=1,
-                                htmid2=None,
-                                htmrev2=None,
-                                minid=None,
-                                maxid=None,
-                                file=None)
+        radius: 
+            The search radius in degrees.  May be a scalar or an array same
+            length as ra1,dec1.
 
-              To speed up successive calls with the same ra2,dec2, you
-              can use:
-                  htmrev2,minid,maxid = h.match_prepare(ra2,dec2)
-              Then
-                  m1,m2,e12 = h.match(ra1,dec1,ra2,dec2,radius,
-                                      htmrev2=htmrev2,minid=minid,maxid=maxid)
+        maxmatch: integer, optional 
+            The maximum number of allowed matches per point. Defaults to return
+            the closest match, maxmatch=1.  Use maxmatch<=0 to return all
+            matches
 
-        
-        Inputs:
-            ra1,dec1,ra2,dec2: 
-                ra,dec lists in degrees.  Can be scalars or arrays but require
-                size(ra) == size(dec) in each set.
+        file: string, optional
+            A file into which will be written the indices and distances.
+            When this keyword is sent, None,None,None is returned. This is
+            useful when the match data will not fit into memory.  
+            
+            The file is an unformatted binary file. It can be read with the
+            read() method. 
 
-          radius: 
-              The search radius in degrees.  May be a scalar or an array same
-              length as ra1,dec1.
-        
-        
-        Keyword Parameters:
+            The format is a 64-bit signed integer representing the number
+            of rows, followed by rows of 
+              
+              i1 i2 d12
 
-            maxmatch=1: 
-                The maximum number of allowed matches per point. Defaults to
-                return the closest match, maxmatch=1.  Use maxmatch<=0 to
-                return all matches
+            Where i1,i2 are the match indices as 64-bit signed integers and
+            d12 is the distance between them in degrees as a 64-bit float.
+ 
+        htmid2=None: 
+            the htm indexes for the second list.  If not sent they are
+            generated internally.  You can generate these with 
 
-            htmid2=None: 
-                the htm indexes for the second list.  If not sent they are
-                generated internally.  You can generate these with 
+                htmid = h.lookup_id(ra, dec)
 
-                    htmid = h.lookup_id(ra, dec)
+        htmrev2=None: 
+            The result of
+                import esutil
+                htmid2 = h.lookup_id(ra, dec)
+                minid=htmid2.min()
+                hist2,htmrev2=\\
+                    esutil.stat.histogram(htmid2-minid,rev=True) 
 
-            htmrev2=None: 
-                The result of
-                    import esutil
-                    htmid2 = h.lookup_id(ra, dec)
-                    minid=htmid2.min()
-                    hist2,htmrev2=\\
-                        esutil.stat.histogram(htmid2-minid,rev=True) 
+            If not sent it is calculated internally for fast lookups.  You
+            can save time on successive calls by generating these your
+            self.
 
-                If not sent it is calculated internally for fast lookups.  You
-                can save time on successive calls by generating these your
-                self.
+        minid=None, maxid=None: 
+            If htmrev2 is sent along with these, there is no need to
+            calculate htmid2.
 
-            minid=None, maxid=None: 
-                If htmrev2 is sent along with these, there is no need to
-                calculate htmid2.
+        file=None: 
+            A file into which will be written the indices and distances.
+            When this keyword is sent, None,None,None is returned. This is
+            useful when the match data will not fit into memory.  
+            
+            The file is an unformatted binary file. It can be read with the
+            read() method. 
 
-            file=None: 
-                A file into which will be written the indices and distances.
-                When this keyword is sent, None,None,None is returned. This is
-                useful when the match data will not fit into memory.  
-                
-                The file is an unformatted binary file. It can be read with the
-                read() method. 
+            The format is a 64-bit signed integer representing the number
+            of rows, followed by rows of 
+              
+              i1 i2 d12
 
-                The format is a 64-bit signed integer representing the number
-                of rows, followed by rows of 
-                  
-                  i1 i2 d12
-
-                Where i1,i2 are the match indices as 64-bit signed integers and
-                d12 is the distance between them in degrees as a 64-bit float.
+            Where i1,i2 are the match indices as 64-bit signed integers and
+            d12 is the distance between them in degrees as a 64-bit float.
         
         Outputs:
 
@@ -701,6 +690,131 @@ class HTM(htmc.HTMC):
             return lower,upper,counts
         else:
             return counts
+
+class Matcher(htmc.Matcher):
+    """
+    Object to match arrays of ra,dec
+
+    The object is initialized with a set of ra,dec and can
+    then be matched to other sets
+
+    parameters
+    ----------
+    depth: int
+        Depth for HTM tree.
+    ra: scalar or array
+        right ascension in degrees
+    dec: scalar or array
+        declination in degrees
+    """
+    def __init__(self, depth, ra, dec):
+
+        ra=numpy.array(ra, dtype='f8', ndmin=1, copy=False)
+        dec=numpy.array(dec, dtype='f8', ndmin=1, copy=False)
+
+        if ra.size != dec.size:
+            raise ValueError("ra size (%d) != "
+                             "dec size (%d)" % (ra.size, dec.size))
+
+        super(Matcher, self).__init__(depth, ra, dec)
+
+    def get_depth(self):
+        """
+        get the depth of the HTM tree
+        """
+        return super(Matcher,self).get_depth()
+
+    def match(self, ra, dec, radius, maxmatch=1, file=None):
+        """
+        match to the input set of ra,dec points
+
+        ra: scalar or array
+            right ascension in degrees
+        dec: scalar or array in degrees
+            declination
+        radius: scalar or array
+            search radius in degrees
+        maxmatch: int, optional
+            Maximum number of matches to return per point, default 1.  Set
+            maxmatch <= 0 to return all matches
+        file: string, optional
+            If sent, write pairs to the file instead of returning the pair
+            data.  This can use much less memory for large match sets.
+            The file is ascii of the form
+                i1 i2 d12
+            Where i1,i2 are the match indices and d12 is the distance between
+            them in degrees
+
+            The file can be read using the read() method.
+
+        returns
+        -------
+        If file= is not sent, a tuple (m1, m2, d):
+            m1:
+                The match indices for the input ra,dec
+            m2:
+                The match indices for the internal ra,dec of
+                the Matcher object
+            d:
+                Distance between the pairs in degrees
+
+        if file= is sent then then number of matches is returned.
+        """
+        ra=numpy.array(ra, dtype='f8', ndmin=1, copy=False)
+        dec=numpy.array(dec, dtype='f8', ndmin=1, copy=False)
+
+        if ra.size != dec.size:
+            raise ValueError("ra size (%d) != "
+                             "dec size (%d)" % (ra.size, dec.size))
+
+        return super(Matcher, self).match(radius, ra, dec, maxmatch, file)
+
+def read_pairs(filename, verbose=False):
+    """
+    Read the pair info written by the match code
+
+    parameters
+    -----------
+    filename: string
+        filename holding the pair data
+    verbose: bool, optional
+        print what is happening
+    returns
+    -------
+    Outputs:
+        A structured array with fields
+            'i1': The index of matches into list 1
+            'i2': The index of matches into list 2
+            'd12': The distance between the matched points
+                in degrees.
+
+        These are equivalent to m1,m2,d12 returned by the
+        match() program when no file is sent.
+
+    Example:
+        import esutil
+        h=esutil.htm.HTM(depth)
+
+        h.match(ra1,dec1,ra2,dec2,radius,filename='some-path')
+
+        data = esutil.htm.read_pairs('some-path')
+    """
+
+    import esutil as eu
+    from esutil.recfile import Recfile
+
+    dtype=[('i1','i8'),('i2','i8'),('d12','f8')]
+
+    if verbose:
+        stdout.write("Reading pairs from file: %s\n" % filename)
+
+    with Recfile(filename, "r", dtype=dtype, delim=' ') as robj:
+        data=robj.read()
+
+    if verbose:
+        stdout.write("    read %d pairs\n" % data.size)
+
+    return data
 
 
 def gmean(r1, r2, dim):
