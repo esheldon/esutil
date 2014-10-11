@@ -657,6 +657,7 @@ def testhist(doplot=False):
 
 def histogram2d(x, y, 
                 z=None,
+                weights=None,
                 nx=None, 
                 ny=None, 
                 xbin=None, 
@@ -760,7 +761,13 @@ def histogram2d(x, y,
     # fixed so that row,col is the indexing
     ind=yind+ny*xind
 
-    if rev:
+    if weights is not None:
+        more=True
+        res = histogram(ind, min=0, max=nx*ny-1, weights=weights[w])
+        hist=res['hist']
+        whist=res['whist'].reshape(nx,ny)
+        revind=res['rev']
+    elif rev:
         hist, revind = histogram(ind, min=0, max=nx*ny-1, rev=True)
     else:
         hist = histogram(ind, min=0, max=nx*ny-1)
@@ -777,6 +784,8 @@ def histogram2d(x, y,
         output={}
         output['hist'] = hist
 
+        if weights is not None:
+            output['whist']=whist
 
         # create the bin edges and centers
         xlow = numpy.arange(nx, dtype='f8')
