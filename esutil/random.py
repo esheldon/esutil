@@ -5,48 +5,26 @@ Module:
 functions:
     srandu(num=1)
         Generate random numbers in the symmetric distribution [-1,1]
-
+    cholesky_sample
+        sample a multivariate covariant distribution using cholesky
+        decomposition.  Uses the CholeskySampler
+    random_indices:
+        Get a unique random selection of indices in [0,imax)
 
 Classes:
 
-    Class Name:
-        Generator
-
-    Purpose:
-
+    Generator
         A class for creating random samples from an arbitrary input probability
         distribution.  The input distribution can either be an array of points
         along with corresponding x values, or a function.
 
-    ** See docs for the Generator class for more details.  To do so in IPython:
-        import esutil
-        esutil.random.Generator?
+    CutGenerator
+        Generate random points from an arbitrary input probability
+        distribution.
 
-    Examples:
-
-        Generate random points from a "sampled" pofx, measured at values x.  In
-        this case pofx is an array of data instead of a function.
-
-            import esutil
-            gen = esutil.random.Generator(pofx, x)
-            rand = gen.genrand(1000000)
-
-
-        Generate random points from an arbitrary function. In this case we can
-        send a range over which x will be generated and the number of points in
-        x to use for the integration.
-
-            def gaussfunc(x):
-                return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
-
-            gen = esutil.random.Generator(gaussfunc, 
-                                          xrange=[-4.5,4.5], nx=100)
-            rand = gen.genrand(1000000)
-
-Modification History:
-    Created:  2010-02, Erin Sheldon, BNL.
-    2010-03-03: Moved to new module random.py, Erin Sheldon, BNL
-
+    CholeskySampler
+        sample a multivariate covariant distribution using cholesky
+        decomposition
 """
 try:
     import numpy
@@ -64,7 +42,6 @@ except:
 # for checking function type, method type
 from types import *
 
-import numpy_util
 import stat
 import esutil as eu
 
@@ -866,6 +843,7 @@ def test_generator(doplot=False):
     """
     Do some tests of the random generator
     """
+    import numpy_util
 
     # first a function
     funcgen = Generator(gaussfunc, xrange=[-4.5,4.5], nx=100)
@@ -905,5 +883,285 @@ def gaussfunc(x):
     for testing function stuff
     """
     return numpy.exp(-0.5*x**2)/numpy.sqrt(2.0*numpy.pi)
+
+class CholeskySampler(object):
+    """
+    sample a multivariate covariant distribution using cholesky decomposition
+
+    example
+    -------
+    means=[20.0, 40.0]
+    cov=[[1.0,0.5],[0.5,2.0]]
+
+    cs=CholeskySampler(means,cov)
+    n=100000
+    rand=cs.sample(n)
+
+    s.mean(axis=0)
+    array([ 20.00139558,  50.00419912])
+
+    s.var(axis=0)
+    array([ 1.00076388,  2.00251013])
+
+    mm=s.mean(axis=0)
+    ( (s[:,0]-mm[0])*(s[:,1]-mm[1]) ).sum()/(n-1)
+    0.50052647916418957
+    """
+    def __init__(self, mean, cov, dist=None):
+        self.mean=numpy.array(mean, ndmin=1)
+        self.cov=numpy.array(cov, ndmin=2)
+
+        if dist is None:
+            dist=numpy.random.randn
+        self.dist=dist
+
+        npar = mean.size
+        n1,n2=cov.shape[0:0+2]
+        if npar != cov.shape[0] or npar != cov.shape[1]:
+            raise ValueError("mean shape [%d] inconsistent "
+                             "with cov shape [%d,%d]" % (npar,n1,n2))
+
+        self.M = numpy.linalg.cholesky(self.cov)
+        self.npar=npar
+
+    def sample(self, n=None):
+        """
+        sample the distribution
+
+        parameters
+        ----------
+        n: integer, optional
+            the number of samples.  If not sent, a single
+            sample is returned, otherwise an array [n,npars]
+            is returned.
+        """
+
+        if n is None:
+            n=1
+            is_scalar=True
+        else:
+            is_scalar=False
+
+        npar=self.npar
+        r=self.dist(npar*n).reshape(npar,n)
+
+        V = numpy.dot(self.M,r)
+
+        mean=self.mean
+        for i in xrange(npar):
+            V[i,:] += mean[i]
+
+        samples=V.T
+        if is_scalar:
+            return samples[0,:]
+        else:
+            return samples
+
+def cholesky_sample(cov, n, means=None, dist=None):
+    """
+    Sample the input covariance using a cholesky decomposition.  The idea is
+    that in each dimension we draw from the standard distribution, and then
+    transform them to have the specified covariance matrix.
+
+    This can be used to produce the mean and errors on combined parameters,
+    taking into account the covariance.
+
+    parameters
+    ----------
+    cov: array
+        A 2-d array representing the covariance of the parameters
+    n: integer
+        The number of random points to generate
+    means: array, optional
+        The mean values to add to the random points; by default
+        the randoms are centered on 0
+    dist: function, optional
+        The distribution function.  Default is numpy.random.randn.
+    
+    example:
+        cov = array([[1.5,0.3],
+                     [0.3,2.7]])
+        means=array([5.6, 12.3])
+        r = cholesky_sample(cov, 100000, means=means)
+
+        x = (r[0,:]
+        erand = (r[1,:]-r[0,:])/(r[1,:]+r[0,:])
+        e_mean = erand.mean()
+        e_err = erand.std()
+
+    History
+        - output is now (npoints,npar) instead of (npar,npoints) to match
+        expectation from rec arrays
+    """
+    if dist is None:
+        dist=numpy.random.randn
+
+    npar = cov.shape[0]
+    if means is not None:
+        nm=len(means)
+        if nm != cov.shape[0]:
+            raise ValueError("expected %d mean values, got %d" % (npar,nm))
+
+    M = numpy.linalg.cholesky(cov)
+
+    r=dist(npar*n).reshape(npar,n)
+
+    V = numpy.dot(M,r)
+
+    if means is not None:
+        for i in xrange(npar):
+            V[i,:] += means[i]
+
+    return V.T
+
+def test_cholesky():
+    import esutil as eu
+    cov=array([[1.0,0.1,0.1],
+               [0.1,2.0,0.1],
+               [0.1,0.1,3.0]])
+    means = [5.0,4.0,8.0]
+
+    n = 100000
+
+    r = cholesky_sample(cov,n,means=means)
+
+    npar = len(means)
+
+    tmp=('mean: %10.6g +/- %10.6g meas: %10.6g +/- %10.6g '
+         'emean: %10.6g efrac: %10.6g')
+    print 'n:',n
+    for i in xrange(npar):
+        mtrue=means[i]
+        etrue=sqrt(cov[i,i])
+        m = r[i,:].mean()
+        e = r[i,:].std()
+        emean = e/sqrt(n)
+        efrac= emean/m
+        text = tmp % (mtrue,etrue,m,e,emean,efrac)
+        print text
+
+    # sum
+    mtrue = means[0] + means[1]
+    etrue = sqrt(cov[0,0] + cov[1,1] + 2*cov[0,1])
+    sum_0_1 = r[0,:] + r[1,:]
+    #eu.plotting.bhist(sum_0_1, binsize=0.2*etrue)
+    m_sum_0_1 = sum_0_1.mean()
+    e_sum_0_1 = sum_0_1.std()
+    emean_sum_0_1 = e_sum_0_1/sqrt(n)
+    efrac_sum_0_1 = emean_sum_0_1/m_sum_0_1 
+    
+    print 'sum 0/1'
+    text = tmp % (mtrue,etrue,m_sum_0_1,e_sum_0_1,emean_sum_0_1,efrac_sum_0_1)
+    print text
+
+    
+    mexp = (means[2]-means[0])/(means[2]+means[0])
+    eexp = -9999
+
+    ellip_01 = (r[2,:]-r[0,:])/(r[2,:]+r[0,:])
+    m_01 = ellip_01.mean()
+    e_01 = ellip_01.std()
+    emean_01 = e_01/sqrt(n)
+    efrac_01 = emean_01/m_01 
+ 
+    eu.plotting.bhist(ellip_01, binsize=0.2*e_01)
+
+    print 'ellip (mean and err can be different)'
+    text = tmp % (mexp,eexp,m_01,e_01,emean_01,efrac_01)
+    print text
+
+    m_01, e_01 = eu.stat.sigma_clip(ellip_01,nsig=5)
+    emean_01 = e_01/sqrt(n)
+    efrac_01 = emean_01/m_01 
+    print 'ellip with sigma clip 5'
+    text = tmp % (mexp,eexp,m_01,e_01,emean_01,efrac_01)
+    print text
+
+    return
+
+    # ratio
+    mexp = means[0]/means[1]
+    eexp = mexp*sqrt(cov[0,0]/means[0]**2 
+                       + cov[1,1]/means[1]**2
+                       - 2*cov[0,1]/means[0]/means[1])
+
+    w,=where( numpy.abs(r[1,:] > 1.e-2))
+    rat_0_1 = r[0,w]/r[1,w]
+    #m_rat_0_1 = rat_0_1.mean()
+    #e_rat_0_1 = rat_0_1.std()
+    ex={}
+    m_rat_0_1, e_rat_0_1 = eu.stat.sigma_clip(rat_0_1,extra=ex,nsig=5)
+    w=ex['index']
+    eu.plotting.bhist(rat_0_1[w], binsize=0.2*eexp)
+    emean_rat_0_1 = e_rat_0_1/sqrt(w.size)
+    efrac_rat_0_1 = emean_rat_0_1/m_rat_0_1 
+    
+    print 'ratio 0/1 (mean and err can be different)'
+    text = tmp % (mexp,eexp,m_rat_0_1,e_rat_0_1,emean_rat_0_1,efrac_rat_0_1)
+    print text
+
+
+def random_indices(imax, nrand, **keys):
+    """
+    Get a unique random selection of indices in [0,imax)
+
+    parameters
+    ----------
+    imax: 
+        range to draw from is [0,imax)
+    nrand:
+        Number of randoms to create.
+    unique:
+        If False, the sample will have replacement, and nrand
+        can be greater than imax
+    seed: int
+        A seed for the random number generator
+    """
+    unique = keys.get('unique',True)
+    seed=keys.get('seed',None)
+    if seed is None:
+        import time
+        seed=int( time.time() )
+
+    if not unique:
+        return numpy.random.randint(0, imax, nrand)
+    else:
+        return _stat_util.random_sample(imax, nrand, seed)
+
+def randind(nmax, nrand, dtype=None):
+    """
+    OBSOLETE, use numpy.random.randint
+
+    Name:
+        randind
+    Calling Sequence:
+        ind = randind(nmax, nrand, dtype=)
+    Purpose:
+        Generate random indices, with replacement, in the open interval
+        [0,nmax)
+    Inputs:
+        nmax: Indices will be generated to nmax-1
+        nrand: Number of randoms to create.
+    Optional Inputs:
+        dtype:  If not sent, will be unsigned 8-byte integer if
+            nmax > 2**32-1 else will be unsigned 4-byte.
+
+    """
+    
+    if dtype is None:
+        if nmax > (2**32-1):
+            dtype = 'u8'
+        else:
+            dtype = 'u4'
+
+    rnd = numpy.random.random(nrand)
+    if nrand == 1:
+        ind = int(rnd*nmax)
+    else:
+        ind=numpy.zeros(nrand,dtype=dtype)
+        ind[:] = arrscl( rnd, 0, nmax-1, arrmin=0.0, arrmax=1.0 )
+
+    return ind
+
 
 
