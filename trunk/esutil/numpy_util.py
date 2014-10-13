@@ -163,11 +163,11 @@ try:
 except:
     have_numpy=False
 
-# for backwards compatibility
-from stat.util import random_indices as random_subset
+from . import misc as eu_misc
 
-import esutil
-import misc as eu_misc
+# for backwards compatibility
+from .random import random_indices as random_subset
+from .random import randind
 
 def where1(conditional_expression):
     """
@@ -1846,42 +1846,6 @@ def splitarray(nper, var_input):
             split_list.append(var[w])
 
     return split_list
-
-def randind(nmax, nrand, dtype=None):
-    """
-    OBSOLETE, use numpy.random.randint
-
-    Name:
-        randind
-    Calling Sequence:
-        ind = randind(nmax, nrand, dtype=)
-    Purpose:
-        Generate random indices, with replacement, in the open interval
-        [0,nmax)
-    Inputs:
-        nmax: Indices will be generated to nmax-1
-        nrand: Number of randoms to create.
-    Optional Inputs:
-        dtype:  If not sent, will be unsigned 8-byte integer if
-            nmax > 2**32-1 else will be unsigned 4-byte.
-
-    """
-    
-    if dtype is None:
-        if nmax > (2**32-1):
-            dtype = 'u8'
-        else:
-            dtype = 'u4'
-
-    rnd = numpy.random.random(nrand)
-    if nrand == 1:
-        ind = int(rnd*nmax)
-    else:
-        ind=numpy.zeros(nrand,dtype=dtype)
-        ind[:] = arrscl( rnd, 0, nmax-1, arrmin=0.0, arrmax=1.0 )
-
-    return ind
-
 
 def between(arr, lowval, highval, type='[)'):
     """
