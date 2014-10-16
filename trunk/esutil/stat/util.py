@@ -742,14 +742,14 @@ def histogram2d(x, y,
 
     if dobinsizes:
         # determine nx,ny from binsizes
-        nx = numpy.int64(  (xmax-xmin)/xbin ) + 1
-        ny = numpy.int64(  (ymax-ymin)/ybin ) + 1
+        nx = numpy.int64(  (xmax-xmin)/float(xbin) ) + 1
+        ny = numpy.int64(  (ymax-ymin)/float(ybin) ) + 1
     else:
-        xbin = (xmax-xmin)/nx
-        ybin = (ymax-ymin)/ny
+        xbin = (xmax-xmin)/float(nx)
+        ybin = (ymax-ymin)/float(ny)
 
-    xind=numpy.floor((x[w]-xmin)*(nx/(xmax-xmin)))
-    yind=numpy.floor((y[w]-ymin)*(ny/(ymax-ymin)))
+    xind=numpy.floor((x[w]-xmin)*(float(nx)/(xmax-xmin)))
+    yind=numpy.floor((y[w]-ymin)*(float(ny)/(ymax-ymin)))
 
     #ind=xind+nx*yind
     # fixed so that row,col is the indexing
