@@ -841,7 +841,8 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     if nrand < 1:
         nrand=1
 
-    ind = esutil.stat.util.random_indices(x.size, nrand, **keys)
+    #ind = esutil.stat.util.random_indices(x.size, nrand, **keys)
+    ind = esutil.random.random_indices(x.size, nrand, **keys)
 
     return bscatter(x[ind], y[ind], **keys)
 

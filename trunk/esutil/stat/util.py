@@ -54,7 +54,8 @@ license="""
 from sys import stdout, stderr
 
 # used to live in this module
-from esutil.random import cholesky_sample, random_indices
+#from esutil.random import cholesky_sample
+#from esutil.random import random_indices
 
 # the external C++ code for doing 
 # histograms.
