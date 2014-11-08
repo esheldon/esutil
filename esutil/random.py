@@ -42,8 +42,9 @@ except:
 # for checking function type, method type
 from types import *
 
-import stat
+#import stat
 import esutil as eu
+from esutil import stat
 
 LOWVAL=-9999.0e47
 
@@ -1126,7 +1127,7 @@ def random_indices(imax, nrand, **keys):
     if not unique:
         return numpy.random.randint(0, imax, nrand)
     else:
-        return _stat_util.random_sample(imax, nrand, seed)
+        return stat._stat_util.random_sample(imax, nrand, seed)
 
 def randind(nmax, nrand, dtype=None):
     """
