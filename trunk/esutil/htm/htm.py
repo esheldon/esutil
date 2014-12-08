@@ -105,17 +105,12 @@ class HTM(htmc.HTMC):
             When this keyword is sent, None,None,None is returned. This is
             useful when the match data will not fit into memory.  
             
-            The file is an unformatted binary file. It can be read with the
-            read_pairs() function. 
+            The file is in text format of the form
+                i1 i2 d12
+            Where i1,i2 are the match indices and d12 is the distance between
+            them in degrees
 
-            The format is a 64-bit signed integer representing the number
-            of rows, followed by rows of 
-              
-              i1 i2 d12
-
-            Where i1,i2 are the match indices as 64-bit signed integers and
-            d12 is the distance between them in degrees as a 64-bit float.
- 
+            The file can be read using the read() method.
 
         returns
         -------
