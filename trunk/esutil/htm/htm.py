@@ -179,6 +179,7 @@ class HTM(htmc.HTMC):
             raise ValueError("radius size (%d) != 1 and"
                              " != ra2,dec2 size (%d)" % (radius.size,ra2.size))
 
+        file=check_filename(file)
 
         if htmrev2 is None:
             # new way using a Matcher
@@ -719,6 +720,7 @@ class Matcher(htmc.Matcher):
             raise ValueError("radius size (%d) != 1 and"
                              " != ra,dec size (%d)" % (radius.size,ra.size))
 
+        file=check_filename(file)
         return super(Matcher, self).match(ra, dec, radius, maxmatch, file)
 
 def read_pairs(filename, verbose=False):
@@ -760,6 +762,7 @@ def read_pairs(filename, verbose=False):
     if verbose:
         stdout.write("Reading pairs from file: %s\n" % filename)
 
+    filename=check_filename(filename)
     with Recfile(filename, "r", dtype=dtype, delim=' ') as robj:
         data=robj.read()
 
@@ -796,3 +799,10 @@ def log_bins(rmin, rmax, nbin):
     #print 'gmean: ',gm
     return lower_edges, upper_edges
 
+def check_filename(filename):
+    if filename is not None:
+        if isinstance(filename,unicode):
+            print 'htm: warning: filename is unicode, converting to string"
+            filename=str(filename)
+
+    return filename
