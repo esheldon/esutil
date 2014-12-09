@@ -802,7 +802,7 @@ def log_bins(rmin, rmax, nbin):
 def check_filename(filename):
     if filename is not None:
         if isinstance(filename,unicode):
-            print 'htm: warning: filename is unicode, converting to string"
+            print "htm: warning: filename is unicode, converting to string"
             filename=str(filename)
 
     return filename
