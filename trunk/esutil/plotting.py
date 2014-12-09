@@ -829,7 +829,10 @@ def polar2whisker(e1, e2, angle=False, degrees=False):
     return u, v
 
 
-def plotrand(x, y, frac=0.1, plt=None, **keys):
+def plotrand(x, y, frac=0.1, **keys):
+    """
+    plot a random subset of the points
+    """
     import biggles
     from biggles import FramedPlot, Points
 
@@ -840,36 +843,13 @@ def plotrand(x, y, frac=0.1, plt=None, **keys):
     nrand = int(x.size*frac)
     if nrand < 1:
         nrand=1
+    elif nrand > x.size:
+        nrand=x.size
 
     #ind = esutil.stat.util.random_indices(x.size, nrand, **keys)
     ind = esutil.random.random_indices(x.size, nrand, **keys)
 
     return bscatter(x[ind], y[ind], **keys)
-
-    '''    
-    if 'type' not in keys:
-        keys['type'] = 'dot'
-
-    c = Points(x[ind], y[ind], **keys)
-    plt.add(c)
-
-    if 'xlabel' in keys:
-        plt.xlabel = keys['xlabel']
-    if 'ylabel' in keys:
-        plt.ylabel = keys['ylabel']
-
-    if 'aspect_ratio' in keys:
-        plt.aspect_ratio=keys['aspect_ratio']
-
-    show = keys.get('show',True)
-    if show:
-        plt.show()
-
-    if 'get_indices' in keys and keys['get_indices']:
-        return plt, ind
-    else:
-        return plt
-    '''
 
 def transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys, **keys):
     """
