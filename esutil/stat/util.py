@@ -939,83 +939,100 @@ def wmedian(arr_in, weights_in):
     return arr[sind[k]]
 
 
-def sigma_clip(arrin, niter=4, nsig=4, get_indices=False, extra={}, 
+def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=False, extra={}, 
                verbose=False, silent=False):
     """
-    NAME:
-      sigma_clip()
+    Calculate the mean/stdev of an array with sigma clipping.
       
-    PURPOSE:
-      Calculate the mean/stdev of an array with sigma clipping. Iterate
-      niter times, removing elements that are outside nsig, and recalculating
-      mean/stdev.
+    Iterate niter times, removing elements that are outside nsig, and
+    recalculating mean/stdev.
 
-    CALLING SEQUENCE:
-      mean,stdev = sigma_clip(arr, niter=4, nsig=4, extra={})
-    
-    INPUTS:
-      arr: A numpy array or a sequence that can be converted.
+    parameters
+    ----------
+    arr: array or sequence
+        A numpy array or sequence
 
-    OPTIONAL INPUTS:
-      niter: number of iterations, defaults to 4
-      nsig: number of sigma, defaults to 4
-      get_indices: bool,optional
+    niter: int, optional
+        number of iterations, defaults to 4
+    nsig: float, optional
+        number of sigma, defaults to 4
+    get_err: bool, optional
+        If set True, return the error on the mean as well
+    get_indices: bool,optional
         if True return mean,stdev,indices
 
-    OUTPUTS:
-      mean,stdev: A tuple containing mean and standard deviation.
-    OPTIONAL OUTPUTS
-      extra={}: Dictionary containing the array of used indices in
-         extra['index']
+    returns
+    -------
+    mean,stdev: A tuple containing mean and standard deviation.
+
+    if get_indices=True, returns mean,stdev,indices where indices
+    is the indices used for the final stats
 
     REVISION HISTORY:
       Converted from IDL: 2006-10-23. Erin Sheldon, NYU
       Minor bug fix to error messaging: 2010-05-28. Brian Gerke, SLAC
       Added silent keyword, to shut off error messages.  BFG 2010-09-13
-
+      Added weights option
     """
     arr = numpy.array(arrin, ndmin=1, copy=False)
+    if weights is not None:
+        weights = numpy.array(weights, ndmin=1, copy=False)
+        assert weights.size==arr.size,"array and weights must be same size"
 
-    index = numpy.arange( arr.size )
+    indices = numpy.arange( arr.size )
+    nold = arr.size
 
-    if get_indices:
-        res=[None,None,None]
-    else:
-        res=[None,None]
+    m,e,s=_get_sigma_clip_stats(arr, indices, weights=weights)
+    if verbose:
+        _print_sigma_clip_stats(0, indices.size, m, s)
 
-    for i in numpy.arange(niter):
-        m = arr[index].mean()
-        s = arr[index].std()
-
-        if verbose:
-            stdout.write('iter %s\tnuse: %s\tmean %s\tstdev %s\n' % \
-                             (i+1, index.size,m,s))
+    res=[]
+    for i in xrange(1,niter+1):
 
         clip = nsig*s
-
-        w, = numpy.where( (numpy.abs(arr[index] - m)) < clip )
+        w, = numpy.where( (numpy.abs(arr[indices] - m)) < clip )
 
         if (w.size == 0):
             if (not silent):
                 stderr.write("nsig too small. Everything clipped on "
                              "iteration %d\n" % (i+1))
-            res[0]=m
-            res[1]=s
-            return res
+            break
 
-        index = index[w]
+        if w.size == nold:
+            break
 
-    # Calculate final stats
-    amean = arr[index].mean()
-    asig = arr[index].std()
+        indices = indices[w]
+        nold = w.size
 
-    res[0]=m
-    res[1]=s
-    extra['index'] = index
+        m,e,s=_get_sigma_clip_stats(arr, indices, weights=weights)
+        if verbose:
+            _print_sigma_clip_stats(i, indices.size, m, s)
+
+
+    res.append(m)
+    res.append(s)
+    if get_err:
+        res.append(e)
     if get_indices:
-        res[2] = index
+        res.append(indices)
+
+    extra['indices'] = indices
 
     return res 
+
+def _get_sigma_clip_stats(arr, indices, weights=None):
+    if weights is not None:
+        m,e,s=wmom(arr[indices], weights[indices], calcerr=True, sdev=True)
+    else:
+        m = arr[indices].mean()
+        s = arr[indices].std()
+        e = s/numpy.sqrt(indices.size)
+
+    return m,e,s
+
+def _print_sigma_clip_stats(iter, nuse, mean, stdev):
+    mess='iter: %d  nuse: %d mean: %10.3g stdev: %10.3g'
+    print mess % (iter, nuse, mean, stdev)
 
 def interplin(vin, xin, uin):
     """
