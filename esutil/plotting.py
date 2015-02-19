@@ -416,7 +416,9 @@ def bhist_vs(data, *fields, **keys):
     
     nx=len(x)
     bindata=[]
+
     nbin = hout['hist'].size
+    nonempty,=numpy.where(hout['hist'] > 0)
 
     # now make a data set for each argument
     for f in fields:
@@ -462,14 +464,14 @@ def bhist_vs(data, *fields, **keys):
     for bd in bindata:
         keys['ylabel'] = bd['plabel']
         if 'mean' in hout:
-            xh = hout['mean']
+            xh = hout['mean'][nonempty]
         else:
-            xh = hout['center']
+            xh = hout['center'][nonempty]
 
         if stype == 'mean':
-            plt=bscatter(xh, bd['mean'], yerr=bd['err'], **keys)
+            plt=bscatter(xh, bd['mean'][nonempty], yerr=bd['err'][nonempty], **keys)
         else:
-            plt=bscatter(xh, bd['sdev'], **keys)
+            plt=bscatter(xh, bd['sdev'][nonempty], **keys)
         plots.append(plt)
 
     return plots
