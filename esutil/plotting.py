@@ -831,7 +831,7 @@ def polar2whisker(e1, e2, angle=False, degrees=False):
     return u, v
 
 
-def plotrand(x, y, frac=0.1, **keys):
+def plotrand(x, y, frac=0.1, get_indices=False, **keys):
     """
     plot a random subset of the points
     """
@@ -851,7 +851,12 @@ def plotrand(x, y, frac=0.1, **keys):
     #ind = esutil.stat.util.random_indices(x.size, nrand, **keys)
     ind = esutil.random.random_indices(x.size, nrand, **keys)
 
-    return bscatter(x[ind], y[ind], **keys)
+    plt=bscatter(x[ind], y[ind], **keys)
+
+    if get_indices:
+        return plt, ind
+    else:
+        return plt
 
 def transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys, **keys):
     """
