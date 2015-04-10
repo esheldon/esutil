@@ -130,6 +130,15 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         Split up an array into chunks of at least a given size.  Return a
         list of these subarrays.  The ordering is perserved.
 
+    between(arr, lowval, highval, type='[)')
+        test values of an array are between the specified values
+
+    outside(arr, lowval, highval, type=')(')
+        test values of an array are outside the specified values
+
+    select_percentile(x, perc, get_ranges=False, **keys)
+        select data in the given percentile(s)
+
 """ 
 
 license="""
@@ -1946,6 +1955,92 @@ def outside(arr, lowval, highval, type=')('):
         raise ValueError("bad range type: '%s'" % type)
 
     return logic
+
+def select_percentile(x, perc, get_ranges=False, **keys):
+    """
+    select data in the given percentile(s)
+
+    parameters
+    ----------
+    x: array-like
+        The data.
+    percentile: scalar or sequence
+        The percentile(s) to select on.  E.g. [25,50,75] would
+        select the quartiles from the array.
+    get_ranges: bool, optional
+        If true, output the ranges as well as the selections
+    **keys:
+        Extra keywords for numpy.percentile  See docs for that
+        function for more details.
+
+    returns
+    -------
+    index_list: list
+        A list containing indices for data that falls in each percentile.  For
+        example, if the percentiles were [25,50,75] the list would contain
+        indices that satisfy
+
+            [x < x25, x25 < x < x50, x50 < x < x75, x > x75]
+
+        where x25 x value at the 25th percentile.
+
+    If get_ranges==True the return is a tuple
+
+        (index_list, range_list)
+
+    Where range_list for percentiles [25,50,75] would be
+
+        [ [x.min(),x25], [x25,x50], [x50,x75], [x75,x.max()] ]
+
+    examples
+    --------
+    >>> x=numpy.random.random(10)
+
+    >>> x
+        array([ 0.34704303,  0.56085122,  0.90532323,  0.59691811,  0.8905648 ,
+            0.86714466,  0.09320939,  0.0274661 ,  0.2320517 ,  0.18905247])
+
+    >>> select_percentiles(x, [25,50,75])
+        [array([6, 7, 9]), array([0, 8]), array([1, 3]), array([2, 4, 5])]
+
+    >>> ilist,ranges=select_percentiles(x, [25,50,75], get_ranges=True)
+    >>> print(ranges)
+     [[0.027466097055253047, 0.19980227889572683],
+      [0.19980227889572683, 0.45394712761396222],
+      [0.45394712761396222, 0.79958802092575598],
+      [0.79958802092575598, 0.90532323138237181]]
+    """
+
+    x=numpy.asanyarray(x)
+
+    if numpy.isscalar(perc):
+        perc=[perc]
+
+    nperc = len(perc)
+
+    pcuts = numpy.percentile(x, perc, **keys)
+
+    wlist = []
+    ranges=[]
+    for i in xrange(nperc+1):
+        if i==0:
+            w,=numpy.where( x < pcuts[i] )
+
+            ranges.append( [x.min(), pcuts[i]] )
+        elif i==nperc:
+            w,=numpy.where( x > pcuts[i-1] )
+
+            ranges.append( [pcuts[i-1], x.max()] )
+        else:
+            w,=numpy.where( (x > pcuts[i-1]) & (x < pcuts[i]) )
+            ranges.append( [pcuts[i-1], pcuts[i]])
+
+        wlist.append(w)
+
+    if get_ranges:
+        return wlist, ranges
+    else:
+        return wlist
 
 
 class ArrayWriter:
