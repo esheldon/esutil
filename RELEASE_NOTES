@@ -11,6 +11,10 @@ New:
     - esutil/numpy_util.py:
         - between: Test if array elements are within a range
         - outside: Test if array elements are outside a range
+    - esutil/plotting.py
+        - added fake_points for getting symbols for a plot key.  Useful when
+          the original points are not available or show up too small in the
+          key.  fake_filled_circles now calls this function
 
 Updates:
     - esutil/htm
