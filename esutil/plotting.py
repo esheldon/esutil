@@ -1001,7 +1001,42 @@ def add_log_error_bars(plt, type, x, y, err, prange, **pkeywords):
         return p
 
 
-def fake_filled_circles(labels, colors=None, sizes=None, x=-9.99e12, y=-9.99e12):
+def fake_points(symbols, labels, colors=None, sizes=None, x=-9.99e12, y=-9.99e12):
+    """
+    fake points for use with plot legends when the points object is not
+    available
+
+    Add these to a biggles.PlotKey object
+    """
+    from biggles import Point
+
+    if len(symbols) != len(labels):
+        raise ValueError("symbols must be same len as labels")
+    if colors is not None:
+        if len(colors) != len(labels):
+            raise ValueError("colors must be same len as labels")
+    if sizes is not None:
+        if len(sizes) != len(labels):
+            raise ValueError("sizes must be same len as labels")
+
+    points=[]
+    for i in xrange(len(labels)):
+
+        keys = {'type':symbols[i]}
+
+        if colors is not None:
+            keys['color'] = colors[i]
+
+        if sizes is not None:
+            keys['size'] = sizes[i]
+
+        p = Point(x,y, **keys)
+        p.label = labels[i]
+
+        points.append(p)
+    return points
+
+def fake_filled_circles(labels, **keys):
     """
 
     When using a dot as plot symbol, the PlotKey is not useful because the dot
@@ -1012,27 +1047,6 @@ def fake_filled_circles(labels, colors=None, sizes=None, x=-9.99e12, y=-9.99e12)
     Then add these to your PlotKey
 
     """
-    from biggles import Point
 
-    if colors is not None:
-        if len(colors) != len(labels):
-            raise ValueError("colors must be same len as labels")
-    if sizes is not None:
-        if len(sizes) != len(labels):
-            raise ValueError("sizes must be same len as labels")
-
-    points=[]
-    keys={}
-    for i in xrange(len(labels)):
-
-        if colors is not None:
-            keys['color'] = colors[i]
-
-        if sizes is not None:
-            keys['size'] = sizes[i]
-
-        p = Point(x,y,type='filled circle', **keys)
-        p.label = labels[i]
-
-        points.append(p)
-    return points
+    return fake_points(['filled circle']*len(labels), labels,
+                       **keys)
