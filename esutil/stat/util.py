@@ -664,13 +664,9 @@ def histogram2d(x, y,
                 rev=False,
                 more=False):
     """
-    Name:
-        histogram2d
-    Purpose:
-        Histogram two-dimensional data.
+    Histogram two-dimensional data.
 
-    Calling Sequence:
-        histogram2d(x, y, z=None,
+    res=histogram2d(x, y, z=None,
                     nx=None, 
                     ny=None, 
                     xbin=None, 
@@ -682,29 +678,43 @@ def histogram2d(x, y,
                     rev=False,
                     more=False)
 
-    Inputs:
-        x,y:  The x and y values for the data.  Must be same length.
+    parameters
+    ----------
+    x,y:
+        The x and y values for the data.  Must be same length.
 
-    Keywords:
-        z: optional z third dimension.
-            If sent 'zmean' is in the output dictionary
+    z: optional z third dimension.
+        If sent more=True is implied and 'zmean' is in the output dictionary
+    nx: int, optional
+        Number of bins in the x direction. nx= and ny must be sent together
+    ny: int optional
+        Number of bins in the y direction. nx= and ny must be sent together
+    xbin: number, optional
+        binsize in the x direction.  xbin= and ybin= must be sent together.
+        xbin and ybin supercede nx= and ny=
+    ybin: number, optional
+        binsize in the y direction.  xbin= and ybin= must be sent together.
+        xbin and ybin supercede nx= and ny=
 
-        nx: Number of bins in the x direction.
-        ny: Number of bins in the y direction.
-        xbin: binsize in the x direction.
-        ybin: binsize in the y direction.
-        xmin: min range to use in the x direction.
-        xmax: max range to use in the x direction.
-        ymin: min range to use in the y direction.
-        ymax: max range to use in the y direction.
-        rev: if True, return a tuple hist,rev
+    xmin: number, optional
+        min range to use in the x direction.
+    xmax: number, optional
+        max range to use in the x direction.
+    ymin: number, optional
+        min range to use in the y direction.
+    ymax: number, optional
+        max range to use in the y direction.
+    rev: bool, optional
+        if True, return a tuple hist,rev where rev is
+        the reverse indices array.  See documentation for
+        the histogram function for an explanation of
+        reverse indices
 
-        more: If True, return a dictionary with the histogram in the
-            'hist' key, as well as xlow,xhigh,xcenter and other bin
-            information.
+    more: bool, optional
+        If True, return a dictionary with the histogram in the 'hist' key, as
+        well as xlow,xhigh,xcenter and other bin information.
 
-            If z is sent, more is implied. 
-
+        If z is sent, more is implied. 
     """
 
     x = numpy.array(x, ndmin=1, copy=False)
