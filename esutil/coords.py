@@ -864,6 +864,8 @@ def dec_parse(decstring):
     if lds >= 3:
         sec = float(ds[2])
         dec += sec/3600.0
+
+    dec *= sign
     return dec
 
 def ra_parse(rastring, hours=True):
