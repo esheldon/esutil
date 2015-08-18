@@ -52,7 +52,7 @@ def qgauss(x,y,npts):
     qg=QGauss(npts)
     return qg.integrate(x,y)
 
-class QGauss:
+class QGauss(object):
     """
     Module:
         integrate
@@ -82,7 +82,6 @@ class QGauss:
         self.npts = None
         self.xxi = None
         self.wii = None
-        self.f1 = None
         self.f2 = None
 
         self.setup(npts=npts)
@@ -195,6 +194,97 @@ class QGauss:
 
         norm = 1.0/numpy.sqrt(2.0*numpy.pi*sigma**2)
         gauss = norm*numpy.exp(-0.5*(xvals - mean)**2/sigma**2 )
+
+        return gauss
+
+class QGauss2(object):
+    """
+    Perform gauss-legendre integration
+
+    parameters
+    ----------
+    nx: int
+        Number of points in x to use for integration
+    ny: int
+        Number of points in y to use for integration
+
+    examples
+    --------
+    from esutil.integrate import QGauss2
+    n1,n2 = 30,30
+    qg = QGauss2(n1,n2)
+
+    # integrate a function or method over the range xmin,xmax
+    result = qg.integrate([xmin,xmax], [ymin,ymax], some_function)
+
+    """
+    def __init__(self, nx, ny):
+
+        self.nx = nx
+        self.ny = ny
+
+        self._setup()
+
+    def _setup(self):
+        from numpy import ones, newaxis, meshgrid
+        nx,ny = self.nx,self.ny
+
+        x, wx = gauleg(-1.0, 1.0, nx)
+        y, wy = gauleg(-1.0, 1.0, ny)
+
+        self.xgrid, self.ygrid = meshgrid(x,y)
+
+        wxgrid = ones( (nx,ny) )*wx[newaxis,:]
+        wygrid = ones( (nx,ny) )*wy[:,newaxis]
+
+        self.wgrid = wxgrid*wygrid
+
+    def integrate_func(self, xrng, yrng, func):
+        """
+        Integrate a function
+        """
+
+        if len(xrng) != 2 or len(yrng) != 2:
+            raise ValueError("xrng and yrng should be 2-element")
+
+        x1 = xrng[0]
+        x2 = xrng[1]
+        y1 = yrng[0]
+        y2 = yrng[1]
+
+        xf1 = (x2-x1)/2.
+        xf2 = (x2+x1)/2.
+        yf1 = (y2-y1)/2.
+        yf2 = (y2+y1)/2.
+
+        xgrid = self.xgrid*xf1 + xf2
+        ygrid = self.ygrid*yf1 + yf2
+
+        zvals = func(xgrid, ygrid)
+
+        integrand = zvals*self.wgrid
+
+        isum = integrand.sum()
+        return xf1*yf1*isum
+
+    def test_gauss_func(self, npts=None):
+        xrange = [-8.0,8.0]
+        yrange = [-8.0,8.0]
+
+        expected = 1.0
+
+        ival = self.integrate_func(xrange, yrange, self.gaussfunc)
+
+        stdout.write("Expected value: %s\n" % expected)
+        stdout.write("Got value: %s\n" % ival)
+
+        fracdiff = (ival - expected)/expected
+        stdout.write("fracdiff: %s\n" % fracdiff)
+
+
+    def gaussfunc(self, xvals, yvals):
+        norm = 1.0/(2.0*numpy.pi)
+        gauss = norm*numpy.exp( -0.5 * (xvals**2 + yvals**2) )
 
         return gauss
 
