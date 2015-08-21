@@ -163,9 +163,104 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
             return pdict
     return plt
 
+def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
+    """
+    Compare the normalized histograms for the two data sets.  Make a grid of
+    plots if the data are multi-dimensional
+
+    parameters
+    ----------
+    data1: array
+        a [N] or [N,dim] array
+    data2: array
+        a [M] or [M,dim] array
+    names: list, optional
+        Optional list of names for each dimension
+    nsig: float, optional
+        Optional number of standard deviations to clip histograms,
+        default 10.0
+    """
+    import biggles
+    from numpy import newaxis
+    from .stat import sigma_clip
+
+    if len(data1.shape)==1:
+        data1=data1[:,newaxis]
+    if len(data2.shape)==1:
+        data1=data2[:,newaxis]
+
+    n1,d1 = data1.shape
+    n2,d2 = data2.shape
+
+    if d1 != d2:
+        raise ValueError("data must have same number of dims. "
+                         "got %d and %d" % (d1,d2))
+    
+    if names is not None:
+        if len(names) != d1:
+            raise ValueError("names must have len equal to number of dims. "
+                             " in data, got %d and %d" % (d1,len(names)))
+
+    else:
+        names = ['par%d' % i for i in xrange(d1)]
+
+    if nsig is None:
+        nsig=100.0
+
+    grid = Grid(d1)
+    tab = biggles.Table(grid.nrow, grid.ncol)
+
+    pkw = {}
+    pkw.update(kw)
+    for dkeys in ['width','height']:
+        del pkw[dkeys]
+
+    pkw['visible']=False
+    for i in xrange(d1):
+        mn1,st1,ind1=sigma_clip(data1[:,i], nsig=nsig, get_indices=True)
+        mn2,st2,ind2=sigma_clip(data2[:,i], nsig=nsig, get_indices=True)
+
+        min_std = min(st1,st2)
+        binsize = 0.2*min_std
+
+        plt=biggles.FramedPlot()
+        plt.xlabel=names[i]
+
+        pkw['binsize']=binsize
+        pkw['color']='blue'
+        h1=biggles.make_histc(data1[ind1,i], **pkw)
+        pkw['color']='red'
+        h2=biggles.make_histc(data2[ind2,i], **pkw)
+
+        plt.add(h1,h2)
+
+        if i==0:
+            h1.label='dataset 1'
+            h2.label='dataset 2'
+            key=biggles.PlotKey(0.1,0.9,[h1,h2],halign='left')
+            plt.add(key)
+
+        row,col=grid(i)
+        tab[row,col] = plt
+
+    if 'show' in kw:
+        show=kw['show']
+    elif 'visible' in kw:
+        show=kw['visible']
+    else:
+        show=True
+
+    if show:
+        width=kw.get('width',1000)
+        height=kw.get('height',1000)
+        tab.show(width=width, height=height)
+
+    return tab
 
 def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**keywords):
     """
+    This is now superceded by biggles.plot_hist
+
     Name:
         bhist
     Purpose:
