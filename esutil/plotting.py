@@ -163,7 +163,7 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
             return pdict
     return plt
 
-def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
+def compare_hist(data1, data2, names=None, dataset_names=None, nsig=10.0, **kw):
     """
     Compare the normalized histograms for the two data sets.  Make a grid of
     plots if the data are multi-dimensional
@@ -176,6 +176,8 @@ def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
         a [M] or [M,dim] array
     names: list, optional
         Optional list of names for each dimension
+    dataset_names: list, optional
+        Optional list of names for each dataset
     nsig: float, optional
         Optional number of standard deviations to clip histograms,
         default 10.0
@@ -203,6 +205,12 @@ def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
 
     else:
         names = ['par%d' % i for i in xrange(d1)]
+    if dataset_names is not None:
+        if len(dataset_names) != 2:
+            raise ValueError("dataset_names must be len 2, "
+                             "got %d" % len(dataset_names))
+    else:
+        dataset_names=['dataset1','dataset2']
 
     if nsig is None:
         nsig=100.0
@@ -220,8 +228,8 @@ def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
         mn1,st1,ind1=sigma_clip(data1[:,i], nsig=nsig, get_indices=True)
         mn2,st2,ind2=sigma_clip(data2[:,i], nsig=nsig, get_indices=True)
 
-        min_std = min(st1,st2)
-        binsize = 0.2*min_std
+        use_std = max(st1,st2)
+        binsize = 0.2*use_std
 
         plt=biggles.FramedPlot()
         plt.xlabel=names[i]
@@ -235,9 +243,9 @@ def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
         plt.add(h1,h2)
 
         if i==0:
-            h1.label='dataset 1'
-            h2.label='dataset 2'
-            key=biggles.PlotKey(0.1,0.9,[h1,h2],halign='left')
+            h1.label=dataset_names[0]
+            h2.label=dataset_names[1]
+            key=biggles.PlotKey(0.9,0.9,[h1,h2],halign='right')
             plt.add(key)
 
         row,col=grid(i)
@@ -250,6 +258,7 @@ def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
     else:
         show=True
 
+    tab.aspect_ratio=kw.get('aspect_ratio',float(grid.nrow)/grid.ncol)
     if show:
         width=kw.get('width',1000)
         height=kw.get('height',1000)
