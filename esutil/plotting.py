@@ -187,7 +187,7 @@ def compare_hist(data1, data2, names=None, nsig=10.0, **kw):
     if len(data1.shape)==1:
         data1=data1[:,newaxis]
     if len(data2.shape)==1:
-        data1=data2[:,newaxis]
+        data2=data2[:,newaxis]
 
     n1,d1 = data1.shape
     n2,d2 = data2.shape
