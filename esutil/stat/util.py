@@ -853,69 +853,119 @@ def boxcar_average(x, N):
     kernel=ones((N,))/N
     return convolve(x, kernel)[(N-1):]
 
-
-def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
+def get_stats(arr, weights=None, doprint=False, **kw):
     """
-    NAME:
-      wmom()
-      
-    PURPOSE:
-      Calculate the weighted mean, error, and optionally standard deviation of
-      an input array.  By default error is calculated assuming the weights are
-      1/err^2, but if you send calcerr=True this assumption is dropped and the
-      error is determined from the weighted scatter.
+    get stats for the input array
+    """
+    from numpy import newaxis
+    arr = numpy.array(arr, dtype='f8', ndmin=1, copy=False)
 
-    CALLING SEQUENCE:
-     wmean,werr = wmom(arr, weights, inputmean=None, calcerr=False, sdev=False)
-    
-    INPUTS:
-      arr: A numpy array or a sequence that can be converted.
-      weights: A set of weights for each elements in array.
-    OPTIONAL INPUTS:
-      inputmean: 
-          An input mean value, around which them mean is calculated.
-      calcerr=False: 
-          Calculate the weighted error.  By default the error is calculated as
-          1/sqrt( weights.sum() ).  If calcerr=True it is calculated as sqrt(
-          (w**2 * (arr-mean)**2).sum() )/weights.sum()
-      sdev=False: 
-          If True, also return the weighted standard deviation as a third
-          element in the tuple.
+    if len(arr.shape) == 1:
+        is_scalar=True
+        arr = arr[:,newaxis]
+    else:
+        is_scalar=False
+    ndim = arr.shape[1]
 
-    OUTPUTS:
-      wmean, werr: A tuple of the weighted mean and error. If sdev=True the
-         tuple will also contain sdev: wmean,werr,wsdev
+    if 'nsig' in kw:
+        mn,std,err = sigma_clip(arr, weights=weights, **kw)
+    elif weights is not None:
+        kw['sdev']=True
+        if 'calcerr' not in kw:
+            kw['calcerr']=True
+        mn,err,std=wmom(arr, weights, **kw)
+        print(mn,err,std)
+    else:
+        mn = arr.mean(axis=0)
+        std = arr.std(axis=0)
+        err = std/sqrt(arr.shape[0])
 
-    REVISION HISTORY:
-      Converted from IDL: 2006-10-23. Erin Sheldon, NYU
 
-   """
-    
+    if doprint:
+        headfmt = ' '.join( ['%12s']*3 )
+        numfmt = ' '.join( ['%12g']*3 )
+
+        head = ('mean','err','std')
+
+        print(headfmt % head)
+        for i in xrange(ndim):
+            print(numfmt % (mn[i],err[i],std[i]))
+
+    if is_scalar:
+        mn=mn[0]
+        std=std[0]
+        err=err[0]
+
+    res = {'mean':mn, 'std':std, 'err':err}
+
+    return res
+
+def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored_kw):
+    """
+    Calculate the weighted moments of the input array. 
+
+    parameters
+    ----------
+    arr: array
+        Array, either 1-d or [N, ndim]
+
+    weights: array
+        Weights, either 1-d or same shape as the array
+
+    inputmean: float or array
+        An input mean value, around which them mean is calculated.  Should
+        be a scalar or [ndim] array
+
+    calcerr: bool
+        Calculate the weighted error.  By default the error is calculated as
+        1/sqrt( weights.sum() ).  If calcerr=True it is calculated as sqrt(
+        (w**2 * (arr-mean)**2).sum() )/weights.sum()
+
+    sdev: bool
+        If True, also return the weighted standard deviation as a third
+        element in the tuple.
+
+    returns
+    --------
+    wmean, werr:
+        A tuple of the weighted mean and error. If sdev=True the
+        tuple will also contain sdev: wmean,werr,wsdev
+    """
+    from numpy import newaxis 
+
     # no copy made if they are already arrays
     arr = numpy.array(arrin, ndmin=1, copy=False)
     
     # Weights is forced to be type double. All resulting calculations
     # will also be double
     weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
-  
-    wtot = weights.sum()
+
+
+    if len(arr.shape) > 1 and len(weights.shape) == 1:
+        weights = weights[:,newaxis]
+    else:
+        if weights.shape != arr.shape:
+            raise ValueError("weights should have one dimension "
+                             "or have same shape as data, got "
+                             "%s %s" % (arr.shape,weights.shape))
+    wtot = weights.sum(axis=0)
         
     # user has input a mean value
     if inputmean is None:
-        wmean = ( weights*arr ).sum()/wtot
+        wmean = ( weights*arr ).sum(axis=0)/wtot
     else:
         wmean=float(inputmean)
 
     # how should error be calculated?
     if calcerr:
-        werr2 = ( weights**2 * (arr-wmean)**2 ).sum()
+        werr2 = ( weights**2 * (arr-wmean)**2 ).sum(axis=0)
         werr = numpy.sqrt( werr2 )/wtot
     else:
         werr = 1.0/numpy.sqrt(wtot)
 
     # should output include the weighted standard deviation?
     if sdev:
-        wvar = ( weights*(arr-wmean)**2 ).sum()/wtot
+        wvar = ( weights*(arr-wmean)**2 ).sum(axis=0)/wtot
         wsdev = numpy.sqrt(wvar)
         return wmean,werr,wsdev
     else:
@@ -950,7 +1000,7 @@ def wmedian(arr_in, weights_in):
 
 
 def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=False, extra={}, 
-               verbose=False, silent=False):
+               verbose=False, silent=False, **ignored_kw):
     """
     Calculate the mean/stdev of an array with sigma clipping.
       
