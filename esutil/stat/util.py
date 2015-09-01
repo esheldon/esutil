@@ -70,7 +70,7 @@ from types import *
 
 try:
     import numpy
-    from numpy import zeros, sqrt
+    from numpy import zeros, sqrt, newaxis
     have_numpy=True
 except:
     have_numpy=False
@@ -853,28 +853,35 @@ def boxcar_average(x, N):
     kernel=ones((N,))/N
     return convolve(x, kernel)[(N-1):]
 
-def get_stats(arr, weights=None, doprint=False, **kw):
+def get_stats(arr_in, weights=None, doprint=False, **kw):
     """
     get stats for the input array
     """
-    from numpy import newaxis
-    arr = numpy.array(arr, dtype='f8', ndmin=1, copy=False)
 
-    if len(arr.shape) == 1:
-        is_scalar=True
-        arr = arr[:,newaxis]
+    arr = numpy.array(arr_in, dtype='f8', ndmin=1, copy=False)
+
+    if 'nsig' in kw or 'niter' in kw:
+        do_sigma_clip=True
+        scalarify=False
+        ndim=None
     else:
-        is_scalar=False
-    ndim = arr.shape[1]
+        do_sigma_clip=False
 
-    if 'nsig' in kw:
+        if len(arr.shape) == 1:
+            scalarify=True
+            arr = arr[:,newaxis]
+        else:
+            scalarify=False
+        ndim = arr.shape[1]
+
+    if do_sigma_clip:
+        kw['get_err']=True
         mn,std,err = sigma_clip(arr, weights=weights, **kw)
     elif weights is not None:
         kw['sdev']=True
         if 'calcerr' not in kw:
             kw['calcerr']=True
         mn,err,std=wmom(arr, weights, **kw)
-        print(mn,err,std)
     else:
         mn = arr.mean(axis=0)
         std = arr.std(axis=0)
@@ -888,10 +895,13 @@ def get_stats(arr, weights=None, doprint=False, **kw):
         head = ('mean','err','std')
 
         print(headfmt % head)
-        for i in xrange(ndim):
-            print(numfmt % (mn[i],err[i],std[i]))
+        if ndim is None:
+            print(numfmt % (mn,err,std))
+        else:
+            for i in xrange(ndim):
+                print(numfmt % (mn[i],err[i],std[i]))
 
-    if is_scalar:
+    if scalarify:
         mn=mn[0]
         std=std[0]
         err=err[0]
@@ -931,7 +941,6 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored
         A tuple of the weighted mean and error. If sdev=True the
         tuple will also contain sdev: wmean,werr,wsdev
     """
-    from numpy import newaxis 
 
     # no copy made if they are already arrays
     arr = numpy.array(arrin, ndmin=1, copy=False)
@@ -941,9 +950,12 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored
     weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
 
 
-    if len(arr.shape) > 1 and len(weights.shape) == 1:
-        weights = weights[:,newaxis]
+    if len(arr.shape) > 1:
+        ndim = arr.shape[1]
+        if len(weights.shape) == 1:
+            weights = weights[:,newaxis]
     else:
+        ndim=1
         if weights.shape != arr.shape:
             raise ValueError("weights should have one dimension "
                              "or have same shape as data, got "
@@ -962,6 +974,8 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored
         werr = numpy.sqrt( werr2 )/wtot
     else:
         werr = 1.0/numpy.sqrt(wtot)
+        if not numpy.isscalar(werr) and len(werr) < ndim:
+            werr = numpy.array([werr[0]]*ndim,dtype='f8')
 
     # should output include the weighted standard deviation?
     if sdev:
@@ -1034,23 +1048,33 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
       Added silent keyword, to shut off error messages.  BFG 2010-09-13
       Added weights option
     """
+
     arr = numpy.array(arrin, ndmin=1, copy=False)
+
+    if len(arr.shape) > 1:
+        raise ValueError("only 1-dimensional arrays suppored, "
+                         "got %s" % (arr.shape,))
+
     if weights is not None:
         weights = numpy.array(weights, ndmin=1, copy=False)
-        assert weights.size==arr.size,"array and weights must be same size"
+
+        if weights.size != arr.size:
+            raise ValueError("weights should have same size as "
+                             "array, got "
+                             "%s %s" % (arr.size,weights.size))
 
     indices = numpy.arange( arr.size )
     nold = arr.size
 
-    m,e,s=_get_sigma_clip_stats(arr, indices, weights=weights)
+    tarr, tweights = _get_sigma_clip_subset(arr, indices, weights=weights)
+
+    m,e,s=_get_sigma_clip_stats(tarr, weights=tweights)
     if verbose:
         _print_sigma_clip_stats(0, indices.size, m, s)
 
-    res=[]
     for i in xrange(1,niter+1):
 
-        clip = nsig*s
-        w, = numpy.where( (numpy.abs(arr[indices] - m)) < clip )
+        w, = numpy.where( (numpy.abs(tarr - m)) < nsig*s)
 
         if (w.size == 0):
             if (not silent):
@@ -1062,13 +1086,15 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
             break
 
         indices = indices[w]
+        tarr, tweights = _get_sigma_clip_subset(arr, indices, weights=weights)
         nold = w.size
 
-        m,e,s=_get_sigma_clip_stats(arr, indices, weights=weights)
+        m,e,s=_get_sigma_clip_stats(tarr, weights=tweights)
         if verbose:
             _print_sigma_clip_stats(i, indices.size, m, s)
 
 
+    res=[]
     res.append(m)
     res.append(s)
     if get_err:
@@ -1080,13 +1106,22 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
 
     return res 
 
-def _get_sigma_clip_stats(arr, indices, weights=None):
+def _get_sigma_clip_subset(arr, indices, weights=None):
+    tarr = arr[indices]
     if weights is not None:
-        m,e,s=wmom(arr[indices], weights[indices], calcerr=True, sdev=True)
+        tweights=weights[indices]
     else:
-        m = arr[indices].mean()
-        s = arr[indices].std()
-        e = s/numpy.sqrt(indices.size)
+        tweights=None
+    
+    return tarr, tweights
+
+def _get_sigma_clip_stats(arr, weights=None):
+    if weights is not None:
+        m,e,s=wmom(arr, weights, calcerr=True, sdev=True)
+    else:
+        m = arr.mean()
+        s = arr.std()
+        e = s/numpy.sqrt(arr.shape[0])
 
     return m,e,s
 
