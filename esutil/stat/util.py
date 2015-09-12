@@ -860,8 +860,8 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
     arr = numpy.array(arr_in, dtype='f8', ndmin=1, copy=False)
 
-    amin = arr.min()
-    amax = arr.max()
+    amin = arr.min(axis=0)
+    amax = arr.max(axis=0)
 
     if 'nsig' in kw or 'niter' in kw:
         do_sigma_clip=True
