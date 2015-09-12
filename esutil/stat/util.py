@@ -860,6 +860,9 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
     arr = numpy.array(arr_in, dtype='f8', ndmin=1, copy=False)
 
+    amin = arr.min()
+    amax = arr.max()
+
     if 'nsig' in kw or 'niter' in kw:
         do_sigma_clip=True
         scalarify=False
@@ -906,7 +909,7 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
         std=std[0]
         err=err[0]
 
-    res = {'mean':mn, 'std':std, 'err':err}
+    res = {'mean':mn, 'std':std, 'err':err, 'min':amin, 'max':amax}
 
     return res
 
