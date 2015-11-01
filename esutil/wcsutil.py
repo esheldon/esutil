@@ -189,6 +189,7 @@ class WCS(object):
         # Convert to internal dictionary and set some attributes of this
         # instance
         self.wcs = self.ConvertWCS(wcs)
+        self._set_naxis()
 
         # Set these as attributes, either from above keywords or from the
         # wcs header
@@ -208,6 +209,60 @@ class WCS(object):
         self.wcs[key] = val
     def keys(self):
         return self.wcs.keys()
+
+    def get_jacobian(self, x, y, distort=True, step=1.0):
+        """
+        Get the elementes of the jacobian matrix at the specified locations
+        This method currently assumes the system is ra,dec
+
+        parameters
+        ----------
+        x,y: scalars or arrays
+            x and y coords in the image
+        distort:  bool, optional
+            Use the distortion model if present.  Default is True
+        step: float
+            Step used for central difference formula, in pixels.  Default is
+            1.0 pixels.
+
+        returns
+        -------
+        jacobian elements: tuple of arrays
+            dra_dx, dra_dy, ddec_dx, ddec_dy
+
+        method
+        ------
+        Finite difference
+        """
+
+        fac = 1.0/(2*step)
+
+        ra, dec = self.image2sky(x, y, distort=distort)
+
+        xp = x + step
+        xm = x - step
+        yp = y + step
+        ym = y - step
+
+        ra_p0, dec_p0 = self.image2sky(xp, y, distort=distort)
+        ra_m0, dec_m0 = self.image2sky(xm, y, distort=distort)
+
+        ra_0p, dec_0p = self.image2sky(x, yp, distort=distort)
+        ra_0m, dec_0m = self.image2sky(x, ym, distort=distort)
+
+        # in arcsec/pixel
+        dra_dx = fac*3600.0*(ra_p0-ra_m0)
+        dra_dy = fac*3600.0*(ra_0p-ra_0m)
+        ddec_dx = fac*3600.0*(dec_p0-dec_m0)
+        ddec_dy = fac*3600.0*(dec_0p-dec_0m)
+
+        # need to scale dra b -cos(dec), minus sign since ra increases
+        # to the left
+        cosdec = -numpy.cos(dec*d2r)
+        dra_dx *= cosdec
+        dra_dy *= cosdec
+
+        return dra_dx, dra_dy, ddec_dx, ddec_dy
 
     def image2sky(self, x, y, distort=True):
         """
@@ -609,8 +664,6 @@ class WCS(object):
         """
 
         wcs=self.wcs
-        self.naxis = numpy.array([wcs['naxis1'],
-                                  wcs['naxis2']])
 
         if 'ap' in self.distort:
             apold = self.distort['ap']
@@ -675,9 +728,6 @@ class WCS(object):
         """
         Invert the distortion model.  Must contain a,b matrices
         """
-
-        self.naxis = numpy.array([wcs['naxis1'],
-                                  wcs['naxis2']])
 
         # Order of polynomial
         sx,sy = self.distort['a'].shape
@@ -1030,6 +1080,14 @@ class WCS(object):
 
         # Extract the distortion model
         self.ExtractDistortionModel()
+
+    def _set_naxis(self):
+        wcs=self.wcs
+        if 'znaxis1' in wcs:
+            self.naxis = numpy.array([wcs['znaxis1'], wcs['znaxis2']])
+        else:
+            self.naxis = numpy.array([wcs['naxis1'], wcs['naxis2']])
+
 
 def _dict_get(d, key, default=None):
     if key not in d:
