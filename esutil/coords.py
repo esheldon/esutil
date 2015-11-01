@@ -1193,6 +1193,8 @@ def randcap(nrand, ra, dec, rad, get_radius=False):
     rand_ra  = phi2
     rand_dec = theta2-90.0
 
+    atbound(rand_ra, 0.0, 360.0)
+
     if get_radius:
         return rand_ra, rand_dec, rand_r
     else:
