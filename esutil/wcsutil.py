@@ -547,6 +547,18 @@ class WCS(object):
         diff = lonlat-self.lonlat_answer
         return diff
 
+    def _fsolve_xy(self, xyguess):
+        import scipy.optimize
+        xy = scipy.optimize.fsolve(self._lonlatdiff, xyguess)
+        return xy
+
+    def _lmfind_xy(self, xyguess):
+        from scipy.optimize import leastsq
+        lm_tup = leastsq(self._lonlatdiff, xyguess, full_output=1)
+        xy, pcov0, infodict, errmsg, ier = lm_tup
+        if ier > 4:
+            raise RuntimeError("failed to find inverse transform: '%s'" % errmsg)
+        return xy
 
     def _findxy(self, lon, lat):
         """ 
@@ -557,26 +569,25 @@ class WCS(object):
         Uses scipy.optimize.fsolve to find the roots of the transformation
         """
 
-        import scipy.optimize
-        #lon = numpy.array(lonin, ndmin=1, dtype='f8', copy=False)
-        #lat = numpy.array(latin, ndmin=1, dtype='f8', copy=False)
         if lon.size != lat.size:
             raise ValueError('lon and lat must be same size')
 
         x = numpy.zeros_like(lon)
         y = numpy.zeros_like(lon)
+
         xyguess = numpy.zeros(2,dtype='f8')
         self.lonlat_answer = numpy.zeros(2,dtype='f8')
+
         for i in range(lon.size):
             self.lonlat_answer[0],self.lonlat_answer[1] = lon[i],lat[i]
 
             # Use inversion without distortion as our guess
             xyguess[0], xyguess[1] = \
                     self.sky2image(lon[i], lat[i], find=False, distort=False)
-            xy = scipy.optimize.fsolve(self._lonlatdiff, xyguess)
+            xy = self._fsolve_xy(xyguess)
+            #print 'using lm'
+            #xy = self._lmfind_xy(xyguess)
             x[i],y[i] = xy[0], xy[1]
-            #loncheck,latcheck = self.image2sky(x[i],y[i])
-            #lonerr, laterr = loncheck-lon[i], latcheck-lat[i]
 
         return x,y
 
