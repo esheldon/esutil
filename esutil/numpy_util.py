@@ -326,13 +326,8 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
         else:
             fdata = array[n][index]
 
-        shape_str = ','.join( str(s) for s in fdata.shape)
 
-        if fdata.dtype.names is not None:
-            type = 'rec[%s]' % shape_str
-            d=''
-            hasfields=True
-        elif numpy.isscalar(fdata):
+        if numpy.isscalar(fdata):
             if isinstance(fdata, numpy.string_):
                 d=fdata
 
@@ -347,8 +342,14 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
             else:
                 d = fdata
         else:
-            d = 'array[%s]' % shape_str
-        
+            shape_str = ','.join( str(s) for s in fdata.shape)
+            if fdata.dtype.names is not None:
+                type = 'rec[%s]' % shape_str
+                d=''
+                hasfields=True
+            else:
+                d = 'array[%s]' % shape_str
+
         if pretty and len(n) > 15:
             l = pformat % (n,type,d)
         else:
