@@ -272,7 +272,7 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
                                pretty=pretty, 
                                index=index)
         lines += flines
-           
+
     lines='\n'.join(lines)
 
     if not page:
@@ -311,7 +311,7 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
     pformat = spacing + "%-" + str(nname) + "s\n %" + str(nspace+nname+ntype) + "s  %s"
 
     max_pretty_slen = 25
-    
+
     for i in range(len(names)):
 
         hasfields=False
