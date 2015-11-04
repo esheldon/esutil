@@ -214,6 +214,17 @@ class WCS(object):
     def keys(self):
         return self.wcs.keys()
 
+    def get_naxis(self):
+        """
+        get [nx,ny], properly accounting for compressed data that
+        use znaxis*
+
+        returns
+        -------
+        [nx,ny] as an array
+        """
+        return self.naxis.copy()
+
     def get_jacobian(self, x, y, distort=True, step=1.0):
         """
         Get the elementes of the jacobian matrix at the specified locations
