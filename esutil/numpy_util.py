@@ -10,7 +10,7 @@ Utilities for using and manipulating numerical python arrays (NumPy).
     ahelp(array, recurse=False, pretty=True)
         Print out a formatted description of the input array.   If the array
         has fields, individual descriptions are printed for each field.  This
-        is designed to be similar to help, struct, /str in IDL. 
+        is designed to be similar to help, struct, /str in IDL.
 
 
     aprint(array, type='table', page=False, nlines=ALL, fields=ALL, file=None)
@@ -28,7 +28,7 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         the same datatype.
 
     copy_fields(array1, array2)
-        Copy common fields from one numpy array to another.  The name 
+        Copy common fields from one numpy array to another.  The name
         matching is case senitive.
 
     extract_fields(array, names, strict=True)
@@ -39,7 +39,7 @@ Utilities for using and manipulating numerical python arrays (NumPy).
 
     remove_fields(array, names)
         Remove a set of fields from the array.  A new array is returned
-        with the leftover fields and data copied in.  The name matching 
+        with the leftover fields and data copied in.  The name matching
         is case sensitive.
 
     add_fields(arr, dtype_or_descr, defaults=None)
@@ -86,13 +86,13 @@ Utilities for using and manipulating numerical python arrays (NumPy).
 
     to_big_endian(array, inplace=False, keep_dtype=False)
         Convert an array to big endian byte order, updating the dtype to
-        reflect this.  The array can have fields. 
+        reflect this.  The array can have fields.
     to_little_endian(array, inplace=False, keep_dtype=False)
         Convert an array to little endian byte order, updating the dtype to
-        reflect this.  The array can have fields.  
+        reflect this.  The array can have fields.
     to_native(array, inplace=False, keep_dtype=False)
         Convert an array to native byteorder, updating the dtype to
-        reflect this.  The array can have fields.  
+        reflect this.  The array can have fields.
 
     byteswap(array, inplace=False, keep_dtype=False)
         Chance the byte order of an array, updating the dtype to reflect this.
@@ -139,7 +139,7 @@ Utilities for using and manipulating numerical python arrays (NumPy).
     select_percentile(x, perc, get_ranges=False, **keys)
         select data in the given percentile(s)
 
-""" 
+"""
 
 license="""
   Copyright (C) 2010  Erin Sheldon
@@ -205,16 +205,16 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     Purpose:
         Print out a formatted description of the input array.   If the array
         has fields, individual descriptions are printed for each field.  This
-        is designed to be similar to help, struct, /str in IDL. 
+        is designed to be similar to help, struct, /str in IDL.
 
     Calling Sequence:
         ahelp(array, recurse=False, pretty=True, page=False)
-    
+
     Inputs:
         array: A numpy array.
 
     Optional Inputs:
-        recurse: for sub-arrays with fields, print out a full description. 
+        recurse: for sub-arrays with fields, print out a full description.
             default is False.
         pretty:  If True, split field descriptions onto multiple lines if
             the name is longer than 15 characters.  Nicer for the eye, but
@@ -235,7 +235,7 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
           dec                >f8  -1.05070432844
 
     Revision History:
-        Created: 2010-04-05, Erin Sheldon, BNL 
+        Created: 2010-04-05, Erin Sheldon, BNL
 
     """
 
@@ -258,7 +258,7 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     lines=[]
     if names is None:
         type=descr[0][1]
-        nfields=0 
+        nfields=0
         line=topformat % (array.size, nfields, type)
         lines.append(line)
         #stdout.write(line)
@@ -267,9 +267,9 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
         line=topformat % (array.size, len(names), 'records')
         lines.append(line)
         #stdout.write(line)
-        flines=_get_field_info(array, 
-                               recurse=recurse, 
-                               pretty=pretty, 
+        flines=_get_field_info(array,
+                               recurse=recurse,
+                               pretty=pretty,
                                index=index)
         lines += flines
 
@@ -360,8 +360,8 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
         if hasfields and recurse:
             #new_nspace = nspace + nname + 1 + ntype + 2
             new_nspace = nspace + 4
-            morelines = _get_field_info(array[n], 
-                                        nspace=new_nspace, 
+            morelines = _get_field_info(array[n],
+                                        nspace=new_nspace,
                                         recurse=recurse)
             lines += morelines
 
@@ -378,13 +378,13 @@ def aprint(array, **keys):
         Print out the rows and columns of the array with fields, aka structure
         or records.  The focus is on visualizing the data rather than speed or
         efficient file output.
-        
-        Optionally results can be sent to a pager or file.  
-        
+
+        Optionally results can be sent to a pager or file.
+
         By default, the columns are printed in a simple, machine readable
         format, but using the type= keyword you can print in other styles.
 
-        Subsets of the fields can be chosen.  Also, printing can be 
+        Subsets of the fields can be chosen.  Also, printing can be
         restricted to the top N lines.
 
         If not type='fancy', the user has more control over the format.
@@ -410,11 +410,11 @@ def aprint(array, **keys):
                 will be added with control.
             If 'latex-deluxe' this is currently a synonym for 'latex'
 
-        file: 
-            Send results to this file rather than standard output. 
-        nlines: 
+        file:
+            Send results to this file rather than standard output.
+        nlines:
             Print only the top N lines.  Default is to print all.
-        fields or columns: 
+        fields or columns:
             Only print a subset of the fields.
 
 
@@ -427,16 +427,16 @@ def aprint(array, **keys):
         trailer:
             Text to print after the array data.
 
-        format: 
+        format:
             A format string to apply to every argument.  E.g. format='%15s'
             Since every arg gets the same format, only %s type formats should
             be used unless the types are homogeneous.
-        delim or sep: 
+        delim or sep:
             The delimiter between fields.
-        array_delim: 
+        array_delim:
             The delimiter between sub-array elements.
-        bracket_arrays:  
-            
+        bracket_arrays:
+
             Put brackets in place to delineate dimensional boundies.  e.g.
             {{a,b,c},{d,e,f}}
 
@@ -445,7 +445,7 @@ def aprint(array, **keys):
                    of ' '
 
 
-        altnames: 
+        altnames:
             An alternative list of names for each field when printing a header
             of field names.  There must be an entry for each field to be
             printed.
@@ -518,7 +518,7 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
 
     PURPOSE:
       Rescale the range of an array to be between minval and maxval.
-    
+
     INPUTS:
       arr: An array
       minval: The minimum value for the output array
@@ -541,17 +541,17 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
 
     REVISION HISTORY:
       Converted from IDL: 2006-10-23. Erin Sheldon, NYU
-      
+
     """
 
     output = numpy.array(arr, dtype=dtype, copy=True)
-    
+
     if arrmin == None: arrmin = output.min()
     if arrmax == None: arrmax = output.max()
-    
+
     if output.size == 1:
         return output
-    
+
     if (arrmin == arrmax):
         raise ValueError('arrmin must not equal arrmax')
 
@@ -566,7 +566,7 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
     # in place
     numpy.multiply(output, a, output)
     numpy.add(output, b, output)
-    
+
     return output
 
 def make_xy_grid(n, xrang, yrang):
@@ -610,11 +610,11 @@ def combine_arrlist(arrlist, keep=False):
         be the same data type.
 
     KEYWORDS:
-        keep:  By default the elements are deleted as they are added to the 
+        keep:  By default the elements are deleted as they are added to the
             big array.  Turn this off with keep=True
 
     REVISION HISTORY:
-        Inspired by combine_ptrlist from SDSSIDL.  2007.  Erin Sheldon, BNL 
+        Inspired by combine_ptrlist from SDSSIDL.  2007.  Erin Sheldon, BNL
     """
     if not isinstance(arrlist,list):
         raise RuntimeError('Input must be a list of arrays')
@@ -627,7 +627,7 @@ def combine_arrlist(arrlist, keep=False):
 
     isarray = isinstance(arrlist[0], numpy.ndarray)
     isrec = isinstance(arrlist[0], numpy.recarray)
-        
+
     if not isarray:
         mess = 'Input must be a list of arrays or recarrays. Found %s' % \
                 type(arrlist[0])
@@ -669,7 +669,7 @@ def copy_fields(arr1, arr2):
         copy_fields(array1, array2)
 
     PURPOSE:
-        Copy common fields from one array1 to array2.  The name 
+        Copy common fields from one array1 to array2.  The name
         matching is case senitive.
 
     REVISION HISTORY:
@@ -703,10 +703,10 @@ def extract_fields(arr, keepnames, strict=True):
 
     Inputs:
         arr: A numpy structure, or array with fields.
-        names: The subset of names to extract.  
+        names: The subset of names to extract.
 
     Optional Inputs:
-        strict: 
+        strict:
             If True, requested names that are not found in the input array will
             raise a ValueError.  Default is True.
 
@@ -755,7 +755,7 @@ def remove_fields(arr, rmnames):
 
     PURPOSE:
         Remove a set of fields from the array.  A new array is returned
-        with the leftover fields and data copied in.  The name matching 
+        with the leftover fields and data copied in.  The name matching
         is case sensitive.
 
     REVISION HISTORY:
@@ -819,9 +819,9 @@ def add_fields(arr, add_dtype_or_descr, defaults=None):
 
     shape = arr.shape
     new_arr = numpy.zeros(shape, dtype=new_descr)
-    
+
     copy_fields(arr, new_arr)
-    
+
     # See if the user has indicated default values for the new fields
     if defaults is not None:
         if type(defaults) != list:
@@ -852,7 +852,7 @@ def reorder_fields(arr, ordered_names, strict=True):
             at the front.  Non-matching names are placed at the back.
 
     Optional Inputs:
-        strict: 
+        strict:
             If True, requested names that are not found in the input array will
             raise a ValueError.  Default is True.
 
@@ -879,7 +879,7 @@ def reorder_fields(arr, ordered_names, strict=True):
         else:
             if strict:
                 raise ValueError("field not found: '%s'" % name)
-    
+
     # now put in the remaining names in original order at the back
     for i in range(original_names.size):
         name = original_names[i]
@@ -974,7 +974,7 @@ def split_fields(data, fields=None, getnames=False):
             raise ValueError("Could not extract fields: data has "
                              "no fields")
         return (data,)
-    
+
     if fields is None:
         fields = allfields
     else:
@@ -1133,7 +1133,7 @@ def replicate(value, shape, dtype=None):
 
 def is_big_endian(array):
     """
-    Return True if array is big endian, False otherwise.  
+    returns True if array is big endian, False otherwise.
 
     Parameters
     ----------
@@ -1162,7 +1162,7 @@ def is_big_endian(array):
 
 def is_little_endian(array):
     """
-    Return True if array is little endian, False otherwise. 
+    returns True if array is little endian, False otherwise.
 
     Parameters
     ----------
@@ -1200,11 +1200,11 @@ def to_native(array, inplace=False, keep_dtype=False):
 
     PURPOSE:
         Convert an array to native byte order, updating the dtype to
-        reflect this.  The array can have fields.  
-    
+        reflect this.  The array can have fields.
+
     KEYWORDS:
-        inplace:  Default False.  If True the data are byteswapped 
-            in place and a reference to the original array is returned.  
+        inplace:  Default False.  If True the data are byteswapped
+            in place and a reference to the original array is returned.
             If False a copy is always retured, even if no data were
             swapped.
         keep_dtype: Default False.  Setting to True prevents the dtype from
@@ -1278,11 +1278,11 @@ def to_big_endian(array, inplace=False, keep_dtype=False):
 
     PURPOSE:
         Convert an array to big endian byte order, updating the dtype to
-        reflect this.  The array can have fields.  
-    
+        reflect this.  The array can have fields.
+
     KEYWORDS:
-        inplace:  Default False.  If True the data are byteswapped 
-            in place and a reference to the original array is returned.  
+        inplace:  Default False.  If True the data are byteswapped
+            in place and a reference to the original array is returned.
             If False a copy is always retured, even if no data were
             swapped.
         keep_dtype: Default False.  Setting to True prevents the dtype from
@@ -1324,11 +1324,11 @@ def to_little_endian(array, inplace=False, keep_dtype=False):
 
     PURPOSE:
         Convert an array to big endian byte order, updating the dtype to
-        reflect this.  The array can have fields. 
-    
+        reflect this.  The array can have fields.
+
     KEYWORDS:
-        inplace:  Default False.  If True the data are byteswapped 
-            in place and a reference to the original array is returned.  
+        inplace:  Default False.  If True the data are byteswapped
+            in place and a reference to the original array is returned.
             If False a copy is always retured, even if no data were
             swapped.
         keep_dtype: Default False.  Setting to True prevents the dtype from
@@ -1394,12 +1394,12 @@ def byteswap(array, inplace=False, keep_dtype=False):
         outdata.dtype = outdata.dtype.newbyteorder()
 
     return outdata
-      
+
 def unique(arr, values=False):
     """
     NAME:
         unique
-    
+
     CALLING SEQUENCE:
         un = unique(arr, values=False)
 
@@ -1442,7 +1442,7 @@ def rem_dup(arr, flag, values=False):
     """
     NAME:
         rem_dup
-    
+
     CALLING SEQUENCE:
         indices = rem_dup(arr, flag, values=False)
         indices, values = rem_dup(arr, flag, values=True)
@@ -1466,14 +1466,14 @@ def rem_dup(arr, flag, values=False):
 
     s = arr.argsort()   # sort indices
     sarr = arr[s]       # sorted array
-    
+
     keep = numpy.zeros(n, dtype='i8')  # indices of values to keep
     nkeep = 0
     sflag = flag[s]  # flags to match sorted array
-    
+
     val = sarr[0]    # first value to process
     f = sflag[0]     # flag for first value
-    
+
     for i in range(1,n):
         if sarr[i] != val:
             val = sarr[i]
@@ -1597,10 +1597,10 @@ def match(arr1input, arr2input):
 def match_multi(arr1input, arr2input):
     """
     Match two numpy integer arrays, one of which may be non-unique
-    
+
     The first array must be unique, but the second array may have multiple
     entries.
-        
+
     Returns the indices of the matches or empty arrays if no matches are found.
     This means arr1[sub1] == arr2[sub2] is true for all corresponding pairs.
 
@@ -1626,7 +1626,7 @@ def match_multi(arr1input, arr2input):
     dtype = 'i8'
     sub1 = numpy.array([])
     sub2 = numpy.array([])
-    
+
     arr1 = numpy.array(arr1input, ndmin=1, copy=False)
     arr2 = numpy.array(arr2input, ndmin=1, copy=False)
 
@@ -1699,7 +1699,7 @@ def match_multi(arr1input, arr2input):
         lastmark=mark[i]
 
     return sub1,sub2
-    
+
 
 
 
@@ -1744,8 +1744,8 @@ def dict2array(d, sort=False, keys=None):
     Keywords:
         keys: provide a sequence of keys to copy.  This can be used to order
             the fields (standard dictionary keys are unordered) or copy only a
-            subset of keys. 
-        sort: Sort the keys.  
+            subset of keys.
+        sort: Sort the keys.
 
     Comments:
         In python >= 3.1 dictionaries can be ordered.
@@ -1807,7 +1807,7 @@ def splitarray(nper, var_input):
 
     Calling Sequence:
         split_list = splitarray(nper, array)
-    
+
     Inputs:
         nper: Number obj elements in each sub-array.  Note, the last one
             may have fewer if len(array) % nper != 0
@@ -1834,7 +1834,7 @@ def splitarray(nper, var_input):
 
 
     Revision History:
-        Created: 2010-04-05, Erin Sheldon, BNL 
+        Created: 2010-04-05, Erin Sheldon, BNL
 
     """
 
@@ -2082,12 +2082,12 @@ class ArrayWriter:
                 will be added with control.
             If 'latex-deluxe' this is currently a synonym for 'latex'
 
-        delim: 
+        delim:
             The delimiter between fields.
-        array_delim: 
+        array_delim:
             The delimiter between sub-array elements.
-        bracket_arrays:  
-            
+        bracket_arrays:
+
             Put brackets in place to delineate dimensional boundies.  e.g.
             {{a,b,c},{d,e,f}}
 
@@ -2220,18 +2220,18 @@ class ArrayWriter:
             aw.write(array, **keywords)
         Purpose:
             Write an array.
-        
+
         Inputs:
-            array: 
+            array:
                 The array to write
         Keywords:
 
             NOTE: All the keywords for the constructor can also be sent to the
             write() method, but note that constructor keywords will "stick".
 
-            nlines: 
+            nlines:
                 The number of lines to write
-            fields or columns: 
+            fields or columns:
                 Only print a subset of the fields.
 
             header:
@@ -2244,12 +2244,12 @@ class ArrayWriter:
             trailer:
                 Text to print after the array data.
 
-            altnames: 
+            altnames:
                 A list of names for each argument.  There must be an entry for
                 each argument. The names are printed above each column when
                 doing fancy printing.
 
-            format: 
+            format:
                 A format string to apply to every argument.  E.g. format='%15s'
                 Since every arg gets the same format, only %s type formats should
                 be used unless the types are homogeneous.
@@ -2257,11 +2257,8 @@ class ArrayWriter:
             title:
                 A title to place above the printout when using fancy printing.
 
-        
-
-
         """
-        
+
         self.set_keywords(**keys)
 
         if self._type == 'fancy':
@@ -2310,7 +2307,7 @@ class ArrayWriter:
                 if ni > nall:
                     raise ValueError("Field index out of range: %s" % ni)
                 names.append(allnames[ni])
-        
+
         nnames = len(names)
 
         if header == True or eu_misc.isstring(header):
@@ -2354,7 +2351,7 @@ class ArrayWriter:
                         strval = str(data)
 
                 line += strval
-                    
+
                 if iname < (nnames-1):
                     line += self._delim
                 iname += 1
@@ -2380,7 +2377,7 @@ class ArrayWriter:
             pydoc.pager(lines)
         else:
             self._fobj.flush()
-        
+
     def latex_write(self, arrin, **keys):
 
         arr=arrin.view(numpy.ndarray)
@@ -2410,7 +2407,7 @@ class ArrayWriter:
                 if ni > nall:
                     raise ValueError("Field index out of range: %s" % ni)
                 names.append(allnames[ni])
-        
+
         nnames = len(names)
 
         # we have fields
@@ -2435,7 +2432,7 @@ class ArrayWriter:
                         strval = str(data)
 
                 line += strval
-                    
+
                 if iname < (nnames-1):
                     line += self._delim
                 iname += 1
@@ -2589,7 +2586,7 @@ class ArrayWriter:
                 self.write_array(a)
             else:
                 self._fobj.write(str(a))
-        
+
             if i < (dimsize-1):
                 self._fobj.write(',')
             i+=1
@@ -2626,7 +2623,7 @@ class ArrayStringifier:
             raise ValueError("array must be simple, not structured")
         self._process(arr)
         return ''.join(self._values)
-    
+
     def _process(self, arr):
 
         if self._brackets:
@@ -2641,7 +2638,7 @@ class ArrayStringifier:
                 self._process(a)
             else:
                 self._values.append(str(a))
-        
+
             if i < (dimsize-1):
                 self._values.append(self._delim)
             i+=1
