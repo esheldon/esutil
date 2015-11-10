@@ -2,32 +2,61 @@ v0.5.3 (unreleased)
 ----------------------------------------------------------------------
 
 New:
-    - esutil/htm:
+    - htm:
         - introduced the Matcher class, which is much more memory efficient for
           matching than the old "reverse indices" style.
         - Added intersect() method to the HTM class to look up all triangles
           that are contained within or intersect a circle centered on the input
           point.
-    - esutil/numpy_util.py:
+    - numpy_util.py:
         - between: Test if array elements are within a range
         - outside: Test if array elements are outside a range
-    - esutil/plotting.py
+        - select_percentile(): select data in the given percentile(s)
+    - plotting.py
         - added fake_points for getting symbols for a plot key.  Useful when
           the original points are not available or show up too small in the
           key.  fake_filled_circles now calls this function
+        - added Grid for simplifying working with a grid of plot
+        - added compare_hist function
+    - stats.py
+        - added get_stats() function to calculate stats for an array
+    - integrate
+        - added 2d gauss legendre integrator
+    - wcsutil
+        - added get_jacobian() function to calculate the jacobian
+          matrix of the transformation
+        - added get_naxis() method to get the dimensions, deals properly
+          with compressed fits extensions
+    - random
+        - added CholeskySampler
 
 Updates:
-    - esutil/htm
+    - wsutil
+        - sped up by factor of 2.3 in some scenarios due to array
+          checking
+    - htm
         - HTM class:
             - Use 64-bit integer internally to allow higher depth values.
             - match() uses a Matcher object internally
 
-    - esutil/stat.histogram2d
+    - stat.histogram2d
         - Now uses proper index order for x,y
-    - esutil/plotting.py
+    - plotting.py
         - removed bcircle and bbox since these are actually part of biggles,
           just not documented.
         - Allow sizes= sent to fake_filled_circles
+    - stats
+        - wmom can work on arrays with more than one dimension
+        - weights can be sent to histogram2d
+but fixes:
+    - coords.py
+        - fix units of returned radius
+        - added missing bounds checking
+        - fix bug in coords.dec_parse. The sign was not being used
+
+    - setup.py
+        - corrected deprecated use of include_dirs, now should work on all
+          systems
 
 v0.5.2 (2014-06-12)
 ----------------------------------------------------------------------
