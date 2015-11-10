@@ -38,7 +38,7 @@
                     y = sin(pi/2-dec)*sin(ra)
                     z = cos(pi/2-dec)
 
-        xyz2eq: 
+        xyz2eq:
             inverse of eq2xyz
 
         sphdist:
@@ -49,7 +49,7 @@
             shift the input longitude.  By default wrap the coordinate to
             -180,180.  If a shift is entered, return the new value
             lon-shift such that the range is still [0,360)
-            
+
         shiftra:
             shift right ascension.  This just calls shiftlon
 
@@ -1075,7 +1075,7 @@ def randsphere(num, ra_range=None, dec_range=None, system='eq'):
 
     parameters
     ----------
-    num: integer 
+    num: integer
         The number of randoms to generate
     ra_range: list, optional
         Should be within range [0,360].  Default [0,360]
@@ -1121,7 +1121,7 @@ def randsphere(num, ra_range=None, dec_range=None, system='eq'):
     rad2deg(dec,dec)
     # now in range [-90,90.0)
     dec -= 90.0
-    
+
     if system == 'xyz':
         x,y,z = eq2xyz(ra, dec)
         return x,y,z
@@ -1174,7 +1174,7 @@ def randcap(nrand, ra, dec, rad, get_radius=False):
     cospsi = cos(rand_posangle)
     costheta2 = costheta*cosr + sintheta*sinr*cospsi
 
-    numpy.clip(costheta2, -1, 1, costheta2)                    
+    numpy.clip(costheta2, -1, 1, costheta2)
 
     # gives [0,pi)
     theta2 = arccos(costheta2)
@@ -1182,7 +1182,7 @@ def randcap(nrand, ra, dec, rad, get_radius=False):
 
     cosDphi = (cosr - costheta*costheta2)/(sintheta*sintheta2)
 
-    numpy.clip(cosDphi, -1, 1, cosDphi)                    
+    numpy.clip(cosDphi, -1, 1, cosDphi)
     Dphi = arccos(cosDphi)
 
     # note fancy usage of where
@@ -1196,6 +1196,7 @@ def randcap(nrand, ra, dec, rad, get_radius=False):
     atbound(rand_ra, 0.0, 360.0)
 
     if get_radius:
+        numpy.rad2deg(rand_r, rand_r)
         return rand_ra, rand_dec, rand_r
     else:
         return rand_ra, rand_dec
