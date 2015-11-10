@@ -6,25 +6,27 @@ This is a sub-package of the esutil package. The full reference is esutil.stat
 
 classes
 -------
-Binner: 
+Binner:
     A class for binning data.
 
 functions
 -------
-histogram:  
+histogram:
     Calculate the histogram of the input data.  The reverse indices are
     also optionally calculated.  This function behaves similarly to the
     IDL histogram function.  Also has the option to use weights, and
     to tabulate a large number of statistics for each bin.
-histogram2d:  
+histogram2d:
     Histgram two variables.
-wmom:  
+get_stats:
+    Calculate statistics for an array
+wmom:
     Calculate weighted mean and error for the given input data.
 wmedian:
     Calculate the weighted median.
-sigma_clip:  
+sigma_clip:
     Return the sigma-clipped mean and error for the input data.
-interplin:  
+interplin:
     Perform linear interpolation.  This function is less powerful than
     scipy.interpolate.interp1d but behaves like the IDL interpol()
     function, including extrapolation beyond boundaries.
