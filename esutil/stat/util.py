@@ -871,6 +871,15 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
         Extra keywords for sigma_clip
     **wmom_keywords:
         Extra keywords for wmom (if using weights)
+
+    returns
+    ------
+    A dict with the stats
+    {'mean':mn,
+     'std':std,
+     'err':err,
+     'min':amin,
+     'max':amax}
     """
 
     arr = numpy.array(arr_in, dtype='f8', ndmin=1, copy=False)
