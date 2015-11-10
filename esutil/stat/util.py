@@ -650,31 +650,31 @@ def testhist(doplot=False):
 
 
 
-def histogram2d(x, y, 
+def histogram2d(x, y,
                 z=None,
                 weights=None,
-                nx=None, 
-                ny=None, 
-                xbin=None, 
-                ybin=None, 
-                xmin=None, 
-                xmax=None, 
-                ymin=None, 
-                ymax=None, 
+                nx=None,
+                ny=None,
+                xbin=None,
+                ybin=None,
+                xmin=None,
+                xmax=None,
+                ymin=None,
+                ymax=None,
                 rev=False,
                 more=False):
     """
     Histogram two-dimensional data.
 
     res=histogram2d(x, y, z=None,
-                    nx=None, 
-                    ny=None, 
-                    xbin=None, 
-                    ybin=None, 
-                    xmin=None, 
-                    xmax=None, 
-                    ymin=None, 
-                    ymax=None, 
+                    nx=None,
+                    ny=None,
+                    xbin=None,
+                    ybin=None,
+                    xmin=None,
+                    xmax=None,
+                    ymin=None,
+                    ymax=None,
                     rev=False,
                     more=False)
 
@@ -714,7 +714,7 @@ def histogram2d(x, y,
         If True, return a dictionary with the histogram in the 'hist' key, as
         well as xlow,xhigh,xcenter and other bin information.
 
-        If z is sent, more is implied. 
+        If z is sent, more is implied.
     """
 
     x = numpy.array(x, ndmin=1, copy=False)
@@ -939,7 +939,7 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
 def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored_kw):
     """
-    Calculate the weighted moments of the input array. 
+    Calculate the weighted moments of the input array.
 
     parameters
     ----------
@@ -971,7 +971,7 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored
 
     # no copy made if they are already arrays
     arr = numpy.array(arrin, ndmin=1, copy=False)
-    
+
     # Weights is forced to be type double. All resulting calculations
     # will also be double
     weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
@@ -988,7 +988,7 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored
                              "or have same shape as data, got "
                              "%s %s" % (arr.shape,weights.shape))
     wtot = weights.sum(axis=0)
-        
+
     # user has input a mean value
     if inputmean is None:
         wmean = ( weights*arr ).sum(axis=0)/wtot
@@ -1022,7 +1022,7 @@ def wmedian(arr_in, weights_in):
     arr = numpy.array(arr_in, ndmin=1, copy=False)
 
     sind=arr.argsort()
-    
+
     # Weights is forced to be type double. All resulting calculations
     # will also be double
     weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
@@ -1040,11 +1040,11 @@ def wmedian(arr_in, weights_in):
     return arr[sind[k]]
 
 
-def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=False, extra={}, 
+def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=False, extra={},
                verbose=False, silent=False, **ignored_kw):
     """
     Calculate the mean/stdev of an array with sigma clipping.
-      
+
     Iterate niter times, removing elements that are outside nsig, and
     recalculating mean/stdev.
 
@@ -1131,7 +1131,7 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
 
     extra['indices'] = indices
 
-    return res 
+    return res
 
 def _get_sigma_clip_subset(arr, indices, weights=None):
     tarr = arr[indices]
@@ -1139,7 +1139,7 @@ def _get_sigma_clip_subset(arr, indices, weights=None):
         tweights=weights[indices]
     else:
         tweights=None
-    
+
     return tarr, tweights
 
 def _get_sigma_clip_stats(arr, weights=None):
@@ -1160,7 +1160,7 @@ def interplin(vin, xin, uin):
     """
     NAME:
       interplin()
-      
+
     PURPOSE:
       Perform 1-d linear interpolation.  Values outside the bounds are
       permitted unlike the scipy.interpolate.interp1d module. They are
@@ -1185,7 +1185,7 @@ def interplin(vin, xin, uin):
 
     # Find closest indices
     xm = x.searchsorted(u) - 1
-    
+
     # searchsorted returns size(array) when the input is larger than xmax
     # Also, we need the index to be less than the last since we interpolate
     # *between* points.
@@ -1196,7 +1196,7 @@ def interplin(vin, xin, uin):
     w, = numpy.where(xm < 0)
     if w.size > 0:
         xm[w] = 0
-        
+
     xmp1 = xm+1
     return (u-x[xm])*(v[xmp1] - v[xm])/(x[xmp1] - x[xm]) + v[xm]
 
