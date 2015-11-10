@@ -856,6 +856,21 @@ def boxcar_average(x, N):
 def get_stats(arr_in, weights=None, doprint=False, **kw):
     """
     get stats for the input array
+
+    parameters
+    ----------
+    array: numpy array
+        An array for which to calculate statistics
+    weights: array, optional
+        Optional weights for the calculation
+    doprint: bool, optional
+        Set True to print the stats
+    nsig: float, optional
+        Optional number of sigma to clip the array
+    **sigma_clip_keywords:
+        Extra keywords for sigma_clip
+    **wmom_keywords:
+        Extra keywords for wmom (if using weights)
     """
 
     arr = numpy.array(arr_in, dtype='f8', ndmin=1, copy=False)
