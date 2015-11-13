@@ -348,13 +348,16 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
                 d=''
                 hasfields=True
             else:
-                d = 'array[%s]' % shape_str
-                d = "["
-                for v in fdata.ravel():
-                    d += str(v)
-                    d += ", "
-                d = d[0:-2]
-                d += "]"
+                if len(fdata.shape) < 2 and fdata.size < 10:
+                    d = "["
+                    for v in fdata.ravel():
+                        d += str(v)
+                        d += ", "
+                    d = d[0:-2]
+                    d += "]"
+                    #d = fdata.__str__()
+                else:
+                    d = 'array[%s]' % shape_str
 
         if pretty and len(n) > 15:
             l = pformat % (n,type,d)
