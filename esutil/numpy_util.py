@@ -349,6 +349,12 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
                 hasfields=True
             else:
                 d = 'array[%s]' % shape_str
+                d = "["
+                for v in fdata.ravel():
+                    d += str(v)
+                    d += ", "
+                d = d[0:-2]
+                d += "]"
 
         if pretty and len(n) > 15:
             l = pformat % (n,type,d)
