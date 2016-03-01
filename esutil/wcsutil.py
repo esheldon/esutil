@@ -67,6 +67,7 @@ import sys
 
 r2d = 180.0/math.pi
 d2r = math.pi/180.0
+DEFTOL = 1e-8
 
 # map the odd scamp naming scheme onto a matrix
 # I didn't figure out the formula
@@ -325,7 +326,7 @@ class WCS(object):
 
         return longitude, latitude
 
-    def sky2image(self, longitude, latitude, distort=True, find=True):
+    def sky2image(self, longitude, latitude, distort=True, find=True, xtol=DEFTOL):
         """
         Usage:
             x,y=sky2image(longitude, latitude, distort=True, find=True)
@@ -340,6 +341,7 @@ class WCS(object):
             find: When the distortion model is present, simply find the 
                 roots of the polynomial rather than using an inverse 
                 polynomial.  This is more accurate but slower. Default True.
+            xtol: tolerance to use when root finding with find=True Default is 1e-8.
         Outputs:
             x,y: x and y coords in the image.  Will have the same shape as
                 lon,lat
@@ -353,9 +355,8 @@ class WCS(object):
 
         # Only do this if there is distortion
         if find and self.distort['name'] != 'none':
-            x,y = self._findxy(longitude, latitude)
+            x,y = self._findxy(longitude, latitude, xtol=xtol)
         else:
-
             u, v = self.sph2image(longitude, latitude)
 
             p=self.projection.upper()
@@ -545,8 +546,11 @@ class WCS(object):
         if w.size > 0:
             b2[w] = -1.0
         '''
-
-        lat_new = numpy.arcsin(b2)*r2d
+        
+        # looks like arctan2 has less roundoff error 
+        # old code used arcsin
+        #lat_new = numpy.arcsin(b2)*r2d
+        lat_new = numpy.arctan2(b2,numpy.sqrt(b0*b0 + b1*b1))*r2d
         lon_new = numpy.arctan2(b1, b0)*r2d
 
         return lon_new, lat_new
@@ -562,9 +566,9 @@ class WCS(object):
         diff = lonlat-self.lonlat_answer
         return diff
 
-    def _fsolve_xy(self, xyguess):
+    def _fsolve_xy(self, xyguess, xtol=DEFTOL):
         import scipy.optimize
-        xy = scipy.optimize.fsolve(self._lonlatdiff, xyguess)
+        xy = scipy.optimize.fsolve(self._lonlatdiff, xyguess, xtol=xtol)
         return xy
 
     def _lmfind_xy(self, xyguess):
@@ -575,7 +579,7 @@ class WCS(object):
             raise RuntimeError("failed to find inverse transform: '%s'" % errmsg)
         return xy
 
-    def _findxy(self, lon, lat):
+    def _findxy(self, lon, lat, xtol=DEFTOL):
         """ 
         This is the simplest way to do the inverse of the (x,y)->(lon,lat)
         transformation when there are distortions.  Simply find the x,y 
@@ -585,17 +589,17 @@ class WCS(object):
         """
 
         if isscalar(lon):
-            x,y = self._findxy_one(lon, lat)
+            x,y = self._findxy_one(lon, lat, xtol=tol)
         else:
             x = numpy.zeros_like(lon)
             y = numpy.zeros_like(lon)
 
             for i in range(lon.size):
-                x[i],y[i] = self._findxy_one(lon[i], lat[i])
+                x[i],y[i] = self._findxy_one(lon[i], lat[i], xtol=xtol)
 
         return x,y
 
-    def _findxy_one(self, lon, lat):
+    def _findxy_one(self, lon, lat, xtol=DEFTOL):
         """ 
         This is the simplest way to do the inverse of the (x,y)->(lon,lat)
         transformation when there are distortions.  Simply find the x,y 
@@ -611,7 +615,7 @@ class WCS(object):
 
         # Use inversion without distortion as our guess
         xyguess[0], xyguess[1] = self.sky2image(lon, lat, find=False, distort=False)
-        xy = self._fsolve_xy(xyguess)
+        xy = self._fsolve_xy(xyguess, xtol=xtol)
         #print 'using lm'
         #xy = self._lmfind_xy(xyguess)
         x,y = xy[0], xy[1]
