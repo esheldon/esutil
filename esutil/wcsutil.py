@@ -552,6 +552,11 @@ class WCS(object):
         #lat_new = numpy.arcsin(b2)*r2d
         lat_new = numpy.arctan2(b2,numpy.sqrt(b0*b0 + b1*b1))*r2d
         lon_new = numpy.arctan2(b1, b0)*r2d
+        
+        # there are no unittests so I added this to make sure the new version works ok
+        #if False:
+        #    lat_new_old = numpy.arcsin(b2)*r2d
+        #    assert numpy.allclose(lat_new_old,lat_new),"New WCS arctan function not working!"
 
         return lon_new, lat_new
 
