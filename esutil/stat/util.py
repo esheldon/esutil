@@ -918,17 +918,18 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
 
     if doprint:
-        headfmt = ' '.join( ['%12s']*3 )
-        numfmt = ' '.join( ['%12g']*3 )
+        head = ('min','max','mean','err','std')
+        nh=len(head)
+        headfmt = ' '.join( ['%12s']*nh )
+        numfmt = ' '.join( ['%12g']*nh )
 
-        head = ('mean','err','std')
 
         print(headfmt % head)
         if ndim is None:
             print(numfmt % (mn,err,std))
         else:
             for i in xrange(ndim):
-                print(numfmt % (mn[i],err[i],std[i]))
+                print(numfmt % (amin[i],amax[i],mn[i],err[i],std[i]))
 
     if scalarify:
         mn=mn[0]
