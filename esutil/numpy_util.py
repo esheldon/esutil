@@ -1493,78 +1493,214 @@ def rem_dup(arr, flag, values=False):
         return s
 
 
-def match(arr1input, arr2input, presorted=False):
+def match(arr1input, arr2input):
     """
     NAME:
         match
 
     CALLING SEQUENCE:
-        ind1,ind2 = match(arr1, arr2, presorted=False)
+        ind1,ind2 = match(arr1, arr2)
 
     PURPOSE:
-        Match two numpy arrays.  Return the indices of the matches or empty
+        match two numpy arrays.  Return the indices of the matches or empty
         arrays if no matches are found.  This means arr1[ind1] == arr2[ind2] is
-        true for all corresponding pairs.  arr1 must contain only unique
-        inputs, but arr2 may be non-unique.
-        If you know arr1 is sorted, set presorted=True and it will run
-        even faster
+        true for all corresponding pairs. Arrays must contain only unique
+        elements
 
     METHOD:
-        uses searchsorted with some sugar.  Much faster than old version
-        based on IDL code.
+        This is the "sort" method as borrowed from the Goddard idl astronomy
+        library routine match.pro
+    TODO:
+        Implement the histogram method, which is faster but uses more
+        memory.
 
     REVISION HISTORY:
-        Created 2015, Eli Rykoff, SLAC.
+        Created 2009, Erin Sheldon, NYU.
+        Make return arrays empty when no matches are found, as opposed
+            to [-1]. This way one can just check match.size > 0
+            2010-05-14
+    """
+
+    # since where returns i8, we are kind of forced into this
+    dtype='i8'
+
+    arr1 = numpy.array(arr1input, ndmin=1, copy=False)
+    arr2 = numpy.array(arr2input, ndmin=1, copy=False)
+
+    n1 = len(arr1)
+    n2 = len(arr2)
+
+    if (n1 == 1) or (n2 == 1):
+        # one of the arrays is length one
+        if n2 > 1:
+            sub2, = numpy.where(arr2 == arr1[0])
+            if sub2.size > 0:
+                sub1 = numpy.array([0], dtype=dtype)
+            else:
+                sub1 = numpy.array([], dtype=dtype)
+        else:
+            sub1, = numpy.where(arr1 == arr2[0])
+            if sub1.size > 0:
+                sub2 = numpy.array([0], dtype=dtype)
+            else:
+                sub2 = numpy.array([], dtype=dtype)
+
+        return sub1, sub2
+
+
+    # make a combined set
+    tmp = numpy.zeros(n1+n2, dtype=arr1.dtype)
+    tmp[0:n1] = arr1[:]
+    tmp[n1:] = arr2[:]
+
+    ind = numpy.zeros(n1+n2, dtype=dtype)
+    ind[0:n1] = numpy.arange(n1)
+    ind[n1:] = numpy.arange(n2)
+
+    vec = numpy.zeros(n1+n2, dtype='b1')
+    vec[n1:] = 1
+
+    # sort combined list
+    sortind = tmp.argsort()
+    tmp = tmp[sortind]
+    ind = ind[sortind]
+    vec = vec[sortind]
+
+    # this finds adjacent dups but only if they are not from the
+    # same array.  Since we demand unique arrays I'm not sure why
+    # the second check is needed
+    firstdup, = numpy.where((tmp == numpy.roll(tmp,-1)) &
+                            (vec != numpy.roll(vec,-1)) )
+    if firstdup.size == 0:
+        sub1 = numpy.array([], dtype=dtype)
+        sub2 = numpy.array([], dtype=dtype)
+        return sub1, sub2
+
+    # both duplicate values...?
+    dup = numpy.zeros(firstdup.size*2, dtype=dtype)
+
+    even = numpy.arange( firstdup.size, dtype=dtype)*2
+    dup[even] = firstdup
+    dup[even+1] = firstdup+1
+
+    # indices of duplicates
+    ind = ind[dup]
+    # vector id of duplicates
+    vec = vec[dup]
+
+    # now subscripts
+    sub1 = ind[ numpy.where( vec == 0 ) ]
+    sub2 = ind[ numpy.where( vec != 0 ) ]
+    return sub1, sub2
+
+def match_multi(arr1input, arr2input):
+    """
+    Match two numpy integer arrays, one of which may be non-unique
+    
+    The first array must be unique, but the second array may have multiple
+    entries.
+        
+    Returns the indices of the matches or empty arrays if no matches are found.
+    This means arr1[sub1] == arr2[sub2] is true for all corresponding pairs.
+
+    parameters
+    ----------
+    arr1: numpy array, integer type
+        An integer numpy array, must be unique.
+    arr2: numpy array, integer type
+        An integer numpy array, may have duplicate entries.
+
+    method
+    ------
+    This uses the method from match_multi.pro from sdssidl.
+
+    revision history
+    ----------------
+    Created 12-12-2013, Eli Rykoff, SLAC
+    12-12-2013 raise ValueError for wrong input. Some style changes.
+               Use numpy-style doc.  Erin Sheldon, BNL 
 
     """
+
+    dtype = 'i8'
+    sub1 = numpy.array([])
+    sub2 = numpy.array([])
     
-    # check for integer data...
-    if (not issubclass(arr1input.dtype.type,numpy.integer) or
-        not issubclass(arr2input.dtype.type,numpy.integer)) :
+    arr1 = numpy.array(arr1input, ndmin=1, copy=False)
+    arr2 = numpy.array(arr2input, ndmin=1, copy=False)
+
+    n1 = len(arr1)
+    n2 = len(arr2)
+
+    # only works for integer data
+
+    if (not issubclass(arr1.dtype.type,numpy.integer) or
+            not issubclass(arr2.dtype.type,numpy.integer)) :
         mess="Error: only works with integer types, got %s %s"
         mess = mess % (arr1.dtype.type,arr2.dtype.type)
         raise ValueError(mess)
 
-    # make sure 1D
-    arr1 = numpy.array(arr1input, ndmin=1, copy=False)
-    arr2 = numpy.array(arr2input, ndmin=1, copy=False)
-    
-    # make sure that arr1 has unique values...
+    # confirm that arr1 is single-valued
     test=numpy.unique(arr1)
-    if test.size != arr1.size:
-        raise ValueError("Error: the arr1input must be unique")
-    
-    # sort arr1 if not presorted
-    if not presorted:
-        st1 = numpy.argsort(arr1)
-    else:
-        st1 = None
+    if test.size != n1:
+        raise ValueError("Error: the first array must be unique")
 
-    # search the sorted array
-    sub1=numpy.searchsorted(arr1,arr2,sorter=st1)
+    # check for single-element array
+    if (n1 == 1) or (n2 == 1) :
+        if (n2 > 1) :
+            sub2,=numpy.where(arr2 == arr1[0])
+            if sub2.size > 0:
+                sub1 = numpy.zeros(sub2.size,dtype=dtype)
+        else :
+            sub1,=numpy.where(arr1 == arr2[0])
+            if sub1.size > 0:
+                sub2 = numpy.zeros(sub1.size,dtype=dtype)
+        return sub1,sub2
 
-    # check for out-of-bounds at the high end if necessary
-    if (arr2.max() > arr1.max()) :
-        bad,=numpy.where(sub1 == arr1.size)
-        sub1[bad] = arr1.size-1
+    min1 = arr1.min()
+    max1 = arr1.max()
+    min2 = arr2.min()
+    max2 = arr2.max()
+    if (min1 < min2) :
+        min12 = min1
+    else :
+        min12 = min2
+    if (max1 > max2):
+        max12 = max1
+    else :
+        max12 = max2
 
-    if not presorted:
-        sub2,=numpy.where(arr1[st1[sub1]] == arr2)
-        sub1=st1[sub1[sub2]]
-    else:
-        sub2,=numpy.where(arr1[sub1] == arr2)
-        sub1=sub1[sub2]
+    # are we in range?
+    if (max12 < min12) or (max12 < 0) :
+        return sub1,sub2
+
+    # we need a version of the arrays that are within range and sorted.
+    u,=numpy.where((arr1 >= min12) & (arr1 <= max12))
+    st1=arr1[u]
+    sortind = st1.argsort()
+    st1=st1[sortind]
+
+    h1,rev1=stat.histogram(st1,binsize=1,min=min12,max=max12,rev=True)
+    h2,rev2=stat.histogram(arr2,binsize=1,min=min12,max=max12,rev=True)
+
+    test,=numpy.where((h1 > 0) & (h2 > 0))
+    if test.size == 0:
+        return sub1,sub2
+
+    nsub=numpy.sum(rev2[test+1]-rev2[test])
+    mark=numpy.cumsum(rev2[test+1]-rev2[test])
+    sub1=numpy.zeros(nsub,dtype=dtype)
+    sub2=numpy.zeros(nsub,dtype=dtype)
+    lastmark=0
+    for i in numpy.arange(test.size):
+        sub1[lastmark:mark[i]] = sortind[numpy.repeat(u[rev1[rev1[test[i]]]],h2[test[i]])]
+        sub2[lastmark:mark[i]] = rev2[rev2[test[i]]:rev2[test[i]+1]]
+        lastmark=mark[i]
 
     return sub1,sub2
+    
 
 
-def match_multi(arr1input, arr2input,presorted=False):
-    """
-    See numpy_util.match()
-
-    """
-
-    return match(arr1input, arr2input,presorted=False)
 
 def strmatch(arr, regex):
     """
