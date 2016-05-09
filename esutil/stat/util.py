@@ -6,25 +6,27 @@ This is a sub-package of the esutil package. The full reference is esutil.stat
 
 classes
 -------
-Binner: 
+Binner:
     A class for binning data.
 
 functions
 -------
-histogram:  
+histogram:
     Calculate the histogram of the input data.  The reverse indices are
     also optionally calculated.  This function behaves similarly to the
     IDL histogram function.  Also has the option to use weights, and
     to tabulate a large number of statistics for each bin.
-histogram2d:  
+histogram2d:
     Histgram two variables.
-wmom:  
+get_stats:
+    Calculate statistics for an array
+wmom:
     Calculate weighted mean and error for the given input data.
 wmedian:
     Calculate the weighted median.
-sigma_clip:  
+sigma_clip:
     Return the sigma-clipped mean and error for the input data.
-interplin:  
+interplin:
     Perform linear interpolation.  This function is less powerful than
     scipy.interpolate.interp1d but behaves like the IDL interpol()
     function, including extrapolation beyond boundaries.
@@ -70,7 +72,7 @@ from types import *
 
 try:
     import numpy
-    from numpy import zeros, sqrt
+    from numpy import zeros, sqrt, newaxis
     have_numpy=True
 except:
     have_numpy=False
@@ -650,31 +652,31 @@ def testhist(doplot=False):
 
 
 
-def histogram2d(x, y, 
+def histogram2d(x, y,
                 z=None,
                 weights=None,
-                nx=None, 
-                ny=None, 
-                xbin=None, 
-                ybin=None, 
-                xmin=None, 
-                xmax=None, 
-                ymin=None, 
-                ymax=None, 
+                nx=None,
+                ny=None,
+                xbin=None,
+                ybin=None,
+                xmin=None,
+                xmax=None,
+                ymin=None,
+                ymax=None,
                 rev=False,
                 more=False):
     """
     Histogram two-dimensional data.
 
     res=histogram2d(x, y, z=None,
-                    nx=None, 
-                    ny=None, 
-                    xbin=None, 
-                    ybin=None, 
-                    xmin=None, 
-                    xmax=None, 
-                    ymin=None, 
-                    ymax=None, 
+                    nx=None,
+                    ny=None,
+                    xbin=None,
+                    ybin=None,
+                    xmin=None,
+                    xmax=None,
+                    ymin=None,
+                    ymax=None,
                     rev=False,
                     more=False)
 
@@ -714,7 +716,7 @@ def histogram2d(x, y,
         If True, return a dictionary with the histogram in the 'hist' key, as
         well as xlow,xhigh,xcenter and other bin information.
 
-        If z is sent, more is implied. 
+        If z is sent, more is implied.
     """
 
     x = numpy.array(x, ndmin=1, copy=False)
@@ -853,69 +855,161 @@ def boxcar_average(x, N):
     kernel=ones((N,))/N
     return convolve(x, kernel)[(N-1):]
 
-
-def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False):
+def get_stats(arr_in, weights=None, doprint=False, **kw):
     """
-    NAME:
-      wmom()
-      
-    PURPOSE:
-      Calculate the weighted mean, error, and optionally standard deviation of
-      an input array.  By default error is calculated assuming the weights are
-      1/err^2, but if you send calcerr=True this assumption is dropped and the
-      error is determined from the weighted scatter.
+    get stats for the input array
 
-    CALLING SEQUENCE:
-     wmean,werr = wmom(arr, weights, inputmean=None, calcerr=False, sdev=False)
-    
-    INPUTS:
-      arr: A numpy array or a sequence that can be converted.
-      weights: A set of weights for each elements in array.
-    OPTIONAL INPUTS:
-      inputmean: 
-          An input mean value, around which them mean is calculated.
-      calcerr=False: 
-          Calculate the weighted error.  By default the error is calculated as
-          1/sqrt( weights.sum() ).  If calcerr=True it is calculated as sqrt(
-          (w**2 * (arr-mean)**2).sum() )/weights.sum()
-      sdev=False: 
-          If True, also return the weighted standard deviation as a third
-          element in the tuple.
+    parameters
+    ----------
+    array: numpy array
+        An array for which to calculate statistics
+    weights: array, optional
+        Optional weights for the calculation
+    doprint: bool, optional
+        Set True to print the stats
+    nsig: float, optional
+        Optional number of sigma to clip the array
+    **sigma_clip_keywords:
+        Extra keywords for sigma_clip
+    **wmom_keywords:
+        Extra keywords for wmom (if using weights)
 
-    OUTPUTS:
-      wmean, werr: A tuple of the weighted mean and error. If sdev=True the
-         tuple will also contain sdev: wmean,werr,wsdev
+    returns
+    ------
+    A dict with the stats
+    {'mean':mn,
+     'std':std,
+     'err':err,
+     'min':amin,
+     'max':amax}
+    """
 
-    REVISION HISTORY:
-      Converted from IDL: 2006-10-23. Erin Sheldon, NYU
+    arr = numpy.array(arr_in, dtype='f8', ndmin=1, copy=False)
 
-   """
-    
+    amin = arr.min(axis=0)
+    amax = arr.max(axis=0)
+
+    if 'nsig' in kw or 'niter' in kw:
+        do_sigma_clip=True
+        scalarify=False
+        ndim=None
+    else:
+        do_sigma_clip=False
+
+        if len(arr.shape) == 1:
+            scalarify=True
+            arr = arr[:,newaxis]
+        else:
+            scalarify=False
+        ndim = arr.shape[1]
+
+    if do_sigma_clip:
+        kw['get_err']=True
+        mn,std,err = sigma_clip(arr, weights=weights, **kw)
+    elif weights is not None:
+        kw['sdev']=True
+        if 'calcerr' not in kw:
+            kw['calcerr']=True
+        mn,err,std=wmom(arr, weights, **kw)
+    else:
+        mn = arr.mean(axis=0)
+        std = arr.std(axis=0)
+        err = std/sqrt(arr.shape[0])
+
+
+    if doprint:
+        head = ('min','max','mean','err','std')
+        nh=len(head)
+        headfmt = ' '.join( ['%12s']*nh )
+        numfmt = ' '.join( ['%12g']*nh )
+
+
+        print(headfmt % head)
+        if ndim is None:
+            print(numfmt % (mn,err,std))
+        else:
+            for i in xrange(ndim):
+                print(numfmt % (amin[i],amax[i],mn[i],err[i],std[i]))
+
+    if scalarify:
+        mn=mn[0]
+        std=std[0]
+        err=err[0]
+
+    res = {'mean':mn, 'std':std, 'err':err, 'min':amin, 'max':amax}
+
+    return res
+
+def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored_kw):
+    """
+    Calculate the weighted moments of the input array.
+
+    parameters
+    ----------
+    arr: array
+        Array, either 1-d or [N, ndim]
+
+    weights: array
+        Weights, either 1-d or same shape as the array
+
+    inputmean: float or array
+        An input mean value, around which them mean is calculated.  Should
+        be a scalar or [ndim] array
+
+    calcerr: bool
+        Calculate the weighted error.  By default the error is calculated as
+        1/sqrt( weights.sum() ).  If calcerr=True it is calculated as sqrt(
+        (w**2 * (arr-mean)**2).sum() )/weights.sum()
+
+    sdev: bool
+        If True, also return the weighted standard deviation as a third
+        element in the tuple.
+
+    returns
+    --------
+    wmean, werr:
+        A tuple of the weighted mean and error. If sdev=True the
+        tuple will also contain sdev: wmean,werr,wsdev
+    """
+
     # no copy made if they are already arrays
     arr = numpy.array(arrin, ndmin=1, copy=False)
-    
+
     # Weights is forced to be type double. All resulting calculations
     # will also be double
     weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
-  
-    wtot = weights.sum()
-        
+
+
+    if len(arr.shape) > 1:
+        ndim = arr.shape[1]
+        if len(weights.shape) == 1:
+            weights = weights[:,newaxis]
+    else:
+        ndim=1
+        if weights.shape != arr.shape:
+            raise ValueError("weights should have one dimension "
+                             "or have same shape as data, got "
+                             "%s %s" % (arr.shape,weights.shape))
+    wtot = weights.sum(axis=0)
+
     # user has input a mean value
     if inputmean is None:
-        wmean = ( weights*arr ).sum()/wtot
+        wmean = ( weights*arr ).sum(axis=0)/wtot
     else:
         wmean=float(inputmean)
 
     # how should error be calculated?
     if calcerr:
-        werr2 = ( weights**2 * (arr-wmean)**2 ).sum()
+        werr2 = ( weights**2 * (arr-wmean)**2 ).sum(axis=0)
         werr = numpy.sqrt( werr2 )/wtot
     else:
         werr = 1.0/numpy.sqrt(wtot)
+        if not numpy.isscalar(werr) and len(werr) < ndim:
+            werr = numpy.array([werr[0]]*ndim,dtype='f8')
 
     # should output include the weighted standard deviation?
     if sdev:
-        wvar = ( weights*(arr-wmean)**2 ).sum()/wtot
+        wvar = ( weights*(arr-wmean)**2 ).sum(axis=0)/wtot
         wsdev = numpy.sqrt(wvar)
         return wmean,werr,wsdev
     else:
@@ -931,7 +1025,7 @@ def wmedian(arr_in, weights_in):
     arr = numpy.array(arr_in, ndmin=1, copy=False)
 
     sind=arr.argsort()
-    
+
     # Weights is forced to be type double. All resulting calculations
     # will also be double
     weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
@@ -949,11 +1043,11 @@ def wmedian(arr_in, weights_in):
     return arr[sind[k]]
 
 
-def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=False, extra={}, 
-               verbose=False, silent=False):
+def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=False, extra={},
+               verbose=False, silent=False, **ignored_kw):
     """
     Calculate the mean/stdev of an array with sigma clipping.
-      
+
     Iterate niter times, removing elements that are outside nsig, and
     recalculating mean/stdev.
 
@@ -984,23 +1078,33 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
       Added silent keyword, to shut off error messages.  BFG 2010-09-13
       Added weights option
     """
+
     arr = numpy.array(arrin, ndmin=1, copy=False)
+
+    if len(arr.shape) > 1:
+        raise ValueError("only 1-dimensional arrays suppored, "
+                         "got %s" % (arr.shape,))
+
     if weights is not None:
         weights = numpy.array(weights, ndmin=1, copy=False)
-        assert weights.size==arr.size,"array and weights must be same size"
+
+        if weights.size != arr.size:
+            raise ValueError("weights should have same size as "
+                             "array, got "
+                             "%s %s" % (arr.size,weights.size))
 
     indices = numpy.arange( arr.size )
     nold = arr.size
 
-    m,e,s=_get_sigma_clip_stats(arr, indices, weights=weights)
+    tarr, tweights = _get_sigma_clip_subset(arr, indices, weights=weights)
+
+    m,e,s=_get_sigma_clip_stats(tarr, weights=tweights)
     if verbose:
         _print_sigma_clip_stats(0, indices.size, m, s)
 
-    res=[]
     for i in xrange(1,niter+1):
 
-        clip = nsig*s
-        w, = numpy.where( (numpy.abs(arr[indices] - m)) < clip )
+        w, = numpy.where( (numpy.abs(tarr - m)) < nsig*s)
 
         if (w.size == 0):
             if (not silent):
@@ -1012,13 +1116,15 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
             break
 
         indices = indices[w]
+        tarr, tweights = _get_sigma_clip_subset(arr, indices, weights=weights)
         nold = w.size
 
-        m,e,s=_get_sigma_clip_stats(arr, indices, weights=weights)
+        m,e,s=_get_sigma_clip_stats(tarr, weights=tweights)
         if verbose:
             _print_sigma_clip_stats(i, indices.size, m, s)
 
 
+    res=[]
     res.append(m)
     res.append(s)
     if get_err:
@@ -1028,15 +1134,24 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
 
     extra['indices'] = indices
 
-    return res 
+    return res
 
-def _get_sigma_clip_stats(arr, indices, weights=None):
+def _get_sigma_clip_subset(arr, indices, weights=None):
+    tarr = arr[indices]
     if weights is not None:
-        m,e,s=wmom(arr[indices], weights[indices], calcerr=True, sdev=True)
+        tweights=weights[indices]
     else:
-        m = arr[indices].mean()
-        s = arr[indices].std()
-        e = s/numpy.sqrt(indices.size)
+        tweights=None
+
+    return tarr, tweights
+
+def _get_sigma_clip_stats(arr, weights=None):
+    if weights is not None:
+        m,e,s=wmom(arr, weights, calcerr=True, sdev=True)
+    else:
+        m = arr.mean()
+        s = arr.std()
+        e = s/numpy.sqrt(arr.shape[0])
 
     return m,e,s
 
@@ -1048,7 +1163,7 @@ def interplin(vin, xin, uin):
     """
     NAME:
       interplin()
-      
+
     PURPOSE:
       Perform 1-d linear interpolation.  Values outside the bounds are
       permitted unlike the scipy.interpolate.interp1d module. They are
@@ -1073,7 +1188,7 @@ def interplin(vin, xin, uin):
 
     # Find closest indices
     xm = x.searchsorted(u) - 1
-    
+
     # searchsorted returns size(array) when the input is larger than xmax
     # Also, we need the index to be less than the last since we interpolate
     # *between* points.
@@ -1084,7 +1199,7 @@ def interplin(vin, xin, uin):
     w, = numpy.where(xm < 0)
     if w.size > 0:
         xm[w] = 0
-        
+
     xmp1 = xm+1
     return (u-x[xm])*(v[xmp1] - v[xm])/(x[xmp1] - x[xm]) + v[xm]
 

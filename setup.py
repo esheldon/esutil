@@ -62,7 +62,8 @@ if have_numpy:
     recfile_module = Extension('esutil.recfile._records', 
                                extra_compile_args=extra_compile_args, 
                                extra_link_args=extra_link_args,
-                               sources=recfile_sources)
+                               sources=recfile_sources,
+                               include_dirs=include_dirs)
     ext_modules.append(recfile_module)
     packages.append('esutil.recfile')
 
@@ -71,7 +72,8 @@ if have_numpy:
     cosmo_module = Extension('esutil.cosmology._cosmolib', 
                              extra_compile_args=extra_compile_args, 
                              extra_link_args=extra_link_args,
-                             sources=cosmo_sources)
+                             sources=cosmo_sources,
+                             include_dirs=include_dirs)
     ext_modules.append(cosmo_module)
     packages.append('esutil.cosmology')
 
@@ -84,7 +86,8 @@ if have_numpy:
     htm_module = Extension('esutil.htm._htmc',
                            extra_compile_args=extra_compile_args, 
                            extra_link_args=extra_link_args,
-                           sources=htm_sources)
+                           sources=htm_sources,
+                           include_dirs=include_dirs)
 
     ext_modules.append(htm_module)
     packages.append('esutil.htm')
@@ -99,14 +102,16 @@ if have_numpy:
     chist_module = Extension('esutil.stat._chist', 
                              extra_compile_args=extra_compile_args, 
                              extra_link_args=extra_link_args,
-                             sources=chist_sources)
+                             sources=chist_sources,
+                             include_dirs=include_dirs)
     ext_modules.append(chist_module)
     stat_util_sources = ['_stat_util.c']
     stat_util_sources = ['esutil/stat/'+s for s in stat_util_sources]
     stat_util_module = Extension('esutil.stat._stat_util', 
                                  extra_compile_args=extra_compile_args, 
                                  extra_link_args=extra_link_args,
-                                 sources=stat_util_sources)
+                                 sources=stat_util_sources,
+                                 include_dirs=include_dirs)
     ext_modules.append(stat_util_module)
     packages.append('esutil.stat')
 
@@ -117,7 +122,8 @@ if have_numpy:
     cgauleg_module = Extension('esutil.integrate._cgauleg', 
                                extra_compile_args=extra_compile_args, 
                                extra_link_args=extra_link_args,
-                               sources=cgauleg_sources)
+                               sources=cgauleg_sources,
+                               include_dirs=include_dirs)
     ext_modules.append(cgauleg_module)
     packages.append('esutil.integrate')
 
@@ -134,7 +140,7 @@ classifiers = ["Development Status :: 5 - Production/Stable"
 
 # data_files copies the ups/esutil.table into prefix/ups
 setup(name='esutil',
-      version="0.5.2",
+      version="0.5.3",
       author="Erin Scott Sheldon",
       author_email="erin.sheldon@gmail.com",
       classifiers=classifiers,
@@ -145,5 +151,4 @@ setup(name='esutil',
       packages=packages,
       data_files=[('ups',['ups/esutil.table'])],
       ext_modules=ext_modules,
-      install_requires=['numpy'],
-      include_dirs=include_dirs)
+      install_requires=['numpy'])

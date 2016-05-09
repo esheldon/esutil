@@ -376,7 +376,7 @@ void NumpyVector<T>::init(PyObject* obj)  throw (const char *) {
         int min_depth=0, max_depth=1;
 
         // require the array is in native byte order
-        int requirements = NPY_NOTSWAPPED;
+        int requirements = NPY_NOTSWAPPED | NPY_ENSUREARRAY;
 
 
         PyArray_Descr* descr=NULL;
