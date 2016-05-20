@@ -929,7 +929,10 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
             print(numfmt % (mn,err,std))
         else:
             for i in xrange(ndim):
-                print(numfmt % (amin[i],amax[i],mn[i],err[i],std[i]))
+                if scalarify:
+                    print(numfmt % (amin,amax,mn[i],err[i],std[i]))
+                else:
+                    print(numfmt % (amin[i],amax[i],mn[i],err[i],std[i]))
 
     if scalarify:
         mn=mn[0]
