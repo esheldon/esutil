@@ -943,6 +943,31 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
     return res
 
+def print_stats(arr, **kw):
+    """
+    print stats for the input array
+
+    parameters
+    ----------
+    array: numpy array
+        An array for which to calculate statistics
+    weights: array, optional
+        Optional weights for the calculation
+    nsig: float, optional
+        Optional number of sigma to clip the array
+    **sigma_clip_keywords:
+        Extra keywords for sigma_clip
+    **wmom_keywords:
+        Extra keywords for wmom (if using weights)
+
+    returns
+    ------
+    None
+    """
+
+    kw['doprint']=True
+    get_stats(arr, **kw)
+
 def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored_kw):
     """
     Calculate the weighted moments of the input array.
