@@ -140,7 +140,7 @@ classifiers = ["Development Status :: 5 - Production/Stable"
 
 # data_files copies the ups/esutil.table into prefix/ups
 setup(name='esutil',
-      version="0.5.3",
+      version="0.5.4",
       author="Erin Scott Sheldon",
       author_email="erin.sheldon@gmail.com",
       classifiers=classifiers,
