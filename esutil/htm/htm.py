@@ -175,9 +175,9 @@ class HTM(htmc.HTMC):
                              "and ra2 must equal dec2 in size, "
                              "got %d,%d and %d,%d" % stup)
 
-        if radius.size != 1 and radius.size != ra2.size:
+        if radius.size != 1 and radius.size != ra1.size:
             raise ValueError("radius size (%d) != 1 and"
-                             " != ra2,dec2 size (%d)" % (radius.size,ra2.size))
+                             " != ra1,dec1 size (%d)" % (radius.size,ra1.size))
 
         file=check_filename(file)
 
