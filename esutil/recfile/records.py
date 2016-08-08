@@ -112,8 +112,8 @@ class Records(_object):
     def Write(self, obj):
         return _records.Records_Write(self, obj)
 
-    def write_string(self, obj):
-        return _records.Records_write_string(self, obj)
+    def write_header_and_update_offset(self, obj):
+        return _records.Records_write_header_and_update_offset(self, obj)
 
     def update_row_count(self, nrows):
         return _records.Records_update_row_count(self, nrows)
