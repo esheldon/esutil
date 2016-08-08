@@ -7,7 +7,6 @@
 #include "NumpyVector.h"
 #include <algorithm> // for transform
 
-
 // A couple of utility functions
 // raturn great circle distance in degrees
 double gcirc(
@@ -157,7 +156,7 @@ PyObject* HTMC::cmatch(
         PyObject* minid_obj,
         PyObject* maxid_obj,
         PyObject* maxmatch_obj,
-        PyObject* filename_obj) throw (const char *) {
+        const char* filename) throw (const char *) {
 
 	// no copies made if already double vectors
 	NumpyVector<double> radius(radius_array);
@@ -190,13 +189,15 @@ PyObject* HTMC::cmatch(
 	int64_t ntotal = 0;
 
 	FILE* fptr=NULL;
-	if (PyString_Check(filename_obj)) {
-		char* filename=PyString_AsString(filename_obj);
-		fptr = fopen(filename, "w");
+
+    std::string fname=filename;
+
+    if (fname!= "") {
+		fptr = fopen(fname.c_str(), "w");
 		if (fptr==NULL) 
 		{
 			std::stringstream err;
-			err<<"Cannot open file: "<<filename<<" : "<<strerror(errno);
+			err<<"Cannot open file: "<<fname<<" : "<<strerror(errno);
 			throw err.str().c_str();
 		}
 	}
@@ -598,7 +599,7 @@ PyObject* Matcher::match(
         PyObject* dec_array,
 		PyObject* radius_array, // degrees
         PyObject* maxmatch_obj,
-        PyObject* filename_obj) throw (const char *) {
+        const char* filename) throw (const char *) {
 
     std::map<int64_t,std::vector<int64_t> >::iterator iter;
 
@@ -624,18 +625,18 @@ PyObject* Matcher::match(
 	int64_t ntotal = 0;
 
 	FILE* fptr=NULL;
-	if (PyString_Check(filename_obj)) {
-		char* filename=PyString_AsString(filename_obj);
-		fptr = fopen(filename, "w");
+
+    std::string fname=filename;
+
+    if (fname!= "") {
+		fptr = fopen(fname.c_str(), "w");
 		if (fptr==NULL) 
 		{
 			std::stringstream err;
-			err<<"Cannot open file: "<<filename<<" : "<<strerror(errno);
+			err<<"Cannot open file: "<<fname<<" : "<<strerror(errno);
 			throw err.str().c_str();
 		}
 	}
-
-
 
 	static const double
 		D2R=0.0174532925199433;

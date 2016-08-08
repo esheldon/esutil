@@ -59,7 +59,7 @@ class HTMC {
                 PyObject* minid_obj,
                 PyObject* maxid_obj,
 				PyObject* maxmatch_obj,
-				PyObject* filename_obj) throw (const char *);
+				const char *filename) throw (const char *);
 
         PyObject* cbincount(
                 PyObject* rmin_object, // units of scale*angle in radians
@@ -107,7 +107,7 @@ class Matcher {
                         PyObject* ra_array, // degrees
                         PyObject* dec_array,
                         PyObject* maxmatch_obj,
-                        PyObject* filename_obj) throw (const char *);
+                        const char* filename) throw (const char *);
 
 
     private:
