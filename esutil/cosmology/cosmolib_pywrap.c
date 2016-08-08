@@ -39,7 +39,16 @@ static void
 PyCosmoObject_dealloc(struct PyCosmoObject* self)
 {
     free(self->cosmo);
+
+#if PY_MAJOR_VERSION >= 3
+    // introduced in python 2.6
+    Py_TYPE(self)->tp_free((PyObject*)self);
+#else
+    // old way, removed in python 3
     self->ob_type->tp_free((PyObject*)self);
+#endif
+
+
 }
 
 
@@ -69,6 +78,12 @@ PyCosmoObject_init(struct PyCosmoObject* self, PyObject *args, PyObject *kwds)
 
 static PyObject *
 PyCosmoObject_repr(struct PyCosmoObject* self) {
+#if PY_MAJOR_VERSION >= 3
+    const char* code="y";
+#else
+    const char* code="s";
+#endif
+
     char repr[255];
     if (self->cosmo != NULL) {
         sprintf(repr, "flat:    %d\n"
@@ -81,9 +96,9 @@ PyCosmoObject_repr(struct PyCosmoObject* self) {
                       self->cosmo->omega_m, 
                       self->cosmo->omega_l, 
                       self->cosmo->omega_k);
-        return PyString_FromString(repr);
+        return Py_BuildValue(code, repr);
     }  else {
-        return PyString_FromString("");
+        return Py_BuildValue(code, "");
     }
 }
 
@@ -91,7 +106,7 @@ static PyObject* PyCosmoObject_DH(struct PyCosmoObject* self) {
     return PyFloat_FromDouble(self->cosmo->DH);
 }
 static PyObject* PyCosmoObject_flat(struct PyCosmoObject* self) {
-    return PyInt_FromLong(self->cosmo->flat);
+    return PyLong_FromLong((long) self->cosmo->flat);
 }
 static PyObject* PyCosmoObject_omega_m(struct PyCosmoObject* self) {
     return PyFloat_FromDouble(self->cosmo->omega_m);
@@ -698,9 +713,14 @@ static PyMethodDef PyCosmoObject_methods[] = {
 
 
 
+
 static PyTypeObject PyCosmoType = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
+#endif
     "_cosmolib.cosmo",             /*tp_name*/
     sizeof(struct PyCosmoObject), /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -749,22 +769,63 @@ static PyMethodDef cosmotype_methods[] = {
 };
 
 
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_cosmolib",      /* m_name */
+        "Define cosmo type and methods ",  /* m_doc */
+        -1,                  /* m_size */
+        cosmotype_methods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
+#endif
+
+
 #ifndef PyMODINIT_FUNC  /* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
+#if PY_MAJOR_VERSION >= 3
+PyInit__cosmolib(void) 
+#else
 init_cosmolib(void) 
+#endif
 {
     PyObject* m;
 
     PyCosmoType.tp_new = PyType_GenericNew;
+
+#if PY_MAJOR_VERSION >= 3
+    if (PyType_Ready(&PyCosmoType) < 0) {
+        return NULL;
+    }
+    m = PyModule_Create(&moduledef);
+    if (m==NULL) {
+        return NULL;
+    }
+
+#else
+
     if (PyType_Ready(&PyCosmoType) < 0)
         return;
 
     m = Py_InitModule3("_cosmolib", cosmotype_methods, "Define cosmo type and methods.");
 
+    if (m==NULL) {
+        return;
+    }
+#endif
+
     Py_INCREF(&PyCosmoType);
     PyModule_AddObject(m, "cosmo", (PyObject *)&PyCosmoType);
 
     import_array();
+
+
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
 }
