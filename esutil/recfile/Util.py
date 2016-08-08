@@ -146,15 +146,9 @@ class Recfile(object):
                 data = robj['field3'].read()
 
 
-                # Read from a CSV file of the same structure, and only read a subset
-                # of the data.  Nrows can be specified to speed up reading if known,
-                # otherwise they will be counted, which is slow for text.
-
-                rows2get=[2335,122332,1550021]
-                fields2get='field2'
-                robj = recfile.Open('test.csv', delim=",", dtype=dtype, nrows=nrows)
-                data = robj.read(rows=rows2get, fields=fields2get)
-                data = robj[fields2get][rows2get]
+            # Read from a CSV file of the same structure, and only read a subset
+            # of the data.  Nrows can be specified to speed up reading if known,
+            # otherwise they will be counted, which is slow for text.
 
             fname='test.csv'
             delim=','
