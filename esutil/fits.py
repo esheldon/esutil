@@ -232,7 +232,7 @@ class FITS(list):
         # get the right shape for the data part of the random group,
         # since binary table does not support ND yet
         if isinstance(hdu, pyfits.GroupsHDU):
-            f = `hdu._dimShape()[:-1]` + tmp._dat_format
+            f = hdu._dimShape()[:-1] + tmp._dat_format
             dtype = pyfits.core._convert_format(f)
         else:
             dtype=[]

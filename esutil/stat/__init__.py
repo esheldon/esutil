@@ -24,6 +24,6 @@ license="""
 """
 
 
-import util
-from util import *
-import unit_tests
+from . import util
+from .util import *
+from . import unit_tests

@@ -75,7 +75,11 @@ static PyMethodDef stat_util_module_methods[] = {
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
+#if PY_MAJOR_VERSION >= 3
+PyInit__stat_util(void) 
+#else
 init_stat_util(void) 
+#endif
 {
     PyObject* m;
 
@@ -112,4 +116,7 @@ init_stat_util(void)
     */
 
     import_array();
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
 }

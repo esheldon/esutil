@@ -7,6 +7,8 @@ Please consult the docs for the main htm package.  For example, in IPython:
 
 
 """
+from __future__ import print_function
+
 import htmc
 from esutil import stat
 import numpy
@@ -146,7 +148,7 @@ class HTM(htmc.HTMC):
         m1,m2,d12 = h.match(ra1,dec1,ra2,dec2,two,maxmatch=0)
 
         for i in xrange(m1.size):
-            print m1[i],m2[i],d12[i]
+            print(m1[i],m2[i],d12[i])
 
         # this produces
         0 1 0.00013888984367
@@ -220,7 +222,7 @@ class HTM(htmc.HTMC):
         deprecated.  Use an htm.Matcher instead
         """
 
-        print 'deprecated: use a htm.Matcher instead'
+        print('deprecated: use a htm.Matcher instead')
 
         if verbose:
             stdout.write("looking up ids\n")
@@ -346,8 +348,8 @@ class HTM(htmc.HTMC):
         #check input
         if ((numpy.size(dec1) != npts) | (numpy.size(dec2) != npts2) | \
                 (numpy.size(z1) != npts) | (numpy.size(z2) != npts2)):
-            print npts, numpy.size(ra1), numpy.size(dec1), numpy.size(z1)
-            print npts2, numpy.size(ra2), numpy.size(dec2), numpy.size(z2)
+            print(npts, numpy.size(ra1), numpy.size(dec1), numpy.size(z1))
+            print(npts2, numpy.size(ra2), numpy.size(dec2), numpy.size(z2))
             raise ValueError('RA Dec and z input arrays to cylmatch must' 
                              ' have the same length for each catalog.')
         if (numpy.size(dz) > 1) & (numpy.size(dz) < npts):
@@ -787,22 +789,16 @@ def log_bins(rmin, rmax, nbin):
 
     log_lower_edges = log_rmin + log_binsize*numpy.arange(nbin)
     log_upper_edges = log_lower_edges + log_binsize
-    #print 'log_lower_edges:',log_lower_edges
-    #print 'log_upper_edges:',log_upper_edges
 
     lower_edges = 10**log_lower_edges
     upper_edges = 10**log_upper_edges
-    #print 'lower_edges:',lower_edges
-    #print 'upper_edges:',upper_edges
 
-    #gm = gmean(upper_edges, lower_edges, 2)
-    #print 'gmean: ',gm
     return lower_edges, upper_edges
 
 def check_filename(filename):
     if filename is not None:
         if isinstance(filename,unicode):
-            print "htm: warning: filename is unicode, converting to string"
+            print("htm: warning: filename is unicode, converting to string")
             filename=str(filename)
 
     return filename

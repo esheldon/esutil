@@ -13,37 +13,18 @@ Functions:
     gauleg:
         Calculate the weights and abscissa for Gauss-Legendre integration.
 """
-license="""
-  Copyright (C) 2010  Erin Sheldon
-
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of version 2 of the GNU General Public License as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-"""
-
-
-
+from __future__ import print_function
 
 from sys import stdout
 import numpy
-import esutil.stat
-import esutil.numpy_util
+from .. import stat
+from .. import numpy_util
 
 # for checking function type, method type
 from types import *
 
 try:
-    import cgauleg
+    from . import cgauleg
     have_cgauleg=True
 except:
     have_cgauleg=False
@@ -146,7 +127,7 @@ class QGauss(object):
 
         # interpolate the yvalues to the right x values for gauss legendre
         # integration
-        yi = esutil.stat.interplin(yvals, xvals, xi)
+        yi = stat.interplin(yvals, xvals, xi)
 
         integrand = yi*self.wii
         isum = integrand.sum()
@@ -158,7 +139,7 @@ class QGauss(object):
 
         num = 100
         xvals = numpy.arange(100)
-        xvals = esutil.numpy_util.arrscl(xvals,mean-4.0*sigma,mean+4.0*sigma)
+        xvals = numpy_util.arrscl(xvals,mean-4.0*sigma,mean+4.0*sigma)
 
         norm = 1.0/numpy.sqrt(2.0*numpy.pi*sigma**2)
         gauss = norm*numpy.exp(-0.5*(xvals - mean)**2/sigma**2 )

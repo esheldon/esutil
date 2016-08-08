@@ -35,23 +35,7 @@ cov2cor(cov)
 cor2cov(cor, diagerr)
     Convert a correlation matrix and diagonal errors to a covariance matrix.
 """
-license="""
-  Copyright (C) 2010  Erin Sheldon
-
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of version 2 of the GNU General Public License as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-"""
+from __future__ import print_function
 
 from sys import stdout, stderr
 
@@ -77,7 +61,7 @@ try:
 except:
     have_numpy=False
 
-import _stat_util
+from . import _stat_util
 
 class Binner(dict):
     """
@@ -1185,7 +1169,7 @@ def _get_sigma_clip_stats(arr, weights=None):
 
 def _print_sigma_clip_stats(iter, nuse, mean, stdev):
     mess='iter: %d  nuse: %d mean: %10.3g stdev: %10.3g'
-    print mess % (iter, nuse, mean, stdev)
+    print(mess % (iter, nuse, mean, stdev))
 
 def interplin(vin, xin, uin):
     """

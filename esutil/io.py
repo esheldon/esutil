@@ -18,26 +18,7 @@ Created late 2009 Erin Sheldon, Brookhaven National Laboratory.  See docs
 for individual methods for revision history.
 
 """
-
-license="""
-  Copyright (C) 2010  Erin Sheldon
-
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of version 2 of the GNU General Public License as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-"""
-
-
+from __future__ import print_function
 
 
 from esutil import numpy_util
@@ -384,14 +365,14 @@ def read_fits_bz2(filename, **keys):
     tmp_name=tmp_name.replace('.bz2','')
 
     if verbose > 1:
-        print 'unzipping to:',tmp_name
+        print('unzipping to:',tmp_name)
     os.system('bzcat %s > %s' % (filename, tmp_name))
 
     try:
         res=read_fits(tmp_name, **keys)
     finally:
         if verbose > 1:
-            print 'cleaning up:',tmp_name
+            print('cleaning up:',tmp_name)
         os.remove(tmp_name)
     
     return res
