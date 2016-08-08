@@ -1,4 +1,5 @@
 from __future__ import print_function
+import copy
 import numpy
 from numpy import isscalar, linspace
 from . import _cosmolib
@@ -108,7 +109,8 @@ class Cosmo:
         self._H0 = H0
 
     def H0(self):
-        return self._H0
+        return copy.deepcopy(self._H0)
+
     def DH(self):
         return self._cosmo.DH()
     def flat(self):
@@ -547,11 +549,11 @@ omega_k: %s
         import time
         import esutil as eu
         from esutil import cosmology_purepy
-        cpy = cosmology_purepy.Cosmo(H0=self.H0,
+        cpy = cosmology_purepy.Cosmo(H0=self.H0(),
                                      flat=self.flat,
-                                     omega_m=self.omega_m, 
-                                     omega_l=self.omega_l,
-                                     omega_k=self.omega_k)
+                                     omega_m=self.omega_m(),
+                                     omega_l=self.omega_l(),
+                                     omega_k=self.omega_k())
 
 
 
