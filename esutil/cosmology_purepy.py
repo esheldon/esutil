@@ -7,7 +7,7 @@
         These routines are completely general for any specified omega_m,
         omega_k, and cosmological constant omega_l.  This code follows the
         conventions of Hogg astro-ph/9905116.
-        
+
         All distances are in units of Mpc/h unless h is specified. Volumes are
         in (Mpc/h)**3.  All return values are arrays.
 
@@ -37,10 +37,10 @@
                 V(zmin, zmax, comoving=True):  Volume between two redshifts.
                 Dc(zmin,zmax): Comoving distance.
                 Dm(zmin,zmax): Transverse comoving distance.
-                DH: Hubble distance c/H. 
-                Ez_inverse(z): 
+                DH: Hubble distance c/H.
+                Ez_inverse(z):
                     1/sqrt( omega_m*(1+z)**3 + omega_k*(1+z)**2 + omega_l)
-                Ezinv_integral(z1,z2): 
+                Ezinv_integral(z1,z2):
                     Integral of Ez_inverse over a range of redshifts.
 
     The module also provides these Convenience Functions.  These are called in
@@ -55,13 +55,13 @@
         V:  Volume between two redshifts.
         Dc: Comoving distance.
         Dm: Transverse comoving distance.
-        DH: Hubble distance c/H. 
+        DH: Hubble distance c/H.
         Ez_inverse: 1/sqrt( omega_m*(1+z)**3 + omega_k*(1+z)**2 + omega_l)
         Ezinv_integral: Integral of Ez_inverse over a range of redshifts.
 
 
     Examples:
-        # using the Cosmo class.  
+        # using the Cosmo class.
         >>> import esutil
         >>> cosmo=esutil.cosmology.Cosmo(omega_m=0.24,h=0.7)
         >>> cosmo.Da(0.0, 0.35)
@@ -75,7 +75,7 @@
 
     Revision History:
         Copied from IDL routines.  2006-11-07, Erin Sheldon, NYU
-        Converted to using faster Gauss-Legendre integration 
+        Converted to using faster Gauss-Legendre integration
             2007-05-17, Erin Sheldon, NYU
         Cleaned up imports so the module can be imported without
             numpy/scipy even though nothing will work.  2009-11-01. E.S.S. BNL
@@ -123,8 +123,8 @@ except:
 import esutil.integrate
 
 class Cosmo(object):
-    def __init__(self, 
-                 omega_m=0.3, 
+    def __init__(self,
+                 omega_m=0.3,
                  omega_l=0.7,
                  omega_k=0.0,
                  H0=100.0,
@@ -199,7 +199,7 @@ class Cosmo(object):
             Dc
         PURPOSE:
             Calculate the comoving distance between redshifts z1 and z2 in
-            a FRW universe. Units: Mpc 
+            a FRW universe. Units: Mpc
         CALLING SEQUENCE:
             import esutil
             cosmo=esutil.cosmology.Cosmo(omega_m=0.3,
@@ -211,12 +211,12 @@ class Cosmo(object):
                                          vnpts=10)
             d=cosmo.Dc(z1, z2)
         INPUTS:
-            z1, z2: The redshifts.  These must either be 
+            z1, z2: The redshifts.  These must either be
                 1) Two scalars
                 2) A scalar and an array.
                 3) Two arrays of the same length.
         """
-  
+
         # Make sure they are arrays, but don't copy if already an array
         z1 = numpy.array(z1in, ndmin=1, copy=False)
         z2 = numpy.array(z2in, ndmin=1, copy=False)
@@ -264,13 +264,13 @@ class Cosmo(object):
                                          vnpts=10)
             d=cosmo.Dm(zmin, zmax)
         INPUTS:
-            zmin, zmax: The redshifts.  
+            zmin, zmax: The redshifts.
                 Note, to interpret as the transverse distance between objects
                 at the same redshift as viewed by a redshift zero observer,
                 zmin=0.0  It is useful to allow zmin != 0 when measuring for
                 example angular diameter distances between two non zero
                 redshifts, as in lensing calculations.  These redshifts must
-                either be 
+                either be
 
                 1) Two scalars
                 2) A scalar and an array.
@@ -292,9 +292,9 @@ class Cosmo(object):
     def Da(self, zmin, zmax):
         """
         NAME:
-            Da 
+            Da
         PURPOSE:
-            Calculate the angular diameter distance between z1 and z2 in a 
+            Calculate the angular diameter distance between z1 and z2 in a
             FRW universe. Units: Mpc.
         CALLING SEQUENCE:
             import esutil
@@ -307,7 +307,7 @@ class Cosmo(object):
                                          vnpts=10)
             d=cosmo.Da(zmin, zmax)
         INPUTS:
-            zmin, zmax: The redshifts.  These must either be 
+            zmin, zmax: The redshifts.  These must either be
                 1) Two scalars
                 2) A scalar and an array.
                 3) Two arrays of the same length.
@@ -327,7 +327,7 @@ class Cosmo(object):
         NAME:
             Dl
         PURPOSE:
-            Calculate the luminosity distance between z1 and z2 in a 
+            Calculate the luminosity distance between z1 and z2 in a
             FRW universe. Units: Mpc.
         CALLING SEQUENCE:
             import esutil
@@ -340,7 +340,7 @@ class Cosmo(object):
                                          vnpts=10)
             d=cosmo.Dl(zmin, zmax)
         INPUTS:
-            zmin, zmax: The redshifts.  These must either be 
+            zmin, zmax: The redshifts.  These must either be
                 1) Two scalars
                 2) A scalar and an array.
                 3) Two arrays of the same length.
@@ -427,7 +427,7 @@ class Cosmo(object):
                                          vnpts=10)
             v = cosmo.V(zmin, zmax, comoving=True)
         INPUTS:
-            zmin, zmax The redshift limits.  
+            zmin, zmax The redshift limits.
             comoving: Use comoving coords, default True.
         """
 
@@ -525,7 +525,7 @@ class Cosmo(object):
         Purpose:
             Calculate the inverse critical density for lensing. The units
             are pc^2/Msun
-        usage: 
+        usage:
             c=Cosmo(keywords..)
             sc = c.sigmacritinv(zl, zs)
 
@@ -536,7 +536,7 @@ class Cosmo(object):
             zl vector, zs vector of the same length
 
         """
-        
+
         zl = numpy.array(zl, ndmin=1, copy=False)
         zs = numpy.array(zs, ndmin=1, copy=False)
 
@@ -636,7 +636,7 @@ def Ezinv_integral_old(z1, z2, omega_m, omega_l, omega_k):
     """
     # just import here since we don't use this old version any more
     import scipy.integrate
-    (val, err) = scipy.integrate.quad(Ez_inverse, z1, z2, 
+    (val, err) = scipy.integrate.quad(Ez_inverse, z1, z2,
                                       args=(omega_m,omega_l,omega_k))
     return numpy.abs(val)
 
@@ -684,19 +684,19 @@ def _extract_omegas(omega_m, omega_l, omega_k, flat):
     return (omega_m, omega_l, omega_k)
 
 
-def Dc(z1in, z2in, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True, 
+def Dc(z1in, z2in, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
        npts=5):
     """
     NAME:
         Dc
     PURPOSE:
         Calculate the comoving distance between redshifts z1 and z2 in
-        a FRW universe. Units: Mpc 
+        a FRW universe. Units: Mpc
     CALLING SEQUENCE:
-        d=Dc(z1, z2, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        d=Dc(z1, z2, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
              flat=True, npts=5)
     INPUTS:
-        z1, z2: The redshifts.  These must either be 
+        z1, z2: The redshifts.  These must either be
            1) Two scalars
            2) A scalar and an array.
            3) Two arrays of the same length.
@@ -708,10 +708,10 @@ def Dc(z1in, z2in, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
         npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
-  
-    (omega_m, omega_l, omega_k) = _extract_omegas(omega_m, omega_l, omega_k, 
+
+    (omega_m, omega_l, omega_k) = _extract_omegas(omega_m, omega_l, omega_k,
                                                   flat)
-    
+
     # Make sure they are arrays, but don't copy if already an array
     z1 = numpy.array(z1in, ndmin=1, copy=False)
     z2 = numpy.array(z2in, ndmin=1, copy=False)
@@ -742,7 +742,7 @@ def Dc(z1in, z2in, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
 
     return dc
 
-def Dm(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True, 
+def Dm(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
        npts=5):
     """
     NAME:
@@ -751,15 +751,15 @@ def Dm(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
         Calculate the transverse comoving distance between two objects at the
         same redshift in a a FRW universe.  Units: Mpc.
     CALLING SEQUENCE:
-        d=Dm(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        d=Dm(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
              flat=True, npts=5)
     INPUTS:
         zmin, zmax: The redshifts.  Note, to interpret as the transverse
           distance between objects at the same redshift as viewed by a redshift
-          zero observer, zmin=0.0  It is useful to allow zmin != 0 when 
+          zero observer, zmin=0.0  It is useful to allow zmin != 0 when
           measuring for example angular diameter distances between two non
-          zero redshifts, as in lensing calculations.  These redshifts must 
-          either be 
+          zero redshifts, as in lensing calculations.  These redshifts must
+          either be
             1) Two scalars
             2) A scalar and an array.
             3) Two arrays of the same length.
@@ -771,7 +771,7 @@ def Dm(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
         npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
-    (omega_m, omega_l, omega_k) = _extract_omegas(omega_m, omega_l, omega_k, 
+    (omega_m, omega_l, omega_k) = _extract_omegas(omega_m, omega_l, omega_k,
                                                   flat)
 
     dh = DH(h=h)
@@ -788,15 +788,15 @@ def Da(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
        npts=5):
     """
     NAME:
-        Da 
+        Da
     PURPOSE:
-        Calculate the angular diameter distance between z1 and z2 in a 
+        Calculate the angular diameter distance between z1 and z2 in a
         FRW universe. Units: Mpc.
     CALLING SEQUENCE:
-        d=Da(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        d=Da(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
              flat=True, npts=5)
     INPUTS:
-        zmin, zmax: The redshifts.  These must either be 
+        zmin, zmax: The redshifts.  These must either be
            1) Two scalars
            2) A scalar and an array.
            3) Two arrays of the same length.
@@ -822,13 +822,13 @@ def Dl(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
     NAME:
         Dl
     PURPOSE:
-        Calculate the luminosity distance between z1 and z2 in a 
+        Calculate the luminosity distance between z1 and z2 in a
         FRW universe. Units: Mpc.
     CALLING SEQUENCE:
-        d=Dl(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        d=Dl(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
              flat=True, npts=5)
     INPUTS:
-        zmin, zmax: The redshifts.  These must either be 
+        zmin, zmax: The redshifts.  These must either be
            1) Two scalars
            2) A scalar and an array.
            3) Two arrays of the same length.
@@ -842,7 +842,7 @@ def Dl(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
     """
     return Da(zmin,zmax,omega_m,omega_l,omega_k,h,flat,npts)*(1.0+zmax)**2
 
-def Distmod(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True, 
+def Distmod(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
             npts=5):
     """
     NAME:
@@ -850,7 +850,7 @@ def Distmod(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
     PURPOSE:
         Calculate the distance modulus to redshift z.
     CALLING SEQUENCE:
-        d=Distmod(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        d=Distmod(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
                   flat=True, npts=5)
     INPUTS:
         z: The redshift(s).
@@ -863,14 +863,14 @@ def Distmod(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
             to redshift 1.
     """
 
-    dmpc = Dl(0.0, z, omega_m=omega_m, omega_l=omega_l, omega_k=omega_k, 
-              h=h, flat=flat, npts=npts)      
+    dmpc = Dl(0.0, z, omega_m=omega_m, omega_l=omega_l, omega_k=omega_k,
+              h=h, flat=flat, npts=npts)
     dpc = dmpc*1.e6
     dm = 5.0*log10(dpc/10.0)
-    return dm      
+    return dm
 
 
-def dV(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True, 
+def dV(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
        npts=5, comoving=True):
     """
     NAME:
@@ -878,7 +878,7 @@ def dV(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
     PURPOSE:
         Calculate the volume elementd dV in a FRW universe. Units: Mpc**3
     CALLING SEQUENCE:
-        dv = dV(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        dv = dV(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
                 flat=True, npts=5, comoving=True)
     INPUTS:
         z: The redshift
@@ -902,7 +902,7 @@ def dV(z, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, flat=True,
     return dv
 
 # This is about a factor of 3 slower than the new one
-def Vold(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+def Vold(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
          flat=True, npts=5, comoving=True):
     """
     NAME:
@@ -911,22 +911,22 @@ def Vold(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
         Calculate the volume between zmin and zmax in an FRW universe.
         Units: Mpc**3
     CALLING SEQUENCE:
-        v = V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        v = V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
               flat=True, npts=5, comoving=True)
     INPUTS:
-        zmin, zmax The redshift limits.  
+        zmin, zmax The redshift limits.
         omega_m, omega_l, omega_k: Density parameters relative to critical.
           If flat=True, then only omega_m is used, omega_l is set to
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the distance integration. Default 5, good to 
+        npts: Number of points in the distance integration. Default 5, good to
             1.e-8 to redshift 1.
     """
 
     # just import here since we don't use this old version any more
     import scipy.integrate
-    (v,err) = scipy.integrate.quad(dV, zmin, zmax, 
+    (v,err) = scipy.integrate.quad(dV, zmin, zmax,
                                    args=(omega_m,omega_l,omega_k,h,flat,npts))
     return v
 
@@ -934,8 +934,8 @@ def Vold(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
 def _vi_run_gauleg(npts):
     if _VI_XXi.size != npts:
         globals()['_VI_XXi'], globals()['_VI_WWi'] = esutil.integrate.gauleg(-1.0,1.0,npts)
- 
-def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+
+def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
       flat=True, npts=5, vnpts=10, comoving=True):
     """
     NAME:
@@ -944,16 +944,16 @@ def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
         Calculate the volume between zmin and zmax in an FRW universe.
         Units: Mpc**3
     CALLING SEQUENCE:
-        v = V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0, 
+        v = V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
               flat=True, npts=5, vnpts=100, comoving=True)
     INPUTS:
-        zmin, zmax The redshift limits.  
+        zmin, zmax The redshift limits.
         omega_m, omega_l, omega_k: Density parameters relative to critical.
           If flat=True, then only omega_m is used, omega_l is set to
           1.0 - omega_m, and omega_k=0.0.   Defaults, 0.3, 0.7, 0.0
         h: Hubble parameter. Default 1.0
         flat: Should we assume a flat cosmology?  Default True.
-        npts: Number of points in the distance integration. Default 5, good to 
+        npts: Number of points in the distance integration. Default 5, good to
             1.e-8 to redshift 1.
         vnpts: Number of points in the volume integration. Default is 10
         comoving: Use comoving coords, default True.
@@ -967,7 +967,7 @@ def V(zmin, zmax, omega_m=0.3, omega_l=0.7, omega_k=0.0, h=1.0,
     f2 = (zmax+zmin)/2.
 
     zvals = _VI_XXi*f1 + f2
-    ezivals = dV(zvals, omega_m, omega_l, omega_k, h, flat, 
+    ezivals = dV(zvals, omega_m, omega_l, omega_k, h, flat,
                  comoving=comoving, npts=npts)
 
     v =  f1 * ((ezivals*_VI_WWi).sum())
@@ -1009,7 +1009,7 @@ def test_sigmacritinv_npts(epsfile=None):
     p2 = FramedPlot()
     p2.xlabel = 'zsource'
     p2.ylabel = '% diff'
-    
+
     l5 = PlotLabel(0.2,0.7,'npts = 5')
     p5.add(l5)
     l4 = PlotLabel(0.2,0.1,'npts = 4')

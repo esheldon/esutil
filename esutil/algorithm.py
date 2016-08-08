@@ -8,11 +8,11 @@ Functions:
         doesn't work as expected for memory mapped arrays.  It reads the entire
         array into memory to do the sort.
 
-        quicksort(data): 
+        quicksort(data):
             Run quick sort on an array or list, or something similar with a []
             operator.  Taken from http://hetland.org/coding/python/quicksort.html
-            
-        quicksort_keyvalue(keys,values): 
+
+        quicksort_keyvalue(keys,values):
             Run quick sort on key value pairs, which should be in lists, arrays or
             something similar with a [] operator.  The sorting is performed on
             the keys. Based on http://hetland.org/coding/python/quicksort.html
@@ -38,7 +38,7 @@ def quicksort(data):
     start = 0
     end =len(data)-1
     _quicksort(data, start, end)
- 
+
 
 def _quicksort(data, start, end):
     if start < end:                            # If there are two or more elements...
@@ -70,7 +70,7 @@ def partition(data, start, end):
 
         while not done:                        # Until we find an out of place element...
             top = top-1                        # ... move the top down.
-            
+
             if top == bottom:                  # If we hit the bottom...
                 done = 1                       # ... we are done.
                 break
@@ -107,7 +107,7 @@ def quicksort_keyvalue(keys, data):
     start = 0
     end =len(data)-1
     _quicksort_keyvalue(keys, data, start, end)
- 
+
 
 
 
@@ -135,7 +135,7 @@ def partition_keyvalue(keys, data, start, end):
 
         while not done:                        # Until we find an out of place element...
             top = top-1                        # ... move the top down.
-            
+
             if top == bottom:                  # If we hit the bottom...
                 done = 1                       # ... we are done.
                 break
