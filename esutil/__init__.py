@@ -125,21 +125,14 @@ from . import stomp_util
 from . import plotting
 from . import hdfs
 from . import random
-
-try:
-    from . import recfile
-except:
-    pass
+from . import recfile
+from . import htm
 
 try:
     from .import sqlite_util
 except:
     pass
 
-try:
-    from . import htm
-except:
-    pass
 
 from . import fits
 try:

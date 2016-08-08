@@ -8,11 +8,11 @@ Please consult the docs for the main htm package.  For example, in IPython:
 
 """
 from __future__ import print_function
-
-import htmc
-from esutil import stat
-import numpy
 from sys import stdout
+import numpy
+
+from . import htmc
+from .. import stat
 
 class HTM(htmc.HTMC):
 
@@ -181,7 +181,7 @@ class HTM(htmc.HTMC):
             raise ValueError("radius size (%d) != 1 and"
                              " != ra1,dec1 size (%d)" % (radius.size,ra1.size))
 
-        file=check_filename(file)
+        filename=check_filename(file, convert_none=True)
 
         if htmrev2 is None:
             # new way using a Matcher
@@ -191,7 +191,7 @@ class HTM(htmc.HTMC):
                                  dec1,
                                  radius,
                                  maxmatch=maxmatch,
-                                 file=file)
+                                 file=filename)
 
         else:
             # deprecated way
@@ -722,8 +722,8 @@ class Matcher(htmc.Matcher):
             raise ValueError("radius size (%d) != 1 and"
                              " != ra,dec size (%d)" % (radius.size,ra.size))
 
-        file=check_filename(file)
-        return super(Matcher, self).match(ra, dec, radius, maxmatch, file)
+        filename=check_filename(file, convert_none=True)
+        return super(Matcher, self).match(ra, dec, radius, maxmatch, filename)
 
 def read_pairs(filename, verbose=False):
     """
@@ -795,10 +795,11 @@ def log_bins(rmin, rmax, nbin):
 
     return lower_edges, upper_edges
 
-def check_filename(filename):
+def check_filename(filename, convert_none=False):
     if filename is not None:
-        if isinstance(filename,unicode):
-            print("htm: warning: filename is unicode, converting to string")
-            filename=str(filename)
+        filename=str(filename)
+    else:
+        if convert_none:
+            filename=""
 
     return filename
