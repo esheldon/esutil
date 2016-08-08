@@ -1212,7 +1212,7 @@ def make_amatrix(u, v, order, constant=True):
     #n = n*n
     n=u.size
     
-    tshape = [ (order+1)*(order+2)/2-1, n ]
+    tshape = [ (order+1)*(order+2)//2-1, n ]
     if constant:
         # Extra column with ones in it for the constant term
         tshape[0] += 1
@@ -1292,7 +1292,7 @@ def Invert2DPolynomial(u, v, x, y, porder, pack=True, constant=True):
         return xcoeffs, ycoeffs
 
 def Ncoeff(order, constant=True):
-    ncoeff = (order+1)*(order+2)/2
+    ncoeff = (order+1)*(order+2)//2
     if not constant:
         ncoeff -= 1
     return ncoeff
@@ -1305,7 +1305,7 @@ def test_invert_2dpoly(porder, fac=5, constant=True, order_increase=0,
 
     # total number of constraints should be at least equal to the
     # number of coeffs.  If constant term is included, ncoeff is
-    #  (order+1)*(order+2)/2 < (order+2)^2/2 < (order+2)^2
+    #  (order+1)*(order+2)//2 < (order+2)^2//2 < (order+2)^2
     # So let's do a lot: 20*(order+2)^2
 
     if porder > 3:
@@ -1345,7 +1345,7 @@ def test_invert_2dpoly(porder, fac=5, constant=True, order_increase=0,
          0.000,0.000,0.000,0.000], dtype='f8')
 
     # number to actuall use
-    ncoeff = (porder+1)*(porder+2)/2
+    ncoeff = (porder+1)*(porder+2)//2
     keep = numpy.arange(start,ncoeff)
     ucoeffs_in = ucoeffs_in[keep]
     vcoeffs_in = vcoeffs_in[keep]

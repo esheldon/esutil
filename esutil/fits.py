@@ -209,7 +209,7 @@ class FITS(list):
         hdu._file.seek(hdu._datLoc)
         
         dtype=self.get_dtype(hdu, **keys)
-        nrows = hdu.size()/dtype.itemsize
+        nrows = hdu.size()//dtype.itemsize
         robj = recfile.Recfile(hdu._file, dtype=dtype, nrows=nrows)
 
         res = robj.read(**keys)

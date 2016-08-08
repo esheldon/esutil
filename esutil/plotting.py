@@ -375,8 +375,8 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
             xvals[i] = hout['high'][-1]
             yvals[i] = hist[-1]
         else:
-            iix = i/2
-            iiy = (i-1)/2
+            iix = i//2
+            iiy = (i-1)//2
             xvals[i] = hout['low'][iix]
             yvals[i] = hist[iiy]
 
@@ -602,8 +602,8 @@ def make_hist_curve(xlow, xhigh, y, ymin=None, ymax=None, **keys):
             xvals[i] = xhigh[-1]
             yvals[i] = y[-1]
         else:
-            iix = i/2
-            iiy = (i-1)/2
+            iix = i//2
+            iiy = (i-1)//2
             xvals[i] = xlow[iix]
             yvals[i] = y[iiy]
 
@@ -1221,7 +1221,7 @@ class Grid(object):
         if index > imax:
             raise ValueError("index too large %d > %d" % (index,imax))
 
-        row = index/self.ncol
+        row = index//self.ncol
         col = index % self.ncol
 
         return row,col

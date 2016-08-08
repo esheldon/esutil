@@ -504,8 +504,8 @@ class CutGenerator(object):
         xvals = numpy.arange(self.xmin, self.xmax, binsize)
         yvals = self.pofx(xvals)
         h = eu.stat.histogram(rand, 
-                              min=xvals[0]-binsize/2, 
-                              max=xvals[-1]+binsize/2, 
+                              min=xvals[0]-binsize/2.,
+                              max=xvals[-1]+binsize/2.,
                               binsize=binsize)
 
         # since on same grid can normalize simply
@@ -714,9 +714,9 @@ class LogNormal(object):
         self.logmean = log(mean) - 0.5*log( 1 + sigma**2/mean**2 )
         self.logvar = log(1 + sigma**2/mean**2 )
         self.logsigma = sqrt(self.logvar)
-        self.logivar = 1./self.logvar
+        self.logivar = 1.0/self.logvar
 
-        self.nconst = 1/sqrt(2*pi*self.logvar)
+        self.nconst = 1.0/sqrt(2*pi*self.logvar)
         if self.nconst <= 1.e-10:
             raise ValueError("logvar %s is too large" % self.logvar)
 

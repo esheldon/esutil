@@ -373,7 +373,7 @@ class Cosmo(object):
         dmpc = self.Dl(0.0, z)
         dpc = dmpc*1.e6
         dm = 5.0*log10(dpc/10.0)
-        return dm      
+        return dm
 
 
     def dV(self, z_input, comoving=True):

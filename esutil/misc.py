@@ -63,7 +63,7 @@ def wlog(*args):
 def center_text(text, width):
     text = text.strip()
     space = width - len(text)
-    return ' '*(space/2) + text + ' '*(space/2 + space%2)
+    return ' '*(space//2) + text + ' '*(space//2 + space%2)
 
 def iformat(i):
     """

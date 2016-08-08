@@ -1036,23 +1036,6 @@ def radec2aitoff(ra, dec):
     x = x*R2D/f
     y = y*R2D/f
 
-    crap="""
-    sa = l
-    if N_elements(sa) eq 1 then sa = fltarr(1) + sa
-    x180 = where (sa gt 180.0)
-    if x180[0] ne -1 then sa[x180]  = sa[x180] - 360.
-    alpha2 = sa/(2*!RADEG)
-    delta = b/!RADEG   
-    r2 = sqrt(2.)    
-    f = 2*r2/!PI     
-    cdec = cos(delta)    
-    denom =sqrt(1. + cdec*cos(alpha2))
-    x = cdec*sin(alpha2)*2.*r2/denom
-    y = sin(delta)*r2/denom
-    x = x*!radeg/f
-    y = y*!radeg/f
-    """
-
     return x,y
 
 def _check_range(rng, allowed):
