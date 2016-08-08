@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 _instantiate_docs="""
     Class:
         SqliteConnection
@@ -54,7 +56,7 @@ _instantiate_docs="""
         >>> sc = SqliteConnection('some file')
 
         # put a recarray into a table
-        >>> print arr.dtype
+        >>> print(arr.dtype)
         [('id', '<i8'), ('ra', '<f8'), ('dec', '<f8'), 
          ('name', '|S25'), ('rmag', '<f4'), ('somestring', '|S10')]
         >>> sc.array2table(arr, 'test')
@@ -430,7 +432,7 @@ class SqliteConnection(sqlite.Connection):
             elif isinstance(val, _string_types):
                 typecode = 'S%i' % len(val)
             else:
-                print "Got type:",type(val)
+                print("Got type:",type(val))
                 raise ValueError("Only support int/long, float, str/unicode")
 
             dt.append( (name,typecode) )

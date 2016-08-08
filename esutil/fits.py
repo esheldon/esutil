@@ -209,7 +209,7 @@ class FITS(list):
         hdu._file.seek(hdu._datLoc)
         
         dtype=self.get_dtype(hdu, **keys)
-        nrows = hdu.size()/dtype.itemsize
+        nrows = hdu.size()//dtype.itemsize
         robj = recfile.Recfile(hdu._file, dtype=dtype, nrows=nrows)
 
         res = robj.read(**keys)
@@ -232,7 +232,7 @@ class FITS(list):
         # get the right shape for the data part of the random group,
         # since binary table does not support ND yet
         if isinstance(hdu, pyfits.GroupsHDU):
-            f = `hdu._dimShape()[:-1]` + tmp._dat_format
+            f = hdu._dimShape()[:-1] + tmp._dat_format
             dtype = pyfits.core._convert_format(f)
         else:
             dtype=[]

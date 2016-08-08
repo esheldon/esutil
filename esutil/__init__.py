@@ -106,51 +106,45 @@ def get_python_version(numerical=False):
     return pyvers
 
 
-import algorithm
-import xmltools
-import ostools
-import misc
-import integrate
-import json_util
-import stat
-import numpy_util
-import oracle_util
-import sfile
-import io
-import wcsutil
-import cosmology
-import coords
-import coords as astro_util
-import stomp_util
-import plotting
-import hdfs
+from . import algorithm
+from . import xmltools
+from . import ostools
+from . import misc
+from . import integrate
+from . import json_util
+from . import stat
+from . import numpy_util
+from . import oracle_util
+from . import sfile
+from . import io
+from . import wcsutil
+from . import cosmology
+from . import coords
+from . import coords as astro_util
+from . import stomp_util
+from . import plotting
+from . import hdfs
+from . import random
+from . import recfile
+from . import htm
 
 try:
-    import sqlite_util
-except:
-    pass
-import random
-
-try:
-    import htm
-except:
-    pass
-
-import fits
-try:
-    import pyfitspatch
-except:
-    pass
-
-try:
-    import pyfitspatch240
+    from .import sqlite_util
 except:
     pass
 
 
-
+from . import fits
 try:
-    import recfile
+    from .import pyfitspatch
 except:
     pass
+
+try:
+    from . import pyfitspatch240
+except:
+    pass
+
+
+
 

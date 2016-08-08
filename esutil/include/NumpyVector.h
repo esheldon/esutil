@@ -265,11 +265,18 @@ template <class T> class NumpyVector {
 template <class T>
 std::map<const char*,int> NumpyVector<T>::mNumpyIdMap;
 
+#if PY_MAJOR_VERSION >= 3
+static int *init_numpy(void) {
+#else
+static void init_numpy(void) {
+#endif
+	import_array();
+}
+
 
 template <class T>
 NumpyVector<T>::NumpyVector()  throw (const char *) {
-	// DONT FORGET THIS!!!!
-	import_array();
+    init_numpy();
 
     init_type_info();
 
@@ -286,8 +293,7 @@ NumpyVector<T>::NumpyVector()  throw (const char *) {
 
 template <class T>
 NumpyVector<T>::NumpyVector(PyObject* obj)  throw (const char *) {
-	// DONT FORGET THIS!!!!
-	import_array();
+    init_numpy();
 
     init_type_info();
 
@@ -308,8 +314,7 @@ NumpyVector<T>::NumpyVector(PyObject* obj)  throw (const char *) {
 // Create given the length and typenum
 template <class T>
 NumpyVector<T>::NumpyVector(npy_intp size) throw (const char *) {
-	// DONT FORGET THIS!!!!
-	import_array();
+    init_numpy();
 
     init_type_info();
 

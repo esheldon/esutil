@@ -99,6 +99,15 @@
 #include <string>
 #include "numpy/arrayobject.h"
 
+#if PY_MAJOR_VERSION >= 3
+static int *init_numpy(void) {
+#else
+static void init_numpy(void) {
+#endif
+	import_array();
+}
+
+
 class NumpyVoidVector {
 	public:
 
@@ -113,7 +122,7 @@ class NumpyVoidVector {
         // Simple constructor with no data created
         NumpyVoidVector()  throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             mArray=NULL;
             // This will zero everything since array is not created
@@ -127,7 +136,7 @@ class NumpyVoidVector {
 
         NumpyVoidVector(PyObject* obj)  throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             mArray=NULL;
             // Get the data.  This may or may not make a copy.
@@ -141,7 +150,7 @@ class NumpyVoidVector {
         NumpyVoidVector(
                 const char* dtype, PyObject* obj)  throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             // Get the data.  This may or may not make a copy.
             mArray=NULL;
@@ -151,7 +160,7 @@ class NumpyVoidVector {
         NumpyVoidVector(
                 const std::string& dtype, PyObject* obj)  throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             // Get the data.  This may or may not make a copy.
             mArray=NULL;
@@ -162,7 +171,7 @@ class NumpyVoidVector {
         NumpyVoidVector(
                 const char* dtype, npy_intp size)  throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             // Get the data.  This may or may not make a copy.
             mArray=NULL;
@@ -172,7 +181,7 @@ class NumpyVoidVector {
         NumpyVoidVector(
                 const std::string& dtype, npy_intp size)  throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             // Get the data.  This may or may not make a copy.
             mArray=NULL;
@@ -189,7 +198,7 @@ class NumpyVoidVector {
         NumpyVoidVector(
                 PyArray_Descr* descr, PyObject* obj)  throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             // Get the data.  This may or may not make a copy.
             mArray=NULL;
@@ -200,7 +209,7 @@ class NumpyVoidVector {
         NumpyVoidVector(
                 PyArray_Descr* descr, npy_intp size) throw (const char *) {
             // DONT FORGET THIS!!!!
-            import_array();
+            init_numpy();
 
             // create a new array from the size and type info
             mArray=NULL;

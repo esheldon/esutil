@@ -1,4 +1,4 @@
-import htm
+from . import htm
 from sys import stdout
 import numpy
 

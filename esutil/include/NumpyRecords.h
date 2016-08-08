@@ -208,15 +208,24 @@
 #include "NumpyVector.h"
 #include "NumpyVoidVector.h"
 
+#if PY_MAJOR_VERSION >= 3
+static int *init_numpy(void) {
+#else
+static void init_numpy(void) {
+#endif
+	import_array();
+}
+
+
 class NumpyRecords {
     public:
         NumpyRecords() throw (const char*) {
-            import_array();
+            init_numpy();
             set_defaults();
         }
 
         NumpyRecords(PyObject* obj) throw (const char*) {
-            import_array();
+            init_numpy();
             set_defaults();
             init(obj);
         }

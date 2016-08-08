@@ -26,6 +26,8 @@ Classes:
         sample a multivariate covariant distribution using cholesky
         decomposition
 """
+from __future__ import print_function
+
 try:
     import numpy
     from numpy import log,exp,sqrt,any,pi
@@ -502,8 +504,8 @@ class CutGenerator(object):
         xvals = numpy.arange(self.xmin, self.xmax, binsize)
         yvals = self.pofx(xvals)
         h = eu.stat.histogram(rand, 
-                              min=xvals[0]-binsize/2, 
-                              max=xvals[-1]+binsize/2, 
+                              min=xvals[0]-binsize/2.,
+                              max=xvals[-1]+binsize/2.,
                               binsize=binsize)
 
         # since on same grid can normalize simply
@@ -712,9 +714,9 @@ class LogNormal(object):
         self.logmean = log(mean) - 0.5*log( 1 + sigma**2/mean**2 )
         self.logvar = log(1 + sigma**2/mean**2 )
         self.logsigma = sqrt(self.logvar)
-        self.logivar = 1./self.logvar
+        self.logivar = 1.0/self.logvar
 
-        self.nconst = 1/sqrt(2*pi*self.logvar)
+        self.nconst = 1.0/sqrt(2*pi*self.logvar)
         if self.nconst <= 1.e-10:
             raise ValueError("logvar %s is too large" % self.logvar)
 
@@ -1030,7 +1032,7 @@ def test_cholesky():
 
     tmp=('mean: %10.6g +/- %10.6g meas: %10.6g +/- %10.6g '
          'emean: %10.6g efrac: %10.6g')
-    print 'n:',n
+    print('n:',n)
     for i in xrange(npar):
         mtrue=means[i]
         etrue=sqrt(cov[i,i])
@@ -1039,7 +1041,7 @@ def test_cholesky():
         emean = e/sqrt(n)
         efrac= emean/m
         text = tmp % (mtrue,etrue,m,e,emean,efrac)
-        print text
+        print(text)
 
     # sum
     mtrue = means[0] + means[1]
@@ -1049,13 +1051,13 @@ def test_cholesky():
     m_sum_0_1 = sum_0_1.mean()
     e_sum_0_1 = sum_0_1.std()
     emean_sum_0_1 = e_sum_0_1/sqrt(n)
-    efrac_sum_0_1 = emean_sum_0_1/m_sum_0_1 
-    
-    print 'sum 0/1'
-    text = tmp % (mtrue,etrue,m_sum_0_1,e_sum_0_1,emean_sum_0_1,efrac_sum_0_1)
-    print text
+    efrac_sum_0_1 = emean_sum_0_1/m_sum_0_1
 
-    
+    print('sum 0/1')
+    text = tmp % (mtrue,etrue,m_sum_0_1,e_sum_0_1,emean_sum_0_1,efrac_sum_0_1)
+    print(text)
+
+
     mexp = (means[2]-means[0])/(means[2]+means[0])
     eexp = -9999
 
@@ -1063,20 +1065,20 @@ def test_cholesky():
     m_01 = ellip_01.mean()
     e_01 = ellip_01.std()
     emean_01 = e_01/sqrt(n)
-    efrac_01 = emean_01/m_01 
- 
+    efrac_01 = emean_01/m_01
+
     eu.plotting.bhist(ellip_01, binsize=0.2*e_01)
 
-    print 'ellip (mean and err can be different)'
+    print('ellip (mean and err can be different)')
     text = tmp % (mexp,eexp,m_01,e_01,emean_01,efrac_01)
-    print text
+    print(text)
 
     m_01, e_01 = eu.stat.sigma_clip(ellip_01,nsig=5)
     emean_01 = e_01/sqrt(n)
     efrac_01 = emean_01/m_01 
-    print 'ellip with sigma clip 5'
+    print('ellip with sigma clip 5')
     text = tmp % (mexp,eexp,m_01,e_01,emean_01,efrac_01)
-    print text
+    print(text)
 
     return
 
@@ -1096,10 +1098,10 @@ def test_cholesky():
     eu.plotting.bhist(rat_0_1[w], binsize=0.2*eexp)
     emean_rat_0_1 = e_rat_0_1/sqrt(w.size)
     efrac_rat_0_1 = emean_rat_0_1/m_rat_0_1 
-    
-    print 'ratio 0/1 (mean and err can be different)'
+
+    print('ratio 0/1 (mean and err can be different)')
     text = tmp % (mexp,eexp,m_rat_0_1,e_rat_0_1,emean_rat_0_1,efrac_rat_0_1)
-    print text
+    print(text)
 
 
 def random_indices(imax, nrand, **keys):

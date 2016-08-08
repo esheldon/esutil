@@ -50,7 +50,7 @@ Functions:
         Extract the directory from a file name and create it if it doesn't
         exist.
 """
-import os
+from __future__ import print_function
 
 import os
 import sys
@@ -291,17 +291,17 @@ def exec_process(command,
     # if a list was entered, convert to a string.  Also print the command
     # if requested
     if verbose:
-        print >>stderr,'Executing command'
+        print('Executing command',file=stderr)
     if isinstance(command, list):
         cmd = ' '.join(command)
         if verbose:
-            print >>stderr,command[0],'   \\'
+            print(command[0],'   \\', file=stderr)
             for c in command[1:]:
-                print >>stderr,'   '+c+'    \\'
+                print('   '+c+'    \\', file=stderr)
     else:
         cmd=command
         if verbose:
-            print >>stderr,cmd
+            print(cmd, file=stderr)
 
 
 
@@ -383,10 +383,10 @@ def makedirs_fromfile(f, verbose=False):
     if hdfs.is_in_hdfs(f):
         if not hdfs.exists(d):
             if verbose:
-                print 'creating dir:',d
+                print('creating dir:',d)
             hdfs.mkdir(d)
     else:
         if not os.path.exists(d):
             if verbose:
-                print 'creating dir:',d
+                print('creating dir:',d)
             os.makedirs(d)

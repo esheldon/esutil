@@ -555,13 +555,8 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
     if (arrmin == arrmax):
         raise ValueError('arrmin must not equal arrmax')
 
-    #try:
     a = (maxval - minval)/(arrmax - arrmin)
     b = (arrmax*minval - arrmin*maxval)/(arrmax - arrmin)
-    #except:
-    #print "Error calculating a,b: ", \
-    #      sys.exc_info()[0], sys.exc_info()[1]
-    #return None
 
     # in place
     numpy.multiply(output, a, output)
@@ -1713,7 +1708,7 @@ def splitarray(nper, var_input):
     ind = numpy.arange(var.size)
 
     # this will tell us which bin the object belongs to
-    bin_nums = ind/nper
+    bin_nums = ind//int(nper)
 
     h,rev = stat.histogram(bin_nums, binsize=1, min=0, rev=True)
 

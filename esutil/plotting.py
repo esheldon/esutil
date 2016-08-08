@@ -6,7 +6,8 @@ except:
     have_numpy = False
 
 import esutil
-import numpy_util
+from . import numpy_util
+from . import stat
 
 
 def bscatter(xin, yin, show=True, plt=None, **keywords):
@@ -301,18 +302,17 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
 
     """
 
-    import esutil
     import biggles
 
     norm=keywords.get('norm',None)
 
-    hout = esutil.stat.histogram(x, 
-                                 binsize=binsize, 
-                                 nbin=nbin, 
-                                 min=min,
-                                 max=max,
-                                 weights=weights,
-                                 more=True)
+    hout = stat.histogram(x, 
+                          binsize=binsize, 
+                          nbin=nbin, 
+                          min=min,
+                          max=max,
+                          weights=weights,
+                          more=True)
     
     if nbin is not None:
         binsize = hout['low'][1] - hout['low'][0]
@@ -375,8 +375,8 @@ def bhist(x, binsize=1.0, nbin=None, min=None,max=None,weights=None,plt=None,**k
             xvals[i] = hout['high'][-1]
             yvals[i] = hist[-1]
         else:
-            iix = i/2
-            iiy = (i-1)/2
+            iix = i//2
+            iiy = (i-1)//2
             xvals[i] = hout['low'][iix]
             yvals[i] = hist[iiy]
 
@@ -477,7 +477,6 @@ def bhist_vs(data, *fields, **keys):
     import biggles
     from itertools import izip
     import copy
-    from esutil.stat import wmom
 
     if len(fields) == 0:
         raise ValueError("Send at least one field name")
@@ -499,7 +498,7 @@ def bhist_vs(data, *fields, **keys):
     x=data[xfield]
 
     keys['more'] = True
-    hout = esutil.stat.histogram(x, **keys)
+    hout = stat.histogram(x, **keys)
  
     plots=[]
     if 'nperbin' not in keys:
@@ -549,10 +548,10 @@ def bhist_vs(data, *fields, **keys):
             for bd in bindata:
                 ydata = data[bd['name']][w]
                 if weights is not None:
-                    mn,err,sdev = wmom(ydata, weights[w], sdev=True)
+                    mn,err,sdev = stat.wmom(ydata, weights[w], sdev=True)
                 else:
                     if clip:
-                        mn,sdev=esutil.stat.sigma_clip(ydata)
+                        mn,sdev=stat.sigma_clip(ydata)
                     else:
                         mn = ydata.mean()
                         sdev = ydata.std()
@@ -603,8 +602,8 @@ def make_hist_curve(xlow, xhigh, y, ymin=None, ymax=None, **keys):
             xvals[i] = xhigh[-1]
             yvals[i] = y[-1]
         else:
-            iix = i/2
-            iiy = (i-1)/2
+            iix = i//2
+            iiy = (i-1)//2
             xvals[i] = xlow[iix]
             yvals[i] = y[iiy]
 
@@ -613,7 +612,7 @@ def make_hist_curve(xlow, xhigh, y, ymin=None, ymax=None, **keys):
             ymin = 0.0
         if ymax is None:
             ymax = yvals.max()
-        yvals = esutil.numpy_util.arrscl(yvals, ymin, ymax)
+        yvals = numpy_util.arrscl(yvals, ymin, ymax)
 
 
     ph = biggles.Curve(xvals, yvals, **keys)
@@ -755,11 +754,10 @@ def bwhiskers(xin, yin, uin, vin,
     return plt
 
 def get_binned_whiskers(x, y, u, v, **keys):
-    import esutil as eu
 
     keys['more']=True
     keys['rev']=True
-    hdict=eu.stat.histogram2d(x, y, **keys)
+    hdict=stat.histogram2d(x, y, **keys)
 
     nbin=hdict['hist'].size
     rev=hdict['rev']
@@ -1223,7 +1221,7 @@ class Grid(object):
         if index > imax:
             raise ValueError("index too large %d > %d" % (index,imax))
 
-        row = index/self.ncol
+        row = index//self.ncol
         col = index % self.ncol
 
         return row,col
