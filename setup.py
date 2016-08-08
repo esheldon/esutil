@@ -9,28 +9,6 @@ from distutils.core import setup,Extension
 import distutils.sysconfig
 import os
 
-main_libdir=distutils.sysconfig.get_python_lib()
-pylib_install_subdir = main_libdir.replace(distutils.sysconfig.PREFIX+os.sep,'')
-pylib_install_subdir = pylib_install_subdir.replace('dist-packages','site-packages')
-
-if not os.path.exists('ups'):
-    os.mkdir('ups')
-tablefile=open('ups/esutil.table','w')
-tab="""
-# The default version of this file will be overwritten on setup to include
-# paths determined from the python version.  This is useful to have in place
-# though so that dependencies can be checked *before* installation.  Currently
-# there are no required dependencies, so this is somewhat moot.
-
-setupOptional("python")
-setupOptional("cjson")
-envPrepend(PYTHONPATH,${PRODUCT_DIR}/%s)
-""" % pylib_install_subdir 
-tablefile.write(tab)
-tablefile.close()
-
-
-
 # can we build recfile?
 packages = ['esutil']
 ext_modules = []
@@ -138,7 +116,6 @@ classifiers = ["Development Status :: 5 - Production/Stable"
               ]
 
 
-# data_files copies the ups/esutil.table into prefix/ups
 setup(name='esutil',
       version="0.5.4",
       author="Erin Scott Sheldon",
@@ -149,6 +126,5 @@ setup(name='esutil',
       license = "GPL",
       url='http://code.google.com/p/esutil/',
       packages=packages,
-      data_files=[('ups',['ups/esutil.table'])],
       ext_modules=ext_modules,
       install_requires=['numpy'])
