@@ -140,24 +140,7 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         select data in the given percentile(s)
 
 """
-
-license="""
-  Copyright (C) 2010  Erin Sheldon
-
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of version 2 of the GNU General Public License as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-"""
+from __future__ import print_function
 
 import os
 import sys
@@ -2064,7 +2047,8 @@ class ArrayWriter:
         if not self._page:
             fobj = keys.get('file',stdout)
 
-            if isinstance(fobj,file):
+            #if isinstance(fobj,file):
+            if hasattr(fobj,'read'):
                 self._fobj = fobj
             else:
                 self._close_the_fobj=True
@@ -2143,7 +2127,11 @@ class ArrayWriter:
 
         if allnames is None:
             # simple arrays are easy
-            arr.tofile(self._fobj, sep='\n')
+            if self._fobj is stdout:
+                for val in arr:
+                    print(val)
+            else:
+                arr.tofile(self._fobj, sep='\n')
             return
 
         nall = len(allnames)
@@ -2249,7 +2237,11 @@ class ArrayWriter:
 
         if allnames is None:
             # simple arrays are easy
-            arr.tofile(self._fobj, sep='\n')
+            if self._fobj is stdout:
+                for val in arr:
+                    print(val)
+            else:
+                arr.tofile(self._fobj, sep='\n')
             return
 
         nall = len(allnames)
