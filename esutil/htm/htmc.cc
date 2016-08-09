@@ -4,11 +4,9 @@
 #include <vector>
 #include <math.h>
 #include "htmc.h"
-#include "NumpyVector.h"
 #include <algorithm> // for transform
 
 
-/*
 #if PY_MAJOR_VERSION >= 3
 static int *init_numpy(void) {
 #else
@@ -16,7 +14,6 @@ static void init_numpy(void) {
 #endif
 	import_array();
 }
-*/
 
 
 // A couple of utility functions
@@ -418,11 +415,7 @@ PyObject* HTMC::cbincount(
     npy_int64 minid = *(npy_int64* ) PyArray_GETPTR1(minmax_ids_array, 0);
     npy_int64 maxid = *(npy_int64* ) PyArray_GETPTR1(minmax_ids_array, 1);
 
-	NumpyVector<double> ra1(ra1_array);
-	NumpyVector<double> dec1(dec1_array);
-	NumpyVector<double> ra2(ra2_array);
-	NumpyVector<double> dec2(dec2_array);
-	NumpyVector<int64_t> htmrev2(htmrev2_array);
+    npy_intp n1 = PyArray_SIZE(ra1_array);
 
     npy_intp nscale=0;
 	bool degrees = true;
@@ -444,7 +437,14 @@ PyObject* HTMC::cbincount(
 
 
 	// Output counts in bins
-	NumpyVector<int64_t> counts(nbin);
+    npy_intp npnbin = nbin;
+    PyObject* counts_array = PyArray_ZEROS(
+        1,
+        &npnbin,
+        NPY_INT64,
+        0
+    );
+
 
 	// This is used in the basic calculations
 	const SpatialIndex &index = mHtmInterface.index();
@@ -468,7 +468,6 @@ PyObject* HTMC::cbincount(
             "Each dot is " << step << " points" << std::endl;
     }
 
-	npy_intp n1 = ra1.size();
 	for (npy_intp i1=0; i1<n1; i1++) {
 		// Declare the domain and the lists
 		SpatialDomain domain;    // initialize empty domain
@@ -490,7 +489,10 @@ PyObject* HTMC::cbincount(
 		}
 
 		// Find the triangles around this point
-		domain.setRaDecD(ra1[i1],dec1[i1],d); //put in ra,dec,d E.S.S.
+        double ra1  = *(double *) PyArray_GETPTR1(ra1_array,  i1);
+        double dec1 = *(double *) PyArray_GETPTR1(dec1_array, i1);
+
+		domain.setRaDecD(ra1,dec1,d);
 		domain.intersect(&index,plist,flist);	  // intersect with list
 
 		// number of triangles found
@@ -519,22 +521,35 @@ PyObject* HTMC::cbincount(
 				int64_t leafbin = idlist[j] - minid;
 
 				// Any found in this leaf?
-				if ( htmrev2[leafbin] != htmrev2[leafbin+1] ) {
+                npy_int64 hlo = *(npy_int64* ) PyArray_GETPTR1(htmrev2_array, leafbin);
+                npy_int64 hhi = *(npy_int64* ) PyArray_GETPTR1(htmrev2_array, leafbin+1);
+
+				if ( hlo != hhi) {
+                    //htmrev2[leafbin] != htmrev2[leafbin+1] ) {
 
 					// Now loop over the sources in this leaf node
-					int64_t nLeafBin = htmrev2[leafbin+1] - htmrev2[leafbin];
+					int64_t nLeafBin = hhi - hlo;
+                    //htmrev2[leafbin+1] - htmrev2[leafbin];
 
 					for (int64_t ileaf=0; ileaf<nLeafBin;ileaf++) {
 
-						npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
+						//npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
 
-						double dis = gcirc(ra1[i1], dec1[i1], ra2[i2], dec2[i2],degrees);
+                        npy_int64 index = hlo + ileaf;
+                        npy_int64 i2 = *(npy_int64* ) PyArray_GETPTR1(htmrev2_array, index);
+
+                        double ra2  = *(double *) PyArray_GETPTR1(ra2_array,  i2);
+                        double dec2 = *(double *) PyArray_GETPTR1(dec2_array, i2);
+
+						double dis = gcirc(ra1, dec1, ra2, dec2, degrees);
 						if (dis <= maxangle) {
 							double logr = logscale + log10(dis);
 
 							int radbin = (int) ( (logr-logrmin)/log_binsize );
 							if (radbin >=0 && radbin < nbin) {
-								counts[radbin] += 1;
+                                npy_int64 *cptr = (npy_int64 *) PyArray_GETPTR1(counts_array, radbin);
+								//counts[radbin] += 1;
+                                *cptr += 1;
 								totcount+=1;
 							} // in one of our radial bins
 						} // Within max angle
@@ -562,8 +577,7 @@ PyObject* HTMC::cbincount(
         fflush(stdout);
     }
 
-	PyObject* countsPyObject= counts.getref();
-	return countsPyObject;
+    return counts_array;
 }
 
 Matcher::Matcher(int depth,

@@ -20,8 +20,6 @@ struct PAIR_INFO_ORDERING {
 	}
 };
 
-// doesn't seem to work to include it here with swig...
-#include "../include/NumpyVector.h"
 
 // called HTMC because we will have another python-only class that
 // inherits from this one.
@@ -123,8 +121,6 @@ class Matcher {
         PyObject* ra;
         PyObject* dec;
         npy_intp npoints;
-        //NumpyVector<double> ra;
-        //NumpyVector<double> dec;
 
         std::map<int64_t, std::vector<int64_t> > hmap;
 

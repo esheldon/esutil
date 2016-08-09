@@ -660,7 +660,7 @@ class HTM(htmc.HTMC):
             minid = htmid2.min()
             maxid = htmid2.max()
         else:
-            htmid2 = numpy.array(htmid,dtype='f8',ndmin=1,copy=False)
+            htmid2 = numpy.array(htmid,dtype='i8',ndmin=1,copy=False)
             if htmid2.size != ra2.size:
                 raise ValueError("htmid2 size %d != "
                                  "ra size %d" % (htmid2.size,ra2.size))
