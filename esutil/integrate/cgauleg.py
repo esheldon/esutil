@@ -91,8 +91,8 @@ except AttributeError:
 
 
 
-def cgauleg(x1var, x2var, nptsvar):
-    return _cgauleg.cgauleg(x1var, x2var, nptsvar)
+def cgauleg(x1, x2, npts):
+    return _cgauleg.cgauleg(x1, x2, npts)
 cgauleg = _cgauleg.cgauleg
 # This file is compatible with both classic and new-style classes.
 

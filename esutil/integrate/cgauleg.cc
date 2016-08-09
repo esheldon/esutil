@@ -1,24 +1,28 @@
-#include <iostream>
 #include "cgauleg.h"
 #include "numpy/arrayobject.h"
-#include "NumpyVector.h"
 
 PyObject* cgauleg(
-		PyObject* x1var,
-		PyObject* x2var,
-		PyObject* nptsvar) throw (const char *) {
+		double x1,
+		double x2,
+		long npts_long) {
 
-	// Numpy array converters are the best
-	NumpyVector<double> x1arr(x1var);
-	NumpyVector<double> x2arr(x2var);
-	NumpyVector<npy_intp> nptsarr(nptsvar);
+	npy_intp npts = npts_long;
 
-	double x1 = x1arr[0];
-	double x2 = x2arr[0];
-	npy_intp npts = nptsarr[0];
+    PyObject* xarray = PyArray_ZEROS(
+        1,
+        &npts,
+        NPY_FLOAT64,
+        0
+    );
+    PyObject* warray = PyArray_ZEROS(
+        1,
+        &npts,
+        NPY_FLOAT64,
+        0
+    );
 
-	NumpyVector<double> x(npts);
-	NumpyVector<double> w(npts);
+    double* x = (double* ) PyArray_DATA(xarray);
+    double* w = (double* ) PyArray_DATA(warray);
 
 	int i, j, m;
 	double xm, xl, z1, z, p1, p2, p3, pp=0, pi, EPS, abszdiff;
@@ -67,8 +71,8 @@ PyObject* cgauleg(
 
 
 	PyObject* output_tuple = PyTuple_New(2);
-	PyTuple_SetItem(output_tuple, 0, x.getref());
-	PyTuple_SetItem(output_tuple, 1, w.getref());
+	PyTuple_SetItem(output_tuple, 0, xarray);
+	PyTuple_SetItem(output_tuple, 1, warray);
 	return output_tuple;
 }
 

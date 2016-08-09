@@ -1,13 +1,14 @@
 %module cgauleg
 %{
+#define SWIG_FILE_WITH_INIT
 #include "cgauleg.h"
 %}
 
-%typemap(throws) const char * %{
-    PyErr_SetString(PyExc_RuntimeError, $1);
-    SWIG_fail;
-%}
+#include "../include/numpy.i"
 
+%init %{
+import_array();
+%}
 
 %include "cgauleg.h"
 

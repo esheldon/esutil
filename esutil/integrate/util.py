@@ -24,7 +24,7 @@ from .. import numpy_util
 from types import *
 
 try:
-    from . import cgauleg
+    from . import _cgauleg
     have_cgauleg=True
 except:
     have_cgauleg=False
@@ -291,7 +291,11 @@ def gauleg(x1, x2, npts):
     """
 
     if have_cgauleg:
-        x,w = cgauleg.cgauleg(x1,x2,npts)
+
+        if npts <= 0:
+            raise ValueError("npts should be > 0, got %s" % npts)
+
+        x,w = _cgauleg.cgauleg(x1,x2,npts)
     else:
         raise ValueError("gauleg C++ extension not found")
 

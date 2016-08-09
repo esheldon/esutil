@@ -95,8 +95,9 @@ if have_numpy:
 
 
     # integrate package
-    #include_dirs += ['esutil/integrate']
-    cgauleg_sources = glob('esutil/integrate/*.cc')
+
+    #cgauleg_sources = glob('esutil/integrate/*.cc')
+    cgauleg_sources = glob('esutil/integrate/cgauleg_pywrap.c')
     cgauleg_module = Extension('esutil.integrate._cgauleg', 
                                extra_compile_args=extra_compile_args, 
                                extra_link_args=extra_link_args,
