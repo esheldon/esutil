@@ -38,6 +38,7 @@ class Records {
 
         PyObject* write_header_and_update_offset(PyObject* obj) throw (const char* );
         PyObject* update_row_count(long nrows) throw (const char* );
+        PyObject* read_sfile_header(void) throw (const char* );
 
 
         // new style

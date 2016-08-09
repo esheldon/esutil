@@ -118,6 +118,9 @@ class Records(_object):
     def update_row_count(self, nrows):
         return _records.Records_update_row_count(self, nrows)
 
+    def read_sfile_header(self):
+        return _records.Records_read_sfile_header(self)
+
     def read_columns(self, arrayobj, colnums, rows):
         return _records.Records_read_columns(self, arrayobj, colnums, rows)
 

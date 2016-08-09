@@ -131,7 +131,9 @@ Records::Records(
 		}
 		// Open for reading
 		mAction=READ;
-        if (mMode[0]=='w') {
+        if (mMode.size() > 1 && mMode=="r+") {
+            mAction |= WRITE;
+        } else if (mMode[0]=='w') {
             // both write and read
             mAction |= WRITE;
         }
@@ -1461,6 +1463,54 @@ PyObject* Records::update_row_count(long nrows) throw (const char* )
     fseek(mFptr, 0, SEEK_END);
 
     Py_RETURN_NONE;
+}
+
+PyObject* Records::read_sfile_header(void) throw (const char* )
+{
+
+    ensure_readable();
+
+    // go back to the beginning
+    rewind(mFptr);
+
+	char endbuff[4]={0};
+    size_t count=0;
+
+	while (1) {
+        char c = fgetc(mFptr);
+
+        if (EOF==c) {
+            throw "EOF reached before reading header end";
+        }
+
+        count++;
+
+        endbuff[0] = endbuff[1];
+        endbuff[1] = endbuff[2];
+
+        endbuff[2] = c;
+
+        if (0==strncmp(endbuff,"END",3)) {
+            break;
+        }
+    }
+
+    // we need to add
+    // 1 for the newline character
+    // 1 for the empty line
+
+    count += 2;
+
+    string hdr;
+    hdr.resize(count);
+    rewind(mFptr);
+    size_t nread = fread(&hdr[0], 1, count, mFptr);
+    if (nread != count) {
+        throw "Error reading header";
+    }
+
+    return Py_BuildValue("sl", hdr.c_str(), ftell(mFptr));
+
 }
 
 
