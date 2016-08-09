@@ -640,6 +640,8 @@ class Recfile(object):
             start = 0
         if stop is None:
             stop = self.nrows
+        elif stop > self.nrows:
+            stop=self.nrows
 
         if start < 0:
             start = self.nrows + start
