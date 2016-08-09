@@ -106,6 +106,7 @@ if have_numpy:
     packages.append('esutil.integrate')
 
 
+    packages.append('esutil.unit_tests')
 
 long_description=open(os.path.join(os.path.dirname(__file__), "README.md")).read()
 
