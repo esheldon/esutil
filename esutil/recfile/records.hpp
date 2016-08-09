@@ -36,7 +36,7 @@ class Records {
 		PyObject* Write(PyObject* obj) throw (const char *);
 
 
-        PyObject* write_string(PyObject* obj) throw (const char* );
+        PyObject* write_header_and_update_offset(PyObject* obj) throw (const char* );
         PyObject* update_row_count(long nrows) throw (const char* );
 
 

@@ -1420,17 +1420,20 @@ long long Records::SequenceCheck(PyObject* obj)
 
 
 /*
-   simply write the data at the current location, it is up the user to make
-   sure this makes sense, e.g. that the file is empty if they are writing
-   a header
+   For writing a header.  the new offset comes from the position after writing the header
 */
 
-PyObject* Records::write_string(PyObject* obj) throw (const char* )
+PyObject* Records::write_header_and_update_offset(PyObject* obj) throw (const char* )
 {
     ensure_writable();
 
+    // should not be necessary, since file should be empty
+    rewind(mFptr);
+
     string header = get_object_as_string(obj);
     fprintf(mFptr, "%s", header.c_str());
+
+    mFileOffset = ftell(mFptr);
 
     Py_RETURN_NONE;
 }
@@ -1439,14 +1442,22 @@ PyObject* Records::write_string(PyObject* obj) throw (const char* )
 
    special function to help SFile to update the header row count
 
+   Rewind the file, write a new SIZE = line, then move back to
+   the end of the file
+
 */
+
 PyObject* Records::update_row_count(long nrows) throw (const char* )
 {
     ensure_writable();
 
+    // go back to the beginning
     rewind(mFptr);
-    fprintf(mFptr, "%20ld\n", nrows);
 
+    // write the fixed-size SIZE entry
+    fprintf(mFptr, "SIZE = %20ld\n", nrows);
+
+    // seek back to the end of the file
     fseek(mFptr, 0, SEEK_END);
 
     Py_RETURN_NONE;
