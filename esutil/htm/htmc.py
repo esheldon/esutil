@@ -166,8 +166,8 @@ class HTMC(_object):
     def intersect(self, ra, dec, radius, inclusive):
         return _htmc.HTMC_intersect(self, ra, dec, radius, inclusive)
 
-    def cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object=None, verbose=0):
-        return _htmc.HTMC_cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object, verbose)
+    def cbincount(self, rmin, rmax, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minmax_ids_array, scale_object=None, verbose=0):
+        return _htmc.HTMC_cbincount(self, rmin, rmax, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minmax_ids_array, scale_object, verbose)
 
     def get_depth(self):
         return _htmc.HTMC_get_depth(self)

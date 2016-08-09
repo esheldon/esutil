@@ -3921,22 +3921,27 @@ fail:
 SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
-  PyObject *arg2 = (PyObject *) 0 ;
-  PyObject *arg3 = (PyObject *) 0 ;
-  PyObject *arg4 = (PyObject *) 0 ;
+  double arg2 ;
+  double arg3 ;
+  long arg4 ;
   PyObject *arg5 = (PyObject *) 0 ;
   PyObject *arg6 = (PyObject *) 0 ;
   PyObject *arg7 = (PyObject *) 0 ;
   PyObject *arg8 = (PyObject *) 0 ;
   PyObject *arg9 = (PyObject *) 0 ;
   PyObject *arg10 = (PyObject *) 0 ;
-  PyObject *arg11 = (PyObject *) 0 ;
-  PyObject *arg12 = (PyObject *) NULL ;
-  int arg13 = (int) 0 ;
+  PyObject *arg11 = (PyObject *) NULL ;
+  int arg12 = (int) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int val13 ;
-  int ecode13 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  double val3 ;
+  int ecode3 = 0 ;
+  long val4 ;
+  int ecode4 = 0 ;
+  int val12 ;
+  int ecode12 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -3949,40 +3954,50 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *SWIGUNUSEDPARM(self), PyObje
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   PyObject * obj11 = 0 ;
-  PyObject * obj12 = 0 ;
   char *  kwnames[] = {
-    (char *) "self",(char *) "rmin_object",(char *) "rmax_object",(char *) "nbin_object",(char *) "ra1_array",(char *) "dec1_array",(char *) "ra2_array",(char *) "dec2_array",(char *) "htmrev2_array",(char *) "minid_obj",(char *) "maxid_obj",(char *) "scale_object",(char *) "verbose", NULL 
+    (char *) "self",(char *) "rmin",(char *) "rmax",(char *) "nbin_object",(char *) "ra1_array",(char *) "dec1_array",(char *) "ra2_array",(char *) "dec2_array",(char *) "htmrev2_array",(char *) "minmax_ids_array",(char *) "scale_object",(char *) "verbose", NULL 
   };
   PyObject *result = 0 ;
   
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOOOOOOOOO|OO:HTMC_cbincount",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOOOOOOOO|OO:HTMC_cbincount",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_cbincount" "', argument " "1"" of type '" "HTMC *""'"); 
   }
   arg1 = reinterpret_cast< HTMC * >(argp1);
-  arg2 = obj1;
-  arg3 = obj2;
-  arg4 = obj3;
+  ecode2 = SWIG_AsVal_double(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "HTMC_cbincount" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
+  ecode3 = SWIG_AsVal_double(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "HTMC_cbincount" "', argument " "3"" of type '" "double""'");
+  } 
+  arg3 = static_cast< double >(val3);
+  ecode4 = SWIG_AsVal_long(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "HTMC_cbincount" "', argument " "4"" of type '" "long""'");
+  } 
+  arg4 = static_cast< long >(val4);
   arg5 = obj4;
   arg6 = obj5;
   arg7 = obj6;
   arg8 = obj7;
   arg9 = obj8;
   arg10 = obj9;
-  arg11 = obj10;
-  if (obj11) {
-    arg12 = obj11;
+  if (obj10) {
+    arg11 = obj10;
   }
-  if (obj12) {
-    ecode13 = SWIG_AsVal_int(obj12, &val13);
-    if (!SWIG_IsOK(ecode13)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "HTMC_cbincount" "', argument " "13"" of type '" "int""'");
+  if (obj11) {
+    ecode12 = SWIG_AsVal_int(obj11, &val12);
+    if (!SWIG_IsOK(ecode12)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "HTMC_cbincount" "', argument " "12"" of type '" "int""'");
     } 
-    arg13 = static_cast< int >(val13);
+    arg12 = static_cast< int >(val12);
   }
   try {
-    result = (PyObject *)(arg1)->cbincount(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13);
+    result = (PyObject *)(arg1)->cbincount(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12);
   }
   catch(char const *_e) {
     PyErr_SetString(PyExc_RuntimeError, _e);

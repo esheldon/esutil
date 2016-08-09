@@ -253,7 +253,7 @@ class HTM(htmc.HTMC):
         deprecated.  Use an htm.Matcher instead
         """
 
-        print('deprecated: use a htm.Matcher instead')
+        raise RuntimeError('deprecated: use a htm.Matcher instead')
 
         if verbose:
             stdout.write("looking up ids\n")
@@ -634,11 +634,36 @@ class HTM(htmc.HTMC):
         else:
             verb=0
 
+        ra1 = numpy.array(ra1, dtype='f8', ndmin=1, copy=False)
+        dec1 = numpy.array(dec1, dtype='f8', ndmin=1, copy=False)
+        ra2 = numpy.array(ra2, dtype='f8', ndmin=1, copy=False)
+        dec2 = numpy.array(dec2, dtype='f8', ndmin=1, copy=False)
+
+
+
+        if (ra1.size != dec1.size
+                or ra2.size != ra2.size):
+            stup=(ra1.size,dec1.size,ra2.size,dec2.size)
+            raise ValueError("ra1 must equal dec1 in size "
+                             "and ra2 must equal dec2 in size, "
+                             "got %d,%d and %d,%d" % stup)
+
+        if scale is not None:
+            scale = numpy.array(scale, dtype='f8', ndmin=1, copy=False) 
+            if scale.size != 1 and scale.size != ra1.size:
+                raise ValueError("scale size (%d) != 1 and"
+                                 " != ra1,dec1 size (%d)" % (scale.size,ra1.size))
+
+
         if htmid2 is None:
             htmid2 = self.lookup_id(ra2, dec2)
             minid = htmid2.min()
             maxid = htmid2.max()
         else:
+            htmid2 = numpy.array(htmid,dtype='f8',ndmin=1,copy=False)
+            if htmid2.size != ra2.size:
+                raise ValueError("htmid2 size %d != "
+                                 "ra size %d" % (htmid2.size,ra2.size))
             if minid is None:
                 minid = htmid2.min()
             if maxid is None:
@@ -647,13 +672,14 @@ class HTM(htmc.HTMC):
         if htmrev2 is None:
             hist2, htmrev2 = stat.histogram(htmid2-minid,rev=True)
 
+        minmax_ids = numpy.array([minid, maxid], dtype='i8')
+
         counts = self.cbincount(
             rmin,rmax,nbin,
             ra1,dec1,
             ra2,dec2,
             htmrev2,
-            minid,
-            maxid,
+            minmax_ids,
             scale,
             verb
         )

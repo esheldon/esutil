@@ -65,16 +65,15 @@ class HTMC {
 				const char *filename) throw (const char *);
         */
         PyObject* cbincount(
-                PyObject* rmin_object, // units of scale*angle in radians
-                PyObject* rmax_object, // units of scale*angle in radians
-				PyObject* nbin_object, 
+                double rmin, // units of scale*angle in radians
+                double rmax, // units of scale*angle in radians
+				long nbin_object, 
                 PyObject* ra1_array, // all in degrees
                 PyObject* dec1_array,
                 PyObject* ra2_array, 
                 PyObject* dec2_array,
                 PyObject* htmrev2_array,
-                PyObject* minid_obj,
-                PyObject* maxid_obj,
+                PyObject* minmax_ids_array,
 				PyObject* scale_object=NULL,
                 int verbose=0) // will bin in radians*scale.  
                                             // Same length as ra1.

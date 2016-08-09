@@ -398,36 +398,25 @@ PyObject* HTMC::cmatch(
 
 
 PyObject* HTMC::cbincount(
-		PyObject* rmin_object, // units of scale*angle in radians
-		PyObject* rmax_object, // units of scale*angle in radians
-		PyObject* nbin_object, 
+		double rmin, // units of scale*angle in radians
+		double rmax, // units of scale*angle in radians
+		long nbin, 
 		PyObject* ra1_array, // all in degrees
 		PyObject* dec1_array,
 		PyObject* ra2_array, 
 		PyObject* dec2_array,
 		PyObject* htmrev2_array,
-		PyObject* minid_obj,
-		PyObject* maxid_obj, 
-		PyObject* scale_object,
+		PyObject* minmax_ids_array,
+		PyObject* scale_array,
         int verbose) throw (const char *) {
 
-
 	double scale=1, logscale=0;
-
-	// get these as numpyvectors even though they are only length 1
-	// because it does a good job with conversions
-	NumpyVector<double> rminvec(rmin_object);
-	NumpyVector<double> rmaxvec(rmax_object);
-	NumpyVector<int64_t> nbinvec(nbin_object);
-
-	double rmin=rminvec[0];
-	double rmax=rmaxvec[0];
-	int64_t nbin=nbinvec[0];
-
 
 	double logrmin = log10(rmin);
 	double logrmax = log10(rmax);
 
+    npy_int64 minid = *(npy_int64* ) PyArray_GETPTR1(minmax_ids_array, 0);
+    npy_int64 maxid = *(npy_int64* ) PyArray_GETPTR1(minmax_ids_array, 1);
 
 	NumpyVector<double> ra1(ra1_array);
 	NumpyVector<double> dec1(dec1_array);
@@ -435,30 +424,18 @@ PyObject* HTMC::cbincount(
 	NumpyVector<double> dec2(dec2_array);
 	NumpyVector<int64_t> htmrev2(htmrev2_array);
 
-	NumpyVector<int64_t> minid_array(minid_obj);
-	NumpyVector<int64_t> maxid_array(maxid_obj);
-	int64_t minid = minid_array[0];
-	int64_t maxid = maxid_array[0];
-
-	// ensure scale is an array if input
-	NumpyVector<double> scale_array;
-	npy_intp nscale=0;
+    npy_intp nscale=0;
 	bool degrees = true;
-	if (scale_object != NULL && scale_object != Py_None) {
-		scale_array.init(scale_object);
-		nscale = scale_array.size();
-		degrees = false;
-		if (nscale > 1) {
-			if (ra1.size()!=scale_array.size() 
-					|| dec1.size() !=scale_array.size()) {
-				throw("scale must be scalar or same size as ra1/dec1");
-			}
-		} else {
-			scale = scale_array[0];
-			logscale = log10(scale);
-		}
-	}
+    if (scale_array != Py_None) {
+        degrees = false;
+        nscale = PyArray_SIZE(scale_array);
 
+        // we can just do this once
+        if (nscale==1) {
+            scale = *(double *) PyArray_GETPTR1(scale_array, 0);
+			logscale = log10(scale);
+        }
+    }
 
 	double log_binsize = (logrmax-logrmin)/nbin;
 	if (log_binsize < 0) {
@@ -486,7 +463,6 @@ PyObject* HTMC::cbincount(
         std::cout<<"logrmax: "<<logrmax<<"\n";
 
         std::cout<<"log binsize: "<<log_binsize<<"\n";
-        std::cout<<"len(scale_array) = "<<scale_array.size()<<"\n";
 
         std::cout << "\n" <<
             "Each dot is " << step << " points" << std::endl;
@@ -498,8 +474,9 @@ PyObject* HTMC::cbincount(
 		SpatialDomain domain;    // initialize empty domain
 		ValVec<uint64> plist, flist;	// List results
 
+        // one for each point
 		if (nscale > 1) {
-			scale = scale_array[i1];
+            scale = *(double *) PyArray_GETPTR1(scale_array, i1);
 			logscale = log10(scale);
 		}
 

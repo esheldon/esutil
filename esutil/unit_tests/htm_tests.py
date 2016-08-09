@@ -164,10 +164,36 @@ class TestHTM(unittest.TestCase):
         )
         counts_truth = numpy.array([0, 0, 3, 0, 0, 3, 0, 0, 1, 0],dtype='i8')
 
-
-        wbad, = numpy.where(counts != counts_truth)
-
         self.assertTrue(numpy.all(counts == counts_truth),
                         "expected %s counts in bincount, got %s" % (counts_truth,counts))
 
+        # now radii in Mpc
+        DMpc = 412.0 # Mpc
+
+        rmin = 0.01 # 10 kpc
+        rmax = 0.3  # 300 kpc
+        nbin = 10
+
+        lower,upper,counts = h.bincount(
+            rmin,rmax,nbin,
+            ra1,dec1,ra2,dec2,
+            getbins=True,
+            scale=DMpc,
+        )
+
+        self.assertTrue(numpy.all(counts == counts_truth),
+                        "expected %s counts in bincount "
+                        "with scalar scale, got %s" % (counts_truth,counts))
+
+        DMpc = numpy.array([DMpc]*ra1.size)
+        lower,upper,counts = h.bincount(
+            rmin,rmax,nbin,
+            ra1,dec1,ra2,dec2,
+            getbins=True,
+            scale=DMpc,
+        )
+
+        self.assertTrue(numpy.all(counts == counts_truth),
+                        "expected %s counts in bincount "
+                        "with array scale, got %s" % (counts_truth,counts))
 
