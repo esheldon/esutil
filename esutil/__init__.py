@@ -128,6 +128,8 @@ from . import random
 from . import recfile
 from . import htm
 
+from . import unit_tests
+
 try:
     from .import sqlite_util
 except:
