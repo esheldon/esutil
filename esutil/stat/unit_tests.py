@@ -1,14 +1,10 @@
 from __future__ import print_function
 
 import esutil
-from . import chist
 import numpy
 from numpy import where
 
 def test():
-    print('chist.chist',chist.chist)
-    print('Testing minimal call to chist:')
-
     data = numpy.array([0,3,1,12,7,5], dtype='i4')
     binsize=1.0
     res = esutil.stat.histogram(data, binsize=binsize, rev=True)
