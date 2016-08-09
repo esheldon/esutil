@@ -1,35 +1,42 @@
 #include <Python.h>
-#include "cgauleg.h"
 #include "numpy/arrayobject.h"
 
-PyObject* PyCGauleg_cgauleg(PyObject* self, PyObject* args) {
+static PyObject* PyCGauleg_cgauleg(PyObject* self, PyObject* args) {
 
     double x1=0, x2=0;
     long npts_long=0;
+
+	npy_intp npts = 0;
+    PyObject* xarray = NULL;
+    PyObject* warray = NULL;
+    double *x=NULL, *w=NULL;
+
+	int i, j, m;
+	double xm, xl, z1, z, p1, p2, p3, pp=0, pi, EPS, abszdiff;
+
+	PyObject* output_tuple = NULL;
+
     if (!PyArg_ParseTuple(args, (char*)"ddl", &x1, &x2, &npts_long)) {
         return NULL;
     }
 
-	npy_intp npts = npts_long;
+	npts = npts_long;
 
-    PyObject* xarray = PyArray_ZEROS(
+    xarray = PyArray_ZEROS(
         1,
         &npts,
         NPY_FLOAT64,
         0
     );
-    PyObject* warray = PyArray_ZEROS(
+    warray = PyArray_ZEROS(
         1,
         &npts,
         NPY_FLOAT64,
         0
     );
 
-    double* x = (double* ) PyArray_DATA(xarray);
-    double* w = (double* ) PyArray_DATA(warray);
-
-	int i, j, m;
-	double xm, xl, z1, z, p1, p2, p3, pp=0, pi, EPS, abszdiff;
+    x = (double* ) PyArray_DATA(xarray);
+    w = (double* ) PyArray_DATA(warray);
 
 	EPS = 4.e-11;
 	pi = 3.141592653589793;
@@ -74,7 +81,7 @@ PyObject* PyCGauleg_cgauleg(PyObject* self, PyObject* args) {
 	}
 
 
-	PyObject* output_tuple = PyTuple_New(2);
+	output_tuple = PyTuple_New(2);
 	PyTuple_SetItem(output_tuple, 0, xarray);
 	PyTuple_SetItem(output_tuple, 1, warray);
 	return output_tuple;
