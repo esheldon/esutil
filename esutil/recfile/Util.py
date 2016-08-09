@@ -703,7 +703,7 @@ class Recfile(object):
             # a sequence entered
             rowlen=len(rows)
 
-            rows2read = numpy.array(rows,ndmin=1,copy=False, dtype='i8')
+            rows2read = numpy.array(rows, ndmin=1, copy=False, dtype='i8')
             if rows2read.size == 1:
                 rows2read[0] = self._fix_range(rows2read[0], isslice=False)
         except:

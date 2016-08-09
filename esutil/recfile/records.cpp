@@ -131,7 +131,9 @@ Records::Records(
 		}
 		// Open for reading
 		mAction=READ;
-        if (mMode[0]=='w') {
+        if (mMode.size() > 1 && mMode=="r+") {
+            mAction |= WRITE;
+        } else if (mMode[0]=='w') {
             // both write and read
             mAction |= WRITE;
         }
@@ -1420,17 +1422,20 @@ long long Records::SequenceCheck(PyObject* obj)
 
 
 /*
-   simply write the data at the current location, it is up the user to make
-   sure this makes sense, e.g. that the file is empty if they are writing
-   a header
+   For writing a header.  the new offset comes from the position after writing the header
 */
 
-PyObject* Records::write_string(PyObject* obj) throw (const char* )
+PyObject* Records::write_header_and_update_offset(PyObject* obj) throw (const char* )
 {
     ensure_writable();
 
+    // should not be necessary, since file should be empty
+    rewind(mFptr);
+
     string header = get_object_as_string(obj);
     fprintf(mFptr, "%s", header.c_str());
+
+    mFileOffset = ftell(mFptr);
 
     Py_RETURN_NONE;
 }
@@ -1439,17 +1444,73 @@ PyObject* Records::write_string(PyObject* obj) throw (const char* )
 
    special function to help SFile to update the header row count
 
+   Rewind the file, write a new SIZE = line, then move back to
+   the end of the file
+
 */
+
 PyObject* Records::update_row_count(long nrows) throw (const char* )
 {
     ensure_writable();
 
+    // go back to the beginning
     rewind(mFptr);
-    fprintf(mFptr, "%20ld\n", nrows);
 
+    // write the fixed-size SIZE entry
+    fprintf(mFptr, "SIZE = %20ld\n", nrows);
+
+    // seek back to the end of the file
     fseek(mFptr, 0, SEEK_END);
 
     Py_RETURN_NONE;
+}
+
+PyObject* Records::read_sfile_header(void) throw (const char* )
+{
+
+    ensure_readable();
+
+    // go back to the beginning
+    rewind(mFptr);
+
+	char endbuff[4]={0};
+    size_t count=0;
+
+	while (1) {
+        char c = fgetc(mFptr);
+
+        if (EOF==c) {
+            throw "EOF reached before reading header end";
+        }
+
+        count++;
+
+        endbuff[0] = endbuff[1];
+        endbuff[1] = endbuff[2];
+
+        endbuff[2] = c;
+
+        if (0==strncmp(endbuff,"END",3)) {
+            break;
+        }
+    }
+
+    // we need to add
+    // 1 for the newline character
+    // 1 for the empty line
+
+    count += 2;
+
+    string hdr;
+    hdr.resize(count);
+    rewind(mFptr);
+    size_t nread = fread(&hdr[0], 1, count, mFptr);
+    if (nread != count) {
+        throw "Error reading header";
+    }
+
+    return Py_BuildValue("sl", hdr.c_str(), ftell(mFptr));
+
 }
 
 

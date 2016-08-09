@@ -112,11 +112,14 @@ class Records(_object):
     def Write(self, obj):
         return _records.Records_Write(self, obj)
 
-    def write_string(self, obj):
-        return _records.Records_write_string(self, obj)
+    def write_header_and_update_offset(self, obj):
+        return _records.Records_write_header_and_update_offset(self, obj)
 
     def update_row_count(self, nrows):
         return _records.Records_update_row_count(self, nrows)
+
+    def read_sfile_header(self):
+        return _records.Records_read_sfile_header(self)
 
     def read_columns(self, arrayobj, colnums, rows):
         return _records.Records_read_columns(self, arrayobj, colnums, rows)
