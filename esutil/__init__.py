@@ -129,6 +129,7 @@ from . import recfile
 from . import htm
 
 from . import unit_tests
+from .unit_tests import test
 
 try:
     from .import sqlite_util

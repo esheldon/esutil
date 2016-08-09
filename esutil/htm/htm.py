@@ -482,136 +482,119 @@ class HTM(htmc.HTMC):
                  getbins=True,
                  verbose=False):
         """
-        Class:
-            HTM
-
-        Method Name:
-            bincount 
+        Count number of pairs between two ra/dec lists as a function of their
+        separation.
         
-        Purpose:
+        The binning is equal spaced in the log10 of the separation.  By default
+        the bin sizes are in degrees, unless the scale= keyword is sent, in
+        which case the units are angle*scale with angle in radians.
 
-            Count number of pairs between two ra/dec lists as a function of
-            their separation.  The binning is equal spaced in the log10 of the
-            separation.  By default the bin sizes are in degrees, unless the
-            scale= keyword is sent, in which case the units are angle*scale
-            with angle in radians.
-
-            This code can be used to calculate correlation functions by
-            calling it on the data as well as random points.
+        This code can be used to calculate correlation functions by
+        calling it on the data as well as random points.
+    
         
-        
-        Calling Sequence:
-            import esutil
-            depth = 10
-            h=esutil.htm.HTM(depth)
-            rlower, rupper, counts = h.bincount(
-                 rmin, rmax, nbin, ra1, dec1, ra2, dec2, 
-                 scale=None,
-                 htmid2=None, 
-                 htmrev2=None,
-                 minid=None,
-                 maxid=None,
-                 getbins=True)
+        parameters
+        ----------
+        rmin,rmax: float
+            Smallest and largest separations to consider.  This
+            is in degrees unless the scale= keyword is sent, in which
+            case the units are angle*scale with angle in radians.
+        nbin: int
+            The number of bins to use.  Bins will be equally spaced in the
+            log10 of the separation.
 
-        Inputs:
-            rmin,rmax: Smallest and largest separations to consider.  This
-                is in degrees unless the scale= keyword is sent, in which
-                case the units are angle*scale with angle in radians.
-            nbin:  The number of bins to use.  Bins will be equally spaced
-                in the log10 of the separation.
-            ra1,dec1,ra2,dec2: 
-                ra,dec lists in degrees.  Can be scalars or arrays but require
-                len(ra) == len(dec) in each set.
-        
-        Keyword Parameters:
+        ra1,dec1,ra2,dec2:  arrays
+            ra,dec lists in degrees.  Can be scalars or arrays but require
+            len(ra) == len(dec) in each set.
+    
 
-            scale:  
-                A scale to apply to the angular separations.  Must be the same
-                length as ra1/dec1 or a scalar.  This is useful for converting
-                angle to physical distance.  For example, scale could be the
-                angular diameter distance to cosmological objects in list 1.
+        scale: float
+            A scale to apply to the angular separations.  Must be the same
+            length as ra1/dec1 or a scalar.  This is useful for converting
+            angle to physical distance.  For example, scale could be the
+            angular diameter distance to cosmological objects in list 1.
 
-                If scale is sent, rmin,rmax must be in units of angle*scale
-                where angle is in *radians*, as opposed to degrees when scale
-                is not sent.
+            If scale is sent, rmin,rmax must be in units of angle*scale
+            where angle is in *radians*, as opposed to degrees when scale
+            is not sent.
 
-            htmid2=None: 
-                the htm indexes for the second list.  If not sent they are
-                generated internally.  You can generate these with 
+        htmid2: array
+            the htm indexes for the second list.  If not sent they are
+            generated internally.  You can generate these with 
 
-                    htmid = h.lookup_id(ra, dec)
+                htmid = h.lookup_id(ra, dec)
 
-            htmrev2=None: 
-                The result of
-                    import esutil
-                    htmid2 = h.lookup_id(ra, dec)
-                    minid=htmid2.min()
-                    hist2,htmrev2=\\
-                        esutil.stat.histogram(htmid2-minid,rev=True) 
+        htmrev2:  array
+            The result of
+                htmid2 = h.lookup_id(ra, dec)
+                minid=htmid2.min()
+                hist2,htmrev2=\\
+                    esutil.stat.histogram(htmid2-minid,rev=True) 
 
-                If not sent it is calculated internally for fast lookups.  You
-                can save time on successive calls by generating these your
-                self.
+            If not sent it is calculated internally for fast lookups.  You
+            can save time on successive calls by generating these your
+            self.
 
-            getbins: 
-                If True, return a tuple 
-                    rlower,rupper,counts 
+        getbins: bool
+            If True, return a tuple 
+                rlower,rupper,counts 
 
-                instead of just counts.  rlower,rupper are the lower and upper
-                limits of each bin.  getbins=True is the default.
-        
-        Outputs:
+            instead of just counts.  rlower,rupper are the lower and upper
+            limits of each bin.  getbins=True is the default.
+        verbose: bool
+            set to True to see progress
 
-            if getbins=True:
-                rlower,rupper,counts:  rlower,rupper are the lower
-                and upper limits of each bin.  getbins=True is the default.
-            if getbins=False:
-                counts:  The pair counts in equally spaced logarithmic bins
-                    in separation.
+        returns
+        --------
+
+        if getbins=False:
+            counts:  The pair counts in equally spaced logarithmic bins
+                in separation.
+
+        if getbins=True:
+            rlower,rupper,counts:  rlower,rupper are the lower
+            and upper limits of each bin.  getbins=True is the default.
 
 
         
-        Restrictions:
-            The C++ wrapper must be compiled.  This will happend automatically
-            during installation of esutil.
-        
+        Restrictions
+        ------------
+        The C++ wrapper must be compiled.  This will happend automatically
+        during installation of esutil.
+    
+        examples
+        --------
+        import esutil
 
-         EXAMPLE:
-            import esutil
-
-            # simple angular counts, no scaling
-            # cross correlate with second catalog
-            h=esutil.htm.HTM()
-            rmin=10/3600. # degrees
-            rmax=1000/3600. # degrees
-            nbin=25
-            rlower,rupper,counts = h.bincount(rmin,rmax,nbin,
-                                              cat1['ra'],cat1['dec'],
-                                              cat2['ra'],cat2['dec'])
+        # simple angular counts, no scaling
+        # cross correlate with second catalog
+        h=esutil.htm.HTM()
+        rmin=10/3600. # degrees
+        rmax=1000/3600. # degrees
+        nbin=25
+        rlower,rupper,counts = h.bincount(rmin,rmax,nbin,
+                                          cat1['ra'],cat1['dec'],
+                                          cat2['ra'],cat2['dec'])
 
 
 
-            # counts using scaling of the angular separations with
-            # the angular diameter distance to get projected
-            # physical separations.
-            c=esutil.cosmology.Cosmo()
+        # counts using scaling of the angular separations with
+        # the angular diameter distance to get projected
+        # physical separations.
+        c=esutil.cosmology.Cosmo()
 
-            # get angular diameter distance to catalog 1 objects
-            DA=c.Da(0.0, cat1['z'])
+        # get angular diameter distance to catalog 1 objects
+        DA=c.Da(0.0, cat1['z'])
 
-            # cross correlate with second catalog
-            h=esutil.htm.HTM()
-            rmin=0.025 # Mpc
-            rmax=30.0 # Mpc
-            nbin=25
-            rlower,rupper,counts = h.bincount(rmin,rmax,nbin,
-                                              cat1['ra'],cat1['dec'],
-                                              cat2['ra'],cat2['dec'],
-                                              scale=DA)
-        
-         MODIFICATION HISTORY:
-             Created:  2010-03-31, Erin Sheldon, BNL
-
+        # cross correlate with second catalog
+        h=esutil.htm.HTM()
+        rmin=0.025 # Mpc
+        rmax=30.0 # Mpc
+        nbin=25
+        rlower,rupper,counts = h.bincount(rmin,rmax,nbin,
+                                          cat1['ra'],cat1['dec'],
+                                          cat2['ra'],cat2['dec'],
+                                          scale=DA)
 
         """
 
