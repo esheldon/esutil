@@ -26,7 +26,7 @@ static PyObject* PyCHist_chist(PyObject* self, PyObject* args) {
         offset = 0, data_index = 0, binnum=0, tbin = 0;
     double thisdata=0;
 
-    if (!PyArg_ParseTuple(args, (char*)"OdOdiO",
+    if (!PyArg_ParseTuple(args, (char*)"OdOdOO",
                           &data_pyobj,
                           &datamin,
                           &sort_pyobj,

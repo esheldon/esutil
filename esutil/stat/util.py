@@ -46,7 +46,7 @@ from sys import stdout, stderr
 # the external C++ code for doing 
 # histograms.
 try:
-    import chist
+    from . import _chist
     have_chist=True
 except:
     have_chist=False
@@ -104,7 +104,7 @@ class Binner(dict):
 
     """
     def __init__(self, x, y=None, weights=None):
-        self.x = numpy.array(x, ndmin=1, copy=False)
+        self.x = numpy.array(x, dtype='f8', ndmin=1, copy=False)
         self.y = y
         self.weights = weights
 
@@ -113,12 +113,12 @@ class Binner(dict):
         self.xpref=''
         if y is not None:
             self.xpref = 'x'
-            self.y = numpy.array(y, ndmin=1, copy=False)
+            self.y = numpy.array(y, dtype='f8', ndmin=1, copy=False)
             if self.y.size != self.x.size:
                 raise ValueError("y must be same len as x")
 
         if weights is not None:
-            self.weights = numpy.array(weights, ndmin=1, copy=False)
+            self.weights = numpy.array(weights, dtype='f8', ndmin=1, copy=False)
             if self.weights.size != self.x.size:
                 raise ValueError("Weights must be same len as data")
 
@@ -223,32 +223,45 @@ class Binner(dict):
         self['low'] = low
         self['high'] = high
 
-    def _do_hist(self, data, dmin, s, bsize, nbin, rev=False):
-        dorev = rev
+    def _do_hist(self, data, dmin, sortind, bsize, nbin, rev=False):
+        dorev=rev
+
         if self.weights is not None:
             # force rev so we can add up in bins with weights
             dorev=True
 
         if have_chist:
             # compute using the external C++ code
+
+            hist = numpy.zeros(nbin, dtype='i8')
             if dorev:
-                hist, revind = chist.chist(data, dmin, s, bsize, nbin, dorev)
+                revsize = sortind.size + nbin + 1
+                revind = numpy.zeros(revsize, dtype='i8')
             else:
-                hist         = chist.chist(data, dmin, s, bsize, nbin, dorev)
                 revind=None
+
+            _chist.chist(
+                data,
+                dmin,
+                sortind,
+                bsize,
+
+                hist,
+                revind,
+            )
 
         else:
             # compute in a python loop
 
             if dorev:
-                revsize = s.size + nbin+1
+                revsize = sortind.size + nbin+1
                 revind = numpy.zeros(revsize, dtype='i8')
             else:
                 # this is just a dummy variable
                 revind=None
             hist = numpy.zeros(nbin, dtype='i8')
 
-            _dohist(data, dmin, s, bsize, hist, revind=revind)
+            _dohist(data, dmin, sortind, bsize, hist, revind=revind)
 
         return hist, revind
 
