@@ -40,18 +40,6 @@ Convenience functions:
 Classes
 
     SFile.  See docs for sfile.SFile for details.
-
-Modification History:
-    This section will track major changes.  See docs for SFile and individual
-    functions for smaller changes.
-
-
-    Created: 2007-05-25, Erin Sheldon, NYU
-
-    2010-02-18  Added '_VERSION' to the header, allowing future changes
-        while still supporting backwards compatibility.  
-            Erin Sheldon, BNL
-
 """
 # vim: set filetype=python :
 import sys
@@ -300,9 +288,21 @@ class SFile:
 
     def get_header(self):
         """
-        return a copy of the header
+        get a copy of the header
         """
         return self._hdr
+
+    def get_mode(self):
+        """
+        get the file open mode
+        """
+        return self._mode
+
+    def get_filename(self):
+        """
+        get the file name
+        """
+        return self._filename
 
     def _ensure_open(self):
         """
