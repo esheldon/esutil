@@ -385,7 +385,8 @@ PyObject* HTMC::cbincount(
 		PyObject* htmrev2_array,
 		PyObject* minid_obj,
 		PyObject* maxid_obj, 
-		PyObject* scale_object) throw (const char *) {
+		PyObject* scale_object,
+        int verbose) throw (const char *) {
 
 
 	double scale=1, logscale=0;
@@ -435,21 +436,12 @@ PyObject* HTMC::cbincount(
 		}
 	}
 
-	std::cout<<"rmin: "<<rmin<<"\n";
-	std::cout<<"rmax: "<<rmax<<"\n";
-	std::cout<<"degrees?: "<<(degrees ? "True" : "False")<<"\n";
-	std::cout<<"nbin: "<<nbin<<"\n";
-	std::cout<<"logrmin: "<<logrmin<<"\n";
-	std::cout<<"logrmax: "<<logrmax<<"\n";
 
 	double log_binsize = (logrmax-logrmin)/nbin;
 	if (log_binsize < 0) {
 		throw("found log_binsize < 0");
 	}
 
-
-	std::cout<<"log binsize: "<<log_binsize<<"\n";
-	std::cout<<"len(scale_array) = "<<scale_array.size()<<"\n";
 
 	// Output counts in bins
 	NumpyVector<int64_t> counts(nbin);
@@ -462,8 +454,20 @@ PyObject* HTMC::cbincount(
 	int linelen=70*step;
 	npy_intp totcount=0;
 
-	std::cout << "\n" <<
-		"Each dot is " << step << " points" << std::endl;
+    if (verbose) {
+        std::cout<<"rmin: "<<rmin<<"\n";
+        std::cout<<"rmax: "<<rmax<<"\n";
+        std::cout<<"degrees?: "<<(degrees ? "True" : "False")<<"\n";
+        std::cout<<"nbin: "<<nbin<<"\n";
+        std::cout<<"logrmin: "<<logrmin<<"\n";
+        std::cout<<"logrmax: "<<logrmax<<"\n";
+
+        std::cout<<"log binsize: "<<log_binsize<<"\n";
+        std::cout<<"len(scale_array) = "<<scale_array.size()<<"\n";
+
+        std::cout << "\n" <<
+            "Each dot is " << step << " points" << std::endl;
+    }
 
 	npy_intp n1 = ra1.size();
 	for (npy_intp i1=0; i1<n1; i1++) {
@@ -525,13 +529,11 @@ PyObject* HTMC::cbincount(
 						npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
 
 						double dis = gcirc(ra1[i1], dec1[i1], ra2[i2], dec2[i2],degrees);
-						//std::cout<<"dis = "<<dis<<"\n";
 						if (dis <= maxangle) {
 							double logr = logscale + log10(dis);
 
 							int radbin = (int) ( (logr-logrmin)/log_binsize );
 							if (radbin >=0 && radbin < nbin) {
-								//std::cout<<"keeping in bin: "<<radbin<<"\n";
 								counts[radbin] += 1;
 								totcount+=1;
 							} // in one of our radial bins
@@ -542,19 +544,23 @@ PyObject* HTMC::cbincount(
 		} // loop over HTM leaves
 
 
-		if ( ( ((i1+1) % step) == 0 && (i1 > 0) ) 
-				|| (i1 == (n1-1)) ) {
-			std::cout<<".";
-			if ( ((i1+1) % linelen) == 0 || (i1 == (n1-1)) ) {
-				std::cout<<"\n"<<(i1+1)<<"/"<<n1<<"  pair count: "<<totcount<<"\n";
-			}
-			fflush(stdout);
-		}
+        if (verbose) {
+            if ( ( ((i1+1) % step) == 0 && (i1 > 0) ) 
+                 || (i1 == (n1-1)) ) {
+                std::cout<<".";
+                if ( ((i1+1) % linelen) == 0 || (i1 == (n1-1)) ) {
+                    std::cout<<"\n"<<(i1+1)<<"/"<<n1<<"  pair count: "<<totcount<<"\n";
+                }
+                fflush(stdout);
+            }
+        }
 
 	} // loop over list 1
 
-	std::cout<<"\n";
-	fflush(stdout);
+    if (verbose) {
+        std::cout<<"\n";
+        fflush(stdout);
+    }
 
 	PyObject* countsPyObject= counts.getref();
 	return countsPyObject;

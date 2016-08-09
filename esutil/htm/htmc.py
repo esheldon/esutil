@@ -226,7 +226,7 @@ class HTMC(_object):
         return _htmc.HTMC_cmatch(self, radius_array, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, maxmatch_obj, filename)
 
 
-    def cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object=None):
+    def cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object=None, verbose=0):
         """
 
         Class:
@@ -262,7 +262,7 @@ class HTMC(_object):
             2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
 
         """
-        return _htmc.HTMC_cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object)
+        return _htmc.HTMC_cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object, verbose)
 
 
     def depth(self):

@@ -97,7 +97,8 @@ Revision History:
                 PyObject* htmrev2_array,
                 PyObject* minid_obj,
                 PyObject* maxid_obj,
-                PyObject* scale_object=NULL) // will bin in radians*scale.  
+                PyObject* scale_object=NULL,
+                int verbose=0) // will bin in radians*scale.  
                                             // Same length as ra1.
                               throw (const char *);
 

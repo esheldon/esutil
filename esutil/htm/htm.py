@@ -479,7 +479,8 @@ class HTM(htmc.HTMC):
                  htmrev2=None,
                  minid=None,
                  maxid=None,
-                 getbins=True):
+                 getbins=True,
+                 verbose=False):
         """
         Class:
             HTM
@@ -614,9 +615,12 @@ class HTM(htmc.HTMC):
 
         """
 
+        if verbose:
+            verb=1
+        else:
+            verb=0
 
         if htmid2 is None:
-            stdout.write("Generating HTM ids\n")
             htmid2 = self.lookup_id(ra2, dec2)
             minid = htmid2.min()
             maxid = htmid2.max()
@@ -627,11 +631,18 @@ class HTM(htmc.HTMC):
                 maxid = htmid2.max()
 
         if htmrev2 is None:
-            stdout.write("Generating reverse indices\n")
             hist2, htmrev2 = stat.histogram(htmid2-minid,rev=True)
 
-        counts = self.cbincount(rmin,rmax,nbin,ra1,dec1,ra2,dec2,
-                                htmrev2,minid,maxid,scale)
+        counts = self.cbincount(
+            rmin,rmax,nbin,
+            ra1,dec1,
+            ra2,dec2,
+            htmrev2,
+            minid,
+            maxid,
+            scale,
+            verb
+        )
         if getbins:
             lower,upper = log_bins(rmin, rmax, nbin)
             return lower,upper,counts

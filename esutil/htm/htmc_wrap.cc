@@ -3798,6 +3798,78 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_0(PyObject *SWIGUNUSEDPARM(self)
   PyObject *arg10 = (PyObject *) 0 ;
   PyObject *arg11 = (PyObject *) 0 ;
   PyObject *arg12 = (PyObject *) 0 ;
+  int arg13 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val13 ;
+  int ecode13 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
+  PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOO:HTMC_cbincount",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_cbincount" "', argument " "1"" of type '" "HTMC *""'"); 
+  }
+  arg1 = reinterpret_cast< HTMC * >(argp1);
+  arg2 = obj1;
+  arg3 = obj2;
+  arg4 = obj3;
+  arg5 = obj4;
+  arg6 = obj5;
+  arg7 = obj6;
+  arg8 = obj7;
+  arg9 = obj8;
+  arg10 = obj9;
+  arg11 = obj10;
+  arg12 = obj11;
+  ecode13 = SWIG_AsVal_int(obj12, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "HTMC_cbincount" "', argument " "13"" of type '" "int""'");
+  } 
+  arg13 = static_cast< int >(val13);
+  try {
+    result = (PyObject *)(arg1)->cbincount(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13);
+  }
+  catch(char const *_e) {
+    PyErr_SetString(PyExc_RuntimeError, _e);
+    SWIG_fail;
+    
+  }
+  
+  resultobj = result;
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  HTMC *arg1 = (HTMC *) 0 ;
+  PyObject *arg2 = (PyObject *) 0 ;
+  PyObject *arg3 = (PyObject *) 0 ;
+  PyObject *arg4 = (PyObject *) 0 ;
+  PyObject *arg5 = (PyObject *) 0 ;
+  PyObject *arg6 = (PyObject *) 0 ;
+  PyObject *arg7 = (PyObject *) 0 ;
+  PyObject *arg8 = (PyObject *) 0 ;
+  PyObject *arg9 = (PyObject *) 0 ;
+  PyObject *arg10 = (PyObject *) 0 ;
+  PyObject *arg11 = (PyObject *) 0 ;
+  PyObject *arg12 = (PyObject *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -3847,7 +3919,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
   PyObject *arg2 = (PyObject *) 0 ;
@@ -3909,14 +3981,14 @@ fail:
 
 SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
-  PyObject *argv[13] = {
+  PyObject *argv[14] = {
     0
   };
   Py_ssize_t ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 12) && (ii < argc); ii++) {
+  for (ii = 0; (ii < 13) && (ii < argc); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
   if (argc == 11) {
@@ -3945,7 +4017,7 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *self, PyObject *args) {
                       if (_v) {
                         _v = (argv[10] != 0);
                         if (_v) {
-                          return _wrap_HTMC_cbincount__SWIG_1(self, args);
+                          return _wrap_HTMC_cbincount__SWIG_2(self, args);
                         }
                       }
                     }
@@ -3986,7 +4058,55 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *self, PyObject *args) {
                         if (_v) {
                           _v = (argv[11] != 0);
                           if (_v) {
-                            return _wrap_HTMC_cbincount__SWIG_0(self, args);
+                            return _wrap_HTMC_cbincount__SWIG_1(self, args);
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 13) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTMC, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      _v = (argv[1] != 0);
+      if (_v) {
+        _v = (argv[2] != 0);
+        if (_v) {
+          _v = (argv[3] != 0);
+          if (_v) {
+            _v = (argv[4] != 0);
+            if (_v) {
+              _v = (argv[5] != 0);
+              if (_v) {
+                _v = (argv[6] != 0);
+                if (_v) {
+                  _v = (argv[7] != 0);
+                  if (_v) {
+                    _v = (argv[8] != 0);
+                    if (_v) {
+                      _v = (argv[9] != 0);
+                      if (_v) {
+                        _v = (argv[10] != 0);
+                        if (_v) {
+                          _v = (argv[11] != 0);
+                          if (_v) {
+                            {
+                              int res = SWIG_AsVal_int(argv[12], NULL);
+                              _v = SWIG_CheckState(res);
+                            }
+                            if (_v) {
+                              return _wrap_HTMC_cbincount__SWIG_0(self, args);
+                            }
                           }
                         }
                       }
@@ -4004,6 +4124,7 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *self, PyObject *args) {
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'HTMC_cbincount'.\n"
     "  Possible C/C++ prototypes are:\n"
+    "    HTMC::cbincount(PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,int)\n"
     "    HTMC::cbincount(PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *)\n"
     "    HTMC::cbincount(PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *)\n");
   return 0;
