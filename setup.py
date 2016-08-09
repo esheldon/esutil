@@ -75,8 +75,9 @@ if have_numpy:
 
     # stat package
     #include_dirs += ['esutil/stat']
-    chist_sources = ['chist.cc','chist_wrap.cc']
-    chist_sources = ['esutil/stat/'+s for s in chist_sources]
+    #chist_sources = ['chist.cc','chist_wrap.cc']
+    #chist_sources = ['esutil/stat/'+s for s in chist_sources]
+    chist_sources = ['esutil/stat/chist_pywrap.c']
     chist_module = Extension('esutil.stat._chist', 
                              extra_compile_args=extra_compile_args, 
                              extra_link_args=extra_link_args,
