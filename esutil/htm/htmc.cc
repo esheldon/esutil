@@ -98,7 +98,7 @@ PyObject* HTMC::intersect(
         ) throw (const char *) {
 
 	static const double D2R=0.0174532925199433;
-    npy_intp nfound;
+    npy_intp nfound=0;
 
 	// This is used in the basic calculations
 	const SpatialIndex &index = mHtmInterface.index();
@@ -643,7 +643,7 @@ PyObject* Matcher::match(
 	std::vector<double> d12;
 
 	// total number of pairs
-	int64_t ntotal = 0;
+	npy_intp ntotal = 0;
 
 	FILE* fptr=NULL;
 
