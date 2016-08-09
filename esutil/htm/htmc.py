@@ -166,9 +166,6 @@ class HTMC(_object):
     def intersect(self, ra, dec, radius, inclusive):
         return _htmc.HTMC_intersect(self, ra, dec, radius, inclusive)
 
-    def cmatch(self, radius_array, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, maxmatch_obj, filename):
-        return _htmc.HTMC_cmatch(self, radius_array, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, maxmatch_obj, filename)
-
     def cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object=None, verbose=0):
         return _htmc.HTMC_cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object, verbose)
 
@@ -196,8 +193,8 @@ class Matcher(_object):
     def get_depth(self):
         return _htmc.Matcher_get_depth(self)
 
-    def match(self, radius_array, ra_array, dec_array, maxmatch_obj, filename):
-        return _htmc.Matcher_match(self, radius_array, ra_array, dec_array, maxmatch_obj, filename)
+    def match(self, radius_array, ra_array, dec_array, maxmatch, filename):
+        return _htmc.Matcher_match(self, radius_array, ra_array, dec_array, maxmatch, filename)
 Matcher_swigregister = _htmc.Matcher_swigregister
 Matcher_swigregister(Matcher)
 

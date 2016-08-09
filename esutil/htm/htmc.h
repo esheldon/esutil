@@ -51,6 +51,7 @@ class HTMC {
         // this requires the reverse indices must already be created,
         // and other obscure inputs. The python wrapper takes care of
         // all that.
+        /*
         PyObject* cmatch(
                 PyObject* radius_array, // degrees
                 PyObject* ra1_array, // all in degrees
@@ -62,7 +63,7 @@ class HTMC {
                 PyObject* maxid_obj,
 				PyObject* maxmatch_obj,
 				const char *filename) throw (const char *);
-
+        */
         PyObject* cbincount(
                 PyObject* rmin_object, // units of scale*angle in radians
                 PyObject* rmax_object, // units of scale*angle in radians
@@ -109,7 +110,7 @@ class Matcher {
         PyObject* match(PyObject* radius_array, // degrees
                         PyObject* ra_array, // degrees
                         PyObject* dec_array,
-                        PyObject* maxmatch_obj,
+                        long maxmatch,
                         const char* filename) throw (const char *);
 
 
@@ -120,8 +121,11 @@ class Matcher {
         int depth;
         htmInterface htm_interface;
 
-        NumpyVector<double> ra;
-        NumpyVector<double> dec;
+        PyObject* ra;
+        PyObject* dec;
+        npy_intp npoints;
+        //NumpyVector<double> ra;
+        //NumpyVector<double> dec;
 
         std::map<int64_t, std::vector<int64_t> > hmap;
 

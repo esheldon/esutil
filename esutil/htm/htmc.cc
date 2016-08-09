@@ -123,7 +123,6 @@ PyObject* HTMC::intersect(
         nfound = flist.length();
     }
 
-	//NumpyVector<int64_t> idlist(nfound);
     PyObject* idlist=PyArray_ZEROS(
         1,
         &nfound,
@@ -169,6 +168,7 @@ PyObject* HTMC::intersect(
  * single number.
  */
 
+/*
 PyObject* HTMC::cmatch(
 		PyObject* radius_array, // degrees
 		PyObject* ra1_array, // all in degrees
@@ -393,7 +393,7 @@ PyObject* HTMC::cmatch(
 
 
 }
-
+*/
 
 
 
@@ -596,10 +596,16 @@ Matcher::Matcher(int depth,
     this->depth = depth;
     this->htm_interface.init(depth);
 
-	// wrap the input ra,dec objects, making sure they are doubles
-	// no copy is made if the are already double arrays
-	this->ra.init(ra_input);
-	this->dec.init(dec_input);
+    this->ra = ra_input;
+    this->dec = dec_input;
+
+    Py_INCREF(ra_input);
+    Py_INCREF(dec_input);
+
+    this->npoints = PyArray_SIZE(this->ra);
+
+	//this->ra.init(ra_input);
+	//this->dec.init(dec_input);
     
     init_hmap();
     init_numpy();
@@ -608,9 +614,12 @@ void Matcher::init_hmap(void)
 {
     std::map<int64_t,std::vector<int64_t> >::iterator iter;
     int64_t htmid=0;
-    int64_t num=ra.size();
-    for (int64_t i=0; i<num; i++) {
-        htmid = htm_interface.lookupID(ra[i], dec[i]);
+    for (npy_intp i=0; i<this->npoints; i++) {
+
+        double ra = *(double *) PyArray_GETPTR1(this->ra, i);
+        double dec = *(double *) PyArray_GETPTR1(this->dec, i);
+
+        htmid = htm_interface.lookupID(ra, dec);
 
         iter=hmap.find(htmid);
 
@@ -628,23 +637,14 @@ PyObject* Matcher::match(
 		PyObject* ra_array, // all in degrees
         PyObject* dec_array,
 		PyObject* radius_array, // degrees
-        PyObject* maxmatch_obj,
+        long maxmatch,
         const char* filename) throw (const char *) {
 
     std::map<int64_t,std::vector<int64_t> >::iterator iter;
 
 	// no copies made if already double vectors
 
-	NumpyVector<double> ra(ra_array);
-	NumpyVector<double> dec(dec_array);
-
-	NumpyVector<double> radius(radius_array);
-	npy_intp nrad = radius.size();
-
-	// get as NumpyVectors even though they are only length 1
-	// because it does a good job with conversions
-	NumpyVector<int64_t> maxmatchVec(maxmatch_obj);
-	int64_t maxmatch = maxmatchVec[0];
+	npy_intp nrad = PyArray_SIZE(radius_array);
 
 	// These will temporarily hold the results
 	std::vector<int64_t> m1;
@@ -677,23 +677,27 @@ PyObject* Matcher::match(
 
 	double rad=0, d=0;
 	if (nrad == 1) {
-		rad = radius[0];
+		rad = *(double *) PyArray_GETPTR1(radius_array, 0);
 		d = cos( rad*D2R );
 	}
 
-	npy_intp ninput = ra.size();
+	npy_intp ninput = PyArray_SIZE(ra_array);
+
 	for (npy_intp i_input=0; i_input<ninput; i_input++) {
 		// Declare the domain and the lists
 		SpatialDomain domain;    // initialize empty domain
 		ValVec<uint64> plist, flist;	// List results
 
 		if (nrad > 1) {
-			rad = radius[i_input];
+            rad = *(double *) PyArray_GETPTR1(radius_array, i_input);
 			d = cos( rad*D2R );
 		}
 
 		// Find the triangles around this point
-		domain.setRaDecD(ra[i_input],dec[i_input],d); //put in ra,dec,d E.S.S.
+        double ra  = *(double *) PyArray_GETPTR1(ra_array,  i_input);
+        double dec = *(double *) PyArray_GETPTR1(dec_array, i_input);
+
+		domain.setRaDecD(ra,dec,d);
 		domain.intersect(&index,plist,flist);	  // intersect with list
 
 
@@ -736,10 +740,14 @@ PyObject* Matcher::match(
                     int64_t i_this = iter->second[ileaf];
 
                     // Returns distance in degrees
-                    double dis = gcirc(ra[i_input],
-                                       dec[i_input],
-                                       this->ra[i_this],
-                                       this->dec[i_this],true);
+                    double tra  = *(double *) PyArray_GETPTR1(this->ra, i_this);
+                    double tdec = *(double *) PyArray_GETPTR1(this->dec, i_this);
+
+                    double dis = gcirc(ra,
+                                       dec,
+                                       tra,
+                                       tdec,
+                                       true);
 
                     // Turns out, this pushing is not a bottleneck!
                     // Time is negligible compared to the leaf finding
@@ -800,19 +808,38 @@ PyObject* Matcher::match(
 
         PyObject* output_tuple = PyTuple_New(3);
 
-		NumpyVector<int64_t> m1out(ntotal);
-		NumpyVector<int64_t> m2out(ntotal);
-		NumpyVector<double> d12out(ntotal);
+        PyObject* m1out=PyArray_ZEROS(
+            1,
+            &ntotal,
+            NPY_INT64,
+            0
+        );
+        PyObject* m2out=PyArray_ZEROS(
+            1,
+            &ntotal,
+            NPY_INT64,
+            0
+        );
+        PyObject* d12out=PyArray_ZEROS(
+            1,
+            &ntotal,
+            NPY_FLOAT64,
+            0
+        );
 
 		for (npy_intp i=0; i<ntotal; i++) {
-			m1out[i] = m1[i];
-			m2out[i] = m2[i];
-			d12out[i] = d12[i];
+            npy_int64 *m1ptr  = (npy_int64* ) PyArray_GETPTR1(m1out, i);
+            npy_int64 *m2ptr  = (npy_int64* ) PyArray_GETPTR1(m2out, i);
+            double    *d12ptr = (npy_float64* ) PyArray_GETPTR1(d12out, i);
+
+			*m1ptr = m1[i];
+			*m2ptr = m2[i];
+			*d12ptr = d12[i];
 		}
 
-		PyTuple_SetItem(output_tuple, 0, m1out.getref());
-		PyTuple_SetItem(output_tuple, 1, m2out.getref());
-		PyTuple_SetItem(output_tuple, 2, d12out.getref());
+		PyTuple_SetItem(output_tuple, 0, m1out);
+		PyTuple_SetItem(output_tuple, 1, m2out);
+		PyTuple_SetItem(output_tuple, 2, d12out);
 
         return output_tuple;
 

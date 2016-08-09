@@ -225,9 +225,10 @@ class HTM(htmc.HTMC):
 
         else:
             # deprecated way
-            stdout.write("you are using the old reverse indices style, "
-                         "this will work but is deprecated\n")
+            raise RuntimeError("the old way using reverse indices is no "
+                               "longer supported. use a Matcher instead")
 
+            """
             if minid is None:
                 minid = htmid2.min()
             if maxid is None:
@@ -244,7 +245,7 @@ class HTM(htmc.HTMC):
                                maxid,
                                maxmatch,
                                file)
-
+            """
 
 
     def match_prepare(self, ra, dec, verbose=False):
