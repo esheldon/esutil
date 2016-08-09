@@ -196,12 +196,6 @@ class SFile:
                   padnull=padnull,
                   ignorenull=ignorenull, **keys)
 
-    def __enter__(self):
-        return self
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.close()
-
-
     def open(self, filename, mode='r', delim=None,
              padnull=False, ignorenull=False, **keys):
         """
@@ -217,11 +211,11 @@ class SFile:
 
         self.close()
 
-        self.padnull=padnull
-        self.ignorenull=ignorenull
-        self.mode = mode
+        self._padnull=padnull
+        self._ignorenull=ignorenull
+        self._mode = mode
 
-        self.filename=filename
+        self._filename=filename
 
         if filename is None:
             return
@@ -229,52 +223,49 @@ class SFile:
         # expand shortcut variables
         fpath = os.path.expanduser(filename)
         fpath = os.path.expandvars(fpath)
-        self.filename=fpath
+        self._filename=fpath
 
-        if mode == 'r+' and not os.path.exists(self.filename):
+        if mode == 'r+' and not os.path.exists(self._filename):
             # path doesn't exist but we want to append.  Change the
             # mode to write
             mode = 'w+'
 
-        if self.mode[0] == 'r':
+        if self._mode[0] == 'r':
             #if reading:
             # For 'r' and 'r+' try to read the header
-            self.hdr = self.read_header()
+            self._hdr = self.read_header()
 
-            self.delim = _match_key(self.hdr, '_delim')
-            self.size = _match_key(self.hdr, '_size', require=True)
-            self.descr = _match_key(self.hdr, '_dtype', require=True)
-            self.dtype = numpy.dtype(self.descr)
+            self._delim = _match_key(self._hdr, '_delim')
+            self._size = _match_key(self._hdr, '_size', require=True)
+            self._descr = _match_key(self._hdr, '_dtype', require=True)
+            self._dtype = numpy.dtype(self._descr)
             
             self._robj = recfile.Recfile(
-                self.filename,
-                mode=self.mode,
-                delim=self.delim,
-                dtype=self.dtype,
+                self._filename,
+                mode=self._mode,
+                delim=self._delim,
+                dtype=self._dtype,
                 nrows=self.get_nrows(),
-                offset=self.data_start,
+                offset=self._data_start,
 
-                padnull=self.padnull,      # these get sent in case mode is r+
-                ignorenull=self.ignorenull,
+                padnull=self._padnull,      # these get sent in case mode is r+
+                ignorenull=self._ignorenull,
             )
 
         else:
             # we are starting from scratch, so we can't read a header
             #
             # get delim from the keyword.  This will be used for writing later
-            self.delim=delim
+            self._delim=delim
 
             self._robj = recfile.Recfile(
-                self.filename,
-                mode=self.mode,
-                delim=self.delim,
+                self._filename,
+                mode=self._mode,
+                delim=self._delim,
 
-                padnull=self.padnull,
-                ignorenull=self.ignorenull,
+                padnull=self._padnull,
+                ignorenull=self._ignorenull,
             )
-
-    def __del__(self):
-        self.close()
 
     def close(self):
         """
@@ -285,76 +276,62 @@ class SFile:
             if self._robj is not None:
                 self._robj.close()
 
+        self._filename=None
+        self._mode=None
         self._robj=None
-        self.hdr=None
-        self.data_start=None
-        self.delim=None
-        self.size=0
-        self.descr=None
-        self.dtype=None
+        self._hdr=None
+        self._data_start=None
+        self._delim=None
+        self._size=0
+        self._descr=None
+        self._dtype=None
 
-        self.padnull=False
-        self.ignorenull=False
+        self._padnull=False
+        self._ignorenull=False
 
-    def __repr__(self):
-        s = []
+    def get_nrows(self):
+        """
+        get the number of rows in the file
+        """
+        if self._hdr is None:
+            raise RuntimeError("no file has been opened for reading")
 
-        if isinstance(self.fobj,file):
-            s += ["filename: '%s'" % self.fobj.name]
-            s += ["mode: '%s'" % self.mode]
-        if self.delim is not None:
-            s=["delim: '%s'" % self.delim]
+        return self._hdr['_SIZE']
 
-        s += ["size: %s" % self.size]
-
-        if self.descr is not None:
-            drepr=pprint.pformat(self.descr)
-            drepr = '  '+drepr.replace('\n','\n  ')
-            s += ["dtype: \n"+drepr]
-
-        if self.hdr is not None:
-            hs = self.h2string()
-            if hs != '':
-                hs = '  '+hs.replace('\n','\n  ')
-                if hs != '':
-                    s += ["hdr: \n"+hs]
-        s = "\n".join(s)
-        return s
-
-    def h2string(self, strip=True):
-        if self.hdr is None:
-            return ''
-        newd = {}
-
-        skipkeys=['_VERSION','_DTYPE','_SIZE','_NROWS',
-                  '_HAS_FIELDS','_DELIM','_SHAPE']
-        for key in self.hdr:
-            if strip:
-                if key not in skipkeys:
-                    newd[key] = self.hdr[key]
-            else:
-                news[key] = self.hdr[key]
-
-        if len(newd) == 0:
-            return ''
-        return pprint.pformat(newd)
+    def get_header(self):
+        """
+        return a copy of the header
+        """
+        return self._hdr
 
     def _ensure_open(self):
+        """
+        check if a file is open, if not raise a RuntimeError
+        """
         if self._robj is None:
             raise RuntimeError("no file is open")
 
     def _ensure_open_for_writing(self):
+        """
+        check if a file is open for writing, if not raise a RuntimeError
+        """
         self._ensure_open()
-        if self._robj.mode[0] != 'w' and '+' not in self.fobj.mode:
+        if self._robj.mode[0] != 'w' and '+' not in self._mode:
             raise ValueError("You must open with 'w*' or 'r+' to write")
 
     def _ensure_open_for_reading(self):
+        """
+        check if a file is open for reading, if not raise a RuntimeError
+        """
         self._ensure_open()
 
-        if self._robj.mode[0] != 'r' and '+' not in self.fobj.mode:
+        if self._robj.mode[0] != 'r' and '+' not in self._mode:
             raise ValueError("You must open with 'w+' or 'r*' to read")
 
     def _ensure_structured(self, data):
+        """
+        check if the data has fields, if not raise a ValueError
+        """
         if data.dtype.names is None:
             raise ValueError("data must be a structured array with fields")
 
@@ -367,45 +344,53 @@ class SFile:
         """
         self._ensure_structured(data)
 
-        # if self.dtype is not None, there was data in the file
-        if self.dtype is not None:
+        # if self._dtype is not None, there was data in the file
+        if self._dtype is not None:
 
             bad=False
-            if self.delim is None:
-                if self.dtype != data.dtype:
+            if self._delim is None:
+                if self._dtype != data.dtype:
                     bad=True
             else:
-                names = self.dtype.names
+                names = self._dtype.names
+                nnames=len(names)
                 input_names = data.dtype.names
+                ninput=len(input_names)
 
-                if len(input_names) != names:
+                if ninput != nnames:
+                    mess='got %d fields instead of %d' % (ninput,nnames)
                     bad=True
                 else:
-                    descr=self.dtype.descr
+                    descr=self._dtype.descr
                     idescr = data.dtype.descr
                     for d1,d2 in zip(descr,idescr):
                         l1 = len(d1)
                         l2 = len(d2)
                         if l1 != l2:
+                            mess='field dim mismatch: %s vs %s' % (d1,d2)
                             bad=True
                             break
 
                         if d1[0] != d2[0]:
+                            mess='field name mismatch: %s vs %s' % (d1[0],d2[0])
                             bad=True
                             break
+
                         # skip byte order
-                        if d1[1:] != d2[1:]:
+                        if d1[1][1:] != d2[1][1:]:
+                            mess='field type mismatch: %s vs %s' % (d1[1][1:],d2[1][1:])
                             bad=True
                             break
 
                         if l1 == 3:
                             if d1[2] != d2[2]:
+                                mess='field shape mismatch: %s vs %s' % (d1[2],d2[2])
                                 bad=True
                                 break
 
                 if bad:
                     raise ValueError("attempt to write an incompatible "
-                                     "data type")
+                                     "data type: "+mess)
             
     def write(self, data, header=None):
         """
@@ -428,16 +413,10 @@ class SFile:
         # check compatible, in case there is already data in the file
         self._ensure_compatible_dtype(data)
 
-        # this will make self.dtype if it is the first write
+        # this will make self._dtype if it is the first write
         self._write_header(data, header=header)
 
         self._robj.write(data)
-
-    def get_subset(self, rows=None, fields=None, columns=None):
-        robj = recfile.Open(self.fobj, nrows=self.size, mode='r', 
-                            offset=self.fobj.tell(),
-                            dtype=self.dtype, delim=self.delim)
-        return robj.get_subset(rows=rows, fields=fields, columns=columns)
 
     def read(self,
              rows=None,
@@ -448,16 +427,44 @@ class SFile:
              split=False,
              reduce=False):
         """
-        Read the data into memory.
+        Read data from the file.
 
-        TODO: add docs
+        parameters
+        -----------
+        rows: sequence or scalar, optional
+            A scalar, array, list or tuple of row numbers to read.  
+            Default is None, meaning read all rows.
+
+        columns: sequence or scalar
+            A scalar, list or tuple of strings naming columns to read 
+            from the file.  Default is None or read all columns.
+        fields:  Same as sending columns=.
+
+        header: bool, optional
+            If True, return both the array and the header dict in
+            a tuple.
+        split: bool, optional
+            If True, return a list of arrays for each column rather
+            than a structured array.
+        reduce: bool, optional
+            If True, and there is only one field requested, reduce
+            it to a plain array. This is equivalent to sending
+            columns=(scalar column name)
+
+        returns
+        -------
+
+        A structured array with fields.
+
+        If the columns= is a scalar column name (rather than list of names or
+        None), then the data is a plain array holding the column data
         """
         
-        self._ensure_open_for_writing()
+        self._ensure_open_for_reading()
 
-        result = self._read_structured(rows=rows, 
-                                       fields=fields,
-                                       columns=columns)
+        result = self._do_read(rows=rows, 
+                               fields=fields,
+                               columns=columns)
 
         if split:
             result = split_fields(result)
@@ -465,7 +472,7 @@ class SFile:
             result = reduce_array(result)
 
         if header:
-            return result, self.hdr
+            return result, copy.deepcopy(self._hdr)
         else:
             return result
 
@@ -491,84 +498,25 @@ class SFile:
         data = sf[fieldlist][rowlist]
         """
 
-        if self.fobj.tell() != self.data_start:
-            self.fobj.seek(self.data_start)
+        return self._robj[arg]
 
-        robj = recfile.Open(self.fobj, nrows=self.size, mode='r', 
+    def _do_read(self, rows=None, fields=None, columns=None):
+        """
+        use the recfile object to read the data
+        """
+
+        if columns is None:
+            columns = fields
+
+        return self._robj.read(rows=rows, columns=columns)
+
+    '''
+    def get_subset(self, rows=None, fields=None, columns=None):
+        robj = recfile.Open(self.fobj, nrows=self._size, mode='r', 
                             offset=self.fobj.tell(),
-                            dtype=self.dtype, delim=self.delim)
-        return robj[arg]
-
-    def _read_structured(self, rows=None, fields=None, columns=None):
-
-        rows2read = self._get_rows2read(rows)
-        fields2read = self._get_fields2read(fields, columns=columns)
-
-        if fields2read is None and rows2read is None and self.delim is None:
-            # Its binary and all, just use fromfile
-            result = numpy.fromfile(self.fobj,dtype=self.dtype)
-        else:
-            if have_recfile:
-                result = self._recfile_read(rows=rows2read, fields=fields2read)
-            else:
-                raise RuntimeError("you need the recfile package "
-                                   "to read structured data")
-
-        return result
-
-    def _recfile_read(self, rows=None, fields=None):
-        robj = recfile.Open(self.fobj, nrows=self.size, mode='r', 
-                            offset=self.fobj.tell(),
-                            dtype=self.dtype, delim=self.delim)
-        return robj.Read(rows=rows, fields=fields)
-
-    def _try_reshape(self, data):
-        shape = _match_key(self.hdr, '_shape')
-        if shape is None:
-            return data
-
-        # Only use it if the lengths match
-        try:
-            ashape = numpy.array(shape, ndmin=1)
-        except:
-            return data
-        if ashape.prod() == data.size:
-            return data.reshape(shape)
-        else:
-            return data
-
-    def _get_rows2read(self, rows):
-        if rows is None:
-            return None
-        rows2read = numpy.array(rows,ndmin=1,copy=False)
-
-        return rows2read
-
-    def _get_fields2read(self, fields, columns=None):
-        if fields is None:
-            fields=columns
-
-        if fields is None:
-            return None
-        elif isinstance(fields, (list,numpy.ndarray)):
-            f=fields
-        elif isinstance(fields,tuple):
-            f=list(fields)
-        elif isstring(fields):
-            f=[fields]
-        else:
-            raise ValueError('fields must be list,tuple,string or array')
-
-        if not isstring(f[0]):
-            # this is probably a list of column numbers, convert to strings
-            allnames = self.dtype.names
-            f = [allnames[i] for i in f]
-
-        return f
-
-
-
-
+                            dtype=self._dtype, delim=self._delim)
+        return robj.get_subset(rows=rows, fields=fields, columns=columns)
+    '''
 
     def _make_header(self, data, header=None):
         if header is None:
@@ -582,8 +530,8 @@ class SFile:
 
         descr = data.dtype.descr
 
-        if self.delim is not None:
-            head['_DELIM'] = self.delim
+        if self._delim is not None:
+            head['_DELIM'] = self._delim
 
             # Text file. Remove the byte order specification. 
             descr = self._remove_byteorder(descr)
@@ -595,28 +543,27 @@ class SFile:
 
     def _write_header(self, data, header=None):
 
-        if self.hdr is not None:
+        if self._hdr is not None:
             # we are appending data.
             # Just update the nrows and move to the end
 
             self._update_size(data.size)
-            self.fobj.seek(0,2) # Seek to end of file
         else:
 
             # this is a dict of variable size
-            self.hdr = self._make_header(data, header=header)
+            self._hdr = self._make_header(data, header=header)
 
             # store some of the info
-            self.descr = self.hdr['_DTYPE']
-            self.dtype = numpy.dtype(self.descr)
+            self._descr = self._hdr['_DTYPE']
+            self._dtype = numpy.dtype(self._descr)
 
             size_string = self._get_size_string(data.size)
-            self.size = data.size
+            self._size = data.size
 
             # As long as the dict contains types that can be represented as
             # constants, this pretty printing can be eval()d.
 
-            hdr_dict_string = pprint.pformat(self.hdr)
+            hdr_dict_string = pprint.pformat(self._hdr)
 
             lines = [
                 size_string,
@@ -647,6 +594,24 @@ class SFile:
 
         return new_descr
 
+    def _update_size(self, size_add):
+        """
+        update the size in the file
+
+        TODO: update for new recfile where file object
+        is maintained within the C++ code
+        """
+        size_current = self._size
+        if size_current is None:
+            raise RuntimeError('Attempting to update size but not found in header')
+
+        size_new = size_current + size_add
+
+        self._robj.robj.update_row_count(size_new)
+        self._size = size_new
+        self._hdr['_SIZE'] = size_new
+
+
     '''
     def _update_size(self, size_add):
         """
@@ -655,14 +620,14 @@ class SFile:
         TODO: update for new recfile where file object
         is maintained within the C++ code
         """
-        size_current = self.size
+        size_current = self._size
         if size_current is None:
             raise RuntimeError('Attempting to update size but not found in header')
         size_new = size_current + size_add
 
         self._write_size(size_new)
-        self.size = size_new
-        self.hdr['_SIZE'] = size_new
+        self._size = size_new
+        self._hdr['_SIZE'] = size_new
     '''
 
     def _get_size_string(self, size):
@@ -802,7 +767,7 @@ class SFile:
             -- data begins --
         """
 
-        if self.filename is None:
+        if self._filename is None:
             raise ValueError("you opened with filename None")
 
         if not have_numpy:
@@ -813,8 +778,24 @@ class SFile:
         # or
         # NROWS = ...
 
-        with open(self.filename) as fobj:
-            line = fobj.readline().strip()
+        dummy_dtype=[('ra','f8')]
+        with recfile.Recfile(self._filename,dtype=dummy_dtype) as robj:
+            hdrstring, offset = robj.robj.read_sfile_header()
+
+        self._data_start = offset
+        lines=hdrstring.split('\n')
+        size = self._extract_size_from_string(lines[0])
+        #print("found size:",size)
+        #print("whole header:\n")
+        #print(hdrstring,end='')
+        #print("-------------\n")
+
+        '''
+        with open(self._filename,'rt') as fobj:
+            print("\nreading a line")
+            #line = fobj.readline().strip()
+            line = fobj.readline()
+            print("\nread line:",line)
             
             size = self._extract_size_from_string(line)
 
@@ -832,11 +813,14 @@ class SFile:
                                    "followed by a blank line")
 
             # now sitting where the data should start
-            self.data_start = fobj.tell()
+            self._data_start = fobj.tell()
+        '''
 
-
-        hdrstring = ' '.join(lines)
-        hdr = eval(hdrstring)
+        hdrdict_string_lines = lines[1:len(lines)-3]
+        #print("hdr dict lines:")
+        #print('\n'.join(hdrdict_string_lines))
+        hdrdict_string= ' '.join(hdrdict_string_lines)
+        hdr = eval(hdrdict_string)
 
         hdr['_SIZE'] = size
 
@@ -849,33 +833,78 @@ class SFile:
 
         return hdr
 
-    def get_nrows(self):
-        """
-        get the number of rows in the file
-        """
+    def _h2string(self, strip=True):
         if self._hdr is None:
-            raise RuntimeError("no file has been opened for reading")
+            return ''
+        newd = {}
 
-        return self._hdr['_SIZE']
+        skipkeys=['_VERSION','_DTYPE','_SIZE','_NROWS',
+                  '_HAS_FIELDS','_DELIM','_SHAPE']
+        for key in self._hdr:
+            if strip:
+                if key not in skipkeys:
+                    newd[key] = self._hdr[key]
+            else:
+                news[key] = self._hdr[key]
 
-    def get_header(self):
-        """
-        return a copy of the header
-        """
-        return self.hdr
-
-    header=get_header
+        if len(newd) == 0:
+            return ''
+        return pprint.pformat(newd)
 
 
+    def __repr__(self):
+
+        top = ["filename: '%s'" % self._filename]
+
+        s = ["mode: '%s'" % self._mode]
+        if self._delim is not None:
+            s += ["delim: '%s'" % self._delim]
+
+        s += ["size: %s" % self._size]
+
+        if self._descr is not None:
+            drepr=pprint.pformat(self._descr).split('\n')
+            drepr = ['  '+d for d in drepr]
+            #drepr = '  '+drepr.replace('\n','\n  ')
+            s += ["dtype:"]
+            s += drepr
+
+        if self._hdr is not None:
+            hs = self._h2string()
+            if hs != '':
+                hs = '  '+hs.replace('\n','\n  ')
+                if hs != '':
+                    s += ["hdr: \n"+hs]
+
+        slist=[]
+        for tmp in s:
+            slist.append('    '+tmp )
+
+        slist = top + slist
+        rep = "\n".join(slist)
+        return rep
 
 
-def write(array, outfile, **keys):
+
+    def __del__(self):
+        self.close()
+    def __enter__(self):
+        return self
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
+
+
+
+
+
+
+def write(outfile, data, **keys):
     """
     Name:
         sfile.write()
 
     Calling Sequence:
-        sfile.write(array, outfile, header=None, delim=None, 
+        sfile.write(data, outfile, header=None, delim=None, 
                     padnull=False, ignorenull=False, append=False)
 
     Write a numpy array into a simple self-describing file format with an ascii
@@ -885,8 +914,10 @@ def write(array, outfile, **keys):
 
 
     Inputs:
-        array: A numpy array.
-        outfile: A string or file pointer for the output file.
+        outfile: string
+            The filename to write
+        data: array
+            Numerical python array, a structured array with fields
 
     Optional Inputs:
         header=: A dictionary containing keyword-value pairs to be added to
@@ -950,6 +981,8 @@ def write(array, outfile, **keys):
 
     """
 
+    if isinstance(outfile,numpy.ndarray):
+        outfile,data = data,outfile
 
     header = keys.get('header',None)
     delim  = keys.get('delim',None)
@@ -957,8 +990,6 @@ def write(array, outfile, **keys):
     ignorenull = keys.get('ignorenull',False)
     append = keys.get('append',False)
 
-    #def write(array, outfile, header=None, delim=None, 
-    #      padnull=False, ignorenull=False, append=False):
 
     if append:
         # if file doesn't yet exist, this will be changed to 'w+' internally.
@@ -968,203 +999,75 @@ def write(array, outfile, **keys):
 
     with SFile(outfile, mode=mode, delim=delim, 
                padnull=padnull, ignorenull=ignorenull) as sf:
-        sf.write(array, header=header)
-    return
+        sf.write(data, header=header)
 
-def read(infile, **keys):
+
+def read(filename, **keys):
     """
     sfile.read()
 
     Read a numpy array from a simple self-describing file format with an ascii
     header.  See the write() function for information about this file format.
-    For ascii files the recfile package is used for reading and writing.
 
-    Calling Sequence:
-        arr = sfile.read(infile, rows=None, columns=None, 
-                         header=False)
+    parameters
+    -----------
+    filename: string
+        Filename from which to read
 
-    Inputs:
-        infile: A string or file pointer for the input file.
-    Optional Inputs:
-        rows=: A scalar, array, list or tuple of row numbers to read.  
-            Default is all.
-        columns=: A scalar, list or tuple of strings naming columns to read 
-            from the file.  Default is all.
-        fields=:  Same as sending columns=.
-        header=False:  If True, return both the array and the header dict in
-            a tuple.
+    rows: sequence or scalar, optional
+        A scalar, array, list or tuple of row numbers to read.  
+        Default is None, meaning read all rows.
 
-    Examples:
-        import sfile
-        arr=sfile.read('test.rec')
+    columns: sequence or scalar
+        A scalar, list or tuple of strings naming columns to read 
+        from the file.  Default is None or read all columns.
+    fields:  Same as sending columns=.
 
-        arr2, hdr = sfile.read('test.rec', 
-                               rows=[3,4], fields=['ra', 'dec'], header=True)
+    header: bool
+        If True, return both the array and the header dict in
+        a tuple.
 
-    File Format:
-        The file format is an ascii header followed by data in binary or rows
-        of ascii.  The data columns must be fixed length in order to map onto
-        numpy arrays.  See the documentation for read_header() for details
-        about the header format.
+    split: bool, optional
+        If True, return a list of arrays for each column rather
+        than a structured array.
+    reduce: bool, optional
+        If True, and there is only one field requested, reduce
+        it to a plain array. This is equivalent to sending
+        columns=(scalar column name)
 
+    returns
+    -------
 
-    Modification History:
-        Created: 2007-05-25, Erin Sheldon, NYU
-        Allow continuation characters "\\" to continue header keywords
-        onto the next line.  2009-05-05
+    A structured array with fields.
 
-        Switched over to new header format.  2009-10-38, Erin Sheldon, BNL.
+    If the columns= is a scalar column name (rather than list of names or
+    None), then the data is a plain array holding the column data
     """
 
-    rows = keys.get('rows',None)
-    fields = keys.get('fields',None)
-    columns = keys.get('columns',None)
-    header = keys.get('header',False)
-
-    with SFile(infile) as sf:
-        data = sf.read(rows=rows, fields=fields, columns=columns, 
-                       header=header)
+    with SFile(filename) as sf:
+        data = sf.read(**keys)
 
     return data
 
     
 
-def read_header(infile, **keys):
+def read_header(filename):
     """
-    Name:
-        read_header()
+    read the header from the indicated sfile
 
-    Calling Sequence:
-        hdr = sfile.read_header(infile)
+    parameters
+    -----------
+    filename: string
+        Filename from which to read
 
-    Inputs:
-        infile: A string or file pointer for the input file.
-
-    Read the header from a simple self-describing file format with an
-    ascii header.  See the write() function for information about reading
-    this file format, and read() for reading.
-
-
-    The file format:
-      First line:
-          SIZE = --------------number
-
-    where if possible the number should be formatted as %20d.  This is
-    large enough to hold a 64-bit number.  This exact formatting is
-    required so SIZE can be updated *in place* when appending rows to a
-    file holding structured arrays.  Note the file can always be read as
-    long as the first line reads SIZE = some_number but appending requires
-    the exact format.
-
-
-    Last two lines of the header region must be:
-            END
-            blank line
-    case does not matter.
-
-      
-    In between the SIZE and END lines is the header data.  This is a
-    string that must eval() to a dictionary.  It must contain the
-    following entry:
-
-          _DTYPE = array data type description in list of tuples or
-            string form (case does not matter).
-              
-            for a structured array.
-                [('field1', 'f8'), ('f2','2i4')]
-            for a simple array:
-                '<f4'
-
-    As noted above, only files holding structured arrays (recarray, array
-    with fields) can be appended.  If the data is a simple array or matrix
-    no appending is supported.
-
-    There should also be a _VERSION tag.
-
-        '_VERSION': '1.0'
-
-    Case does not matter. If '_VERSION' is not present, it is assumed that the
-    version is 1.0, but you should always set this.  If you use this module to
-    write data, it will always be set.
-
-
-    If the file holds a simple array, and the dtype field is a simple
-    string, then the following keyword, if present, will be used to
-    reshape the array:
-
-          '_SHAPE'
-
-    If the total elements in the _shape field matches the size then it
-    will be used to reshape the array before returning or when using
-    memory maps.
-
-    If the data are ascii then delimiter must be given in the keyword
-
-          _DELIM  
-          
-    This can be for example ',', ' ', or a tab character.  Again, case does
-    not matter.  
-
-    The rest of the keywords can by any variable can be used as long as it
-    can be eval()d.
-
-    An example header:
-        SIZE =                   10
-        {'_VERSION': '1.0',
-         '_DELIM': ',',
-         '_DTYPE': [('x', 'f4'),
-                    ('y', 'f4'),
-                    ('ra', 'f8'),
-                    ('dec', 'f8'),
-                    ('exposurename', 'S20'),
-                    ('ccd', 'i1'),
-                    ('size_flags', 'i4'),
-                    ('magi', 'f4'),
-                    ('sigma0', 'f4'),
-                    ('star_flag', 'i4'),
-                    ('shear_flags', 'i4'),
-                    ('shapelet_sigma', 'f4'),
-                    ('shear1', 'f4'),
-                    ('shear2', 'f4'),
-                    ('shear_cov00', 'f4'),
-                    ('shear_cov01', 'f4'),
-                    ('shear_cov11', 'f4')],
-         'listvar': [1, 2, 3],
-         'subd': {'subd1': 'subfield', 'sublist': [8.5, 6.6]},
-         'svar': 'hello',
-         'test1': 35}
-        END
-
-        -- data begins --
-
-    Modification History:
-        Created: 2007-05-25, Erin Sheldon, NYU
-        Allow continuation characters "\\" to continue header keywords
-            onto the next line.  2009-05-05
-
-        Switched header to be simply a dictionary representation.
-            SIZE = %20d
-            { a dictionary representation }
-            END
-            blank line
-        This is much more powerful and simple.  Anything that can be eval()d
-        can be in the header, including numpy arrays.  
-                    2009-10-28. Erin Sheldon, BNL
-
-        Allow simple arrays (without fields) to be written.  Switch to
-        using SIZE = %20d on the first row instead of NROWS, this makes
-        more sense for both structured and simple arrays.  Note the
-        old style can still be read, just not appended.
-            2009-11-16, ESS
-        
-        2010-02-18  Added '_VERSION' to the header, allowing future changes
-            while still supporting backwards compatibility.  Erin Sheldon, BNL
-
+    returns
+    -------
+    The header as a dictionary
     """
 
-    sf = SFile(infile)
-    hdr = sf.hdr
-    sf.close()
+    with SFile(filename) as sf:
+        hdr = sf.get_header()
+
     return hdr
 
 
@@ -1243,10 +1146,13 @@ def _match_key(d, key, require=False):
     """
     if not isinstance(d,dict):
         raise RuntimeError('Input object must be a dict, got %s' % d)
+
     keys = list( d.keys() )
+
     keyslow = [k.lower() for k in keys]
     keylow = key.lower()
-    if keyslow.count(keylow) != 0:
+
+    if keylow in keyslow:
         ind = keyslow.index(keylow)
         return d[keys[ind]]
     else:
