@@ -1,18 +1,17 @@
 %module htmc
-//%include std_string.i
 %{
 #include "htmc.h"
 %}
-//%feature("kwargs");
+%feature("kwargs");
 
-// must you declare with throw (const char *)?
 %typemap(throws) const char * %{
     PyErr_SetString(PyExc_RuntimeError, $1);
     SWIG_fail;
 %}
 
+%include "htmc.h"
 
-//%include "htmc.h"
+/*
 
 class HTMC {
     public:
@@ -22,46 +21,10 @@ class HTMC {
         ~HTMC() {};
 
         // take in ra/dec and output the htm index for each
-#ifdef SWIG
-%feature("docstring",
-"
-Class:
-    HTM
-
-Method Name:
-    lookup_id
-
-Purpose:
-
-    Return the index of the input ra/dec at the current htm depth.   ra/dec may
-    be arrays.
-
-Calling Sequence:
-
-    import esutil
-    h=esutil.htm.HTM(depth)
-    htmid = h.lookup_id(ra, dec)
-
-Inputs:
-    ra,dec:  Scalars or arrays of equal length.
-
-Outputs:
-    htmid:  An array with the htm id.
-
-Example:
-
-    >>> import esutil
-    >>> h=esutil.htm.HTM(depth)
-    >>> htmid = h.lookup_id(ra, dec)
-
-Revision History:
-    2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
-");
-#endif
-
-        PyObject* lookup_id(
+        void lookup_id(
                 PyObject* ra_array, 
-                PyObject* dec_array) throw (const char *);
+                PyObject* dec_array,
+                PyObject* htm_ids_array) throw (const char *);
 
         PyObject* intersect(
                             double ra, // all in degrees
@@ -104,7 +67,7 @@ Revision History:
 
 
 
-        int depth() {
+        int get_depth() {
             return mDepth;
         }
 
@@ -136,4 +99,4 @@ class Matcher {
 
 };
 
-
+*/

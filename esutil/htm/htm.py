@@ -20,9 +20,10 @@ class HTM(htmc.HTMC):
         """
         get the depth of the HTM tree
         """
-        return super(HTM,self).depth()
+        return super(HTM,self).get_depth()
+    depth=get_depth
 
-    def area(self):
+    def get_area(self):
         """
 
         Get the mean area of triangles at the current depth. The units are
@@ -40,6 +41,35 @@ class HTM(htmc.HTMC):
         areadiv = 4.0**self.get_depth()
         area = area0/areadiv*(180.0/pi)**2
         return area
+    area=get_area
+
+    def lookup_id(self, ra, dec):
+        """
+        look up the htm index for the input ra,dec
+
+        parameters
+        ----------
+        ra: array or scalar
+            an array or scalar right ascension in degrees
+        dec: array or scalar
+            an array or scalar declination in degrees
+
+        returns
+        -------
+        htmid:
+            The htm index
+        """
+
+        ra  = numpy.array(ra,  dtype='f8', ndmin=1, copy=False)
+        dec = numpy.array(dec, dtype='f8', ndmin=1, copy=False)
+
+        if ra.size != dec.size:
+            raise ValueError("ra and dec must be the same size")
+
+        htm_ids = numpy.zeros(ra.size, dtype='i8')
+        super(HTM,self).lookup_id(ra, dec, htm_ids)
+
+        return htm_ids
 
     def intersect(self, ra, dec, radius, inclusive=True):
         """

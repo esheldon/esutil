@@ -7,6 +7,18 @@
 #include "NumpyVector.h"
 #include <algorithm> // for transform
 
+
+/*
+#if PY_MAJOR_VERSION >= 3
+static int *init_numpy(void) {
+#else
+static void init_numpy(void) {
+#endif
+	import_array();
+}
+*/
+
+
 // A couple of utility functions
 // raturn great circle distance in degrees
 double gcirc(
@@ -57,30 +69,28 @@ HTMC::HTMC(int depth) throw (const char *) {
 void HTMC::init(int depth) throw (const char *) {
     mDepth = depth;
     mHtmInterface.init(depth);
+
+    init_numpy();
 }
 
-PyObject* HTMC::lookup_id(
+void HTMC::lookup_id(
 		PyObject* ra_array, 
-		PyObject* dec_array) throw (const char* ) {
+		PyObject* dec_array,
+        PyObject* htm_ids_array
+) throw (const char* ) {
 
+    npy_intp num = PyArray_SIZE(ra_array);
 
-	// wrap the input ra,dec objects, making sure they are doubles
-	// no copy is made if the are already double arrays
-	NumpyVector<double> ra(ra_array);
-	NumpyVector<double> dec(dec_array);
+	for (npy_intp i=0; i<num; i++) {
+        double    *raptr    = (double *)    PyArray_GETPTR1(ra_array, i);
+        double    *decptr   = (double *)    PyArray_GETPTR1(dec_array, i);
+        npy_int64 *idptr    = (npy_int64 *) PyArray_GETPTR1(htm_ids_array, i);
 
-	if (ra.size() != dec.size()) {
-		throw "ra/dec must be the same size";
+		npy_int64 id = (npy_int64) mHtmInterface.lookupID(*raptr, *decptr);
+
+        *idptr = id;
 	}
 
-	NumpyVector<npy_int64> htmid(ra.size());
-
-	for (npy_intp i=0; i<ra.size(); i++) {
-		htmid[i] = mHtmInterface.lookupID(ra[i], dec[i]);
-	}
-
-	PyObject* htmidPyObj = htmid.getref();
-	return htmidPyObj;
 }
 
 PyObject* HTMC::intersect(
@@ -113,27 +123,40 @@ PyObject* HTMC::intersect(
         nfound = flist.length();
     }
 
-	NumpyVector<int64_t> idlist(nfound);
+	//NumpyVector<int64_t> idlist(nfound);
+    PyObject* idlist=PyArray_ZEROS(
+        1,
+        &nfound,
+        NPY_INT64,
+        0);
 
-	npy_intp idcount=0;
+	npy_intp *idptr=NULL, id_index=0;
 
     // ----------- FULL NODES -------------
     for(size_t i = 0; i < flist.length(); i++)
     {  
-        idlist[idcount] = flist(i);
-        idcount++;
+        idptr = (npy_intp* ) PyArray_GETPTR1(idlist, id_index);
+        *idptr = flist(i);
+
+        id_index++;
     }
     if (inclusive) {
         // ----------- Partial Nodes ----------
         for(size_t i = 0; i < plist.length(); i++)
         {  
-            idlist[idcount] = plist(i);
-            idcount++;
+            idptr = (npy_intp* ) PyArray_GETPTR1(idlist, id_index);
+            *idptr = plist(i);
+
+            id_index++;
         }
     }
 
+    return idlist;
+
+    /*
 	PyObject* idlist_pyobj = idlist.getref();
 	return idlist_pyobj;
+    */
 }
 
 
@@ -579,6 +602,7 @@ Matcher::Matcher(int depth,
 	this->dec.init(dec_input);
     
     init_hmap();
+    init_numpy();
 }
 void Matcher::init_hmap(void)
 {

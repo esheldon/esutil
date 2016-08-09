@@ -90,6 +90,57 @@ except AttributeError:
     _newclass = 0
 
 
+class PAIR_INFO(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PAIR_INFO, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, PAIR_INFO, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["i1"] = _htmc.PAIR_INFO_i1_set
+    __swig_getmethods__["i1"] = _htmc.PAIR_INFO_i1_get
+    if _newclass:
+        i1 = _swig_property(_htmc.PAIR_INFO_i1_get, _htmc.PAIR_INFO_i1_set)
+    __swig_setmethods__["i2"] = _htmc.PAIR_INFO_i2_set
+    __swig_getmethods__["i2"] = _htmc.PAIR_INFO_i2_get
+    if _newclass:
+        i2 = _swig_property(_htmc.PAIR_INFO_i2_get, _htmc.PAIR_INFO_i2_set)
+    __swig_setmethods__["d12"] = _htmc.PAIR_INFO_d12_set
+    __swig_getmethods__["d12"] = _htmc.PAIR_INFO_d12_get
+    if _newclass:
+        d12 = _swig_property(_htmc.PAIR_INFO_d12_get, _htmc.PAIR_INFO_d12_set)
+
+    def __init__(self):
+        this = _htmc.new_PAIR_INFO()
+        try:
+            self.this.append(this)
+        except Exception:
+            self.this = this
+    __swig_destroy__ = _htmc.delete_PAIR_INFO
+    __del__ = lambda self: None
+PAIR_INFO_swigregister = _htmc.PAIR_INFO_swigregister
+PAIR_INFO_swigregister(PAIR_INFO)
+
+class PAIR_INFO_ORDERING(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PAIR_INFO_ORDERING, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, PAIR_INFO_ORDERING, name)
+    __repr__ = _swig_repr
+
+    def __call__(self, pi1, pi2):
+        return _htmc.PAIR_INFO_ORDERING___call__(self, pi1, pi2)
+
+    def __init__(self):
+        this = _htmc.new_PAIR_INFO_ORDERING()
+        try:
+            self.this.append(this)
+        except Exception:
+            self.this = this
+    __swig_destroy__ = _htmc.delete_PAIR_INFO_ORDERING
+    __del__ = lambda self: None
+PAIR_INFO_ORDERING_swigregister = _htmc.PAIR_INFO_ORDERING_swigregister
+PAIR_INFO_ORDERING_swigregister(PAIR_INFO_ORDERING)
+
 class HTMC(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, HTMC, name, value)
@@ -109,200 +160,20 @@ class HTMC(_object):
     __swig_destroy__ = _htmc.delete_HTMC
     __del__ = lambda self: None
 
-    def lookup_id(self, ra_array, dec_array):
-        """
-
-        Class:
-            HTM
-
-        Method Name:
-            lookup_id
-
-        Purpose:
-
-            Return the index of the input ra/dec at the current htm depth.   ra/dec may
-            be arrays.
-
-        Calling Sequence:
-
-            import esutil
-            h=esutil.htm.HTM(depth)
-            htmid = h.lookup_id(ra, dec)
-
-        Inputs:
-            ra,dec:  Scalars or arrays of equal length.
-
-        Outputs:
-            htmid:  An array with the htm id.
-
-        Example:
-
-            >>> import esutil
-            >>> h=esutil.htm.HTM(depth)
-            >>> htmid = h.lookup_id(ra, dec)
-
-        Revision History:
-            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
-
-        """
-        return _htmc.HTMC_lookup_id(self, ra_array, dec_array)
-
+    def lookup_id(self, ra_array, dec_array, htm_ids_array):
+        return _htmc.HTMC_lookup_id(self, ra_array, dec_array, htm_ids_array)
 
     def intersect(self, ra, dec, radius, inclusive):
-        """
-
-        Class:
-            HTM
-
-        Method Name:
-            lookup_id
-
-        Purpose:
-
-            Return the index of the input ra/dec at the current htm depth.   ra/dec may
-            be arrays.
-
-        Calling Sequence:
-
-            import esutil
-            h=esutil.htm.HTM(depth)
-            htmid = h.lookup_id(ra, dec)
-
-        Inputs:
-            ra,dec:  Scalars or arrays of equal length.
-
-        Outputs:
-            htmid:  An array with the htm id.
-
-        Example:
-
-            >>> import esutil
-            >>> h=esutil.htm.HTM(depth)
-            >>> htmid = h.lookup_id(ra, dec)
-
-        Revision History:
-            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
-
-        """
         return _htmc.HTMC_intersect(self, ra, dec, radius, inclusive)
 
-
     def cmatch(self, radius_array, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, maxmatch_obj, filename):
-        """
-
-        Class:
-            HTM
-
-        Method Name:
-            lookup_id
-
-        Purpose:
-
-            Return the index of the input ra/dec at the current htm depth.   ra/dec may
-            be arrays.
-
-        Calling Sequence:
-
-            import esutil
-            h=esutil.htm.HTM(depth)
-            htmid = h.lookup_id(ra, dec)
-
-        Inputs:
-            ra,dec:  Scalars or arrays of equal length.
-
-        Outputs:
-            htmid:  An array with the htm id.
-
-        Example:
-
-            >>> import esutil
-            >>> h=esutil.htm.HTM(depth)
-            >>> htmid = h.lookup_id(ra, dec)
-
-        Revision History:
-            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
-
-        """
         return _htmc.HTMC_cmatch(self, radius_array, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, maxmatch_obj, filename)
 
-
     def cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object=None, verbose=0):
-        """
-
-        Class:
-            HTM
-
-        Method Name:
-            lookup_id
-
-        Purpose:
-
-            Return the index of the input ra/dec at the current htm depth.   ra/dec may
-            be arrays.
-
-        Calling Sequence:
-
-            import esutil
-            h=esutil.htm.HTM(depth)
-            htmid = h.lookup_id(ra, dec)
-
-        Inputs:
-            ra,dec:  Scalars or arrays of equal length.
-
-        Outputs:
-            htmid:  An array with the htm id.
-
-        Example:
-
-            >>> import esutil
-            >>> h=esutil.htm.HTM(depth)
-            >>> htmid = h.lookup_id(ra, dec)
-
-        Revision History:
-            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
-
-        """
         return _htmc.HTMC_cbincount(self, rmin_object, rmax_object, nbin_object, ra1_array, dec1_array, ra2_array, dec2_array, htmrev2_array, minid_obj, maxid_obj, scale_object, verbose)
 
-
-    def depth(self):
-        """
-
-        Class:
-            HTM
-
-        Method Name:
-            lookup_id
-
-        Purpose:
-
-            Return the index of the input ra/dec at the current htm depth.   ra/dec may
-            be arrays.
-
-        Calling Sequence:
-
-            import esutil
-            h=esutil.htm.HTM(depth)
-            htmid = h.lookup_id(ra, dec)
-
-        Inputs:
-            ra,dec:  Scalars or arrays of equal length.
-
-        Outputs:
-            htmid:  An array with the htm id.
-
-        Example:
-
-            >>> import esutil
-            >>> h=esutil.htm.HTM(depth)
-            >>> htmid = h.lookup_id(ra, dec)
-
-        Revision History:
-            2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.
-
-        """
-        return _htmc.HTMC_depth(self)
-
+    def get_depth(self):
+        return _htmc.HTMC_get_depth(self)
 HTMC_swigregister = _htmc.HTMC_swigregister
 HTMC_swigregister(HTMC)
 

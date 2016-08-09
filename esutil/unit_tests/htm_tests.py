@@ -29,7 +29,7 @@ class TestHTM(unittest.TestCase):
 
         self.assertTrue(ok,"creating HTM object with default %d" % self.depth)
 
-        outd = h.depth()
+        outd = h.get_depth()
         self.assertEqual(outd, self.depth, "checking depth can be gotten")
 
     def testLookup(self):
@@ -55,6 +55,22 @@ class TestHTM(unittest.TestCase):
 
         self.assertTrue(numpy.all(htmid==expected), "looking htm id of array ra,dec")
 
+    def testIntersect(self):
+        try:
+            h=htm.HTM(self.depth)
+            ok=True
+        except:
+            ok=False
+
+        self.assertTrue(ok,"creating HTM object")
+        if not ok:
+            skipTest("cannot test result if HTM object creation fails")
+
+        expected=numpy.array([10518792, 10518793, 10518795, 10518820, 10518823, 10518836,
+                              10518839, 14172676, 14172678, 14172679, 14172696, 14172699,
+                              14172728, 14172731])
+        idlist=h.intersect(200.0, 0.0, 0.1)
+        self.assertTrue(numpy.all(idlist==expected), "intersect")
 
     def testMatch(self):
  

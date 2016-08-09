@@ -34,9 +34,11 @@ class HTMC {
 
 
         // take in ra/dec and output the htm index for each
-		PyObject* lookup_id(
+		void lookup_id(
                 PyObject* ra_array, 
-                PyObject* dec_array) throw (const char *);
+                PyObject* dec_array,
+                PyObject* htm_ids_array
+        ) throw (const char *);
 
         PyObject* intersect(
                             double ra, // all in degrees
@@ -80,7 +82,7 @@ class HTMC {
 
 
 
-        int depth() {
+        int get_depth() {
             return mDepth;
         }
 

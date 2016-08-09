@@ -18,7 +18,7 @@ def test():
     # make sure the depth matches up
     stdout.write('Checking depth....')
 
-    outd = h.depth()
+    outd = h.get_depth()
 
     if outd != depth:
         stdout.write('Error\n')

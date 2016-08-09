@@ -3008,9 +3008,12 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 #define SWIGTYPE_p_HTMC swig_types[0]
 #define SWIGTYPE_p_Matcher swig_types[1]
-#define SWIGTYPE_p_char swig_types[2]
-static swig_type_info *swig_types[4];
-static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
+#define SWIGTYPE_p_PAIR_INFO swig_types[2]
+#define SWIGTYPE_p_PAIR_INFO_ORDERING swig_types[3]
+#define SWIGTYPE_p_char swig_types[4]
+#define SWIGTYPE_p_int64_t swig_types[5]
+static swig_type_info *swig_types[7];
+static swig_module_info swig_module = {swig_types, 6, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3118,16 +3121,6 @@ namespace swig {
 #include "htmc.h"
 
 
-#include <limits.h>
-#if !defined(SWIG_NO_LLONG_MAX)
-# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
-#   define LLONG_MAX __LONG_LONG_MAX__
-#   define LLONG_MIN (-LLONG_MAX - 1LL)
-#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
-# endif
-#endif
-
-
 SWIGINTERN int
 SWIG_AsVal_double (PyObject *obj, double *val)
 {
@@ -3172,6 +3165,26 @@ SWIG_AsVal_double (PyObject *obj, double *val)
 #endif
   return res;
 }
+
+
+  #define SWIG_From_double   PyFloat_FromDouble 
+
+
+SWIGINTERNINLINE PyObject*
+  SWIG_From_bool  (bool value)
+{
+  return PyBool_FromLong(value ? 1 : 0);
+}
+
+
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
 
 
 #include <float.h>
@@ -3393,20 +3406,328 @@ SWIGINTERNINLINE PyObject*
 #ifdef __cplusplus
 extern "C" {
 #endif
-SWIGINTERN PyObject *_wrap_new_HTMC__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_PAIR_INFO_i1_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  int arg1 ;
+  PAIR_INFO *arg1 = (PAIR_INFO *) 0 ;
+  int64_t arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:PAIR_INFO_i1_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "PAIR_INFO_i1_set" "', argument " "1"" of type '" "PAIR_INFO *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_int64_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "PAIR_INFO_i1_set" "', argument " "2"" of type '" "int64_t""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "PAIR_INFO_i1_set" "', argument " "2"" of type '" "int64_t""'");
+    } else {
+      int64_t * temp = reinterpret_cast< int64_t * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->i1 = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_PAIR_INFO_i1_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO *arg1 = (PAIR_INFO *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int64_t result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:PAIR_INFO_i1_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "PAIR_INFO_i1_get" "', argument " "1"" of type '" "PAIR_INFO *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO * >(argp1);
+  result =  ((arg1)->i1);
+  resultobj = SWIG_NewPointerObj((new int64_t(static_cast< const int64_t& >(result))), SWIGTYPE_p_int64_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_PAIR_INFO_i2_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO *arg1 = (PAIR_INFO *) 0 ;
+  int64_t arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:PAIR_INFO_i2_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "PAIR_INFO_i2_set" "', argument " "1"" of type '" "PAIR_INFO *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_int64_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "PAIR_INFO_i2_set" "', argument " "2"" of type '" "int64_t""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "PAIR_INFO_i2_set" "', argument " "2"" of type '" "int64_t""'");
+    } else {
+      int64_t * temp = reinterpret_cast< int64_t * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->i2 = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_PAIR_INFO_i2_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO *arg1 = (PAIR_INFO *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int64_t result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:PAIR_INFO_i2_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "PAIR_INFO_i2_get" "', argument " "1"" of type '" "PAIR_INFO *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO * >(argp1);
+  result =  ((arg1)->i2);
+  resultobj = SWIG_NewPointerObj((new int64_t(static_cast< const int64_t& >(result))), SWIGTYPE_p_int64_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_PAIR_INFO_d12_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO *arg1 = (PAIR_INFO *) 0 ;
+  double arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:PAIR_INFO_d12_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "PAIR_INFO_d12_set" "', argument " "1"" of type '" "PAIR_INFO *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO * >(argp1);
+  ecode2 = SWIG_AsVal_double(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "PAIR_INFO_d12_set" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
+  if (arg1) (arg1)->d12 = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_PAIR_INFO_d12_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO *arg1 = (PAIR_INFO *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  double result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:PAIR_INFO_d12_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "PAIR_INFO_d12_get" "', argument " "1"" of type '" "PAIR_INFO *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO * >(argp1);
+  result = (double) ((arg1)->d12);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_PAIR_INFO(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_PAIR_INFO")) SWIG_fail;
+  result = (PAIR_INFO *)new PAIR_INFO();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_PAIR_INFO, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_PAIR_INFO(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO *arg1 = (PAIR_INFO *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_PAIR_INFO",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_PAIR_INFO" "', argument " "1"" of type '" "PAIR_INFO *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO * >(argp1);
+  delete arg1;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *PAIR_INFO_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O:swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_PAIR_INFO, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_PAIR_INFO_ORDERING___call__(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  PAIR_INFO_ORDERING *arg1 = (PAIR_INFO_ORDERING *) 0 ;
+  PAIR_INFO *arg2 = 0 ;
+  PAIR_INFO *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "pi1",(char *) "pi2", NULL 
+  };
+  bool result;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:PAIR_INFO_ORDERING___call__",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO_ORDERING, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "PAIR_INFO_ORDERING___call__" "', argument " "1"" of type '" "PAIR_INFO_ORDERING *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO_ORDERING * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_PAIR_INFO,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "PAIR_INFO_ORDERING___call__" "', argument " "2"" of type '" "PAIR_INFO const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "PAIR_INFO_ORDERING___call__" "', argument " "2"" of type '" "PAIR_INFO const &""'"); 
+  }
+  arg2 = reinterpret_cast< PAIR_INFO * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_PAIR_INFO,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "PAIR_INFO_ORDERING___call__" "', argument " "3"" of type '" "PAIR_INFO const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "PAIR_INFO_ORDERING___call__" "', argument " "3"" of type '" "PAIR_INFO const &""'"); 
+  }
+  arg3 = reinterpret_cast< PAIR_INFO * >(argp3);
+  result = (bool)(arg1)->operator ()((PAIR_INFO const &)*arg2,(PAIR_INFO const &)*arg3);
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_PAIR_INFO_ORDERING(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO_ORDERING *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_PAIR_INFO_ORDERING")) SWIG_fail;
+  result = (PAIR_INFO_ORDERING *)new PAIR_INFO_ORDERING();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_PAIR_INFO_ORDERING, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_PAIR_INFO_ORDERING(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  PAIR_INFO_ORDERING *arg1 = (PAIR_INFO_ORDERING *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_PAIR_INFO_ORDERING",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_PAIR_INFO_ORDERING, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_PAIR_INFO_ORDERING" "', argument " "1"" of type '" "PAIR_INFO_ORDERING *""'"); 
+  }
+  arg1 = reinterpret_cast< PAIR_INFO_ORDERING * >(argp1);
+  delete arg1;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *PAIR_INFO_ORDERING_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O:swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_PAIR_INFO_ORDERING, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_new_HTMC(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  int arg1 = (int) 10 ;
   int val1 ;
   int ecode1 = 0 ;
   PyObject * obj0 = 0 ;
+  char *  kwnames[] = {
+    (char *) "depth", NULL 
+  };
   HTMC *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:new_HTMC",&obj0)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_HTMC" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"|O:new_HTMC",kwnames,&obj0)) SWIG_fail;
+  if (obj0) {
+    ecode1 = SWIG_AsVal_int(obj0, &val1);
+    if (!SWIG_IsOK(ecode1)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_HTMC" "', argument " "1"" of type '" "int""'");
+    } 
+    arg1 = static_cast< int >(val1);
+  }
   try {
     result = (HTMC *)new HTMC(arg1);
   }
@@ -3423,84 +3744,33 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_HTMC__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  HTMC *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_HTMC")) SWIG_fail;
-  try {
-    result = (HTMC *)new HTMC();
-  }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_HTMC, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_HTMC(PyObject *self, PyObject *args) {
-  Py_ssize_t argc;
-  PyObject *argv[2] = {
-    0
-  };
-  Py_ssize_t ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 1) && (ii < argc); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 0) {
-    return _wrap_new_HTMC__SWIG_1(self, args);
-  }
-  if (argc == 1) {
-    int _v;
-    {
-      int res = SWIG_AsVal_int(argv[0], NULL);
-      _v = SWIG_CheckState(res);
-    }
-    if (_v) {
-      return _wrap_new_HTMC__SWIG_0(self, args);
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_HTMC'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    HTMC::HTMC(int)\n"
-    "    HTMC::HTMC()\n");
-  return 0;
-}
-
-
-SWIGINTERN PyObject *_wrap_HTMC_init__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_HTMC_init(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
-  int arg2 ;
+  int arg2 = (int) 10 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   int val2 ;
   int ecode2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "depth", NULL 
+  };
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:HTMC_init",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O|O:HTMC_init",kwnames,&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_init" "', argument " "1"" of type '" "HTMC *""'"); 
   }
   arg1 = reinterpret_cast< HTMC * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "HTMC_init" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
+  if (obj1) {
+    ecode2 = SWIG_AsVal_int(obj1, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "HTMC_init" "', argument " "2"" of type '" "int""'");
+    } 
+    arg2 = static_cast< int >(val2);
+  }
   try {
     (arg1)->init(arg2);
   }
@@ -3514,81 +3784,6 @@ SWIGINTERN PyObject *_wrap_HTMC_init__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyO
   return resultobj;
 fail:
   return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_HTMC_init__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  HTMC *arg1 = (HTMC *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:HTMC_init",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_init" "', argument " "1"" of type '" "HTMC *""'"); 
-  }
-  arg1 = reinterpret_cast< HTMC * >(argp1);
-  try {
-    (arg1)->init();
-  }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_HTMC_init(PyObject *self, PyObject *args) {
-  Py_ssize_t argc;
-  PyObject *argv[3] = {
-    0
-  };
-  Py_ssize_t ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 1) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTMC, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      return _wrap_HTMC_init__SWIG_1(self, args);
-    }
-  }
-  if (argc == 2) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTMC, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      {
-        int res = SWIG_AsVal_int(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        return _wrap_HTMC_init__SWIG_0(self, args);
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'HTMC_init'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    HTMC::init(int)\n"
-    "    HTMC::init()\n");
-  return 0;
 }
 
 
@@ -3613,19 +3808,23 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_HTMC_lookup_id(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_HTMC_lookup_id(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
   PyObject *arg2 = (PyObject *) 0 ;
   PyObject *arg3 = (PyObject *) 0 ;
+  PyObject *arg4 = (PyObject *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
-  PyObject *result = 0 ;
+  PyObject * obj3 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "ra_array",(char *) "dec_array",(char *) "htm_ids_array", NULL 
+  };
   
-  if (!PyArg_ParseTuple(args,(char *)"OOO:HTMC_lookup_id",&obj0,&obj1,&obj2)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOO:HTMC_lookup_id",kwnames,&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_lookup_id" "', argument " "1"" of type '" "HTMC *""'"); 
@@ -3633,8 +3832,9 @@ SWIGINTERN PyObject *_wrap_HTMC_lookup_id(PyObject *SWIGUNUSEDPARM(self), PyObje
   arg1 = reinterpret_cast< HTMC * >(argp1);
   arg2 = obj1;
   arg3 = obj2;
+  arg4 = obj3;
   try {
-    result = (PyObject *)(arg1)->lookup_id(arg2,arg3);
+    (arg1)->lookup_id(arg2,arg3,arg4);
   }
   catch(char const *_e) {
     PyErr_SetString(PyExc_RuntimeError, _e);
@@ -3642,14 +3842,14 @@ SWIGINTERN PyObject *_wrap_HTMC_lookup_id(PyObject *SWIGUNUSEDPARM(self), PyObje
     
   }
   
-  resultobj = result;
+  resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_HTMC_intersect(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_HTMC_intersect(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
   double arg2 ;
@@ -3671,9 +3871,12 @@ SWIGINTERN PyObject *_wrap_HTMC_intersect(PyObject *SWIGUNUSEDPARM(self), PyObje
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "ra",(char *) "dec",(char *) "radius",(char *) "inclusive", NULL 
+  };
   PyObject *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:HTMC_intersect",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOOO:HTMC_intersect",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_intersect" "', argument " "1"" of type '" "HTMC *""'"); 
@@ -3715,7 +3918,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_HTMC_cmatch(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_HTMC_cmatch(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
   PyObject *arg2 = (PyObject *) 0 ;
@@ -3744,9 +3947,12 @@ SWIGINTERN PyObject *_wrap_HTMC_cmatch(PyObject *SWIGUNUSEDPARM(self), PyObject 
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "radius_array",(char *) "ra1_array",(char *) "dec1_array",(char *) "ra2_array",(char *) "dec2_array",(char *) "htmrev2_array",(char *) "minid_obj",(char *) "maxid_obj",(char *) "maxmatch_obj",(char *) "filename", NULL 
+  };
   PyObject *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:HTMC_cmatch",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOOOOOOOOO:HTMC_cmatch",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_cmatch" "', argument " "1"" of type '" "HTMC *""'"); 
@@ -3784,7 +3990,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
   PyObject *arg2 = (PyObject *) 0 ;
@@ -3797,8 +4003,8 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_0(PyObject *SWIGUNUSEDPARM(self)
   PyObject *arg9 = (PyObject *) 0 ;
   PyObject *arg10 = (PyObject *) 0 ;
   PyObject *arg11 = (PyObject *) 0 ;
-  PyObject *arg12 = (PyObject *) 0 ;
-  int arg13 ;
+  PyObject *arg12 = (PyObject *) NULL ;
+  int arg13 = (int) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   int val13 ;
@@ -3816,9 +4022,12 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_0(PyObject *SWIGUNUSEDPARM(self)
   PyObject * obj10 = 0 ;
   PyObject * obj11 = 0 ;
   PyObject * obj12 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "rmin_object",(char *) "rmax_object",(char *) "nbin_object",(char *) "ra1_array",(char *) "dec1_array",(char *) "ra2_array",(char *) "dec2_array",(char *) "htmrev2_array",(char *) "minid_obj",(char *) "maxid_obj",(char *) "scale_object",(char *) "verbose", NULL 
+  };
   PyObject *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOO:HTMC_cbincount",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOOOOOOOOO|OO:HTMC_cbincount",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_cbincount" "', argument " "1"" of type '" "HTMC *""'"); 
@@ -3834,12 +4043,16 @@ SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_0(PyObject *SWIGUNUSEDPARM(self)
   arg9 = obj8;
   arg10 = obj9;
   arg11 = obj10;
-  arg12 = obj11;
-  ecode13 = SWIG_AsVal_int(obj12, &val13);
-  if (!SWIG_IsOK(ecode13)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "HTMC_cbincount" "', argument " "13"" of type '" "int""'");
-  } 
-  arg13 = static_cast< int >(val13);
+  if (obj11) {
+    arg12 = obj11;
+  }
+  if (obj12) {
+    ecode13 = SWIG_AsVal_int(obj12, &val13);
+    if (!SWIG_IsOK(ecode13)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "HTMC_cbincount" "', argument " "13"" of type '" "int""'");
+    } 
+    arg13 = static_cast< int >(val13);
+  }
   try {
     result = (PyObject *)(arg1)->cbincount(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13);
   }
@@ -3856,282 +4069,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  HTMC *arg1 = (HTMC *) 0 ;
-  PyObject *arg2 = (PyObject *) 0 ;
-  PyObject *arg3 = (PyObject *) 0 ;
-  PyObject *arg4 = (PyObject *) 0 ;
-  PyObject *arg5 = (PyObject *) 0 ;
-  PyObject *arg6 = (PyObject *) 0 ;
-  PyObject *arg7 = (PyObject *) 0 ;
-  PyObject *arg8 = (PyObject *) 0 ;
-  PyObject *arg9 = (PyObject *) 0 ;
-  PyObject *arg10 = (PyObject *) 0 ;
-  PyObject *arg11 = (PyObject *) 0 ;
-  PyObject *arg12 = (PyObject *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  PyObject * obj8 = 0 ;
-  PyObject * obj9 = 0 ;
-  PyObject * obj10 = 0 ;
-  PyObject * obj11 = 0 ;
-  PyObject *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOO:HTMC_cbincount",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_cbincount" "', argument " "1"" of type '" "HTMC *""'"); 
-  }
-  arg1 = reinterpret_cast< HTMC * >(argp1);
-  arg2 = obj1;
-  arg3 = obj2;
-  arg4 = obj3;
-  arg5 = obj4;
-  arg6 = obj5;
-  arg7 = obj6;
-  arg8 = obj7;
-  arg9 = obj8;
-  arg10 = obj9;
-  arg11 = obj10;
-  arg12 = obj11;
-  try {
-    result = (PyObject *)(arg1)->cbincount(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12);
-  }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
-  resultobj = result;
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_HTMC_cbincount__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  HTMC *arg1 = (HTMC *) 0 ;
-  PyObject *arg2 = (PyObject *) 0 ;
-  PyObject *arg3 = (PyObject *) 0 ;
-  PyObject *arg4 = (PyObject *) 0 ;
-  PyObject *arg5 = (PyObject *) 0 ;
-  PyObject *arg6 = (PyObject *) 0 ;
-  PyObject *arg7 = (PyObject *) 0 ;
-  PyObject *arg8 = (PyObject *) 0 ;
-  PyObject *arg9 = (PyObject *) 0 ;
-  PyObject *arg10 = (PyObject *) 0 ;
-  PyObject *arg11 = (PyObject *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  PyObject * obj8 = 0 ;
-  PyObject * obj9 = 0 ;
-  PyObject * obj10 = 0 ;
-  PyObject *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:HTMC_cbincount",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_cbincount" "', argument " "1"" of type '" "HTMC *""'"); 
-  }
-  arg1 = reinterpret_cast< HTMC * >(argp1);
-  arg2 = obj1;
-  arg3 = obj2;
-  arg4 = obj3;
-  arg5 = obj4;
-  arg6 = obj5;
-  arg7 = obj6;
-  arg8 = obj7;
-  arg9 = obj8;
-  arg10 = obj9;
-  arg11 = obj10;
-  try {
-    result = (PyObject *)(arg1)->cbincount(arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
-  }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
-  resultobj = result;
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_HTMC_cbincount(PyObject *self, PyObject *args) {
-  Py_ssize_t argc;
-  PyObject *argv[14] = {
-    0
-  };
-  Py_ssize_t ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 13) && (ii < argc); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 11) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTMC, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      _v = (argv[1] != 0);
-      if (_v) {
-        _v = (argv[2] != 0);
-        if (_v) {
-          _v = (argv[3] != 0);
-          if (_v) {
-            _v = (argv[4] != 0);
-            if (_v) {
-              _v = (argv[5] != 0);
-              if (_v) {
-                _v = (argv[6] != 0);
-                if (_v) {
-                  _v = (argv[7] != 0);
-                  if (_v) {
-                    _v = (argv[8] != 0);
-                    if (_v) {
-                      _v = (argv[9] != 0);
-                      if (_v) {
-                        _v = (argv[10] != 0);
-                        if (_v) {
-                          return _wrap_HTMC_cbincount__SWIG_2(self, args);
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 12) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTMC, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      _v = (argv[1] != 0);
-      if (_v) {
-        _v = (argv[2] != 0);
-        if (_v) {
-          _v = (argv[3] != 0);
-          if (_v) {
-            _v = (argv[4] != 0);
-            if (_v) {
-              _v = (argv[5] != 0);
-              if (_v) {
-                _v = (argv[6] != 0);
-                if (_v) {
-                  _v = (argv[7] != 0);
-                  if (_v) {
-                    _v = (argv[8] != 0);
-                    if (_v) {
-                      _v = (argv[9] != 0);
-                      if (_v) {
-                        _v = (argv[10] != 0);
-                        if (_v) {
-                          _v = (argv[11] != 0);
-                          if (_v) {
-                            return _wrap_HTMC_cbincount__SWIG_1(self, args);
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 13) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_HTMC, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      _v = (argv[1] != 0);
-      if (_v) {
-        _v = (argv[2] != 0);
-        if (_v) {
-          _v = (argv[3] != 0);
-          if (_v) {
-            _v = (argv[4] != 0);
-            if (_v) {
-              _v = (argv[5] != 0);
-              if (_v) {
-                _v = (argv[6] != 0);
-                if (_v) {
-                  _v = (argv[7] != 0);
-                  if (_v) {
-                    _v = (argv[8] != 0);
-                    if (_v) {
-                      _v = (argv[9] != 0);
-                      if (_v) {
-                        _v = (argv[10] != 0);
-                        if (_v) {
-                          _v = (argv[11] != 0);
-                          if (_v) {
-                            {
-                              int res = SWIG_AsVal_int(argv[12], NULL);
-                              _v = SWIG_CheckState(res);
-                            }
-                            if (_v) {
-                              return _wrap_HTMC_cbincount__SWIG_0(self, args);
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'HTMC_cbincount'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    HTMC::cbincount(PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,int)\n"
-    "    HTMC::cbincount(PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *)\n"
-    "    HTMC::cbincount(PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *,PyObject *)\n");
-  return 0;
-}
-
-
-SWIGINTERN PyObject *_wrap_HTMC_depth(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_HTMC_get_depth(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
   void *argp1 = 0 ;
@@ -4139,13 +4077,13 @@ SWIGINTERN PyObject *_wrap_HTMC_depth(PyObject *SWIGUNUSEDPARM(self), PyObject *
   PyObject * obj0 = 0 ;
   int result;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:HTMC_depth",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:HTMC_get_depth",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_depth" "', argument " "1"" of type '" "HTMC *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_get_depth" "', argument " "1"" of type '" "HTMC *""'"); 
   }
   arg1 = reinterpret_cast< HTMC * >(argp1);
-  result = (int)(arg1)->depth();
+  result = (int)(arg1)->get_depth();
   resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
@@ -4160,7 +4098,7 @@ SWIGINTERN PyObject *HTMC_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject 
   return SWIG_Py_Void();
 }
 
-SWIGINTERN PyObject *_wrap_new_Matcher(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_Matcher(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   int arg1 ;
   PyObject *arg2 = (PyObject *) 0 ;
@@ -4170,9 +4108,12 @@ SWIGINTERN PyObject *_wrap_new_Matcher(PyObject *SWIGUNUSEDPARM(self), PyObject 
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "depth",(char *) "ra",(char *) "dec", NULL 
+  };
   Matcher *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOO:new_Matcher",&obj0,&obj1,&obj2)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:new_Matcher",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_Matcher" "', argument " "1"" of type '" "int""'");
@@ -4239,7 +4180,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Matcher_match(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Matcher_match(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Matcher *arg1 = (Matcher *) 0 ;
   PyObject *arg2 = (PyObject *) 0 ;
@@ -4258,9 +4199,12 @@ SWIGINTERN PyObject *_wrap_Matcher_match(PyObject *SWIGUNUSEDPARM(self), PyObjec
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
   PyObject * obj5 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "radius_array",(char *) "ra_array",(char *) "dec_array",(char *) "maxmatch_obj",(char *) "filename", NULL 
+  };
   PyObject *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:Matcher_match",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOOOO:Matcher_match",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Matcher, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Matcher_match" "', argument " "1"" of type '" "Matcher *""'"); 
@@ -4302,189 +4246,32 @@ SWIGINTERN PyObject *Matcher_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObje
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
-	 { (char *)"new_HTMC", _wrap_new_HTMC, METH_VARARGS, NULL},
-	 { (char *)"HTMC_init", _wrap_HTMC_init, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_i1_set", _wrap_PAIR_INFO_i1_set, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_i1_get", _wrap_PAIR_INFO_i1_get, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_i2_set", _wrap_PAIR_INFO_i2_set, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_i2_get", _wrap_PAIR_INFO_i2_get, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_d12_set", _wrap_PAIR_INFO_d12_set, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_d12_get", _wrap_PAIR_INFO_d12_get, METH_VARARGS, NULL},
+	 { (char *)"new_PAIR_INFO", _wrap_new_PAIR_INFO, METH_VARARGS, NULL},
+	 { (char *)"delete_PAIR_INFO", _wrap_delete_PAIR_INFO, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_swigregister", PAIR_INFO_swigregister, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_ORDERING___call__", (PyCFunction) _wrap_PAIR_INFO_ORDERING___call__, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"new_PAIR_INFO_ORDERING", _wrap_new_PAIR_INFO_ORDERING, METH_VARARGS, NULL},
+	 { (char *)"delete_PAIR_INFO_ORDERING", _wrap_delete_PAIR_INFO_ORDERING, METH_VARARGS, NULL},
+	 { (char *)"PAIR_INFO_ORDERING_swigregister", PAIR_INFO_ORDERING_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_HTMC", (PyCFunction) _wrap_new_HTMC, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"HTMC_init", (PyCFunction) _wrap_HTMC_init, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"delete_HTMC", _wrap_delete_HTMC, METH_VARARGS, NULL},
-	 { (char *)"HTMC_lookup_id", _wrap_HTMC_lookup_id, METH_VARARGS, (char *)"\n"
-		"\n"
-		"Class:\n"
-		"    HTM\n"
-		"\n"
-		"Method Name:\n"
-		"    lookup_id\n"
-		"\n"
-		"Purpose:\n"
-		"\n"
-		"    Return the index of the input ra/dec at the current htm depth.   ra/dec may\n"
-		"    be arrays.\n"
-		"\n"
-		"Calling Sequence:\n"
-		"\n"
-		"    import esutil\n"
-		"    h=esutil.htm.HTM(depth)\n"
-		"    htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Inputs:\n"
-		"    ra,dec:  Scalars or arrays of equal length.\n"
-		"\n"
-		"Outputs:\n"
-		"    htmid:  An array with the htm id.\n"
-		"\n"
-		"Example:\n"
-		"\n"
-		"    >>> import esutil\n"
-		"    >>> h=esutil.htm.HTM(depth)\n"
-		"    >>> htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Revision History:\n"
-		"    2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.\n"
-		"\n"
-		""},
-	 { (char *)"HTMC_intersect", _wrap_HTMC_intersect, METH_VARARGS, (char *)"\n"
-		"\n"
-		"Class:\n"
-		"    HTM\n"
-		"\n"
-		"Method Name:\n"
-		"    lookup_id\n"
-		"\n"
-		"Purpose:\n"
-		"\n"
-		"    Return the index of the input ra/dec at the current htm depth.   ra/dec may\n"
-		"    be arrays.\n"
-		"\n"
-		"Calling Sequence:\n"
-		"\n"
-		"    import esutil\n"
-		"    h=esutil.htm.HTM(depth)\n"
-		"    htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Inputs:\n"
-		"    ra,dec:  Scalars or arrays of equal length.\n"
-		"\n"
-		"Outputs:\n"
-		"    htmid:  An array with the htm id.\n"
-		"\n"
-		"Example:\n"
-		"\n"
-		"    >>> import esutil\n"
-		"    >>> h=esutil.htm.HTM(depth)\n"
-		"    >>> htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Revision History:\n"
-		"    2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.\n"
-		"\n"
-		""},
-	 { (char *)"HTMC_cmatch", _wrap_HTMC_cmatch, METH_VARARGS, (char *)"\n"
-		"\n"
-		"Class:\n"
-		"    HTM\n"
-		"\n"
-		"Method Name:\n"
-		"    lookup_id\n"
-		"\n"
-		"Purpose:\n"
-		"\n"
-		"    Return the index of the input ra/dec at the current htm depth.   ra/dec may\n"
-		"    be arrays.\n"
-		"\n"
-		"Calling Sequence:\n"
-		"\n"
-		"    import esutil\n"
-		"    h=esutil.htm.HTM(depth)\n"
-		"    htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Inputs:\n"
-		"    ra,dec:  Scalars or arrays of equal length.\n"
-		"\n"
-		"Outputs:\n"
-		"    htmid:  An array with the htm id.\n"
-		"\n"
-		"Example:\n"
-		"\n"
-		"    >>> import esutil\n"
-		"    >>> h=esutil.htm.HTM(depth)\n"
-		"    >>> htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Revision History:\n"
-		"    2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.\n"
-		"\n"
-		""},
-	 { (char *)"HTMC_cbincount", _wrap_HTMC_cbincount, METH_VARARGS, (char *)"\n"
-		"\n"
-		"Class:\n"
-		"    HTM\n"
-		"\n"
-		"Method Name:\n"
-		"    lookup_id\n"
-		"\n"
-		"Purpose:\n"
-		"\n"
-		"    Return the index of the input ra/dec at the current htm depth.   ra/dec may\n"
-		"    be arrays.\n"
-		"\n"
-		"Calling Sequence:\n"
-		"\n"
-		"    import esutil\n"
-		"    h=esutil.htm.HTM(depth)\n"
-		"    htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Inputs:\n"
-		"    ra,dec:  Scalars or arrays of equal length.\n"
-		"\n"
-		"Outputs:\n"
-		"    htmid:  An array with the htm id.\n"
-		"\n"
-		"Example:\n"
-		"\n"
-		"    >>> import esutil\n"
-		"    >>> h=esutil.htm.HTM(depth)\n"
-		"    >>> htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Revision History:\n"
-		"    2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.\n"
-		"\n"
-		""},
-	 { (char *)"HTMC_depth", _wrap_HTMC_depth, METH_VARARGS, (char *)"\n"
-		"\n"
-		"Class:\n"
-		"    HTM\n"
-		"\n"
-		"Method Name:\n"
-		"    lookup_id\n"
-		"\n"
-		"Purpose:\n"
-		"\n"
-		"    Return the index of the input ra/dec at the current htm depth.   ra/dec may\n"
-		"    be arrays.\n"
-		"\n"
-		"Calling Sequence:\n"
-		"\n"
-		"    import esutil\n"
-		"    h=esutil.htm.HTM(depth)\n"
-		"    htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Inputs:\n"
-		"    ra,dec:  Scalars or arrays of equal length.\n"
-		"\n"
-		"Outputs:\n"
-		"    htmid:  An array with the htm id.\n"
-		"\n"
-		"Example:\n"
-		"\n"
-		"    >>> import esutil\n"
-		"    >>> h=esutil.htm.HTM(depth)\n"
-		"    >>> htmid = h.lookup_id(ra, dec)\n"
-		"\n"
-		"Revision History:\n"
-		"    2010-03-03:  SWIG wrapper completed.  Erin Sheldon, BNL.\n"
-		"\n"
-		""},
+	 { (char *)"HTMC_lookup_id", (PyCFunction) _wrap_HTMC_lookup_id, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"HTMC_intersect", (PyCFunction) _wrap_HTMC_intersect, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"HTMC_cmatch", (PyCFunction) _wrap_HTMC_cmatch, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"HTMC_cbincount", (PyCFunction) _wrap_HTMC_cbincount, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"HTMC_get_depth", _wrap_HTMC_get_depth, METH_VARARGS, NULL},
 	 { (char *)"HTMC_swigregister", HTMC_swigregister, METH_VARARGS, NULL},
-	 { (char *)"new_Matcher", _wrap_new_Matcher, METH_VARARGS, NULL},
+	 { (char *)"new_Matcher", (PyCFunction) _wrap_new_Matcher, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"delete_Matcher", _wrap_delete_Matcher, METH_VARARGS, NULL},
 	 { (char *)"Matcher_get_depth", _wrap_Matcher_get_depth, METH_VARARGS, NULL},
-	 { (char *)"Matcher_match", _wrap_Matcher_match, METH_VARARGS, NULL},
+	 { (char *)"Matcher_match", (PyCFunction) _wrap_Matcher_match, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"Matcher_swigregister", Matcher_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
@@ -4494,22 +4281,34 @@ static PyMethodDef SwigMethods[] = {
 
 static swig_type_info _swigt__p_HTMC = {"_p_HTMC", "HTMC *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Matcher = {"_p_Matcher", "Matcher *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_PAIR_INFO = {"_p_PAIR_INFO", "PAIR_INFO *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_PAIR_INFO_ORDERING = {"_p_PAIR_INFO_ORDERING", "PAIR_INFO_ORDERING *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_int64_t = {"_p_int64_t", "int64_t *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_HTMC,
   &_swigt__p_Matcher,
+  &_swigt__p_PAIR_INFO,
+  &_swigt__p_PAIR_INFO_ORDERING,
   &_swigt__p_char,
+  &_swigt__p_int64_t,
 };
 
 static swig_cast_info _swigc__p_HTMC[] = {  {&_swigt__p_HTMC, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Matcher[] = {  {&_swigt__p_Matcher, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_PAIR_INFO[] = {  {&_swigt__p_PAIR_INFO, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_PAIR_INFO_ORDERING[] = {  {&_swigt__p_PAIR_INFO_ORDERING, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_int64_t[] = {  {&_swigt__p_int64_t, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_HTMC,
   _swigc__p_Matcher,
+  _swigc__p_PAIR_INFO,
+  _swigc__p_PAIR_INFO_ORDERING,
   _swigc__p_char,
+  _swigc__p_int64_t,
 };
 
 
