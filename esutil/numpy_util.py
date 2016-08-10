@@ -317,11 +317,12 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
                 # if pretty printing, reduce string lengths
                 if pretty and len(d) > max_pretty_slen:
                     d = fdata[0:max_pretty_slen]
-                    d = "'" + d +"'"
-                    d = d+'...'
+                    #d = "'" + d +"'"
+                    d = "'%s'..." % d
+                    #d = d+'...'
                 else:
                     if pretty:
-                        d = "'" + d +"'"
+                        d = "'%s'" % d
             else:
                 d = fdata
         else:
