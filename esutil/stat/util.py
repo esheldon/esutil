@@ -923,7 +923,7 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
         print(headfmt % head)
         if ndim is None:
-            print(numfmt % (mn,err,std))
+            print(numfmt % (amin,amax,mn,err,std))
         else:
             for i in xrange(ndim):
                 if scalarify:
