@@ -1,3 +1,24 @@
+v0.6.0 (2016-08-19)
+---------------------
+
+New Features
+
+    - python3 support
+    - unit tests.  Coverage is only currently a few of the sub packages.
+
+bug fixes
+
+    - in htm, fixed radius size check to match ra1/dec1 instead of ra2/dec2
+      (thanks to Eli Rykoff)
+    - some potential integer division issues
+
+notes
+
+    - NumpyVector.h etc. do not seem to be reliable in python3.  All use of
+      them has been removed from esutil, they are left for backwards
+      compatibility
+
+
 v0.5.4 (2016-06-09)
 ---------------------
 
