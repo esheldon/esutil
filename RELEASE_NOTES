@@ -4,7 +4,7 @@ v0.6.0 (2016-08-19)
 New Features
 
     - python3 support
-    - unit tests.  Coverage is only currently a few of the sub packages.
+    - unit tests.  Coverage is not yet complete.
 
 bug fixes
 
