@@ -63,10 +63,11 @@ class Generator(object):
     Calling Sequence:
         import esutil
         gen = esutil.random.Generator(pofx, x=None, xrange=None, nx=None,
-                                          method='accum', cumulative=False, seed=None)
+                                      method='accum', cumulative=False, rng=None,
+                                      seed=None)
 
-        r = gen.genrand(num)
-        r = gen.genrand(num, seed=None)
+        r = gen.sample() # single scalar value
+        r = gen.sample(num)
 
     Inputs:
         pofx: Either an array of points or a function.  If p(x) is an array sample
@@ -99,6 +100,11 @@ class Generator(object):
             Note for method='cut' this is ignored: you must enter the differential 
             distribution.
 
+        rng: random number generator
+            e.g. numpy.random.RandomState
+
+        seed: integer
+            Used to start a new random number generator if rng is not sent
 
     Examples:
 
@@ -108,7 +114,7 @@ class Generator(object):
 
             import esutil
             gen = esutil.random.Generator(pofx, x)
-            rand = gen.genrand(1000000)
+            rand = gen.sample(1000000)
 
 
         Generate random points from an arbitrary function. In this case we can
@@ -120,7 +126,7 @@ class Generator(object):
 
             gen = esutil.random.Generator(gaussfunc, 
                                           xrange=[-4.5,4.5], nx=100)
-            rand = gen.genrand(1000000)
+            rand = gen.sample(1000000)
 
 
     Revision History:
@@ -135,7 +141,8 @@ class Generator(object):
                  nx=None, 
                  method='accum', 
                  cumulative=False, 
-                 seed=None):
+                 seed=None,
+                 rng=None):
 
         # make sure the method is valid
         self._check_method(method)
@@ -143,7 +150,10 @@ class Generator(object):
 
         self.cumulative=cumulative
 
-
+        if rng is None:
+            self.rng=numpy.random.RandomState(seed=seed)
+        else:
+            self.rng=rng
 
         # different initializations depending if p(x) array was sent or a
         # function
@@ -193,10 +203,6 @@ class Generator(object):
                 self.pofx_max = p.max()
 
 
-
-        if seed is not None:
-            numpy.random.seed(seed=seed)
-
     def _check_method(self, method):
         if method not in ['accum','cut']:
             raise ValueError("method must be 'accum' or 'cut'")
@@ -204,7 +210,7 @@ class Generator(object):
 
 
 
-    def genrand(self, numrand, seed=None):
+    def sample(self, numrand=None, **kw):
         """
         Class:
             random.Genrand
@@ -221,17 +227,28 @@ class Generator(object):
             rand = generator.genrand(numrand)
 
         """
-        if self.method == 'accum':
-            return self.genrand_accum(numrand, seed=None)
-        elif self.method == 'cut':
-            return self.genrand_cut(numrand, seed=None)
 
-    def genrand_accum(self, numrand, seed=None):
-        if seed is not None:
-            numpy.random.seed(seed=seed)
+        if numrand is None:
+            numrand=1
+            is_scalar=True
+        else:
+            is_scalar=False
+        if self.method == 'accum':
+            vals=self._genrand_accum(numrand)
+        elif self.method == 'cut':
+            vals=self._genrand_cut(numrand)
+
+        if is_scalar:
+            vals=vals[0]
+
+        return vals
+
+    genrand=sample
+
+    def _genrand_accum(self, numrand):
 
         # this returns f8
-        urand = numpy.random.random(numrand)
+        urand = self.rng.uniform(size=numrand)
 
         # to get randoms from the distribution, we interpolate the x(pcum) at
         # the test rand values.  Clever!
@@ -240,10 +257,7 @@ class Generator(object):
         return rand
 
 
-    def genrand_cut(self, numrand, seed=None):
-
-        if seed is not None:
-            numpy.random.seed(seed=seed)
+    def _genrand_cut(self, numrand):
 
         rand = numpy.zeros(numrand,dtype='f8')
 
@@ -273,8 +287,8 @@ class Generator(object):
         return rand
 
     def generate_cut_values(self, num):
-        randx = numpy.random.random(num)
-        randy = numpy.random.random(num)
+        randx = self.rng.uniform(size=num)
+        randy = self.rng.uniform(size=num)
 
         if self.isfunc:
             # get x,y on the right range and evaluate function
