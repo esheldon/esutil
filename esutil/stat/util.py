@@ -915,7 +915,12 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
 
     if doprint:
-        head = ('min','max','mean','err','std')
+        nsig=kw.get("nsigma_print",1.0)
+        if nsig != 1.0:
+            errs='err * %.1f' % nsig
+        else:
+            errs='err'
+        head = ('min','max','mean',errs,'std')
         nh=len(head)
         headfmt = ' '.join( ['%12s']*nh )
         numfmt = ' '.join( ['%12g']*nh )
@@ -923,13 +928,13 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
         print(headfmt % head)
         if ndim is None:
-            print(numfmt % (amin,amax,mn,err,std))
+            print(numfmt % (amin,amax,mn,nsig*err,std))
         else:
             for i in xrange(ndim):
                 if scalarify:
-                    print(numfmt % (amin,amax,mn[i],err[i],std[i]))
+                    print(numfmt % (amin,amax,mn[i],nsig*err[i],std[i]))
                 else:
-                    print(numfmt % (amin[i],amax[i],mn[i],err[i],std[i]))
+                    print(numfmt % (amin[i],amax[i],mn[i],nsig*err[i],std[i]))
 
     if scalarify:
         mn=mn[0]
@@ -940,7 +945,7 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
 
     return res
 
-def print_stats(arr, **kw):
+def print_stats(arr, nsigma=1.0, **kw):
     """
     print stats for the input array
 
@@ -963,6 +968,7 @@ def print_stats(arr, **kw):
     """
 
     kw['doprint']=True
+    kw['nsigma_print']=nsigma
     get_stats(arr, **kw)
 
 def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored_kw):
