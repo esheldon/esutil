@@ -1,3 +1,13 @@
+v0.6.1 (not yet released)
+-------------------------
+
+New Features
+
+    - numpy_util.dictlist2array
+        Convert a list of dictionaries to a structured numpy array.  Works
+        for simple typs such as strings, integers, floats.
+
+
 v0.6.0 (2016-08-19)
 ---------------------
 

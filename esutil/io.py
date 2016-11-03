@@ -32,8 +32,6 @@ import os
 
 import copy
 
-from sys import stdout, stderr
-
 try:
     import fitsio
     fits_package='fitsio'
@@ -204,7 +202,7 @@ def read(fileobj, **keywords):
                     # this will only work if the all data has the 
                     # same structure
                     if verbose:
-                        stderr.write("Combining arrays\n")
+                        print("Combining arrays")
                     alldata = numpy_util.combine_arrlist(alldata)
         return alldata
 
@@ -217,7 +215,7 @@ def read(fileobj, **keywords):
         return data
     else:
         if verbose:
-            stderr.write("Reading: %s\n" % fname)
+            print("Reading:",fname)
 
     # pick the right reader based on type
     try:
@@ -535,7 +533,7 @@ def write_fits(fileobj, data, **keys):
         else:
             name=fileobj
 
-        stderr.write("Writing to: %s\n" % name)
+        print("Writing to:",name)
 
     if fits_package == 'fitsio':
         write_fits_fitsio(fileobj, data, **keys)

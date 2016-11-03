@@ -126,6 +126,11 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         Convert a dictionary to a numpy array.  Works for simple typs such as
         strings, integers, floating.
 
+    dictlist2array(dict, sort=False, keys=None)
+        Convert a list of dictionaries to a structured numpy array.  Works
+        for simple typs such as strings, integers, floats.
+
+
     splitarray(nper, array)
         Split up an array into chunks of at least a given size.  Return a
         list of these subarrays.  The ordering is perserved.
@@ -154,6 +159,16 @@ try:
     have_numpy=True
 except:
     have_numpy=False
+
+# python3 compatibility
+try:
+    basestring
+except:
+    basestring=str
+try:
+    long
+except:
+    long=int
 
 from . import misc as eu_misc
 
@@ -1642,6 +1657,100 @@ def dict2array(d, sort=False, keys=None):
         a[key] = d[key]
 
     return a
+
+
+def dictlist2array(dlist, keys=None, sort=False):
+    """
+    Convert a list of dictionaries to an array.  Only works for basic types
+    such as scalar numbers and strings
+
+    parameters
+    ----------
+    dlist: list of dicts
+        A list of dictionaries.  All dicts should have the same
+        entries.
+
+    keys: list, optional
+        A sequence of keys to copy.  This can be used to order the fields
+        (standard dictionary keys are unordered) or copy only a subset of keys.
+    sort: bool, optional
+        If True, sort the keys.  default False
+    """
+    if len(dlist) == 0:
+        return numpy.array([])
+
+
+    if keys is None:
+        keys = dlist[0].keys()
+
+        if sort:
+            keys=sorted(keys)
+
+        keys=list(keys)
+
+
+    types={}
+    # for ordering
+    names=[]
+    for key in keys:
+
+        names.append(key)
+
+        if key not in dlist[0]:
+            raise KeyError("Requested key %s not in dictionary" % key)
+
+        for d in dlist:
+
+            val=d[key]
+
+            if isinstance(val, basestring):
+                slen=len(val)
+                if key in types:
+                    if types[key]['basetype'] != 'S':
+                        raise ValueError("type mismatch for field '%s'" % key)
+
+                    types[key]['len'] = max(slen, types[key]['len'])
+                else:
+                    types[key] = {}
+                    types[key]['basetype'] = 'S'
+                    types[key]['len'] = slen
+            else:
+                if not isinstance(val, (int,long,float)):
+                    raise ValueError("only basic types currently supported, "
+                                     "got '%s'" % type(val))
+
+                if isinstance(val, (int,long)):
+                    dt='i8'
+                else:
+                    dt='f8'
+
+                if key in types:
+                    if types[key]['basetype'] != dt:
+                        raise ValueError("type mismatch for field '%s'" % key)
+                else:
+                    types[key] = {}
+                    types[key]['basetype'] = dt
+
+    dtype=[]
+    for name in names:
+
+        tinfo = types[name]
+        if tinfo['basetype'] == 'S':
+            t = 'S%d' % tinfo['len']
+        else:
+            t = tinfo['basetype']
+
+        dtype.append( (name, t) )
+
+    arr = numpy.zeros(len(dlist), dtype=dtype)
+
+    for i,d in enumerate(dlist):
+        for key in d:
+            arr[key][i] = d[key]
+
+
+    return arr
+
 
 
 def splitarray(nper, var_input):
