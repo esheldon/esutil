@@ -221,21 +221,27 @@ def compare_hist(data1, data2, names=None, dataset_names=None, nsig=10.0, **kw):
 
     pkw = {}
     pkw.update(kw)
-    for dkeys in ['width','height']:
-        del pkw[dkeys]
+    for dkey in ['width','height']:
+        pkw.pop(dkey,None)
 
     pkw['visible']=False
+    pkw['norm']=1
+    if 'nbin' not in pkw and binsize not in pkw:
+        get_binsize=True
+    else:
+        get_binsize=False
+
     for i in xrange(d1):
+
         mn1,st1,ind1=sigma_clip(data1[:,i], nsig=nsig, get_indices=True)
         mn2,st2,ind2=sigma_clip(data2[:,i], nsig=nsig, get_indices=True)
-
-        use_std = max(st1,st2)
-        binsize = 0.2*use_std
+        if get_binsize:
+            use_std = max(st1,st2)
+            pkw['binsize'] = 0.2*use_std
 
         plt=biggles.FramedPlot()
         plt.xlabel=names[i]
 
-        pkw['binsize']=binsize
         pkw['color']='blue'
         h1=biggles.make_histc(data1[ind1,i], **pkw)
         pkw['color']='red'
