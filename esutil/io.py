@@ -32,15 +32,20 @@ import os
 
 import copy
 
+fits_package=None
 try:
     import fitsio
     fits_package='fitsio'
 except:
     try:
-        import pyfits
+        import astropy.io.fits as pyfits
         fits_package='pyfits'
     except:
-        fits_package=None
+        try:
+            import pyfits
+            fits_package='pyfits'
+        except:
+            pass
 
 
 
