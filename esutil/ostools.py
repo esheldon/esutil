@@ -367,7 +367,7 @@ def _poll_subprocess(pobj, timeout, poll):
 
 
 
-def makedirs_fromfile(f, verbose=False):
+def makedirs_fromfile(f, verbose=False, allow_fail=False):
     """
     Extract the directory from a file name and create it if it doesn't exist.
 
@@ -389,4 +389,13 @@ def makedirs_fromfile(f, verbose=False):
         if not os.path.exists(d):
             if verbose:
                 print('creating dir:',d)
-            os.makedirs(d)
+            try:
+                os.makedirs(d)
+            except OSError as ex:
+                if ex.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else:
+                    if not allow_fail:
+                        raise
+
+
