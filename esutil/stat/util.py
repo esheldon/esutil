@@ -124,10 +124,42 @@ class Binner(dict):
 
 
 
-    def dohist(self, binsize=None, nbin=None, nperbin=None, min=None, max=None, rev=False, mergelast=True):
+    def dohist(self,
+               binsize=None,
+               nbin=None,
+               nperbin=None,
+               min=None,
+               max=None,
+               rev=False,
+               mergelast=True,
+               calc_stats=True):
         """
         Perform the basic histogram, optionally getting reverse indices. Note
         if weights were sent, reverse indices will always be calculated
+
+        send either binsize, nbin, or nperbin
+
+        parameters
+        ----------
+        binsize: float, optional
+            Binsize to use.
+        nbin: int, optional
+            number of bins to use
+        nperbin: int, optional
+            number of objects per bin
+        min: float, optional
+            min value to include in histogram
+        max: float, optional
+            max value to include in histogram
+        rev: bool, optional
+            If set to True, calculate the reverse indices.  If
+            weights were sent, rev=True is implied
+        mergelast: bool, optional
+            merge the last bin into the previous; useful when
+            the last bin is empty
+        calc_stats: bool, optional
+            Calculate additional statistics; default True
+            Equivalent to calling binner.calc_stats()
         """
 
         # this method inherited from dict
@@ -146,6 +178,9 @@ class Binner(dict):
             self._hist_by_binsize_or_nbin(binsize, nbin, rev)
         else:
             raise ValueError("Send binsize or nbin or nperbin")
+
+        if calc_stats:
+            self.calc_stats()
 
     def _hist_by_binsize_or_nbin(self, binsize, nbin, rev):
 
