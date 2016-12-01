@@ -120,7 +120,7 @@ classifiers = ["Development Status :: 5 - Production/Stable"
 
 
 setup(name='esutil',
-      version="0.6.1rc1",
+      version="0.6.1",
       author="Erin Scott Sheldon",
       author_email="erin.sheldon@gmail.com",
       classifiers=classifiers,
