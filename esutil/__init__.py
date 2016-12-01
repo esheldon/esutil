@@ -92,7 +92,7 @@ _property_headurl='$HeadURL$'
 
 import sys
 
-__version__ = "0.6.0"
+__version__ = "0.6.1rc1"
 
 def version():
     return __version__
