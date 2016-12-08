@@ -1,4 +1,4 @@
-v0.6.1 (not yet released)
+v0.6.1
 -------------------------
 
 New Features
@@ -6,7 +6,23 @@ New Features
     - numpy_util.dictlist2array
         Convert a list of dictionaries to a structured numpy array.  Works
         for simple typs such as strings, integers, floats.
+    - stat.Binner 
+        Now by default run calc_stats when calling dohist; I found I
+        essentially never did just dohist without calling calc_stats.
+    - ostools.makedirs_fromfile
+        new keyword allow_fail to allow failure
+    - io module
+        when fitsio is not available, look for astropy.io.fits as well
+        as pyfits (long overdue)
+    - stats.print_stats
+        Added nsigma= keyword
+    - random.Generator
+        Allow sending the random number generator through rng=
 
+Bug Fixes
+
+    - plotting.compare_hist
+        Fix bug regarding binsize
 
 v0.6.0 (2016-08-19)
 ---------------------
