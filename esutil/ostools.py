@@ -378,8 +378,13 @@ def makedirs_fromfile(f, verbose=False, allow_fail=False):
     verbose: boolean, optional
         Optionally print that the dir is being created.
     """
+    import errno
     from esutil import hdfs
+
     d=os.path.dirname(f)
+    if d=='':
+        return
+
     if hdfs.is_in_hdfs(f):
         if not hdfs.exists(d):
             if verbose:
