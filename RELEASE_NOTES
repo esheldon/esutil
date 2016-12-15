@@ -1,3 +1,10 @@
+v0.6.2 (not released)
+-------------------------
+
+Bug Fixes
+
+    - ostools.makedirs_fromfile
+
 v0.6.1
 -------------------------
 
