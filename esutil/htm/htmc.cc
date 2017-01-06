@@ -584,6 +584,8 @@ Matcher::Matcher(int depth,
                  PyObject* ra_input,
                  PyObject* dec_input) throw (const char *)
 {
+    init_numpy();
+
     this->depth = depth;
     this->htm_interface.init(depth);
 
@@ -599,7 +601,6 @@ Matcher::Matcher(int depth,
 	//this->dec.init(dec_input);
     
     init_hmap();
-    init_numpy();
 }
 void Matcher::init_hmap(void)
 {
