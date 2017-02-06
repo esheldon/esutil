@@ -107,7 +107,7 @@ Records::Records(
         long offset,
         int bracket_arrays,
         bool padnull,
-        bool ignorenull) throw (const char *)
+        bool ignorenull)
 {
     init_numpy();
 
@@ -127,7 +127,7 @@ Records::Records(
 
 	if (mMode[0] == 'r' || mMode == "w+") {
 		if ( (dtype == NULL) || (nrows==-9999) ) {
-			throw "You must send the datatype and number of rows when reading";
+			throw std::runtime_error("You must send the datatype and number of rows when reading");
 		}
 		// Open for reading
 		mAction=READ;
@@ -164,7 +164,7 @@ Records::~Records()
 
 }
 
-void Records::close() throw (const char*)
+void Records::close() 
 {
 	if (mFptr != NULL) {
 		if (mDebug) debugout("Closing file");
@@ -204,45 +204,45 @@ void Records::init_variables()
 
 }
 
-void Records::process_nrows(long long nrows)  throw (const char* )
+void Records::process_nrows(long long nrows)  
 {
 	if (mDebug) {cerr<<"nrows = "<<nrows<<endl;fflush(stdout);}
 	if (nrows < 1) {
-		throw "Input nrows must be >= 1";
+		throw std::runtime_error("Input nrows must be >= 1");
 	}
 	mNrows = nrows;
 }
 
 
-void Records::ensure_writable(void) throw (const char* )
+void Records::ensure_writable(void) 
 {
 	if (mFptr == NULL) {
-		throw "File is not open";
+		throw std::runtime_error("File is not open");
 	}
 	if ( (mAction & WRITE) == 0) {
-		throw "File is not open for writing";
+		throw std::runtime_error("File is not open for writing");
 	}
 }
-void Records::ensure_readable(void) throw (const char* )
+void Records::ensure_readable(void) 
 {
 	if (mFptr == NULL) {
-		throw "File is not open";
+		throw std::runtime_error("File is not open");
 	}
 	if ( (mAction & READ) == 0) {
-		throw "File is not open for reading";
+		throw std::runtime_error("File is not open for reading");
 	}
 }
 
-void Records::ensure_binary(void) throw (const char* )
+void Records::ensure_binary(void) 
 {
     if (mFileType != BINARY_FILE) {
-		throw "attempt to read ascii data as binary";
+		throw std::runtime_error("attempt to read ascii data as binary");
     }
 }
-void Records::ensure_text(void) throw (const char* )
+void Records::ensure_text(void) 
 {
     if (mFileType != ASCII_FILE) {
-		throw "attempt to read binary data as text";
+		throw std::runtime_error("attempt to read binary data as text");
     }
 }
 
@@ -251,16 +251,16 @@ void Records::goto_offset(void)
     fseek(mFptr, mFileOffset, SEEK_SET);
 }
 
-void Records::do_seek(npy_intp seek_distance) throw (const char* ) {
+void Records::do_seek(npy_intp seek_distance)  {
 	if (seek_distance > 0) {
 		if(fseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
 			string err="Error skipping fields";
-			throw err.c_str();
+			throw std::runtime_error(err);
 		}
 	}
 }
 
-void Records::skip_rows(long long current_row, long long row2read) throw (const char* )
+void Records::skip_rows(long long current_row, long long row2read) 
 {
 	long long rows2skip=0;
 	if (mFileType == BINARY_FILE) {
@@ -278,7 +278,7 @@ void Records::skip_rows(long long current_row, long long row2read) throw (const 
 
 
 
-void Records::skip_text_rows(long long nskip) throw (const char* )
+void Records::skip_text_rows(long long nskip) 
 {
 	if (nskip > 0) {
 		long long nlines = 0;
@@ -286,7 +286,7 @@ void Records::skip_text_rows(long long nskip) throw (const char* )
 		while (nlines < nskip) {
 			c = fgetc(mFptr);
 			if (c == EOF) {
-				throw "Reached EOF prematurely";
+				throw std::runtime_error("Reached EOF prematurely");
 			}
 			if (c == '\n') {
 				nlines++;
@@ -295,11 +295,11 @@ void Records::skip_text_rows(long long nskip) throw (const char* )
 	}
 }
 
-void Records::skip_binary_rows(long long nskip) throw (const char* )
+void Records::skip_binary_rows(long long nskip) 
 {
 	if (nskip > 0) {
 		if (fseeko(mFptr, mRowSize*nskip, SEEK_CUR) != 0) {
-			throw "Failed to fseek";
+			throw std::runtime_error("Failed to fseek");
 		}
 	}
 }
@@ -309,7 +309,7 @@ void Records::skip_binary_rows(long long nskip) throw (const char* )
 
 
 // read all the elements of a field
-void Records::scan_column_values(long long fnum, char* input_buff) throw (const char* )
+void Records::scan_column_values(long long fnum, char* input_buff) 
 {
 
     int skipping=false;
@@ -344,7 +344,7 @@ void Records::scan_column_values(long long fnum, char* input_buff) throw (const 
 			else {
 				err += ": Read error";
 			}
-			throw err.c_str();
+			throw std::runtime_error(err);
 		}
         if (!skipping) {
             buff += mSizes[fnum]/mNel[fnum] ;
@@ -353,7 +353,7 @@ void Records::scan_column_values(long long fnum, char* input_buff) throw (const 
 }
 
 
-void Records::read_ascii_bytes(long long colnum, char* buff)  throw (const char* )
+void Records::read_ascii_bytes(long long colnum, char* buff)  
 {
 
     int skipping=false;
@@ -376,7 +376,7 @@ void Records::read_ascii_bytes(long long colnum, char* buff)  throw (const char*
 				string err=
 					"EOF reached unexpectedly reading field: "+
 					mNames[colnum];
-				throw err.c_str();
+				throw std::runtime_error(err);
 			}
 
             // if NULL, we are skipping this data
@@ -394,7 +394,7 @@ void Records::read_ascii_bytes(long long colnum, char* buff)  throw (const char*
 
 
 // read single entry
-void Records::read_from_text_column(long long colnum, char* buff) throw (const char* )
+void Records::read_from_text_column(long long colnum, char* buff) 
 {
 
 	if (mTypeNums[colnum] == NPY_STRING) {
@@ -409,12 +409,12 @@ void Records::read_from_text_column(long long colnum, char* buff) throw (const c
 }
 
 // read single entry
-void Records::read_from_binary_column(long long colnum, char* buff) throw (const char* )
+void Records::read_from_binary_column(long long colnum, char* buff) 
 {
     int nread = fread(buff, mSizes[colnum], 1, mFptr);
     if (nread != 1) {
         string err="Error reading field: "+mNames[colnum];
-        throw err.c_str();
+        throw std::runtime_error(err);
     }
 }
 
@@ -456,7 +456,7 @@ npy_intp Records::get_ncols_to_read(PyObject* colnums)
 
 PyObject* Records::read_columns(PyObject* arrayobj,
                                 PyObject* colnums,
-                                PyObject* rows) throw (const char* )
+                                PyObject* rows) 
 
 {
 
@@ -470,7 +470,7 @@ PyObject* Records::read_columns(PyObject* arrayobj,
 
 
 // stop is exclusive
-void Records::skip_ascii_col_range(npy_intp start, npy_intp stop) throw (const char* )
+void Records::skip_ascii_col_range(npy_intp start, npy_intp stop) 
 {
     for (npy_intp col=start; col<stop; col++) {
         read_from_text_column(col, NULL);
@@ -479,7 +479,7 @@ void Records::skip_ascii_col_range(npy_intp start, npy_intp stop) throw (const c
 
 void Records::read_text_columns(PyObject* arrayobj,
                                      PyObject* colnums,
-                                     PyObject* rows) throw (const char* )
+                                     PyObject* rows) 
 {
     bool doall_rows=false, doall_cols=false;
 	npy_intp
@@ -561,7 +561,7 @@ void Records::read_text_columns(PyObject* arrayobj,
 
 void Records::read_binary_columns(PyObject* arrayobj,
                                   PyObject* colnums,
-                                  PyObject* rows) throw (const char* )
+                                  PyObject* rows) 
 {
     bool doall_rows=false;
 	npy_intp
@@ -641,22 +641,22 @@ void Records::read_binary_columns(PyObject* arrayobj,
 
 }
 
-npy_intp Records::process_slice(npy_intp row1, npy_intp row2, npy_intp step) throw (const char* )
+npy_intp Records::process_slice(npy_intp row1, npy_intp row2, npy_intp step) 
 {
 	// Just do some error checking on the requested rows
 	stringstream serr;
 	if (row1 < 0) {
 		serr<<"Requested first row < 0";
-		throw serr.str().c_str();
+		throw std::runtime_error(serr.str());
 	}
 	if (row2 > mNrows) {
 		serr<<"Requested slice beyond delcared size "<<mNrows;
-		throw serr.str().c_str();
+		throw std::runtime_error(serr.str());
 	}
 
 	if (step <= 0) {
 		serr<<"Requested step must be > 0";
-		throw serr.str().c_str();
+		throw std::runtime_error(serr.str());
 	}
 
 	// we use python slicing rules:  [n1:n2:step] really means  from n1 to n2-1
@@ -690,7 +690,7 @@ npy_intp Records::process_slice(npy_intp row1, npy_intp row2, npy_intp step) thr
 PyObject* Records::read_binary_slice(PyObject* arrayobj,
                                      long long row1,
                                      long long row2,
-                                     long long step) throw (const char* )
+                                     long long step) 
 {
 
     ensure_readable();
@@ -711,7 +711,7 @@ PyObject* Records::read_binary_slice(PyObject* arrayobj,
 
         npy_intp nread = (npy_intp) fread(ptr, mRowSize, nrows2read, mFptr);
         if (nread != nrows2read) {
-            throw "Error reading slice";
+            throw std::runtime_error("Error reading slice");
         } 
 
     } else {
@@ -722,7 +722,7 @@ PyObject* Records::read_binary_slice(PyObject* arrayobj,
 
             size_t nread = fread(ptr, mRowSize, 1, mFptr);
             if (nread != 1) {
-                throw "Failed to read row data";
+                throw std::runtime_error("Failed to read row data");
             }
 
             skip_binary_rows(step-1);
@@ -741,7 +741,7 @@ PyObject* Records::read_binary_slice(PyObject* arrayobj,
 /*
 
 
-PyObject* Records::ReadSlice(long long row1, long long row2, long long step)  throw (const char* )
+PyObject* Records::ReadSlice(long long row1, long long row2, long long step)  
 {
     ensure_readable();
 
@@ -769,7 +769,7 @@ PyObject* Records::ReadSlice(long long row1, long long row2, long long step)  th
 
 PyObject* Records::Read(
 		PyObject* rows,
-		PyObject* fields) throw (const char* )
+		PyObject* fields) 
 {
     ensure_readable();
 
@@ -818,7 +818,7 @@ void Records::ReadAllAsBinary()
 	if (mDebug) debugout("Reading all in one big fread()");
 	int nread = fread(mData, mRowSize, mNrows, mFptr);
 	if (nread != mNrows) {
-		throw "Error reading entire file as binary";
+		throw std::runtime_error("Error reading entire file as binary");
 	} 
 }
 
@@ -860,7 +860,7 @@ void Records::ReadRows()
 
 }
 
-void Records::ReadRowsSlice(npy_intp row1, npy_intp step) throw (const char* )
+void Records::ReadRowsSlice(npy_intp row1, npy_intp step) 
 {
 
 	if (mDebug) debugout("Reading rows by slice");
@@ -874,7 +874,7 @@ void Records::ReadRowsSlice(npy_intp row1, npy_intp step) throw (const char* )
 
 		npy_intp nread = fread(mData, mRowSize, mNrowsToRead, mFptr);
 		if (nread != mNrowsToRead) {
-			throw "Error reading slice";
+			throw std::runtime_error("Error reading slice");
 		} 
 
 	} else {
@@ -951,7 +951,7 @@ void Records::DoSeek(npy_intp seek_distance) {
 	if (seek_distance > 0) {
 		if(fseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
 			string err="Error skipping fields";
-			throw err.c_str();
+			throw std::runtime_error(err);
 		}
 	}
 }
@@ -973,7 +973,7 @@ void Records::ReadFieldAsBinary(long long fnum)
 	int nread = fread(mData, mSizes[fnum], 1, mFptr);
 	if (nread != 1) {
 		string err="Error reading field: "+mNames[fnum];
-		throw err.c_str();
+		throw std::runtime_error(err);
 	}
 	// Move the data pointer
 	mData = mData+mSizes[fnum];
@@ -1024,7 +1024,7 @@ void Records::ReadAsciiBytes(long long fnum)
 				string err=
 					"EOF reached unexpectedly reading field: "+
 					mNames[fnum];
-				throw err.c_str();
+				throw std::runtime_error(err);
 			}
 			*buff = c;
 			buff++;
@@ -1063,7 +1063,7 @@ void Records::ScanVal(long long fnum)
 			else {
 				err = + ": Read error";
 			}
-			throw err.c_str();
+			throw std::runtime_error(err);
 		}
 		buff += mSizes[fnum]/mNel[fnum] ;
 	}
@@ -1073,7 +1073,7 @@ void Records::ReadWholeRowBinary()
 {
 	int nread = fread(mData, mRowSize, 1, mFptr);
 	if (nread != 1) {
-		throw "Failed to read row data";
+		throw std::runtime_error("Failed to read row data");
 	}
 	mData+=mRowSize;
 }
@@ -1105,7 +1105,7 @@ void Records::CreateOutputArray()
 				NPY_FALSE);
 
 	if (mReturnObject==NULL) {
-		throw "Could not allocate array";
+		throw std::runtime_error("Could not allocate array");
 	}
 
 	
@@ -1150,7 +1150,7 @@ void Records::SubDtype(
 		ListStringMatch(mNames, tmplist, matchids);
 		Py_XDECREF(tmplist);
 	} else {
-		throw "fields keyword must be string or list";
+		throw std::runtime_error("fields keyword must be string or list");
 	}
 	vector<string> matchnames;
 	matchnames.resize(matchids.size());
@@ -1197,7 +1197,7 @@ PyObject* Records::ExtractSubDescr(
 
 				// copy is made of tuple
 				if (PyList_Append(dlist, tup) != 0) {
-					throw "Could not append to list";
+					throw std::runtime_error("Could not append to list");
 				}
 				Py_XDECREF(tup);
 
@@ -1211,7 +1211,7 @@ PyObject* Records::ExtractSubDescr(
 	// Now convert this list to a descr
 	if (mDebug) {cerr<<"Converting list to descr"<<endl;fflush(stdout);}
 	if (!PyArray_DescrConverter(dlist, &newdescr)) {
-		throw "data type not understood";
+		throw std::runtime_error("data type not understood");
 	}
 	if (mDebug) {cerr<<"  Done"<<endl;fflush(stdout);};
 
@@ -1336,13 +1336,13 @@ PyObject* Records::Object2IntpArray(PyObject* obj)
 	descr = PyArray_DescrNewFromType(NPY_INTP);
 
 	if (descr == NULL) {
-		throw "could not create NPY_INPT descriptor";
+		throw std::runtime_error("could not create NPY_INPT descriptor");
 	}
 	// This will steal a reference to descr, so we don't need to decref
 	// descr as long as we decref the array!
 	arr = PyArray_FromAny(obj, descr, min_depth, max_depth, flags, NULL);
 	if (arr == NULL) {
-		throw "Could not convert rows keyword to an array of type NPY_INTP";
+		throw std::runtime_error("Could not convert rows keyword to an array of type NPY_INTP");
 	}
 	return arr;
 }
@@ -1380,7 +1380,7 @@ void Records::ListStringMatch(
 			}
 		}
 		if (goodones.size() == 0) {
-			throw "None of the requested fields are in string form";
+			throw std::runtime_error("None of the requested fields are in string form");
 		} else {
 			// loop over snames and see which ones match the input list
 			// this preserves order, which is important.
@@ -1396,7 +1396,7 @@ void Records::ListStringMatch(
 		}
 	}
 	if (matchids.size() == 0) {
-		throw "None of the requested field names matched";
+		throw std::runtime_error("None of the requested field names matched");
 	}
 
 }
@@ -1425,7 +1425,7 @@ long long Records::SequenceCheck(PyObject* obj)
    For writing a header.  the new offset comes from the position after writing the header
 */
 
-PyObject* Records::write_header_and_update_offset(PyObject* obj) throw (const char* )
+PyObject* Records::write_header_and_update_offset(PyObject* obj) 
 {
     ensure_writable();
 
@@ -1449,7 +1449,7 @@ PyObject* Records::write_header_and_update_offset(PyObject* obj) throw (const ch
 
 */
 
-PyObject* Records::update_row_count(long nrows) throw (const char* )
+PyObject* Records::update_row_count(long nrows) 
 {
     ensure_writable();
 
@@ -1465,7 +1465,7 @@ PyObject* Records::update_row_count(long nrows) throw (const char* )
     Py_RETURN_NONE;
 }
 
-PyObject* Records::read_sfile_header(void) throw (const char* )
+PyObject* Records::read_sfile_header(void) 
 {
 
     ensure_readable();
@@ -1480,7 +1480,7 @@ PyObject* Records::read_sfile_header(void) throw (const char* )
         char c = fgetc(mFptr);
 
         if (EOF==c) {
-            throw "EOF reached before reading header end";
+            throw std::runtime_error("EOF reached before reading header end");
         }
 
         count++;
@@ -1506,7 +1506,7 @@ PyObject* Records::read_sfile_header(void) throw (const char* )
     rewind(mFptr);
     size_t nread = fread(&hdr[0], 1, count, mFptr);
     if (nread != count) {
-        throw "Error reading header";
+        throw std::runtime_error("Error reading header");
     }
 
     return Py_BuildValue("sl", hdr.c_str(), ftell(mFptr));
@@ -1516,7 +1516,7 @@ PyObject* Records::read_sfile_header(void) throw (const char* )
 
 
 
-PyObject* Records::Write(PyObject* obj) throw (const char* )
+PyObject* Records::Write(PyObject* obj) 
 {
     ensure_writable();
 
@@ -1528,7 +1528,7 @@ PyObject* Records::Write(PyObject* obj) throw (const char* )
 
 
 	if (!PyArray_Check(obj)) {
-		throw "Input must be a NumPy array object";
+		throw std::runtime_error("Input must be a NumPy array object");
 	}
 	mNrows = PyArray_Size(obj);
 
@@ -1551,7 +1551,7 @@ PyObject* Records::Write(PyObject* obj) throw (const char* )
 	return(ret);
 }
 
-void Records::WriteAllAsBinary() throw (const char* )
+void Records::WriteAllAsBinary() 
 {
 	// This is easy!
 	if (mDebug) debugout("Writing in one big fwrite");
@@ -1563,12 +1563,12 @@ void Records::WriteAllAsBinary() throw (const char* )
 			<<mNrows<<" but only wrote "<<nwrite;
 
 		err=serr.str();
-		throw err.c_str();
+		throw std::runtime_error(err);
 	}
 
 }
 
-void Records::WriteRows() throw (const char* )
+void Records::WriteRows() 
 {
 	if (mDebug) {
 		cerr<<"Writing "<<mNrows<<" rows as ASCII"<<endl;
@@ -1589,7 +1589,7 @@ void Records::WriteRows() throw (const char* )
 	} // rows
 }
 
-void Records::WriteField(long long fnum)  throw (const char* )
+void Records::WriteField(long long fnum)  
 {
 
 	long long nel=mNel[fnum];
@@ -1620,7 +1620,7 @@ void Records::WriteField(long long fnum)  throw (const char* )
 
 }
 
-void Records::WriteArrayFieldWithBrackets(long long fnum)  throw (const char* )
+void Records::WriteArrayFieldWithBrackets(long long fnum)  
 {
 
     // [3,2] looks like this:
@@ -1643,7 +1643,7 @@ void Records::WriteArrayFieldWithBrackets(long long fnum)  throw (const char* )
 }
 
 
-void Records::_WriteArrayWithBrackets(long long fnum, long long dim) throw (const char* ) {
+void Records::_WriteArrayWithBrackets(long long fnum, long long dim)  {
 
 	long long nel=mNel[fnum];
 	long long elsize = mSizes[fnum]/nel;
@@ -1681,7 +1681,7 @@ void Records::_WriteArrayWithBrackets(long long fnum, long long dim) throw (cons
 
 
 
-void Records::WriteStringAsAscii(long long fnum) throw (const char* )
+void Records::WriteStringAsAscii(long long fnum) 
 {
 	char* buffer=NULL;
 
@@ -1702,13 +1702,13 @@ void Records::WriteStringAsAscii(long long fnum) throw (const char* )
 		}
 		int res = fputc( (int) c, mFptr);
 		if (res == EOF) {
-			throw "Error occured writing string field";
+			throw std::runtime_error("Error occured writing string field");
 		}
 		buffer++;
 	}
 }
 
-void Records::WriteNumberAsAscii(char* buffer, long long type) throw (const char* )
+void Records::WriteNumberAsAscii(char* buffer, long long type) 
 {
 	int res;
 
@@ -1790,12 +1790,12 @@ void Records::WriteNumberAsAscii(char* buffer, long long type) throw (const char
 			string err;
 			serr << "Unsupported type "<<type;
 			err=serr.str();
-			throw err.c_str();
+			throw std::runtime_error(err);
 			break;
 	}
 
 	if (res < 0) {
-		throw "Error writing data";
+		throw std::runtime_error("Error writing data");
 	}
 }
 
@@ -1854,7 +1854,7 @@ void Records::ProcessRowsToRead(PyObject* rows)
 		stringstream serr;
 		serr<<"You said the file has "<<mNrows<<" rows but requested to read "
 			<<mNrowsToRead<<" rows";
-		throw serr.str().c_str();
+		throw std::runtime_error(serr.str());
 	}
 
 	if (mDebug) {
@@ -1868,13 +1868,13 @@ void Records::ProcessRowsToRead(PyObject* rows)
 void Records::process_descriptor(PyObject* descr)
 {
 	if (descr == NULL) {
-		throw "Input descr is NULL";
+		throw std::runtime_error("Input descr is NULL");
 	}
 
 	if (!PyArray_DescrCheck(descr)) {
 		throw
-			"Input descr must be a NumPy type descriptor. e.g. "
-			"arr.dtype, or numpy.dtype(typelist)";
+			std::runtime_error("Input descr must be a NumPy type descriptor. e.g. "
+			"arr.dtype, or numpy.dtype(typelist)");
 	}
 
 	// Get a new reference to this descr and make sure to decref later
@@ -1898,7 +1898,7 @@ void Records::set_fptr(const char *filename, const char* mode)
     mFptr = fopen(fstr.c_str(), mode);
     if (mFptr==NULL) {
         string err="Could not open file: "+fstr;
-        throw err.c_str();
+        throw std::runtime_error(err);
     }
     return;
 
@@ -1919,7 +1919,7 @@ void Records::process_delim(PyObject* delim_obj)
                 mArrayDelim = mDelim;
             }
 		} else {
-			throw "delim keyword must be a string or None"; 
+			throw std::runtime_error("delim keyword must be a string or None");
 		}
 	}
 

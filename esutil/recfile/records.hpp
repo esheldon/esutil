@@ -26,82 +26,82 @@ class Records {
                 int bracket_arrays=0,
                 bool padnull=false,
                 bool ignorenull=false
-        ) throw (const char *);
+        ) ;
 
         ~Records();
 
-		void close() throw (const char*);
+		void close() ;
 
         // TODO convert
-		PyObject* Write(PyObject* obj) throw (const char *);
+		PyObject* Write(PyObject* obj) ;
 
 
-        PyObject* write_header_and_update_offset(PyObject* obj) throw (const char* );
-        PyObject* update_row_count(long nrows) throw (const char* );
-        PyObject* read_sfile_header(void) throw (const char* );
+        PyObject* write_header_and_update_offset(PyObject* obj) ;
+        PyObject* update_row_count(long nrows) ;
+        PyObject* read_sfile_header(void) ;
 
 
         // new style
         PyObject* read_columns(PyObject* arrayobj,
                                PyObject* colnums,
-                               PyObject* rows) throw (const char* );
+                               PyObject* rows) ;
 
         PyObject* read_binary_slice(PyObject* arrayobj,
                                     long long row1,
                                     long long row2,
-                                    long long step) throw (const char* );
+                                    long long step) ;
 
     private:
 
 		// Check the input nrows and copy to mNrows
-		void process_nrows(long long nrows) throw (const char* ); 
+		void process_nrows(long long nrows) ; 
 
-		void do_seek(npy_intp seek_distance) throw (const char* );
+		void do_seek(npy_intp seek_distance) ;
         void goto_offset(void);
 
         // new style
         npy_intp get_nrows_to_read(PyObject* rows);
         npy_intp get_ncols_to_read(PyObject* rows);
 
-        void scan_column_values(long long fnum, char* buff) throw (const char* );
-        void read_ascii_bytes(long long colnum, char* buff) throw (const char* );
-        void read_from_text_column(long long colnum, char* buff) throw (const char* );
-        void read_from_binary_column(long long colnum, char* buff) throw (const char* );
+        void scan_column_values(long long fnum, char* buff) ;
+        void read_ascii_bytes(long long colnum, char* buff) ;
+        void read_from_text_column(long long colnum, char* buff) ;
+        void read_from_binary_column(long long colnum, char* buff) ;
 
         void read_binary_columns(PyObject* arrayobj,
                                  PyObject* colnums,
-                                 PyObject* rows) throw (const char* );
-        void skip_ascii_col_range(npy_intp start, npy_intp stop) throw (const char* );
+                                 PyObject* rows) ;
+        void skip_ascii_col_range(npy_intp start, npy_intp stop) ;
         void read_text_columns(PyObject* arrayobj,
                                PyObject* colnums,
-                               PyObject* rows) throw (const char* );
+                               PyObject* rows) ;
 
 
 		// Initialize member variables
 		void init_variables();
 
 
-        void ensure_writable(void) throw (const char* );
-        void ensure_readable(void) throw (const char* );
-        void ensure_binary(void) throw (const char* );
-        void ensure_text(void) throw (const char* );
+        void ensure_writable(void) ;
+        void ensure_readable(void) ;
+        void ensure_binary(void) ;
+        void ensure_text(void) ;
 
-        npy_intp process_slice(npy_intp row1, npy_intp row2, npy_intp step) throw (const char* );
-		void skip_rows(long long current_row, long long row2read) throw (const char* );
-		void skip_text_rows(long long nskip) throw (const char* );
-		void skip_binary_rows(long long nskip) throw (const char* );
+        npy_intp process_slice(npy_intp row1, npy_intp row2, npy_intp step) ;
+		void skip_rows(long long current_row, long long row2read) ;
+		void skip_text_rows(long long nskip) ;
+		void skip_binary_rows(long long nskip) ;
 
 		void make_scan_formats(vector<string> &formats, bool add_delim);
 		void make_print_formats(vector<string> &formats);
 
         // TODO still need to be converted
-		void WriteAllAsBinary() throw (const char* );
-		void WriteRows() throw (const char* );
-		void WriteField(long long fnum) throw (const char* );
-        void WriteArrayFieldWithBrackets(long long fnum) throw (const char* );
-        void _WriteArrayWithBrackets(long long fnum, long long dim) throw (const char* );
-		void WriteNumberAsAscii(char* buffer, long long type) throw (const char* );
-		void WriteStringAsAscii(long long fnum) throw (const char* );
+		void WriteAllAsBinary() ;
+		void WriteRows() ;
+		void WriteField(long long fnum) ;
+        void WriteArrayFieldWithBrackets(long long fnum) ;
+        void _WriteArrayWithBrackets(long long fnum, long long dim) ;
+		void WriteNumberAsAscii(char* buffer, long long type) ;
+		void WriteStringAsAscii(long long fnum) ;
 
 
 		void copy_field_info(PyArray_Descr* descr);
@@ -193,8 +193,8 @@ class Records {
 		static const int ASCII_FILE = 1;
 
 
-		//static const bool mDebug=false;
-		static const bool mDebug=true;
+		static const bool mDebug=false;
+		//static const bool mDebug=true;
 };
 
 

@@ -3004,6 +3004,9 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 
 
+  #define SWIG_exception(code, msg) do { SWIG_Error(code, msg); SWIG_fail;; } while(0) 
+
+
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_Records swig_types[0]
@@ -3530,15 +3533,13 @@ SWIGINTERN PyObject *_wrap_new_Records(PyObject *SWIGUNUSEDPARM(self), PyObject 
     } 
     arg9 = static_cast< bool >(val9);
   }
-  try {
-    result = (Records *)new Records((char const *)arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+  {
+    try {
+      result = (Records *)new Records((char const *)arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Records, SWIG_POINTER_NEW |  0 );
   if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
   if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
@@ -3563,7 +3564,13 @@ SWIGINTERN PyObject *_wrap_delete_Records(PyObject *SWIGUNUSEDPARM(self), PyObje
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Records" "', argument " "1"" of type '" "Records *""'"); 
   }
   arg1 = reinterpret_cast< Records * >(argp1);
-  delete arg1;
+  {
+    try {
+      delete arg1;
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3584,15 +3591,13 @@ SWIGINTERN PyObject *_wrap_Records_close(PyObject *SWIGUNUSEDPARM(self), PyObjec
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Records_close" "', argument " "1"" of type '" "Records *""'"); 
   }
   arg1 = reinterpret_cast< Records * >(argp1);
-  try {
-    (arg1)->close();
+  {
+    try {
+      (arg1)->close();
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3620,15 +3625,13 @@ SWIGINTERN PyObject *_wrap_Records_Write(PyObject *SWIGUNUSEDPARM(self), PyObjec
   }
   arg1 = reinterpret_cast< Records * >(argp1);
   arg2 = obj1;
-  try {
-    result = (PyObject *)(arg1)->Write(arg2);
+  {
+    try {
+      result = (PyObject *)(arg1)->Write(arg2);
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = result;
   return resultobj;
 fail:
@@ -3656,15 +3659,13 @@ SWIGINTERN PyObject *_wrap_Records_write_header_and_update_offset(PyObject *SWIG
   }
   arg1 = reinterpret_cast< Records * >(argp1);
   arg2 = obj1;
-  try {
-    result = (PyObject *)(arg1)->write_header_and_update_offset(arg2);
+  {
+    try {
+      result = (PyObject *)(arg1)->write_header_and_update_offset(arg2);
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = result;
   return resultobj;
 fail:
@@ -3698,15 +3699,13 @@ SWIGINTERN PyObject *_wrap_Records_update_row_count(PyObject *SWIGUNUSEDPARM(sel
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Records_update_row_count" "', argument " "2"" of type '" "long""'");
   } 
   arg2 = static_cast< long >(val2);
-  try {
-    result = (PyObject *)(arg1)->update_row_count(arg2);
+  {
+    try {
+      result = (PyObject *)(arg1)->update_row_count(arg2);
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = result;
   return resultobj;
 fail:
@@ -3728,15 +3727,13 @@ SWIGINTERN PyObject *_wrap_Records_read_sfile_header(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Records_read_sfile_header" "', argument " "1"" of type '" "Records *""'"); 
   }
   arg1 = reinterpret_cast< Records * >(argp1);
-  try {
-    result = (PyObject *)(arg1)->read_sfile_header();
+  {
+    try {
+      result = (PyObject *)(arg1)->read_sfile_header();
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = result;
   return resultobj;
 fail:
@@ -3770,15 +3767,13 @@ SWIGINTERN PyObject *_wrap_Records_read_columns(PyObject *SWIGUNUSEDPARM(self), 
   arg2 = obj1;
   arg3 = obj2;
   arg4 = obj3;
-  try {
-    result = (PyObject *)(arg1)->read_columns(arg2,arg3,arg4);
+  {
+    try {
+      result = (PyObject *)(arg1)->read_columns(arg2,arg3,arg4);
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = result;
   return resultobj;
 fail:
@@ -3833,15 +3828,13 @@ SWIGINTERN PyObject *_wrap_Records_read_binary_slice(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "Records_read_binary_slice" "', argument " "5"" of type '" "long long""'");
   } 
   arg5 = static_cast< long long >(val5);
-  try {
-    result = (PyObject *)(arg1)->read_binary_slice(arg2,arg3,arg4,arg5);
+  {
+    try {
+      result = (PyObject *)(arg1)->read_binary_slice(arg2,arg3,arg4,arg5);
+    } catch (const std::exception& e) {
+      SWIG_exception(SWIG_RuntimeError, e.what());
+    }
   }
-  catch(char const *_e) {
-    PyErr_SetString(PyExc_RuntimeError, _e);
-    SWIG_fail;
-    
-  }
-  
   resultobj = result;
   return resultobj;
 fail:
