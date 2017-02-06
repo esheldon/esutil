@@ -204,7 +204,7 @@ void Records::init_variables()
 
 }
 
-void Records::process_nrows(long long nrows) 
+void Records::process_nrows(long long nrows)  throw (const char* )
 {
 	if (mDebug) {cerr<<"nrows = "<<nrows<<endl;fflush(stdout);}
 	if (nrows < 1) {
@@ -251,7 +251,7 @@ void Records::goto_offset(void)
     fseek(mFptr, mFileOffset, SEEK_SET);
 }
 
-void Records::do_seek(npy_intp seek_distance) {
+void Records::do_seek(npy_intp seek_distance) throw (const char* ) {
 	if (seek_distance > 0) {
 		if(fseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
 			string err="Error skipping fields";
@@ -260,7 +260,7 @@ void Records::do_seek(npy_intp seek_distance) {
 	}
 }
 
-void Records::skip_rows(long long current_row, long long row2read)
+void Records::skip_rows(long long current_row, long long row2read) throw (const char* )
 {
 	long long rows2skip=0;
 	if (mFileType == BINARY_FILE) {
@@ -278,7 +278,7 @@ void Records::skip_rows(long long current_row, long long row2read)
 
 
 
-void Records::skip_text_rows(long long nskip)
+void Records::skip_text_rows(long long nskip) throw (const char* )
 {
 	if (nskip > 0) {
 		long long nlines = 0;
@@ -295,7 +295,7 @@ void Records::skip_text_rows(long long nskip)
 	}
 }
 
-void Records::skip_binary_rows(long long nskip)
+void Records::skip_binary_rows(long long nskip) throw (const char* )
 {
 	if (nskip > 0) {
 		if (fseeko(mFptr, mRowSize*nskip, SEEK_CUR) != 0) {
@@ -309,7 +309,7 @@ void Records::skip_binary_rows(long long nskip)
 
 
 // read all the elements of a field
-void Records::scan_column_values(long long fnum, char* input_buff)
+void Records::scan_column_values(long long fnum, char* input_buff) throw (const char* )
 {
 
     int skipping=false;
@@ -342,7 +342,7 @@ void Records::scan_column_values(long long fnum, char* input_buff)
 				err += ": EOF reached unexpectedly";
 			}
 			else {
-				err = + ": Read error";
+				err += ": Read error";
 			}
 			throw err.c_str();
 		}
@@ -353,7 +353,7 @@ void Records::scan_column_values(long long fnum, char* input_buff)
 }
 
 
-void Records::read_ascii_bytes(long long colnum, char* buff)
+void Records::read_ascii_bytes(long long colnum, char* buff)  throw (const char* )
 {
 
     int skipping=false;
@@ -394,7 +394,7 @@ void Records::read_ascii_bytes(long long colnum, char* buff)
 
 
 // read single entry
-void Records::read_from_text_column(long long colnum, char* buff)
+void Records::read_from_text_column(long long colnum, char* buff) throw (const char* )
 {
 
 	if (mTypeNums[colnum] == NPY_STRING) {
@@ -409,7 +409,7 @@ void Records::read_from_text_column(long long colnum, char* buff)
 }
 
 // read single entry
-void Records::read_from_binary_column(long long colnum, char* buff)
+void Records::read_from_binary_column(long long colnum, char* buff) throw (const char* )
 {
     int nread = fread(buff, mSizes[colnum], 1, mFptr);
     if (nread != 1) {
@@ -470,7 +470,7 @@ PyObject* Records::read_columns(PyObject* arrayobj,
 
 
 // stop is exclusive
-void Records::skip_ascii_col_range(npy_intp start, npy_intp stop)
+void Records::skip_ascii_col_range(npy_intp start, npy_intp stop) throw (const char* )
 {
     for (npy_intp col=start; col<stop; col++) {
         read_from_text_column(col, NULL);
@@ -641,7 +641,7 @@ void Records::read_binary_columns(PyObject* arrayobj,
 
 }
 
-npy_intp Records::process_slice(npy_intp row1, npy_intp row2, npy_intp step)
+npy_intp Records::process_slice(npy_intp row1, npy_intp row2, npy_intp step) throw (const char* )
 {
 	// Just do some error checking on the requested rows
 	stringstream serr;
@@ -1551,7 +1551,7 @@ PyObject* Records::Write(PyObject* obj) throw (const char* )
 	return(ret);
 }
 
-void Records::WriteAllAsBinary()
+void Records::WriteAllAsBinary() throw (const char* )
 {
 	// This is easy!
 	if (mDebug) debugout("Writing in one big fwrite");
@@ -1568,7 +1568,7 @@ void Records::WriteAllAsBinary()
 
 }
 
-void Records::WriteRows()
+void Records::WriteRows() throw (const char* )
 {
 	if (mDebug) {
 		cerr<<"Writing "<<mNrows<<" rows as ASCII"<<endl;
@@ -1589,7 +1589,7 @@ void Records::WriteRows()
 	} // rows
 }
 
-void Records::WriteField(long long fnum) 
+void Records::WriteField(long long fnum)  throw (const char* )
 {
 
 	long long nel=mNel[fnum];
@@ -1620,7 +1620,7 @@ void Records::WriteField(long long fnum)
 
 }
 
-void Records::WriteArrayFieldWithBrackets(long long fnum) 
+void Records::WriteArrayFieldWithBrackets(long long fnum)  throw (const char* )
 {
 
     // [3,2] looks like this:
@@ -1643,7 +1643,7 @@ void Records::WriteArrayFieldWithBrackets(long long fnum)
 }
 
 
-void Records::_WriteArrayWithBrackets(long long fnum, long long dim) {
+void Records::_WriteArrayWithBrackets(long long fnum, long long dim) throw (const char* ) {
 
 	long long nel=mNel[fnum];
 	long long elsize = mSizes[fnum]/nel;
@@ -1681,7 +1681,7 @@ void Records::_WriteArrayWithBrackets(long long fnum, long long dim) {
 
 
 
-void Records::WriteStringAsAscii(long long fnum)
+void Records::WriteStringAsAscii(long long fnum) throw (const char* )
 {
 	char* buffer=NULL;
 
@@ -1708,7 +1708,7 @@ void Records::WriteStringAsAscii(long long fnum)
 	}
 }
 
-void Records::WriteNumberAsAscii(char* buffer, long long type)
+void Records::WriteNumberAsAscii(char* buffer, long long type) throw (const char* )
 {
 	int res;
 
