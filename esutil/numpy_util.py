@@ -166,6 +166,10 @@ try:
 except:
     basestring=str
 try:
+    xrange
+except:
+    xrange=range
+try:
     long
 except:
     long=int

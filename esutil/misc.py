@@ -44,6 +44,16 @@ import os
 from sys import stdout, stderr
 
 try:
+    basestring
+except:
+    basestring=str
+
+try:
+    xrange
+except:
+    xrange=range
+
+try:
     import numpy
     have_numpy=True
 except:
