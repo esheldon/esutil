@@ -345,7 +345,8 @@ void Records::scan_column_values(long long fnum, char* input_buff)
             int ok=false;
 
             // for non-whitespace delimited, we can see if the character is the
-            // delimiter, meaning we have an empty field.
+            // delimiter, meaning we have an empty field.  This doesn't work at
+            // the beginning or end of the line though
             if (!mReadAsWhitespace) {
                 char c = fgetc(mFptr);
                 if (mDelim[0] == c) {
@@ -362,6 +363,8 @@ void Records::scan_column_values(long long fnum, char* input_buff)
                             ok=true;
                         }
                     }
+                } else {
+                    cerr<<"character does not match delim: '" << c <<"'\n";
                 }
             }
 
