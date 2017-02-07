@@ -47,6 +47,10 @@ except:
         except:
             pass
 
+try:
+    basestring
+except:
+    basestring=str
 
 
 try:
@@ -353,11 +357,11 @@ def write(fileobj, data, **keywords):
     finally:
         pass
 
-def read_fits_bz2(filename, **keys):
+def read_fits_bz2(fname, **keys):
     import tempfile
     verbose=keys.get('verbose',False)
 
-    bname=os.path.basename(filename)
+    bname=os.path.basename(fname)
     bname=bname.replace('.fits.bz2','')
     bname=bname.replace('.fit.bz2','')
 
@@ -369,7 +373,7 @@ def read_fits_bz2(filename, **keys):
 
     if verbose > 1:
         print('unzipping to:',tmp_name)
-    os.system('bzcat %s > %s' % (filename, tmp_name))
+    os.system('bzcat %s > %s' % (fname, tmp_name))
 
     try:
         res=read_fits(tmp_name, **keys)
@@ -380,16 +384,16 @@ def read_fits_bz2(filename, **keys):
     
     return res
 
-def read_fits(fileobj, **keywords):
+def read_fits(fname, **keywords):
     """
     Name:
         read_fits
     Purpose:
         Read data from a single fits file.
     Calling Sequence:
-        data=read_fits(fileobj, **keywords)
+        data=read_fits(fname, **keywords)
     Inputs:
-        fileobj: The file name/file object for a fits file.
+        fname: The file name
     Keywords:
         ext: Which extension, or HDU, to read.  Default first with data.
         view: What view of the data to return. Default is numpy.ndarray
@@ -408,16 +412,16 @@ def read_fits(fileobj, **keywords):
 
     import numpy
 
-    if isinstance(fileobj,basestring) and 'bz2' in fileobj:
-        return read_fits_bz2(fileobj, **keywords)
+    if 'bz2' in fname:
+        return read_fits_bz2(fname, **keywords)
 
     if fits_package is None:
         raise ImportError("Could not import fitsio or pyfits")
 
     if fits_package == 'fitsio':
-        result = read_fits_fitsio(fileobj, **keywords)
+        result = read_fits_fitsio(fname, **keywords)
     elif fits_package == 'pyfits':
-        result = read_fits_pyfits(fileobj, **keywords)
+        result = read_fits_pyfits(fname, **keywords)
     else:
         raise ValueError("expected fitsio or pyfits")
 
@@ -450,7 +454,7 @@ def read_fits(fileobj, **keywords):
     else:
         return d
 
-def read_fits_fitsio(filename, **keywords):
+def read_fits_fitsio(fname, **keywords):
     ext=keywords.get('ext',None)
     rows=keywords.get('rows',None)
     columns=keywords.get('columns',None)
@@ -461,15 +465,15 @@ def read_fits_fitsio(filename, **keywords):
         columns=fields
 
     if header=='only':
-        return fitsio.read_header(filename, **keywords)
+        return fitsio.read_header(fname, **keywords)
     else:
-        return fitsio.read(filename,
+        return fitsio.read(fname,
                            ext=ext,
                            rows=rows,
                            columns=columns,
                            header=header)
 
-def read_fits_pyfits(fileobj, **keywords):
+def read_fits_pyfits(fname, **keywords):
     import numpy
     import pyfits
     header = keywords.get('header', False)
@@ -496,8 +500,7 @@ def read_fits_pyfits(fileobj, **keywords):
             # allow columns to be synonymous with fields
             fields=columns
 
-    if isinstance(fileobj,(str,unicode)):
-        fileobj=ostools.expand_filename(fileobj)
+    fname=ostools.expand_filename(fname)
 
     if 'ignore_missing_end' not in keywords:
         # the ignore_missing_end=True is for the multitude
@@ -505,12 +508,12 @@ def read_fits_pyfits(fileobj, **keywords):
         keywords['ignore_missing_end'] = True
 
     if header == 'only':
-        return pyfits.getheader(fileobj, **keywords)
+        return pyfits.getheader(fname, **keywords)
 
     if header:
-        d,h = pyfits.getdata(fileobj, **keywords)
+        d,h = pyfits.getdata(fname, **keywords)
     else:
-        d = pyfits.getdata(fileobj, **keywords)
+        d = pyfits.getdata(fname, **keywords)
 
     view = keywords.get('view',numpy.ndarray)
     if view is not None:
@@ -529,32 +532,26 @@ def read_fits_pyfits(fileobj, **keywords):
         return d
 
 
-def write_fits(fileobj, data, **keys):
+def write_fits(fname, data, **keys):
     verbose = keys.get('verbose', False)
     if verbose:
-
-        if isinstance(fileobj,file):
-            name=f.name
-        else:
-            name=fileobj
-
         print("Writing to:",name)
 
     if fits_package == 'fitsio':
-        write_fits_fitsio(fileobj, data, **keys)
+        write_fits_fitsio(fname, data, **keys)
     elif fits_package == 'pyfits':
-        result = write_fits_pyfits(fileobj, data, **keys)
+        result = write_fits_pyfits(fname, data, **keys)
     else:
         raise ValueError("expected fitsio or pyfits")
 
-def write_fits_fitsio(fileobj, data, **keys):
+def write_fits_fitsio(fname, data, **keys):
     extname=keys.get('extname',None)
     units=keys.get('units',None)
     compress=keys.get('compress',None)
     header=keys.get('header',None)
     clobber=keys.get('clobber',False)
 
-    fitsio.write(fileobj, data, 
+    fitsio.write(fname, data, 
                  extname=extname,
                  units=units,
                  compress=compress,
@@ -563,9 +560,9 @@ def write_fits_fitsio(fileobj, data, **keys):
 
 
 
-def write_fits_pyfits(fileobj, data, **keys):
+def write_fits_pyfits(fname, data, **keys):
     import pyfits
-    pyfits.writeto(fileobj, data, **keys)
+    pyfits.writeto(fname, data, **keys)
 
 def write_rec(fileobj, data, **keys):
     sfile.write(data, fileobj, **keys)
@@ -622,37 +619,45 @@ def write_xml(fileobj, data, **keywords):
     xmltools.dict2xml(data, fileobj, roottag=roottag)
 
 def read_yaml(fileobj, **keywords):
-    if isinstance(fileobj, (str,unicode)):
-        return yaml.load(open(fileobj))
-    elif isinstance(fileobj,file):
-        return yaml.load(fileobj)
+    if isinstance(fileobj, basestring):
+        with open(fileobj) as fobj:
+            res = yaml.load(fobj)
+
     else:
-        raise ValueError("file must be a string or open file object")
+        res = yaml.load(fileobj)
+
+    return res
 
 def write_yaml(fileobj, data, **keywords):
-    if isinstance(fileobj, (str,unicode)):
-        return yaml.dump(data, open(fileobj,'w'))
-    elif isinstance(fileobj,file):
-        return yaml.dump(data, fileobj)
+    if isinstance(fileobj, basestring):
+        with open(fileobj,'w') as fobj:
+            res = yaml.dump(data, fobj)
+
     else:
-        raise ValueError("file must be a string or open file object")
+        res = yaml.dump(data, fileobj)
+
+    return res
 
 def read_pyobj(fileobj, **keywords):
-    if isinstance(fileobj, (str,unicode)):
-        return eval(open(fileobj).read())
-    elif isinstance(fileobj,file):
-        return eval(fileobj.read())
+    if isinstance(fileobj, basestring):
+
+        with open(fileobj) as fobj:
+            res = eval(fobj.read())
+
     else:
-        raise ValueError("file must be a string or open file object")
+        res = eval(fileobj.read())
+
+    return res
 
 def write_pyobj(fileobj, data, **keywords):
     import pprint
-    if isinstance(fileobj, (str,unicode)):
-        pprint.pprint(data,stream=open(fileobj,'w'))
-    elif isinstance(fileobj,file):
-        pprint.pprint(data,stream=fileobj)
+    if isinstance(fileobj, basestring):
+
+        with open(fileobj,'w') as fobj:
+            pprint.pprint(data,stream=fobj)
+
     else:
-        raise ValueError("file must be a string or open file object")
+        pprint.pprint(data,stream=fileobj)
 
 
 
@@ -699,20 +704,16 @@ def _get_fname_ftype_from_inputs(fileobj, **keywords):
 
     fs='local'
 
-    if isinstance(fileobj, file):
+    try:
         fname = fileobj.name
         fobj = fileobj
-    elif isinstance(fileobj, (str,unicode)):
+    except AttributeError:
         if is_in_hdfs(fileobj):
             fs='hdfs'
 
         # make sure we expand all ~username and other variables
         fname=ostools.expand_filename(fileobj)
         fobj = fname
-    else:
-        raise ValueError("Input must be a string or file object, or a "
-                         "list thereof")
-
 
     ftype=None
     if 'type' in keywords:
