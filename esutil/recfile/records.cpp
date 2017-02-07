@@ -337,28 +337,40 @@ void Records::scan_column_values(long long fnum, char* input_buff)
 	for (long long el=0; el<mNel[fnum]; el++) {
 		int ret = fscanf(mFptr, mScanFormats[type_num].c_str(), buff);
 		if (ret != 1) {
-            bool ok=true;
-
-			string err="ScanVal: Error reading field: "+mNames[fnum];
 			if (feof(mFptr)) {
-                ok=false;
-				err += ": EOF reached unexpectedly";
-			} else {
-                char c = fgetc(mFptr);
-                if (mDelim[0] == c) {
-                    //cerr<<"found delim, probably empty field\n";
-
-                    string tmp = "nan" + mDelim;
-                    ret = sscanf(tmp.c_str(), mScanFormats[type_num].c_str(), buff);
-                } else {
-                    ok=false;
-                    err += ": Read error";
-                }
-			}
-
-            if (!ok) {
+                string err="ScanVal: EOF reached unexpectedly reading field: "+mNames[fnum];
                 throw std::runtime_error(err);
             }
+
+            int ok=false;
+
+            // for non-whitespace delimited, we can see if the character is the
+            // delimiter, meaning we have an empty field.
+            if (!mReadAsWhitespace) {
+                char c = fgetc(mFptr);
+                if (mDelim[0] == c) {
+                
+                    // we can store nan for missing data if this is a float column
+                    if (   type_num == NPY_FLOAT ||
+                           type_num == NPY_DOUBLE ||
+                           type_num==NPY_LONGDOUBLE ) {
+
+                        string tmp = "nan" + mDelim;
+                        ret = sscanf(tmp.c_str(), mScanFormats[type_num].c_str(), buff);
+
+                        if (ret == 1) {
+                            ok=true;
+                        }
+                    }
+                }
+            }
+
+            if (!ok) { 
+                string err="ScanVal: Error reading field: "+mNames[fnum];
+                throw std::runtime_error(err);
+            }
+
+
 		}
         if (!skipping) {
             buff += mSizes[fnum]/mNel[fnum] ;
