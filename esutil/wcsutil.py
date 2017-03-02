@@ -381,7 +381,7 @@ class WCS(object):
         return x,y
 
     def ExtractProjection(self, wcs):
-        projection = wcs['ctype1'][4:].upper()
+        projection = wcs['ctype1'][4:].strip().upper()
         if projection not in _allowed_projections:
             err=("Projection type %s unsupported.  Only [%s] projections "
                  "currently supported")
@@ -1074,8 +1074,8 @@ class WCS(object):
                                   wcs['crpix2']], dtype='f8')
         self.crval = numpy.array([wcs['crval1'],
                                   wcs['crval2']], dtype='f8')
-        self.ctype = numpy.array([wcs['ctype1'],
-                                  wcs['ctype2']])
+        self.ctype = numpy.array([wcs['ctype1'].strip().upper(),
+                                  wcs['ctype2'].strip().upper()])
 
         # Get the projection from ctype
         self.projection = self.ExtractProjection(wcs)
