@@ -150,7 +150,7 @@ def colprint(*args, **keys):
     if not page:
         # should we print to a file?
         f = keys.get('file', stdout)
-        if isinstance(f, file):
+        if hasattr(f, 'write'):
             fobj = f
         else:
             f = os.path.expandvars(f)
