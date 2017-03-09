@@ -482,11 +482,7 @@ PyObject* Matcher::match(PyObject* ra_array, // all in degrees
                     double tra  = *(double *) PyArray_GETPTR1(this->ra, i_this);
                     double tdec = *(double *) PyArray_GETPTR1(this->dec, i_this);
 
-                    double dis = gcirc(ra,
-                                       dec,
-                                       tra,
-                                       tdec,
-                                       true);
+                    double dis = gcirc(ra, dec, tra, tdec, true);
 
                     // Turns out, this pushing is not a bottleneck!
                     // Time is negligible compared to the leaf finding
@@ -547,24 +543,9 @@ PyObject* Matcher::match(PyObject* ra_array, // all in degrees
 
         PyObject* output_tuple = PyTuple_New(3);
 
-        PyObject* m1out=PyArray_ZEROS(
-                                      1,
-                                      &ntotal,
-                                      NPY_INT64,
-                                      0
-                                     );
-        PyObject* m2out=PyArray_ZEROS(
-                                      1,
-                                      &ntotal,
-                                      NPY_INT64,
-                                      0
-                                     );
-        PyObject* d12out=PyArray_ZEROS(
-                                       1,
-                                       &ntotal,
-                                       NPY_FLOAT64,
-                                       0
-                                      );
+        PyObject* m1out=PyArray_ZEROS(1, &ntotal, NPY_INT64, 0);
+        PyObject* m2out=PyArray_ZEROS(1, &ntotal, NPY_INT64, 0);
+        PyObject* d12out=PyArray_ZEROS(1, &ntotal, NPY_FLOAT64, 0);
 
         for (npy_intp i=0; i<ntotal; i++) {
             npy_int64 *m1ptr  = (npy_int64* ) PyArray_GETPTR1(m1out, i);
