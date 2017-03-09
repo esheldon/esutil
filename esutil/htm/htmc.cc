@@ -193,11 +193,11 @@ PyObject* HTMC::cbincount(double rmin, // units of scale*angle in radians
     // Output counts in bins
     npy_intp npnbin = nbin;
     PyObject* counts_array = PyArray_ZEROS(
-                                           1,
-                                           &npnbin,
-                                           NPY_INT64,
-                                           0
-                                          );
+        1,
+        &npnbin,
+        NPY_INT64,
+        0
+    );
 
 
     // This is used in the basic calculations
@@ -279,15 +279,11 @@ PyObject* HTMC::cbincount(double rmin, // units of scale*angle in radians
                 npy_int64 hhi = *(npy_int64* ) PyArray_GETPTR1(htmrev2_array, leafbin+1);
 
                 if ( hlo != hhi) {
-                    //htmrev2[leafbin] != htmrev2[leafbin+1] ) {
 
                     // Now loop over the sources in this leaf node
                     int64_t nLeafBin = hhi - hlo;
-                    //htmrev2[leafbin+1] - htmrev2[leafbin];
 
                     for (int64_t ileaf=0; ileaf<nLeafBin;ileaf++) {
-
-                        //npy_intp i2 = htmrev2[ htmrev2[leafbin] + ileaf ];
 
                         npy_int64 index = hlo + ileaf;
                         npy_int64 i2 = *(npy_int64* ) PyArray_GETPTR1(htmrev2_array, index);
@@ -302,36 +298,37 @@ PyObject* HTMC::cbincount(double rmin, // units of scale*angle in radians
                             int radbin = (int) ( (logr-logrmin)/log_binsize );
                             if (radbin >=0 && radbin < nbin) {
                                 npy_int64 *cptr = (npy_int64 *) PyArray_GETPTR1(counts_array, radbin);
-                                //counts[radbin] += 1;
                                 *cptr += 1;
                                 totcount+=1;
                             } // in one of our radial bins
+
                         } // Within max angle
+
                     } // loop over objects in leaf 
                 } // points exist in this leafbin
-                } // leafid in range of list 2
-            } // loop over HTM leaves
+            } // leafid in range of list 2
+        } // loop over HTM leaves
 
-
-            if (verbose) {
-                if ( ( ((i1+1) % step) == 0 && (i1 > 0) ) 
-                     || (i1 == (n1-1)) ) {
-                    std::cout<<".";
-                    if ( ((i1+1) % linelen) == 0 || (i1 == (n1-1)) ) {
-                        std::cout<<"\n"<<(i1+1)<<"/"<<n1<<"  pair count: "<<totcount<<"\n";
-                    }
-                    fflush(stdout);
-                }
-            }
-
-        } // loop over list 1
 
         if (verbose) {
-            std::cout<<"\n";
-            fflush(stdout);
+            if ( ( ((i1+1) % step) == 0 && (i1 > 0) ) 
+                 || (i1 == (n1-1)) ) {
+                std::cout<<".";
+                if ( ((i1+1) % linelen) == 0 || (i1 == (n1-1)) ) {
+                    std::cout<<"\n"<<(i1+1)<<"/"<<n1<<"  pair count: "<<totcount<<"\n";
+                }
+                fflush(stdout);
+            }
         }
 
-        return counts_array;
+    } // loop over list 1
+
+    if (verbose) {
+        std::cout<<"\n";
+        fflush(stdout);
+    }
+
+    return counts_array;
 }
 
 Matcher::Matcher(int depth,
