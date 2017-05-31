@@ -153,7 +153,7 @@ def bscatter(xin, yin, show=True, plt=None, **keywords):
         else:
             xsize = keywords.get('xsize',512)
             ysize = keywords.get('ysize',512)
-            plt.write_image(xsize, ysize, fname)
+            plt.write_img(xsize, ysize, fname)
     else:
         if show:
             plt.show()
