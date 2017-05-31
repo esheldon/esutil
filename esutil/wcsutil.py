@@ -594,7 +594,7 @@ class WCS(object):
         """
 
         if isscalar(lon):
-            x,y = self._findxy_one(lon, lat, xtol=tol)
+            x,y = self._findxy_one(lon, lat, xtol=xtol)
         else:
             x = numpy.zeros_like(lon)
             y = numpy.zeros_like(lon)
