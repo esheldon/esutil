@@ -1109,7 +1109,7 @@ def add_log_error_bars(plt, type, x, y, err, prange, **pkeywords):
         return p
 
 
-def fake_points(symbols, labels, colors=None, sizes=None, x=-9.99e12, y=-9.99e12):
+def fake_points(symbols, labels, colors=None, sizes=None, x=9.99e12, y=9.99e12):
     """
     fake points for use with plot legends when the points object is not
     available
@@ -1133,7 +1133,8 @@ def fake_points(symbols, labels, colors=None, sizes=None, x=-9.99e12, y=-9.99e12
         keys = {'type':symbols[i]}
 
         if colors is not None:
-            keys['color'] = colors[i]
+            if colors[i] is not None:
+                keys['color'] = colors[i]
 
         if sizes is not None:
             keys['size'] = sizes[i]
