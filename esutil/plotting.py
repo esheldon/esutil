@@ -1,4 +1,9 @@
 try:
+    xrange
+except:
+    xrange=range
+
+try:
     import numpy
     from numpy import where
     have_numpy = True
