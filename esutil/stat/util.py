@@ -215,7 +215,9 @@ class Binner(dict):
         indmax = ind[-1]
         indmin = 0
         nbin = numpy.int64( (indmax-indmin)/bsize ) + 1
-        hist,rev = self._do_hist(ind, 0, inds, bsize, nbin, True)
+
+        f8ind = numpy.array(ind, dtype='f8', ndmin=1, copy=False)
+        hist,rev = self._do_hist(f8ind, 0, inds, bsize, nbin, True)
 
         # convert the indices in rev to the unlimited, unsorted frame
         self['low'] = numpy.zeros(nbin, dtype='f8')
