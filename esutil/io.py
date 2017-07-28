@@ -100,8 +100,8 @@ def read(fileobj, **keywords):
             File name or an open file object.  Can also be a sequence.  If a
             sequence is input, the return value will, by default, be a list of
             results.  If the return types are numpy arrays, one can send the
-            combine=True keyword to combine them into a single array as long
-            as the data types match.
+            combine=True (the default) keyword to combine them into a single
+            array as long as the data types match.
 
     Keywords:
         type: 
@@ -136,7 +136,7 @@ def read(fileobj, **keywords):
         combine:  If a list of filenames/fileobjects is sent, the default
             behavior is to return a list of data.  If combine=True and the
             data are numpy arrays, attempt to combine them into a single
-            array.  Only works if the data types match.
+            array.  Only works if the data types match.  Default True
         view:  If the result is derived from a numpy array, set this to
             pick the view.  E.g. pyfits returns a special pyfits type for
             binary table.  You can request a simple numpy array with fields
@@ -192,27 +192,36 @@ def read(fileobj, **keywords):
 
     # If input is a sequence, read them all.
     if isinstance(fileobj, (list,tuple)):
-        combine = keywords.get('combine', False)
+
+
+        flist = fileobj
+        nfiles=len(flist)
+
+        if nfiles==1:
+            return read(flist[0], **keywords) 
+
+        combine = keywords.get('combine', True)
+
+        # we want to default to verbose in terms of showing progress
+        verbose_progress = keywords.get('verbose', True)
 
         # a list was given
         alldata = []
-        for f in fileobj:
-            # note, only fields/columns is begin passed on but not rows
+        for i,f in enumerate(flist):
+            if verbose_progress:
+                print("reading %d/%d %s" % (i+1,nfiles,f))
+
+            # note, only fields/columns is being passed on but not rows
             # also note seproot is not being passed on
             data = read(f, **keywords) 
             alldata.append(data)
 
         if combine:
-            if len(fileobj) == 1:
-                alldata = alldata[0]
-            else:
-                fn,fobj,type,fs = _get_fname_ftype_from_inputs(fileobj[0], **keywords)
-                if type == 'fits' or type == 'rec':
-                    # this will only work if the all data has the 
-                    # same structure
-                    if verbose:
-                        print("Combining arrays")
-                    alldata = numpy_util.combine_arrlist(alldata)
+            fn,fobj,type,fs = _get_fname_ftype_from_inputs(fileobj[0], **keywords)
+            if type == 'fits' or type == 'rec':
+                # this will only work if the all data has the 
+                # same structure
+                alldata = numpy_util.combine_arrlist(alldata)
         return alldata
 
     # a scalar was input

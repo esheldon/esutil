@@ -703,7 +703,8 @@ def histogram2d(x, y,
                 ymin=None,
                 ymax=None,
                 rev=False,
-                more=False):
+                more=False,
+                **kw):
     """
     Histogram two-dimensional data.
 

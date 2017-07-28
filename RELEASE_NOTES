@@ -1,6 +1,11 @@
 v0.6.2 (not released)
 -------------------------
 
+Backward Incompatible Changes
+
+    - combine=True is now the default when reading lists of
+      files using esutil.io.read
+
 Bug Fixes
 
     - ostools.makedirs_fromfile
