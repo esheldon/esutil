@@ -148,7 +148,7 @@ classifiers = [
 
 
 setup(name='esutil',
-      version="0.6.2.3",
+      version="0.6.2.4",
       author="Erin Scott Sheldon",
       author_email="erin.sheldon@gmail.com",
       classifiers=classifiers,
