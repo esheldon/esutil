@@ -1,4 +1,4 @@
-v0.6.2 (not released)
+v0.6.2
 -------------------------
 
 Backward Incompatible Changes
@@ -8,7 +8,12 @@ Backward Incompatible Changes
 
 Bug Fixes
 
+    - lots of py3 compatability stuff
+    - stat/util.py fix bug with data type in nperbin scheme
+    - plotting.py fake_points allow no color sent
     - ostools.makedirs_fromfile
+    - wcsutil.py fix bug in  _findxy for scalar input thanks to 
+      Thomas Erben
 
 v0.6.1
 -------------------------
