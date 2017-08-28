@@ -35,6 +35,7 @@ else:
 
 if have_numpy:
     # recfile
+    include_dirs += ['esutil/recfile']
     recfile_sources = ['esutil/recfile/records.cpp',
                        'esutil/recfile/records_wrap.cpp']
     recfile_module = Extension('esutil.recfile._records', 
