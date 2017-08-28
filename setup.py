@@ -157,5 +157,5 @@ setup(name='esutil',
       license = "GPL",
       url='http://code.google.com/p/esutil/',
       packages=packages,
-      ext_modules=ext_modules,
-      install_requires=['numpy'])
+      ext_modules=ext_modules)
+#, install_requires=['numpy'])
