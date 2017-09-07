@@ -163,6 +163,9 @@ class HTMC(_object):
     def lookup_id(self, ra_array, dec_array, htm_ids_array):
         return _htmc.HTMC_lookup_id(self, ra_array, dec_array, htm_ids_array)
 
+    def get_vertices(self, id_array, v0_array, v1_array, v2_array):
+        return _htmc.HTMC_get_vertices(self, id_array, v0_array, v1_array, v2_array)
+
     def intersect(self, ra, dec, radius, inclusive):
         return _htmc.HTMC_intersect(self, ra, dec, radius, inclusive)
 

@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cstdio>
 #include <vector>
+#include <stdint.h>
 #include <math.h>
 #include "htmc.h"
 #include <algorithm> // for transform
@@ -86,6 +87,39 @@ void HTMC::lookup_id(PyObject* ra_array,
     }
 
 }
+
+void HTMC::get_vertices(const PyObject* id_array, // 1-element array of uint64
+                        PyObject* v0_array,
+                        PyObject* v1_array,
+                        PyObject* v2_array) throw (const char* ) {
+
+    uint64 id=0;
+    double *ptr = NULL;
+    SpatialVector v0, v1, v2;
+
+    const SpatialIndex &index = mHtmInterface.index();
+
+    id = *(uint64 *) PyArray_GETPTR1(id_array,0);
+
+    index.nodeVertex(id, v0, v1, v2);
+
+    ptr = (double *) PyArray_DATA(v0_array);
+    ptr[0] = v0.x();
+    ptr[1] = v0.y();
+    ptr[2] = v0.z();
+
+    ptr = (double *) PyArray_DATA(v1_array);
+    ptr[0] = v1.x();
+    ptr[1] = v1.y();
+    ptr[2] = v1.z();
+
+    ptr = (double *) PyArray_DATA(v2_array);
+    ptr[0] = v2.x();
+    ptr[1] = v2.y();
+    ptr[2] = v2.z();
+
+}
+
 
 PyObject* HTMC::intersect(double ra, // all in degrees
                           double dec,

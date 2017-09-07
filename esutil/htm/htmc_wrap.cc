@@ -3849,6 +3849,50 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_HTMC_get_vertices(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  HTMC *arg1 = (HTMC *) 0 ;
+  PyObject *arg2 = (PyObject *) 0 ;
+  PyObject *arg3 = (PyObject *) 0 ;
+  PyObject *arg4 = (PyObject *) 0 ;
+  PyObject *arg5 = (PyObject *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "id_array",(char *) "v0_array",(char *) "v1_array",(char *) "v2_array", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOOO:HTMC_get_vertices",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_HTMC, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "HTMC_get_vertices" "', argument " "1"" of type '" "HTMC *""'"); 
+  }
+  arg1 = reinterpret_cast< HTMC * >(argp1);
+  arg2 = obj1;
+  arg3 = obj2;
+  arg4 = obj3;
+  arg5 = obj4;
+  try {
+    (arg1)->get_vertices((PyObject const *)arg2,arg3,arg4,arg5);
+  }
+  catch(char const *_e) {
+    PyErr_SetString(PyExc_RuntimeError, _e);
+    SWIG_fail;
+    
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_HTMC_intersect(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   HTMC *arg1 = (HTMC *) 0 ;
@@ -4212,6 +4256,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"HTMC_init", (PyCFunction) _wrap_HTMC_init, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"delete_HTMC", _wrap_delete_HTMC, METH_VARARGS, NULL},
 	 { (char *)"HTMC_lookup_id", (PyCFunction) _wrap_HTMC_lookup_id, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"HTMC_get_vertices", (PyCFunction) _wrap_HTMC_get_vertices, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"HTMC_intersect", (PyCFunction) _wrap_HTMC_intersect, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"HTMC_cbincount", (PyCFunction) _wrap_HTMC_cbincount, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"HTMC_get_depth", _wrap_HTMC_get_depth, METH_VARARGS, NULL},

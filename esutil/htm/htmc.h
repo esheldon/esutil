@@ -38,6 +38,12 @@ class HTMC {
                 PyObject* htm_ids_array
         ) throw (const char *);
 
+        void get_vertices(const PyObject* id_array, // 1-element array of uint64
+                          PyObject* v0_array,
+                          PyObject* v1_array,
+                          PyObject* v2_array) throw (const char* );
+
+
         PyObject* intersect(
                             double ra, // all in degrees
                             double dec,

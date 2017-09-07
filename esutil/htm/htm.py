@@ -71,6 +71,30 @@ class HTM(htmc.HTMC):
 
         return htm_ids
 
+    def get_vertices(self, id):
+        """
+        look up the vertices of the input triangle
+
+        parameters
+        ----------
+        id: integer
+            Index of an HTM triangle.
+
+        returns
+        -------
+        v1, v2, v3: arrays
+            Each is an (x,y,z) representing the corners of a triangle
+        """
+
+        id_array = numpy.array([id], dtype='u8')
+
+        v0 = numpy.zeros(3, dtype='f8')
+        v1 = numpy.zeros(3, dtype='f8')
+        v2 = numpy.zeros(3, dtype='f8')
+        super(HTM,self).get_vertices(id_array, v0, v1, v2)
+
+        return v0, v1, v2
+
     def intersect(self, ra, dec, radius, inclusive=True):
         """
         look up all triangles that are contained within or intersect a circle
