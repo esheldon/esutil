@@ -99,9 +99,6 @@ class Recfile(object):
         Currently the delimiter is forced to be a comma because the authors
         were implementing postgres input files.
 
-    verbose:
-        Print information about processing.  Default False.
-
     examples
     --------
     Instantiate a new Recfile class
@@ -171,7 +168,6 @@ class Recfile(object):
         dtype=keys.get('dtype',None)
         nrows=keys.get('nrows',-9999)
 
-        self.verbose=keys.get('verbose',False)
         self.bracket_arrays=keys.get('bracket_arrays',False)
 
         self.padnull=keys.get('padnull',False)
@@ -202,9 +198,6 @@ class Recfile(object):
         # expand shortcut variables
         filename = os.path.expanduser(filename)
         self.filename = os.path.expandvars(filename)
-
-        if self.verbose:
-            stdout.write("\nOpening file: %s\n" % filename)
 
         if self.mode not in ['r','r+','w','w+']:
             raise ValueError("bad mode: '%s'" % self.mode)
@@ -462,10 +455,6 @@ class Recfile(object):
 
 
         dataview = data.view(numpy.ndarray)
-        if self.verbose:
-            stdout.write("Writing %s: %s\n" % \
-                (dataview.size,pprint.pformat(dataview.dtype.descr)))
-
 
         if self.is_ascii:
             # for ascii, make sure the data are in native format.  This greatly
@@ -723,8 +712,6 @@ class Recfile(object):
         if rmin < 0 or rmax >= self.nrows:
             raise ValueError("Requested rows range from %s->%s: out of "
                              "range %s->%s" % (rmin,rmax,0,self.nrows-1))
-        if self.verbose:
-            stdout.write("\t\tReading %s rows\n" % len(rows2read))
 
         return rows2read
 
