@@ -43,7 +43,6 @@ Classes
 """
 # vim: set filetype=python :
 import sys
-from sys import stdout,stderr
 import os
 import pprint
 import copy
@@ -785,40 +784,8 @@ class SFile:
         self._data_start = offset
         lines=hdrstring.split('\n')
         size = self._extract_size_from_string(lines[0])
-        #print("found size:",size)
-        #print("whole header:\n")
-        #print(hdrstring,end='')
-        #print("-------------\n")
-
-        '''
-        with open(self._filename,'rt') as fobj:
-            print("\nreading a line")
-            #line = fobj.readline().strip()
-            line = fobj.readline()
-            print("\nread line:",line)
-            
-            size = self._extract_size_from_string(line)
-
-            # Read through the header until we hit "END"
-            lines = []
-            line=fobj.readline().strip()
-            while line.upper() != 'END':
-                lines.append(line)
-                line=fobj.readline().strip()
-
-            # read one more line, which should be blank
-            line = fobj.readline()
-            if line.strip() != '':
-                raise RuntimeError("Header should end with END on it's own line "
-                                   "followed by a blank line")
-
-            # now sitting where the data should start
-            self._data_start = fobj.tell()
-        '''
 
         hdrdict_string_lines = lines[1:len(lines)-3]
-        #print("hdr dict lines:")
-        #print('\n'.join(hdrdict_string_lines))
         hdrdict_string= ' '.join(hdrdict_string_lines)
         hdr = eval(hdrdict_string)
 
