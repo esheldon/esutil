@@ -544,7 +544,7 @@ def read_fits_pyfits(fname, **keywords):
 def write_fits(fname, data, **keys):
     verbose = keys.get('verbose', False)
     if verbose:
-        print("Writing to:",name)
+        print("Writing to:",fname)
 
     if fits_package == 'fitsio':
         write_fits_fitsio(fname, data, **keys)
