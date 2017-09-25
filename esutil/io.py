@@ -233,7 +233,7 @@ def read(fileobj, **keywords):
         return data
     else:
         if verbose:
-            print("Reading:",fname)
+            print("reading:",fname)
 
     # pick the right reader based on type
     try:
@@ -337,6 +337,9 @@ def write(fileobj, data, **keywords):
 
     # a scalar was input
     fname,fobj,type,fs =_get_fname_ftype_from_inputs(fileobj, **keywords)
+
+    if verbose:
+        print("writing:",fname)
 
     if fs == 'hdfs':
         with hdfs.HDFSFile(fname, verbose=verbose) as hdfs_file:
@@ -542,10 +545,6 @@ def read_fits_pyfits(fname, **keywords):
 
 
 def write_fits(fname, data, **keys):
-    verbose = keys.get('verbose', False)
-    if verbose:
-        print("Writing to:",fname)
-
     if fits_package == 'fitsio':
         write_fits_fitsio(fname, data, **keys)
     elif fits_package == 'pyfits':
@@ -586,9 +585,13 @@ def read_rec(fileobj, **keys):
     columns=keys.get('columns',None)
     fields=keys.get('fields',None)
     ensure_native = keys.get('ensure_native',False)
+    verbose=keys.get('verbose',False)
+
 
     
     if header == 'only':
+        if verbose:
+            print("reading header from:",fileobj)
         return sfile.read_header(fileobj)
 
     # if dtype is sent, we assume there is no header at all
