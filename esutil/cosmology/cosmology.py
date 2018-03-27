@@ -7,7 +7,7 @@ from . import _cosmolib
 
 _CLIGHT=2.99792458e5
 
-class Cosmo:
+class Cosmo(object):
     """
     A Class for calculating  cosmological distances.  
 
@@ -93,6 +93,13 @@ class Cosmo:
                  omega_m=0.3, 
                  omega_l=0.7,
                  omega_k=None):
+
+        # these are the input values, not extracted ones.  Useful for
+        # building a copy
+        self._flat=flat
+        self._omega_m=omega_m
+        self._omega_l=omega_l
+        self._omega_k=omega_k
 
         flat, omega_m, omega_l, omega_k = \
                 self.extract_parms(omega_m,omega_l,omega_k,flat)
@@ -433,6 +440,33 @@ omega_l: %s
 omega_k: %s
         """ % (self._H0, self.flat(), self.omega_m(), self.omega_l(), self.omega_k())
         return m
+
+    def __copy__(self):
+        """
+        make a copy.  Note this is not the usual
+        copy, it just makes a new instance.
+        """
+        return Cosmo(
+            H0=self._H0,
+            flat=self._flat,
+            omega_m=self._omega_m,
+            omega_l=self._omega_l,
+            omega_k=self._omega_k,
+        )
+
+    def __deepcopy__(self, memo):
+        """
+        make a copy.  Note this is not the usual
+        deepcopy, it just makes a new instance.
+        """
+        return Cosmo(
+            H0=self._H0,
+            flat=self._flat,
+            omega_m=self._omega_m,
+            omega_l=self._omega_l,
+            omega_k=self._omega_k,
+        )
+
 
     def extract_parms(self, omega_m, omega_l, omega_k, flat):
         if omega_k is not None:
