@@ -267,11 +267,14 @@ std::map<const char*,int> NumpyVector<T>::mNumpyIdMap;
 
 #if PY_MAJOR_VERSION >= 3
 static int *init_numpy(void) {
+    import_array();
+    return NULL;
+}
 #else
 static void init_numpy(void) {
-#endif
-	import_array();
+    import_array();
 }
+#endif
 
 
 template <class T>
