@@ -9,11 +9,14 @@
 
 #if PY_MAJOR_VERSION >= 3
 static int *init_numpy(void) {
+    import_array();
+    return NULL;
+}
 #else
 static void init_numpy(void) {
-#endif
-	import_array();
+    import_array();
 }
+#endif
 
 // check unicode for python3, string for python2
 static int is_python_string(const PyObject* obj)
