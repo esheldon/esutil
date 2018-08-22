@@ -424,7 +424,7 @@ def read_fits(fname, **keywords):
 
     import numpy
 
-    if 'bz2' in fname:
+    if fname[-4:] == '.bz2':
         return read_fits_bz2(fname, **keywords)
 
     if fits_package is None:
