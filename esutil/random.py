@@ -27,6 +27,10 @@ Classes:
         decomposition
 """
 from __future__ import print_function
+try:
+    xrange
+except:
+    xrange=range
 
 try:
     import numpy
