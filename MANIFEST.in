@@ -2,3 +2,4 @@ graft esutil/recfile
 graft esutil/cosmology
 graft esutil/htm
 graft esutil/htm/htm_src
+include LICENSE
