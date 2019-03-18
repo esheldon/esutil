@@ -397,7 +397,7 @@ def makedirs_fromfile(f, verbose=False, allow_fail=False):
             try:
                 os.makedirs(d)
             except OSError as ex:
-                if ex.errno == errno.EEXIST and os.path.isdir(path):
+                if ex.errno == errno.EEXIST and os.path.isdir(d):
                     pass
                 else:
                     if not allow_fail:
