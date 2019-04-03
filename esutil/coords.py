@@ -98,7 +98,11 @@ license="""
 
 try:
     import numpy
-    from numpy import where, sin, cos, arccos, arcsin, arctan2, sqrt, rad2deg, deg2rad
+    from numpy import (
+        where, zeros,
+        sin, cos, arccos, arcsin,
+        arctan2, sqrt, rad2deg, deg2rad,
+    )
     have_numpy=True
 except:
     have_numpy=False
@@ -1110,7 +1114,7 @@ def randsphere(num, ra_range=None, dec_range=None, system='eq'):
     else:
         return ra, dec
 
-def randcap(nrand, ra, dec, rad, get_radius=False):
+def randcap(nrand, ra, dec, rad, get_radius=False, dorot=False):
     """
     Generate random points in a sherical cap
 
@@ -1122,60 +1126,74 @@ def randcap(nrand, ra, dec, rad, get_radius=False):
     ra,dec:
         The center of the cap in degrees.  The ra should be within [0,360) and
         dec from [-90,90]
-    rad:
+    rad: float
         radius of the cap, same units as ra,dec
-
     get_radius: bool, optional
         if true, return radius of each point in radians
+    dorot: bool
+        If dorot is True, generate the points on the equator and rotate them to
+        be centered at the desired location.  This is the default when the dec
+        is within 0.1 degrees of the pole, to avoid calculation issues
     """
+
     # generate uniformly in r**2
-    rand_r = numpy.random.random(nrand)
-    rand_r = sqrt(rand_r)*rad
+    if dec >= 89.9 or dec <= -89.9:
+        dorot=True
 
-    # put in degrees
-    numpy.deg2rad(rand_r,rand_r)
+    if dorot:
+        tra, tdec = 90.0, 0.0
+        rand_ra,rand_dec, rand_r = randcap(nrand, 90.0, 0.0, rad, get_radius=True)
+        rand_ra,rand_dec = rotate(0.0, dec-tdec, 0.0, rand_ra, rand_dec)
+        rand_ra,rand_dec = rotate(ra-tra, 0.0, 0.0, rand_ra, rand_dec)
+    else:
 
-    # generate position angle uniformly 0,2*PI
-    rand_posangle = numpy.random.random(nrand)*2*PI
+        rand_r = numpy.random.random(nrand)
+        rand_r = sqrt(rand_r)*rad
 
-    theta = numpy.array(dec, dtype='f8',ndmin=1,copy=True)
-    phi = numpy.array(ra,dtype='f8',ndmin=1,copy=True)
-    theta += 90
+        # put in degrees
+        numpy.deg2rad(rand_r,rand_r)
 
-    numpy.deg2rad(theta,theta)
-    numpy.deg2rad(phi,phi)
+        # generate position angle uniformly 0,2*PI
+        rand_posangle = numpy.random.random(nrand)*2*PI
 
-    sintheta = sin(theta)
-    costheta = cos(theta)
-    sinphi = sin(phi)
-    cosphi = cos(phi)
+        theta = numpy.array(dec, dtype='f8',ndmin=1,copy=True)
+        phi = numpy.array(ra,dtype='f8',ndmin=1,copy=True)
+        theta += 90
 
-    sinr = sin(rand_r)
-    cosr = cos(rand_r)
+        numpy.deg2rad(theta,theta)
+        numpy.deg2rad(phi,phi)
 
-    cospsi = cos(rand_posangle)
-    costheta2 = costheta*cosr + sintheta*sinr*cospsi
+        sintheta = sin(theta)
+        costheta = cos(theta)
+        sinphi = sin(phi)
+        cosphi = cos(phi)
 
-    numpy.clip(costheta2, -1, 1, costheta2)
+        sinr = sin(rand_r)
+        cosr = cos(rand_r)
 
-    # gives [0,pi)
-    theta2 = arccos(costheta2)
-    sintheta2 = sin(theta2)
+        cospsi = cos(rand_posangle)
+        costheta2 = costheta*cosr + sintheta*sinr*cospsi
 
-    cosDphi = (cosr - costheta*costheta2)/(sintheta*sintheta2)
+        numpy.clip(costheta2, -1, 1, costheta2)
 
-    numpy.clip(cosDphi, -1, 1, cosDphi)
-    Dphi = arccos(cosDphi)
+        # gives [0,pi)
+        theta2 = arccos(costheta2)
+        sintheta2 = sin(theta2)
 
-    # note fancy usage of where
-    phi2=numpy.where(rand_posangle > PI, phi+Dphi, phi-Dphi)
+        cosDphi = (cosr - costheta*costheta2)/(sintheta*sintheta2)
 
-    numpy.rad2deg(phi2,phi2)
-    numpy.rad2deg(theta2,theta2)
-    rand_ra  = phi2
-    rand_dec = theta2-90.0
+        numpy.clip(cosDphi, -1, 1, cosDphi)
+        Dphi = arccos(cosDphi)
 
-    atbound(rand_ra, 0.0, 360.0)
+        # note fancy usage of where
+        phi2=numpy.where(rand_posangle > PI, phi+Dphi, phi-Dphi)
+
+        numpy.rad2deg(phi2,phi2)
+        numpy.rad2deg(theta2,theta2)
+        rand_ra  = phi2
+        rand_dec = theta2-90.0
+
+        atbound(rand_ra, 0.0, 360.0)
 
     if get_radius:
         numpy.rad2deg(rand_r, rand_r)
@@ -1183,6 +1201,116 @@ def randcap(nrand, ra, dec, rad, get_radius=False):
     else:
         return rand_ra, rand_dec
 
+
+def randcap_brute(nrand, ra, dec, rad, get_radius=False):
+    """
+    Generate random points in a sherical cap using brute
+    force rejection sampling. This is extremely
+    slow and is used for testing purposes only.
+
+    parameters
+    ----------
+
+    nrand: int
+        The number of random points
+    ra,dec: float
+        The center of the cap in degrees.  The ra should be within [0,360) and
+        dec from [-90,90]
+    rad: float
+        radius of the cap, same units as ra,dec
+    get_radius: bool, optional
+        if true, return radius of each point in radians
+    """
+
+    ora=zeros(nrand)
+    odec=zeros(nrand)
+    orad=zeros(nrand)
+
+    ngood=0
+    nleft=nrand
+
+    while ngood < nrand:
+        tra,tdec = randsphere(nleft)
+        d = sphdist(ra, dec, tra, tdec)
+        w,=where(d <= rad)
+        if w.size > 0:
+            ora[ngood:ngood+w.size] = tra[w]
+            odec[ngood:ngood+w.size] = tdec[w]
+            orad[ngood:ngood+w.size] = d[w]
+
+            ngood += w.size
+            nleft -= w.size
+
+    if get_radius:
+        return ora, odec, orad
+    else:
+        return ora, odec
+
+
+def rotate(phi, theta, psi, ra, dec):
+    """
+    rotation the given positions on the sphere
+
+    The convention is the usual zxz
+
+    Parameters
+    ----------
+    phi, theta, psi: numbers
+        The euler angles in zxz convention
+    ra, dec: numbers or arrays
+        positions to be rotated
+    """
+
+    if hasattr(ra,'__len__'):
+        is_scalar=False
+    else:
+        is_scalar=True
+        
+    ra = numpy.array(ra, ndmin=1, copy=False)
+    dec = numpy.array(dec, ndmin=1, copy=False)
+    if ra.size != dec.size:
+        raise ValueError('ra[%d] has different size than '
+                         'dec[%d]' % (ra.size,dec.size))
+
+    twopi  = 2.0*PI
+    fourpi = 4.0*PI
+
+    # use negative; rotating the points is like rotating
+    # the coord system in the opposite direction
+    phi = deg2rad(-phi)
+    theta = deg2rad(-theta)
+    psi = deg2rad(-psi)
+
+    sintheta = sin( theta )
+    costheta = cos( theta )
+
+
+    a = deg2rad(ra) - phi
+    b = deg2rad(dec)
+
+    sb = sin(b)
+    cb = cos(b)
+    cbsa = cb * sin(a)
+
+    b  = -sintheta * cbsa + costheta * sb
+
+    w, = numpy.where(b > 1.0)
+    if w.size > 0:
+        b[w] = 1.0
+
+    dec_out = arcsin(b)
+
+    a =  arctan2( costheta * cbsa + sintheta * sb, cb * cos(a) )
+    ra_out = ( (a+psi+fourpi) % twopi)
+
+    rad2deg(ra_out, out=ra_out)
+    rad2deg(dec_out, out=dec_out)
+
+    if is_scalar:
+        ra_out = ra_out[0]
+        dec_out = dec_out[0]
+
+    return ra_out, dec_out
 
 def rect_area(lon_min, lon_max, lat_min, lat_max):
     """
