@@ -1198,8 +1198,8 @@ def make_xy_grid(n, xrang, yrang):
 
     x= numpy.outer(x, ones)
     y= numpy.outer(ones, y)
-    x = x.flatten(1)
-    y = y.flatten(1)
+    x = x.flatten('F')
+    y = y.flatten('F')
 
     return x,y
 
