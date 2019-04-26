@@ -573,7 +573,7 @@ class SqliteConnection(sqlite.Connection):
         if self.verbose:
             stdout.write("Writing to temporary file: %s\n" % tmpname)
         # padding nulls since sqlite cannot deal with them
-        r = recfile.Open(tmpf.file,mode='w',delim='\t', padnull=True)
+        r = recfile.Open(tmpname,mode='w',delim='\t', padnull=True)
         r.write(data)
         r.close()
         tmpf.close()
