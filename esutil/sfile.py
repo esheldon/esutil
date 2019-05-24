@@ -74,11 +74,7 @@ except:
 SFILE_VERSION='1.0'
 
 
-def Open(filename, mode='r', **keys):
-    sf = SFile(filename, mode=mode, **keys)
-    return sf
-
-class SFile:
+class SFile(object):
     """
     Class SFile
 
@@ -284,6 +280,20 @@ class SFile:
             raise RuntimeError("no file has been opened for reading")
 
         return self._hdr['_SIZE']
+
+    @property
+    def nrows(self):
+        """
+        get the number of rows in the file
+        """
+        return self.get_nrows()
+
+    @property
+    def dtype(self):
+        """
+        get the number of rows in the file
+        """
+        return self._dtype
 
     def get_header(self):
         """
@@ -851,18 +861,11 @@ class SFile:
         rep = "\n".join(slist)
         return rep
 
-
-
-    def __del__(self):
-        self.close()
     def __enter__(self):
         return self
+
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
-
-
-
-
 
 
 def write(outfile, data, **keys):
@@ -1016,7 +1019,6 @@ def read(filename, **keys):
 
     return data
 
-    
 
 def read_header(filename):
     """
@@ -1077,7 +1079,7 @@ def split_fields(data, fields=None, getnames=False):
             raise ValueError("Could not extract fields: data has "
                              "no fields")
         return (data,)
-    
+
     if fields is None:
         fields = allfields
     else:
@@ -1148,7 +1150,10 @@ def _fix_range(i, maxval):
         i=maxval
     return i
 
-
+# deprecated
+def Open(filename, mode='r', **keys):
+    sf = SFile(filename, mode=mode, **keys)
+    return sf
 
 def test():
     """
@@ -1160,4 +1165,3 @@ def test():
 
     write(data, tmpfile)
     read(tmpfile)
-

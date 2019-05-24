@@ -388,9 +388,9 @@ class Recfile(object):
             if read_all_cols and read_all_rows:
                 result = self._read_binary_slice(slice(0,self.nrows,1))
 
-            elif read_all_cols:
-                # read some row subset
-                result = self.robj.read_binary_rows(rows)
+            #elif read_all_cols:
+            #    # read some row subset
+            #    result = self.robj.read_binary_rows(rows)
 
             else:
                 result = self._read_columns(colnums,rows)
@@ -720,7 +720,9 @@ class Recfile(object):
             fields=columns
 
         if fields is None:
-            return None, False
+            # return None, False
+            colnums = numpy.arange(self.colnames.size)
+            return colnums, False
 
         is_scalar=numpy.isscalar(fields)
         if is_scalar:
