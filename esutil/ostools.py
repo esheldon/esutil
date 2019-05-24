@@ -164,7 +164,7 @@ def path_join(*paths):
 
         # join a list of path elements
         p=path_join(['/tmp','file.txt']) # gives /tmp/file.txt
-        
+
         # Join a path element with a list of path elements
         p=path_join('/tmp', ['test','file.txt']) # gives /tmp/test/file.txt
         p=path_join(['/tmp','test'], 'file.txt') # gives /tmp/test/file.txt
@@ -229,11 +229,11 @@ def expand_path(filename):
 expand_filename=expand_path
 
 
-def exec_process(command, 
-                 timeout=None, 
+def exec_process(command,
+                 timeout=None,
                  poll=1,
-                 stdout_file=subprocess.PIPE, 
-                 stderr_file=subprocess.PIPE, 
+                 stdout_file=subprocess.PIPE,
+                 stderr_file=subprocess.PIPE,
                  shell=True,
                  verbose=False):
     """
@@ -306,10 +306,12 @@ def exec_process(command,
 
 
     stdout.flush()
-    pobj = subprocess.Popen(cmd, 
-                            stdout=stdout_fileobj, 
-                            stderr=stderr_fileobj, 
-                            shell=shell)
+    pobj = subprocess.Popen(
+        cmd,
+        stdout=stdout_fileobj,
+        stderr=stderr_fileobj,
+        shell=shell,
+    )
 
     if timeout is not None:
         exit_status, stdout_ret, stderr_ret = _poll_subprocess(pobj, timeout, poll)
@@ -320,9 +322,9 @@ def exec_process(command,
         exit_status = pobj.returncode
 
     # close them if we opened them
-    if isinstance(stdout_fileobj, file) and not stdout_was_entered:
+    if hasattr(stdout_fileobj, 'close') and not stdout_was_entered:
         stdout_fileobj.close()
-    if isinstance(stderr_fileobj, file) and not stderr_was_entered:
+    if hasattr(stderr_fileobj, 'close') and not stderr_was_entered:
         stderr_fileobj.close()
 
     return exit_status, stdout_ret, stderr_ret
