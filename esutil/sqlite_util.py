@@ -100,6 +100,7 @@ Classes:
 
 import os
 import tempfile
+from tempfile import NamedTemporaryFile
 import shutil
 import sys
 from sys import stdout
@@ -419,9 +420,9 @@ class SqliteConnection(sqlite.Connection):
         row = rows[0]
 
         dt=[]
-        for i in xrange(len(row)):
+        for i, val in enumerate(row):
             name = description[i][0].lower()
-            val = row[i]
+            #val = row[i]
             if val is None:
                 raise ValueError("Cannot work with None/Null types "
                                  "when converting to recarray")
@@ -490,8 +491,7 @@ class SqliteConnection(sqlite.Connection):
         curs.execute(query)
 
 
-    def array2table(self, arr, tablename, 
-                    create=False, cleanup=True):
+    def array2table(self, arr, tablename, create=False, cleanup=True):
         """
         Name:
             array2table
@@ -509,23 +509,23 @@ class SqliteConnection(sqlite.Connection):
             tablename: The name for a table.  It is created
                 if it doesn't exist.
         Keywords:
-            create: 
+            create:
                 If True, drop any existing table with the same name.
                 Otherwise, attempt to append.
-            cleanup: 
+            cleanup:
                 If not True, leave the temporary file for debugging
 
         """
 
         self._create_tabledef_from_array(arr, tablename, force=create)
-        tmpname = self.write_import_file(arr, extra=tablename)
-        self.import_file(tmpname, tablename)
 
-        if cleanup:
-            if self.verbose:
-                stdout.write("Cleaning up temporary file %s\n" % tmpname)
-            os.remove(tmpname)
-            
+        with NamedTemporaryFile(dir=self.tmpdir,
+                                suffix='.csv',
+                                delete=cleanup) as tmpf:
+
+            self.write_import_file(tmpf.name, arr)
+            self.import_file(tmpf.name, tablename)
+
     def _create_tabledef_from_array(self, arr, tablename, force=False):
         """
         Create the table definition from the array descriptor.
@@ -550,13 +550,14 @@ class SqliteConnection(sqlite.Connection):
 
     def import_file(self, filename, tablename):
         import esutil
-        command="""
-            sqlite3 -separator '\t' %s ".import %s %s" 
+        command=r"""
+            sqlite3 -separator '|' %s ".import %s %s"
         """ % (self.dbfile, filename, tablename)
 
         status, stdo, stde = \
             esutil.ostools.exec_process(command, verbose=self.verbose)
-        if status != 0 or stde != "":
+
+        if status != 0:
             mess="""
             Error occurred:
                 exit_status: %s
@@ -565,34 +566,14 @@ class SqliteConnection(sqlite.Connection):
             """ % (status,stdo,stde)
             raise RuntimeError(mess)
 
-    def write_import_file(self, data, extra='sqlite'):
+    def write_import_file(self, fname, data):
         from esutil import recfile
-        tmpf = self.temp_file(extra)
-        tmpname = tmpf.name
 
         if self.verbose:
-            stdout.write("Writing to temporary file: %s\n" % tmpname)
-        # padding nulls since sqlite cannot deal with them
-        r = recfile.Open(tmpf.file,mode='w',delim='\t', padnull=True)
-        r.write(data)
-        r.close()
-        tmpf.close()
+            stdout.write("Writing to temporary file: %s\n" % fname)
 
-        return tmpname
-
-
-    def temp_file(self, extra):
-        # write data to a temporary csv file and then import.  We need
-        # to specify delete=False so the file will remain on disk after
-        # we close it
-        tmpf=tempfile.NamedTemporaryFile(dir=self.tmpdir,
-                                         prefix=extra+'-temp-', 
-                                         suffix='.csv',
-                                         delete=False)
-        return tmpf
-
-
-
+        with recfile.Recfile(fname, mode='w', delim='|', padnull=True) as rec:
+            rec.write(data)
 
     def fromarray(self,arr,tablename,create=False,cleanup=True):
         """
