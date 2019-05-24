@@ -149,7 +149,19 @@ class SqliteConnection(sqlite3.Connection):
 
         self.row_factory = sqlite3.Row
 
-    def describe(self, name=None, type='table'):
+    def describe_table(self, name):
+        """
+        Print a visually appealing description of the database table.
+
+        Parameters
+        ----------
+        name: str
+            table name
+        """
+
+        self.describe(type='table', name=name)
+
+    def describe(self, type=None, name=None):
         """
         Name:
             describe
