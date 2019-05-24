@@ -1,49 +1,102 @@
+"""
+Name:
+    sqlite_util
+
+Purpose:
+    Some utilities to use sqlite databases with numpy
+
+Classes:
+    SqliteConnection, a numpy aware sqlite class, with other nice
+    features added
+"""
 from __future__ import print_function
 
-_instantiate_docs="""
+import numpy
+import sqlite3
+import os
+import tempfile
+from tempfile import NamedTemporaryFile
+# import sys
+from sys import stdout
+
+
+# sqlite only has integer and real types.  Because we don't
+# know the true size of each field we'll have to read them
+# as 8-byte
+_np2sqlite = {}
+_np2sqlite['i1'] = 'integer'
+_np2sqlite['int8'] = 'integer'
+_np2sqlite['u1'] = 'integer'
+_np2sqlite['uint8'] = 'integer'
+
+_np2sqlite['i2'] = 'integer'
+_np2sqlite['int16'] = 'integer'
+_np2sqlite['u2'] = 'integer'
+_np2sqlite['uint16'] = 'integer'
+
+_np2sqlite['i4'] = 'integer'
+_np2sqlite['int32'] = 'integer'
+_np2sqlite['u4'] = 'integer'
+_np2sqlite['uint32'] = 'integer'
+
+_np2sqlite['i8'] = 'integer'
+_np2sqlite['int64'] = 'integer'
+# possible loss of information
+_np2sqlite['u8'] = 'integer'
+_np2sqlite['uint64'] = 'integer'
+
+_np2sqlite['f4'] = 'real'
+_np2sqlite['float32'] = 'real'
+_np2sqlite['f8'] = 'real'
+_np2sqlite['float64'] = 'real'
+
+
+class SqliteConnection(sqlite3.Connection):
+    """
     Class:
         SqliteConnection
     Purpose:
         Inherits from the sqlite3.Connection class and adds
-        new functionality. 
+        new functionality, including support numpy arrays.
 
     Useful Methods:
         See each method's documentation for more details.
 
-            execute: 
+            execute:
                 Execute a query and return the cursor. Alternatively if
                 the keyword asarray=True return the result as a numpy
                 array with fields corresponding to the columns (recarray).
 
-            array2table:  
+            array2table:
                 Stuff a numpy array with fields (recarray) into a table,
                 creating it if necessary.  The column names will match
                 those in the array.  Requires the sqlite3 command
                 line tool.
 
-            table_exists: 
+            table_exists:
                 Check if the table exists.
 
-            describe:  
+            describe:
                 Print a visually appealing description of a database,
                 index, table, etc.
 
-            info: 
+            info:
                 Get info about objects in the database, e.g. tables,
                 indexes.
 
-            table_info: 
+            table_info:
                 Get info about a table.
 
             drop:
                 Drop an object from the database.
 
-            add_index: 
+            add_index:
                 Add an index to a table.
 
     Instantiation:
 
-        sc = SqliteConnection(dbfile, tmpdir=, verbose=False, **sqlite_keywords)
+        sc = SqliteConnection(dbfile, tmpdir=, verbose=False, **kw)
+        where **kw are sent to the sqlite connection
 
         Inputs:
             tmpdir: Where to place the temporary files when importing
@@ -57,7 +110,7 @@ _instantiate_docs="""
 
         # put a recarray into a table
         >>> print(arr.dtype)
-        [('id', '<i8'), ('ra', '<f8'), ('dec', '<f8'), 
+        [('id', '<i8'), ('ra', '<f8'), ('dec', '<f8'),
          ('name', '|S25'), ('rmag', '<f4'), ('somestring', '|S10')]
         >>> sc.array2table(arr, 'test')
 
@@ -73,107 +126,28 @@ _instantiate_docs="""
         somestring                 text
 
         # read some data
-        >>> sc.execute('select id,ra,dec from test where ra > 100',asarray=True)
-            
+        >>> sc.execute('select id,ra,dec from test where ra > 100',
+                       asarray=True)
+
         array([(0, 234.22054479562661, 51.847377397263408),
                (1, 191.35238390475229, 74.59074110561744),
                (2, 204.31881737647379, -79.021416563580445),
-               (5, 273.42461342683248, -84.026182045433345)], 
+               (5, 273.42461342683248, -84.026182045433345)],
               dtype=[('id', '<i8'), ('ra', '<f8'), ('dec', '<f8')])
+    """
 
-
-
-"""
-
-__doc__="""
-Name:
-    sqlite_util
-
-Purpose:
-    Some utilities to work with sqlite databases.  The SqliteConnection
-    class inherits from the sqlite3 connection class and adds additional
-    functionality.
-
-Classes:
-%s
-""" % _instantiate_docs
-
-import os
-import tempfile
-from tempfile import NamedTemporaryFile
-import shutil
-import sys
-from sys import stdout
-
-
-try:
-    import sqlite3 as sqlite
-    have_sqlite=True
-except:
-    have_sqlite=False
-
-try:
-    import numpy
-    have_numpy=True
-except:
-    have_numpy=False
-
-
-_major_pyvers = int( sys.version_info[0] )
-if _major_pyvers >= 3:
-    _int_types = [int]
-    _string_types = [str]
-else:
-    _int_types = [int,long]
-    _string_types = [str,unicode]
-
-_int_types = tuple(_int_types)
-_string_types = tuple(_string_types)
-
-# sqlite only has integer and real types.  Because we don't
-# know the true size of each field we'll have to read them
-# as 8-byte
-_np2sqlite={}
-_np2sqlite['i1']      = 'integer'
-_np2sqlite['int8']    = 'integer'
-_np2sqlite['u1']      = 'integer'
-_np2sqlite['uint8']    = 'integer'
-
-_np2sqlite['i2']      = 'integer'
-_np2sqlite['int16']   = 'integer'
-_np2sqlite['u2']      = 'integer'
-_np2sqlite['uint16']   = 'integer'
-
-_np2sqlite['i4']      = 'integer'
-_np2sqlite['int32']   = 'integer'
-_np2sqlite['u4']      = 'integer'
-_np2sqlite['uint32']   = 'integer'
-
-_np2sqlite['i8']      = 'integer'
-_np2sqlite['int64']   = 'integer'
-# possible loss of information
-_np2sqlite['u8']      = 'integer'
-_np2sqlite['uint64']   = 'integer'
-
-_np2sqlite['f4']      = 'real'
-_np2sqlite['float32'] = 'real'
-_np2sqlite['f8']      = 'real'
-_np2sqlite['float64'] = 'real'
-
-class SqliteConnection(sqlite.Connection):
-    __doc__=_instantiate_docs
     def __init__(self, dbfile, verbose=False, tmpdir=None, **keys):
 
-        dbfile=os.path.expandvars(dbfile)
-        dbfile=os.path.expanduser(dbfile)
+        dbfile = os.path.expandvars(dbfile)
+        dbfile = os.path.expanduser(dbfile)
 
         self.dbfile = dbfile
         self.verbose = verbose
         self.tmpdir = tmpdir
 
-        sqlite.Connection.__init__(self, dbfile, **keys)
+        sqlite3.Connection.__init__(self, dbfile, **keys)
 
-        self.row_factory = sqlite.Row
+        self.row_factory = sqlite3.Row
 
     def describe(self, type=None, name=None):
         """
@@ -200,23 +174,27 @@ class SqliteConnection(sqlite.Connection):
             # tables we print in a particular way
             info = self.table_info(name)
 
-            stdout.write("%-15s %15s\n" % ("column","type"))
-            stdout.write("-"*32+"\n")
+            stdout.write('%-15s %15s\n' % ('column', 'type'))
+            stdout.write('-'*32+'\n')
             for row in info:
-                stdout.write("%-15s %15s\n" % (row['name'],row['type']))
+                stdout.write('%-15s %15s\n' % (row['name'], row['type']))
 
         else:
             # info for all objects of this type
-            infolist = self.info(type,name)
+            infolist = self.info(type, name)
 
-            head = "%-10s %25s %15s %s" %  ('type','name','tbl_name','sql')
-            stdout.write(head) 
+            head = "%-10s %25s %15s %s" % ('type', 'name', 'tbl_name', 'sql')
+            stdout.write(head)
             stdout.write("\n" + "-"*len(head)+"\n")
 
             for info in infolist:
-                stdout.write("%-10s %25s %15s %s\n" % \
-                    (info['type'],info['name'],info['tbl_name'],info['sql'])) 
-
+                tup = (
+                    info['type'],
+                    info['name'],
+                    info['tbl_name'],
+                    info['sql'],
+                )
+                stdout.write("%-10s %25s %15s %s\n" % tup)
 
     def info(self, type=None, name=None):
         """
@@ -266,11 +244,11 @@ class SqliteConnection(sqlite.Connection):
         Calling Sequence:
             sc = SqliteConnection('some file')
             info = sc.table_info(tablename=None, columns=None)
-        
+
         Inputs:
             tablename: Name of a table to query.  If None, get
                 info for all tables.
-                    
+
             columns:
                 if sent, a subset of columns will be returned.
 
@@ -295,7 +273,7 @@ class SqliteConnection(sqlite.Connection):
 
         curs = self.cursor()
         if tablename is not None:
-            query="pragma table_info(%s)" % tablename
+            query = "pragma table_info(%s)" % tablename
         else:
             query = "select * from sqlite_master where type='table'"
 
@@ -326,11 +304,11 @@ class SqliteConnection(sqlite.Connection):
                 ... do something ...
         """
         query = """
-            select 
-                name 
-            from 
-                sqlite_master 
-            where 
+            select
+                name
+            from
+                sqlite_master
+            where
                 type='table' and name = '%s'\n""" % tablename
 
         if self.verbose:
@@ -344,7 +322,6 @@ class SqliteConnection(sqlite.Connection):
         else:
             return True
 
-
     def execute(self, query, asarray=False, dtype=None):
         """
         Name:
@@ -356,18 +333,18 @@ class SqliteConnection(sqlite.Connection):
             curs = sc.execute('some query')
             OR
             arr = sc.execute('some query', asarray=True, dtype=None)
-        
+
         Inputs:
-            query: 
+            query:
                 A query string
-            asarray=False: 
+            asarray=False:
 
                 If asarray=True then the result is converted to an
                 array. The data type is determined from the returned
                 data. Because the sqlite3 python module does not return
                 declared column types, we are stuck with 'i8' 'f8' and
-                string types. 
-                
+                string types.
+
                 Note the length of the string column is determined from
                 the *first* row, so you may end up with truncated data
                 if the columns are variable length. TODO: allow getting
@@ -387,28 +364,28 @@ class SqliteConnection(sqlite.Connection):
             curs.execute(query)
             return curs
 
-
         # when row factory is Row, the proper iteration is not supported
         # for use with fromiter.  Temporarily turn it off.
         row_factory_old = self.row_factory
-        self.row_factory=None
+        self.row_factory = None
         curs = self.cursor()
         curs.execute(query)
 
- 
         if dtype is None:
             # we have to get the data first in order to determine the
             # data types
             rows = curs.fetchall()
             if len(rows) == 0:
-                return numpy.array([],dtype='i4')
+                return numpy.array([], dtype='i4')
 
-            dtype = self._extract_row_dtype(curs.description,rows)
+            dtype = self._extract_row_dtype(curs.description, rows)
             res = numpy.array(rows, dtype=dtype)
         else:
             # this is cheaper
             res = numpy.fromiter(curs, dtype=dtype)
+
         curs.close()
+        self.row_factory = row_factory_old
         return res
 
     def _extract_row_dtype(self, description, rows):
@@ -419,26 +396,25 @@ class SqliteConnection(sqlite.Connection):
 
         row = rows[0]
 
-        dt=[]
+        dt = []
         for i, val in enumerate(row):
             name = description[i][0].lower()
-            #val = row[i]
             if val is None:
                 raise ValueError("Cannot work with None/Null types "
                                  "when converting to recarray")
-            if isinstance(val, _int_types):
+            if isinstance(val, int):
                 typecode = 'i8'
             elif isinstance(val, float):
                 typecode = 'f8'
-            elif isinstance(val, _string_types):
+            elif isinstance(val, str):
                 typecode = 'S%i' % len(val)
             else:
-                print("Got type:",type(val))
+                print("Got type:", type(val))
                 raise ValueError("Only support int/long, float, str/unicode")
 
-            dt.append( (name,typecode) )
+            dt.append((name, typecode))
         return dt
-    
+
     def drop(self, type, name):
         """
         Name:
@@ -452,10 +428,10 @@ class SqliteConnection(sqlite.Connection):
             type: The object type, e.g. table or index.
             name: The name of the object.
         """
-        query = "drop %s %s" % (type,name)
+        query = "drop %s %s" % (type, name)
         if self.verbose:
             stdout.write("%s\n" % query)
-        curs=self.cursor()
+        curs = self.cursor()
         curs.execute(query)
 
     def add_index(self, tablename, columns):
@@ -466,30 +442,29 @@ class SqliteConnection(sqlite.Connection):
             sc = SqliteConnection('some file')
             sc.add_index(tablename, columns)
         Inputs:
-            tablename: 
+            tablename:
                 The name of the table where the index will be built.
-            columns: 
+            columns:
                 The columns to use on the index. Can be a string or a
                 list of strings for a multi-column index.
         """
 
-        if not isinstance(columns,(list,tuple)):
+        if not isinstance(columns, (list, tuple)):
             columns = [columns]
 
-        curs=self.cursor()
+        curs = self.cursor()
 
         index_name = '_'.join(columns) + '_index'
         column_list = ','.join(columns)
 
-        query=("create index if not exists "
-               "%s on %s (%s)""" % (index_name, tablename, column_list))
+        query = ("create index if not exists "
+                 "%s on %s (%s)""" % (index_name, tablename, column_list))
 
         if self.verbose:
             stdout.write("Adding index: \n")
             stdout.write(query+'\n')
 
         curs.execute(query)
-
 
     def array2table(self, arr, tablename, create=False, cleanup=True):
         """
@@ -501,7 +476,7 @@ class SqliteConnection(sqlite.Connection):
 
         Calling Sequence:
             sc = SqliteConnection('somefile')
-            sc.array2table(arr, tablename, create=False, 
+            sc.array2table(arr, tablename, create=False,
                            cleanup=True)
 
         Inputs:
@@ -534,23 +509,22 @@ class SqliteConnection(sqlite.Connection):
         exists = self.table_exists(tablename)
         if exists:
             if force:
-                self.drop('table',tablename)
+                self.drop('table', tablename)
             else:
                 # we'll assume the table has the right definition for
                 # this array, for now
                 return
 
         tabledef = descr2tabledef(arr.dtype.descr, tablename)
-        curs=self.cursor()
+        curs = self.cursor()
         if self.verbose:
             stdout.write(tabledef)
         curs.execute(tabledef)
         curs.close()
 
-
     def import_file(self, filename, tablename):
         import esutil
-        command=r"""
+        command = r"""
             sqlite3 -separator '|' %s ".import %s %s"
         """ % (self.dbfile, filename, tablename)
 
@@ -558,12 +532,12 @@ class SqliteConnection(sqlite.Connection):
             esutil.ostools.exec_process(command, verbose=self.verbose)
 
         if status != 0:
-            mess="""
+            mess = """
             Error occurred:
                 exit_status: %s
                 stdout: %s
                 stderr: %s
-            """ % (status,stdo,stde)
+            """ % (status, stdo, stde)
             raise RuntimeError(mess)
 
     def write_import_file(self, fname, data):
@@ -575,15 +549,13 @@ class SqliteConnection(sqlite.Connection):
         with recfile.Recfile(fname, mode='w', delim='|', padnull=True) as rec:
             rec.write(data)
 
-    def fromarray(self,arr,tablename,create=False,cleanup=True):
+    def fromarray(self, arr, tablename, create=False, cleanup=True):
         """
         Deprecated. Use array2table
         """
-        return self.array2table(arr, tablename, 
+        return self.array2table(arr, tablename,
                                 create=create,
                                 cleanup=cleanup)
-
-
 
 
 def descr2tabledef(descr, tablename):
@@ -612,6 +584,7 @@ def descr2tabledef(descr, tablename):
 
     return tabledef
 
+
 def descr2coldefs(descr):
     """
     Convert a numpy type descriptor to a set of column definitions.  Numpy
@@ -626,10 +599,10 @@ def descr2coldefs(descr):
         arr.dtype.descr
     """
 
-    coldefs=[]
+    coldefs = []
     for d in descr:
         if len(d) > 2:
-            mess="""
+            mess = """
             Found array field: %s
             sqlite does not support array columns
             """ % str(d)
@@ -644,6 +617,7 @@ def descr2coldefs(descr):
 
     return coldefs
 
+
 def numpy2sqlite(typename):
     """
     Convert a numpy type to a sqlite column type.
@@ -654,37 +628,38 @@ def numpy2sqlite(typename):
 
     if tname[0] == 's':
         return 'text'
-    
+
     if tname not in _np2sqlite:
         raise ValueError("unrecognized typename: %s" % tname)
 
     return _np2sqlite[tname]
+
 
 def tabledef2dtype(table_info, columns=None, size=None):
     """
     Take output of table_info() and convert to a numpy descriptor.
     We can't really use this yet.
 
-    Todo: 
+    Todo:
         variable length columns
         Implement sizes keyword
     """
     dtype = []
     for info in table_info:
-        name = str( info['name'].lower() )
-        
-        keepcol=True
+        name = str(info['name'].lower())
+
+        keepcol = True
         if columns is not None:
             if name not in columns:
-                keepcol=False
-        
+                keepcol = False
+
         if keepcol:
             typ = sqlite2numpy(info['type'])
 
             if typ == 'S?':
                 raise ValueError("Dont' support variable length columns yet")
 
-            dtype.append( (name, typ) )
+            dtype.append((name, typ))
 
     return dtype
 
@@ -695,11 +670,12 @@ def _remove_byteorder(tname):
     else:
         return tname
 
+
 def sqlite2numpy(typename, size=None):
     """
     We can't use this yet....
 
-    Convert a column type declaration from sqlite to a numpy data type. 
+    Convert a column type declaration from sqlite to a numpy data type.
     Determine sizes as best as possible from the declaration, or use the
     sizes= keyword to set sizes explicitly.
 
@@ -713,8 +689,8 @@ def sqlite2numpy(typename, size=None):
 
     So integers are stored in a variable length encoding.  Even if a column is
     declared i4 it can store 8 bytes.  The actual storage depends on the value
-    of the data.  
-    
+    of the data.
+
     But if a column is declared to have specific size, we will honor this and
     assume the user knows what they are doing.  Since "integer" is how most
     people will declare all integer columns, we cannot be tempted to assign
@@ -752,42 +728,39 @@ def sqlite2numpy(typename, size=None):
 
     """
     typename = typename.strip().lower()
-    if typename   in ['i1','int8','tinyint']:
+    if typename in ['i1', 'int8', 'tinyint']:
         return 'i1'
-    elif typename in ['i2','int16','smallint']:
+    elif typename in ['i2', 'int16', 'smallint']:
         return 'i2'
-    elif typename in ['i4','int32']:
+    elif typename in ['i4', 'int32']:
         return 'i4'
-    elif typename in ['i8','int64','bigint','int','integer']:
+    elif typename in ['i8', 'int64', 'bigint', 'int', 'integer']:
         return 'i8'
-    elif typename in ['f4','float32','float']:
+    elif typename in ['f4', 'float32', 'float']:
         return 'f4'
-    elif typename in ['f8','float64','double','real']:
+    elif typename in ['f8', 'float64', 'double', 'real']:
         return 'f8'
     else:
         # if size is sent, allow it to override any size indicators
         if size is not None:
             try:
                 szint = int(size)
-            except:
+            except ValueError:
                 raise ValueError("could not convert input size "
                                  "'%s' to int" % size)
             return 'S%d' % szint
 
-
         # no size given in name.  Treat as text.
-        if typename in ['char','character','text','string']:
+        if typename in ['char', 'character', 'text', 'string']:
             return 'S?'
-
 
         # varchar and character varying only have max limits, so we will
         # treat them like a "text" field even if they have sizes declared.
         if typename.find('varying') != -1 or typename.find('varchar') != -1:
             return 'S?'
 
-
         # Try to infer the size
-        left=typename.find('(')
+        left = typename.find('(')
         if left != -1:
             right = typename.find(')')
             if right != -1:
@@ -795,16 +768,13 @@ def sqlite2numpy(typename, size=None):
 
                 try:
                     szint = int(substr)
-                except:
+                except ValueError:
                     raise ValueError("could not convert size "
                                      "indicator '%s' to int in" % typename)
                 return 'S%d' % szint
 
         # if we get here something went wrong
         raise ValueError("Unable to convert type name: '%s'" % typename)
-
-
-
 
 
 #
@@ -819,20 +789,17 @@ def py2sqlite(data):
     Can try to support numpy later
     """
 
-    if isinstance(data, _int_types):
+    if isinstance(data, int):
         return 'integer'
     elif isinstance(data, float):
         return 'real'
-    elif isinstance(data, _string_types):
+    elif isinstance(data, str):
         return 'text'
     else:
-        message="""
-        Error: python data must be one of the following types:
-            int/long
-            float
-            string/unicode
-        """
+        message = ('Error: python data must be one of the '
+                   'following types: int, float, str')
         raise ValueError(message)
+
 
 def dict2coldefs(data, types=None, keys=None):
     """
@@ -842,10 +809,10 @@ def dict2coldefs(data, types=None, keys=None):
     """
 
     if keys is None:
-        keys = list( data.keys() )
+        keys = list(data.keys())
 
-    coldefs=[]
-    i=0
+    coldefs = []
+    i = 0
     for key in keys:
         if types is not None:
             typedef = types[i]
@@ -857,6 +824,7 @@ def dict2coldefs(data, types=None, keys=None):
         coldefs.append(coldef)
 
     return coldefs
+
 
 def dict2tabledef(data, tablename, types=None, keys=None):
     coldefs = dict2coldefs(data, types=types, keys=keys)
@@ -875,23 +843,21 @@ def dict2csv(data, filename, keys=None):
     """
     Write a sequence of dictionaries to a csv file
     """
+    import csv
 
     data = dict_ensurelist(data)
 
     if keys is None:
         keys = list(data[0].keys())
 
-    import csv
-    fobj=open(filename,'w')
+    with open(filename, 'w') as fobj:
+        writer = csv.DictWriter(fobj, keys)
+        writer.writerows(data)
 
-    writer = csv.DictWriter(fobj, keys)
-    writer.writerows(data)
-
-    fobj.close()
 
 def dict_ensurelist(data):
-    errormess="Input data must be dict or sequence of dicts"
-    if isinstance(data, (list,tuple)):
+    errormess = "Input data must be dict or sequence of dicts"
+    if isinstance(data, (list, tuple)):
         if not isinstance(data[0], dict):
             raise ValueError(errormess)
     elif isinstance(data, dict):
@@ -899,6 +865,7 @@ def dict_ensurelist(data):
     else:
         raise ValueError(errormess)
     return data
+
 
 def add_index(dbfile, tablename, columns, verbose=False):
     """
@@ -909,31 +876,30 @@ def add_index(dbfile, tablename, columns, verbose=False):
     conn.close()
 
 
-def dict2table(data, dbfile, tablename, 
+def dict2table(data, dbfile, tablename,
                keys=None, types=None,
-               indices=None, 
-               tmpdir='.', clobber=True, 
+               indices=None,
+               tmpdir='.', clobber=True,
                cleanup=True,
                verbose=False):
     """
 
     Convert a dict or list of dicts to an sqlite table, creating the table if
     needed.  If the table exists, the data are appended.
-
     """
     import esutil
-    
+
     # ensure we have a list of dicts
     data = dict_ensurelist(data)
 
     # check paths
-    dbpath=os.path.expanduser(dbfile)
-    dbpath=os.path.expandvars(dbpath)
+    dbpath = os.path.expanduser(dbfile)
+    dbpath = os.path.expandvars(dbpath)
 
     if verbose:
         stdout.write("database file: %s\n" % dbfile)
 
-    existing_db=False
+    existing_db = False
     if os.path.exists(dbpath):
         if clobber:
             if verbose:
@@ -946,18 +912,19 @@ def dict2table(data, dbfile, tablename,
             existing_db = True
 
     # open. This will create if new or open for updating if exists.
-    conn = sqlite.connect(dbpath, isolation_level=None)
+    conn = sqlite3.connect(dbpath, isolation_level=None)
 
-    curs=conn.cursor()
+    curs = conn.cursor()
 
     # see if the table exists
-    existing_table=False
+    existing_table = False
     if existing_db:
-        curs.execute("select name from sqlite_master where type='table' and name = '%s'" % tablename)
+        q = "select name from sqlite_master where type='table' and name = ?"
+        curs.execute(q, (tablename,))
         res = curs.fetchall()
         if len(res) != 0:
             # this will be a new table in an existing database
-            existing_table=True
+            existing_table = True
 
     if not existing_table:
         # Get the table definition
@@ -973,11 +940,9 @@ def dict2table(data, dbfile, tablename,
 
     conn.close()
 
-
-
     # write data to a temporary csv file and then import
-    csvtmp = tempfile.mktemp(dir=tmpdir, 
-                             prefix=tablename+'-temp-', 
+    csvtmp = tempfile.mktemp(dir=tmpdir,
+                             prefix=tablename+'-temp-',
                              suffix='.csv')
 
     if verbose:
@@ -985,28 +950,20 @@ def dict2table(data, dbfile, tablename,
 
     dict2csv(data, csvtmp, keys=keys)
 
-
-
     #  Now execute the import statement
     if verbose:
         stdout.write("Importing data\n")
-    comm="""
-        sqlite3 -separator ',' %s ".import %s %s" 
+    comm = """
+        sqlite3 -separator ',' %s ".import %s %s"
     """ % (dbpath, csvtmp, tablename)
 
     esutil.ostools.exec_process(comm, verbose=verbose)
-
-
 
     if cleanup:
         if verbose:
             stdout.write("Cleaning up temporary file %s\n" % csvtmp)
         os.remove(csvtmp)
 
-
-
     if indices is not None:
         for index in indices:
             add_index(dbpath, tablename, index, verbose=verbose)
-
-
