@@ -149,7 +149,7 @@ class SqliteConnection(sqlite3.Connection):
 
         self.row_factory = sqlite3.Row
 
-    def describe(self, type=None, name=None):
+    def describe(self, name=None, type='table'):
         """
         Name:
             describe
