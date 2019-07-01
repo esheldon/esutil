@@ -23,10 +23,35 @@ Classes:
         >>> ds.pop()
         ~
 
+    Class Name:
+        StagedOutFile
+    Purpose:
+        A context manager for staging files from temporary directories to
+        a final destination.
+
+    Example:
+        >>> fname = "/home/jill/output.dat"
+        >>> tmpdir = "/tmp"
+        >>> with StagedOutFile(fname, tmpdir=tmpdir) as sf:
+        ...     with open(sf.path, 'w') as fobj:
+        ...         fobj.write("some data")
+
+    Class Name:
+        StagedInFile
+    Purpose:
+        A class to stage a file in to local disk for reading.
+
+    Example:
+        >>> fname="/home/jill/output.dat"
+        >>> tmpdir="/tmp"
+        >>> with StagedInFile(fname,tmpdir=tmpdir) as sf:
+        ...     with open(sf.path) as fobj:
+        ...         # read some data from fobj
+
 Functions:
     See docs for the individual functions for more info.
 
-    path_join(*paths):  
+    path_join(*paths):
         Join path elements using the system path separator.  Any number of
         inputs can be given.  These must be strings or sequences.  This is
         similar to the os.path.join function but can join any number of path
@@ -42,6 +67,9 @@ Functions:
         $SOMEVAR.  this simple uses a call to both os.path.expanduser and
         os.path.expandvars
 
+    expand_filename:
+        Synonym for `expand_path`.
+
     exec_process:
         Execute a command on the operating system with a possible timeout in
         seconds
@@ -53,9 +81,10 @@ Functions:
 from __future__ import print_function
 
 import os
-import sys
+import shutil
 from sys import stdout, stderr
 import subprocess
+
 
 class DirStack(object):
     """
@@ -66,7 +95,7 @@ class DirStack(object):
 
     Construction:
         ds=DirStack(verbose=False):  If verbose=True a message is
-            printed for push and pop similar to that printed on 
+            printed for push and pop similar to that printed on
             unix systems.
     Methods:
         push(directory): Change to the input directory.  Push the
@@ -102,7 +131,7 @@ class DirStack(object):
         old_dir = os.getcwd()
 
         os.chdir(dir)
-        
+
         # only do this *after* we successfully chdir
         self._dirs.append(old_dir)
         if self.verbose:
@@ -170,7 +199,7 @@ def path_join(*paths):
         p=path_join(['/tmp','test'], 'file.txt') # gives /tmp/test/file.txt
 
         # nested sequences.  Gives /tmp/test1/test2/file.txt
-        p=path_join(['/tmp',['test1','test2']], 'file.txt') 
+        p=path_join(['/tmp',['test1','test2']], 'file.txt')
     """
 
     plist=[]
@@ -242,22 +271,22 @@ def exec_process(command,
     Purpose:
         Execute a command on the operating system with a possible timeout in
         seconds
-    
+
     Calling Sequence:
 
         exit_status, stdout_returned, stderr_returned = \
-           execute_command(command, 
-                           timeout=None, 
+           execute_command(command,
+                           timeout=None,
                            poll=1,
-                           stdout=subprocess.PIPE, 
-                           stderr=subprocess.PIPE, 
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE,
                            shell=True,
                            verbose=False)
     Inputs:
         command: A command to run.
 
     Keywords:
-        timeout: 
+        timeout:
             If this argument is sent, the process will be killed if it runs for
             longer than timeout seconds.
         poll:
@@ -379,6 +408,9 @@ def makedirs_fromfile(f, verbose=False, allow_fail=False):
         The file name
     verbose: boolean, optional
         Optionally print that the dir is being created.
+    allow_fail: boolean, optional
+        If True, raise an error if the directory cannot be made and it does
+        not already exist. Default is False.
     """
     import errno
     from esutil import hdfs
@@ -406,3 +438,179 @@ def makedirs_fromfile(f, verbose=False, allow_fail=False):
                         raise
 
 
+class StagedOutFile(object):
+    """A context manager for staging files from temporary directories to
+    a final destination.
+
+    Parameters
+    ----------
+    fname : str
+        Final destination path for file.
+    tmpdir : str, optional
+        If not sent, or `None`, the final path is used and no staging
+        is performed.
+    must_exist : bool, optional
+        If `True`, the file to be staged must exist at the time of staging
+        or an `IOError` is thrown. If `False`, this is silently ignored.
+        Default `False`.
+
+    Examples
+    --------
+    >>> fname = "/home/jill/output.dat"
+    >>> tmpdir = "/tmp"
+    >>> with StagedOutFile(fname, tmpdir=tmpdir) as sf:
+    ...     with open(sf.path, 'w') as fobj:
+    ...         fobj.write("some data")
+    """
+    def __init__(self, fname, tmpdir=None, must_exist=False):
+        self.must_exist = must_exist
+        self.was_staged_out = False
+        self._set_paths(fname, tmpdir=tmpdir)
+
+    def _set_paths(self, fname, tmpdir=None):
+        fname = os.path.realpath(expand_path(fname))
+
+        self.final_path = fname
+
+        if tmpdir is not None:
+            self.tmpdir = os.path.realpath(expand_path(tmpdir))
+        else:
+            self.tmpdir = tmpdir
+
+        fdir = os.path.dirname(self.final_path)
+
+        if self.tmpdir is None:
+            self.is_temp = False
+            self.path = self.final_path
+        else:
+            if not os.path.exists(self.tmpdir):
+                os.makedirs(self.tmpdir)
+
+            bname = os.path.basename(fname)
+            self.path = os.path.join(self.tmpdir, bname)
+
+            if self.tmpdir == fdir:
+                # the user sent tmpdir as the final output dir, no
+                # staging is performed
+                self.is_temp = False
+            else:
+                self.is_temp = True
+
+    def stage_out(self):
+        """If a tempdir was used, move the file to its final destination.
+
+        Note that you normally would not call this yourself, but rather use a
+        context manager, in which case this method is called for you.
+        """
+        if self.is_temp and not self.was_staged_out:
+            if not os.path.exists(self.path):
+                if self.must_exist:
+                    mess = "temporary file not found: %s" % self.path
+                    raise IOError(mess)
+                else:
+                    return
+
+            if os.path.exists(self.final_path):
+                print("removing existing file:", self.final_path)
+                os.remove(self.final_path)
+
+            makedirs_fromfile(self.final_path)
+
+            print(
+                "staging out '%s' -> '%s'" % (self.path, self.final_path))
+            shutil.move(self.path, self.final_path)
+
+        self.was_staged_out = True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.stage_out()
+
+
+class StagedInFile(object):
+    """
+    A class to stage a file in to local disk for reading.
+
+    parameters
+    ----------
+    fname: string
+        original file location
+    tmpdir: string, optional
+        If not sent or None, no staging is done and the original file
+        path is used.
+
+    examples
+    --------
+    # using a context for the staged file
+    fname="/home/jill/output.dat"
+    tmpdir="/tmp"
+    with StagedInFile(fname,tmpdir=tmpdir) as sf:
+        with open(sf.path) as fobj:
+            # read some data
+
+    """
+    def __init__(self, fname, tmpdir=None):
+
+        self._set_paths(fname, tmpdir=tmpdir)
+        self.stage_in()
+
+    def _set_paths(self, fname, tmpdir=None):
+        fname = os.path.realpath(expand_path(fname))
+
+        self.original_path = fname
+
+        if tmpdir is not None:
+            self.tmpdir = os.path.realpath(expand_path(tmpdir))
+        else:
+            self.tmpdir = tmpdir
+
+        self.was_staged_in = False
+        self._stage_in = False
+
+        if self.tmpdir is not None:
+            bdir, bname = os.path.split(self.original_path)
+            self.path = os.path.join(self.tmpdir, bname)
+
+            if self.tmpdir == bdir:
+                # the user sent tmpdir as the source dir, no
+                # staging is performed
+                self._stage_in = False
+            else:
+                self._stage_in = True
+        else:
+            self.path = self.original_path
+
+    def stage_in(self):
+        """
+        make a local copy of the file
+        """
+        import shutil
+
+        if self._stage_in:
+            if not os.path.exists(self.original_path):
+                raise IOError("file not found:", self.original_path)
+
+            if os.path.exists(self.path):
+                print("removing existing file:", self.path)
+                os.remove(self.path)
+            else:
+                makedirs_fromfile(self.path)
+
+            print("staging in", self.original_path, "->", self.path)
+            shutil.copy(self.original_path, self.path)
+
+            self.was_staged_in = True
+
+    def cleanup(self):
+        if self.was_staged_in and os.path.exists(self.path):
+            print("removing temporary file:", self.path)
+            os.remove(self.path)
+            self.was_staged_in = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.cleanup()
