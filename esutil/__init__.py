@@ -8,7 +8,7 @@ Sub-packages and modules:
         The focus is primarily on structures, aka recarrays or structured
         arrays.
 
-    io: 
+    io:
         File input/output convenience functions.  Read and write many file
         formats using the same read() write() interface.
 
@@ -46,7 +46,7 @@ Sub-packages and modules:
         Fast tools for working with the World Coordinat System used in astronomy to
         convert instrument coordinates to sky coordinates.
 
-    htm:  
+    htm:
         Tools for working with the Hierarchical Triangular Mesh, whic his a
         method for breaking the unit sphere into a tree structure where each
         node in the tree is represented by a spherical triangle.   This can be
@@ -92,7 +92,7 @@ _property_headurl='$HeadURL$'
 
 import sys
 
-__version__ = "0.6.2.5"
+__version__ = "0.6.3"
 
 def version():
     return __version__
@@ -147,7 +147,3 @@ try:
     from . import pyfitspatch240
 except:
     pass
-
-
-
-

@@ -1,3 +1,14 @@
+v0.6.3
+-------------------------
+
+New Fatures
+
+    - ostools.StagedInFile
+        A class to stage a file in to local disk for reading.
+    - ostools.StagedOutFile
+        A context manager for staging files from temporary directories to
+        a final destination.        
+
 v0.6.2
 -------------------------
 
@@ -12,7 +23,7 @@ Bug Fixes
     - stat/util.py fix bug with data type in nperbin scheme
     - plotting.py fake_points allow no color sent
     - ostools.makedirs_fromfile
-    - wcsutil.py fix bug in  _findxy for scalar input thanks to 
+    - wcsutil.py fix bug in  _findxy for scalar input thanks to
       Thomas Erben
 
 v0.6.1
@@ -23,7 +34,7 @@ New Features
     - numpy_util.dictlist2array
         Convert a list of dictionaries to a structured numpy array.  Works
         for simple typs such as strings, integers, floats.
-    - stat.Binner 
+    - stat.Binner
         Now by default run calc_stats when calling dohist; I found I
         essentially never did just dohist without calling calc_stats.
     - ostools.makedirs_fromfile
@@ -144,7 +155,7 @@ v0.5.2 (2014-06-12)
 ----------------------------------------------------------------------
 
 Updates:
-    esutil/io.py: 
+    esutil/io.py:
         Added writing of xml files.
         Added bunzipping of fits files that end in .bz2
     esutil/wcsutil.py:
@@ -154,10 +165,10 @@ Updates:
         - forward keywords to the underlying biggles routines
 
 New methods:
-    esutil/numpy_util.py: 
+    esutil/numpy_util.py:
         descr_to_native:
             Remove byte order information from numpy type descriptor.
-        strmatch: 
+        strmatch:
             match a string array to a regular expression
         match_multi:
             code for matching two numpy integer arrays, one
@@ -223,7 +234,7 @@ New files:
         file system.  Also routines for listing, removing, etc.
     esutil/cosmology:
         Now using simplified cosmology package written in C.
-    esutil/fits.py: 
+    esutil/fits.py:
         This is a workaround for reading subsets of columns and rows from fits
         files when only pyfits is available.  Note you should use
         the fitsio package instead:  https://github.com/esheldon/fitsio
@@ -247,7 +258,7 @@ Updates:
           was per steradian.  To get the old behavior, divide by 4*pi
     esutil/coords.py:
         - added more optionals units to sphdist
-    esutil/plotting.py: 
+    esutil/plotting.py:
         - bhist now doesn't use Histogram but a new histogram plotter.  ylog
           and xlog now work
         - in plotrand use dot as default stuyle
@@ -258,7 +269,7 @@ Updates:
         - can send type= for curves in bscatter.
         - now can use weights in plot hist.
 
-    esutil/io.py: 
+    esutil/io.py:
         - If the filenames start with hdfs:// the files will be staged
           in and out of the hadoop file system transparently.
         - Use the fitsio package if available, fall back to pyfits otherwise.
@@ -272,7 +283,7 @@ Updates:
 
     esutil/numpy_util.py:
         - Added sort option to numpy_util.random_subset
-        - added ability to print latex table to ArrayWriter and aprint       
+        - added ability to print latex table to ArrayWriter and aprint
         - ahelp can be used on scalars.
         - added replicate function
         - added arr2str function, which uses ArrayWriter
@@ -294,12 +305,12 @@ Bugs:
     esutil/numpy_util.py:
         - fixed bug with ensure_native
     esutil/stat/util.py
-        - fixed bug sending nbin for histogram. 
+        - fixed bug sending nbin for histogram.
         - Fix bug in stat.sigma_clip
         - In Binner, make sure stats are fully calculated if weights are sent
         - fixed bug in histogram when only min= or max= are sent
     esutil/plotting.py:
-        - fixed bug for point type in plotrand. 
+        - fixed bug for point type in plotrand.
     esutil/cosmology:
         - Use exact speed of light value.
     esutil/io.py:
@@ -321,8 +332,8 @@ New files:
 
 Modifications:
 
-    esutil/numpy_util: 
-        * Improvements to ArrayWriter, which is now used for 
+    esutil/numpy_util:
+        * Improvements to ArrayWriter, which is now used for
           aprint() (ESS)
         * Added random_subset() function.
     esutil/htm/htm.py: cylmatch added (BG)
@@ -351,16 +362,16 @@ Additions:
 		been sent to the pyfits people and when incorporated pyfitspatch will
 		be dropped.
 
-	numpy_util.ahelp:  
+	numpy_util.ahelp:
         Print out a formatted description of the input array.   If the array
         has fields, individual descriptions are printed for each field.  This
-        is designed to be similar to help, struct, /str in IDL. 
+        is designed to be similar to help, struct, /str in IDL.
 
-	numpy_util.aprint: 
+	numpy_util.aprint:
         Print fields from the array in columns.
 
     numpy.randind
-        Return nrand random indices, with replacement, in the open 
+        Return nrand random indices, with replacement, in the open
         range [0,nmax)
 
 	misc.colprint():
@@ -389,7 +400,7 @@ Bug Fixes:
 	Fix in NumpyVector.h to allow for the fact that int64_t and npy_int64
 	actually have different type ids on OS X.  This affected the htm code.
 
-	Re-implemented the histogramming code as a C extension instead of 
+	Re-implemented the histogramming code as a C extension instead of
 	using scipy.weave.  This circumvents the bug in weave for gcc >= 4.3.
 	Same for gauleg.
 
@@ -397,7 +408,7 @@ Bug Fixes:
 v0.3.0 (2010-04-04)
 
 New files and packages:
-	htm package:  
+	htm package:
 		Added C++ code for working with the Heierarchical Triangular Mesh
 		(HTM).  This is a code for breaking the sky into spherical triangles, a
 		quad tree, which makes for fast searching.  Includes the class HTM with
@@ -405,25 +416,25 @@ New files and packages:
 		for finding matches between lists of ra,dec and bincount for counting
 		pairs in radial bins, useful for calculating correlation functions.
 
-	integrate.py: 
+	integrate.py:
 		Tools for numerical integration.  Currently has a class for performing
 		gauss-legendre integration.
 
-	plotting.py: 
-		Tools for plotting with matplotlib.  
+	plotting.py:
+		Tools for plotting with matplotlib.
 			setuplot() for setting up the plotting and establishing a plot
 				object.
 			set_mino0r_ticks() for setting up minor tick mark locations in
 				a smart way.
 			whiskers: Plot whiskers, or arrowless vectors.
-	random.py:  
+	random.py:
 		Contains a class for generating random points from an arbitrary
 		probability distribution.
 
-	coords.py:  
+	coords.py:
 		astro_util.py is now coords.py, appropriate since all the code was
 		coordinate transformations.
-	
+
 Other Changes:
 	Numerous changes that I forgot to write into this release notes. Will be
 	more diligent in the future.
