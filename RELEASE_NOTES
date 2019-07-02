@@ -1,13 +1,33 @@
 v0.6.3
 -------------------------
 
-New Fatures
+New Features
 
     - ostools.StagedInFile
         A class to stage a file in to local disk for reading.
     - ostools.StagedOutFile
         A context manager for staging files from temporary directories to
         a final destination.        
+    - added dorot option for dealing with random cap generation at the pole
+    - added coords.rotate to do euler rotations
+    - smart copying of Cosmo objects
+
+python 3 updates
+
+    - sqlite_util updated to py3
+    - sfile updated to py3
+    - exec_process updated to py3
+
+numpy updates
+
+    - wcsutil, was still using old integer based ordering, now only
+      strings are supported
+    - deal properly with init numpy in recent versions
+
+bug fixes
+
+    - fixed bug in makedirs_fromfile using wrong variable
+    - bug in fits writing, wrong variable name, also bug in verbosity
 
 v0.6.2
 -------------------------
