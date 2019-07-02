@@ -38,8 +38,8 @@ if have_numpy:
     include_dirs += ['esutil/recfile']
     recfile_sources = ['esutil/recfile/records.cpp',
                        'esutil/recfile/records_wrap.cpp']
-    recfile_module = Extension('esutil.recfile._records', 
-                               extra_compile_args=extra_compile_args, 
+    recfile_module = Extension('esutil.recfile._records',
+                               extra_compile_args=extra_compile_args,
                                extra_link_args=extra_link_args,
                                sources=recfile_sources,
                                include_dirs=include_dirs)
@@ -48,8 +48,8 @@ if have_numpy:
 
     # cosmology package
     cosmo_sources = glob('esutil/cosmology/*.c')
-    cosmo_module = Extension('esutil.cosmology._cosmolib', 
-                             extra_compile_args=extra_compile_args, 
+    cosmo_module = Extension('esutil.cosmology._cosmolib',
+                             extra_compile_args=extra_compile_args,
                              extra_link_args=extra_link_args,
                              sources=cosmo_sources,
                              include_dirs=include_dirs)
@@ -63,7 +63,7 @@ if have_numpy:
     htm_sources = glob('esutil/htm/htm_src/*.cpp')
     htm_sources += ['esutil/htm/htmc.cc','esutil/htm/htmc_wrap.cc']
     htm_module = Extension('esutil.htm._htmc',
-                           extra_compile_args=extra_compile_args, 
+                           extra_compile_args=extra_compile_args,
                            extra_link_args=extra_link_args,
                            sources=htm_sources,
                            include_dirs=include_dirs)
@@ -79,16 +79,16 @@ if have_numpy:
     #chist_sources = ['chist.cc','chist_wrap.cc']
     #chist_sources = ['esutil/stat/'+s for s in chist_sources]
     chist_sources = ['esutil/stat/chist_pywrap.c']
-    chist_module = Extension('esutil.stat._chist', 
-                             extra_compile_args=extra_compile_args, 
+    chist_module = Extension('esutil.stat._chist',
+                             extra_compile_args=extra_compile_args,
                              extra_link_args=extra_link_args,
                              sources=chist_sources,
                              include_dirs=include_dirs)
     ext_modules.append(chist_module)
     stat_util_sources = ['_stat_util.c']
     stat_util_sources = ['esutil/stat/'+s for s in stat_util_sources]
-    stat_util_module = Extension('esutil.stat._stat_util', 
-                                 extra_compile_args=extra_compile_args, 
+    stat_util_module = Extension('esutil.stat._stat_util',
+                                 extra_compile_args=extra_compile_args,
                                  extra_link_args=extra_link_args,
                                  sources=stat_util_sources,
                                  include_dirs=include_dirs)
@@ -100,8 +100,8 @@ if have_numpy:
 
     #cgauleg_sources = glob('esutil/integrate/*.cc')
     cgauleg_sources = glob('esutil/integrate/cgauleg_pywrap.c')
-    cgauleg_module = Extension('esutil.integrate._cgauleg', 
-                               extra_compile_args=extra_compile_args, 
+    cgauleg_module = Extension('esutil.integrate._cgauleg',
+                               extra_compile_args=extra_compile_args,
                                extra_link_args=extra_link_args,
                                sources=cgauleg_sources,
                                include_dirs=include_dirs)
@@ -148,7 +148,7 @@ classifiers = [
 
 
 setup(name='esutil',
-      version="0.6.2.5",
+      version="0.6.3",
       author="Erin Scott Sheldon",
       author_email="erin.sheldon@gmail.com",
       classifiers=classifiers,
