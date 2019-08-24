@@ -26,8 +26,8 @@ except:
     time.sleep(5)
 
 if platform.system()=='Darwin':
-    extra_compile_args=['-arch','i386','-arch','x86_64']
-    extra_link_args=['-arch','i386','-arch','x86_64']
+    extra_compile_args = ['-stdlib=libc++']
+    extra_link_args=[]
 else:
     extra_compile_args=[]
     extra_link_args=[]
