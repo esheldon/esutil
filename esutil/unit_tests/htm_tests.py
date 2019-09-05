@@ -1,5 +1,6 @@
 from __future__ import with_statement, print_function
 import sys, os
+import pickle
 import tempfile
 import warnings
 import numpy
@@ -197,3 +198,8 @@ class TestHTM(unittest.TestCase):
                         "expected %s counts in bincount "
                         "with array scale, got %s" % (counts_truth,counts))
 
+    def test_pickle(self):
+        h = htm.HTM(5)
+        pickled = pickle.dumps(h)
+        result = pickle.loads(pickled)
+        self.assertEqual(h.get_depth(), result.get_depth())

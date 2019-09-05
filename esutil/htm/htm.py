@@ -689,6 +689,11 @@ class HTM(htmc.HTMC):
         else:
             return counts
 
+    def __reduce__(self):
+        """To support pickle/unpickle: only depth matters"""
+        return (HTM, (self.get_depth(), ))
+
+
 class Matcher(htmc.Matcher):
     """
     Object to match arrays of ra,dec
