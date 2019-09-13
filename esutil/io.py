@@ -633,10 +633,10 @@ def write_xml(fileobj, data, **keywords):
 def read_yaml(fileobj, **keywords):
     if isinstance(fileobj, basestring):
         with open(fileobj) as fobj:
-            res = yaml.load(fobj)
+            res = yaml.load(fobj, Loader=yaml.Loader)
 
     else:
-        res = yaml.load(fileobj)
+        res = yaml.load(fileobj, Loader=yaml.Loader)
 
     return res
 
