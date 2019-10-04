@@ -1,3 +1,15 @@
+v0.6.4
+-------------------------
+
+New Features
+    - added pbar.PBar for simple progress bars
+    - make htm picklable (B. Van Klaveren)
+
+Compatability
+    - Adapt to new pyyaml requirements to specify a loader, in io.read_yaml 
+      (M. Becker)
+    - Updating setup.py for better macOS support (D. Munha)
+
 v0.6.3.x
 -------------------------
 
