@@ -939,12 +939,16 @@ class WCS(object):
         elif hasattr(wcs_in, '__iter__'):
             wcs={}
             for k in wcs_in:
+                if k is None:
+                    continue
                 wcs[k.lower()] = wcs_in[k]
         else:
             # Try to use the items() method to get what we want
             wcs={}
             try:
                 for k,v in wcs_in.items():
+                    if k is None:
+                        continue
                     wcs[k.lower()] = v
             except:
                 raise ValueError('Input wcs must be a numpy array '+\
