@@ -134,7 +134,7 @@ class Cosmo(object):
 
     @property
     def _pars(self):
-        return self.H0(), None, bool(self.flat), self.omega_m(), self.omega_l(), self.omega_k()
+        return self.H0(), None, bool(self.flat()), self.omega_m(), self.omega_l(), self.omega_k()
 
     def Dc(self, zmin, zmax):
         """
