@@ -115,6 +115,9 @@ class Cosmo(object):
 
         self._H0 = H0
 
+    def __reduce__(self):
+        return (self.__class__, (self._pars))
+
     def H0(self):
         return copy.deepcopy(self._H0)
 
@@ -128,6 +131,10 @@ class Cosmo(object):
         return self._cosmo.omega_l()
     def omega_k(self):
         return self._cosmo.omega_k()
+
+    @property
+    def _pars(self):
+        return self.H0(), None, bool(self.flat), self.omega_m(), self.omega_l(), self.omega_k()
 
     def Dc(self, zmin, zmax):
         """
