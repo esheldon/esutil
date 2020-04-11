@@ -25,6 +25,7 @@ class TestPickleCosmo(unittest.TestCase):
             with open(fn, 'rb') as f:
                 _cosmo = pickle.load(f)
 
+            self.assertEqual(cosmo.H0(), _cosmo.H0())
             self.assertEqual(cosmo.DH(), _cosmo.DH())
             self.assertEqual(cosmo.flat(), _cosmo.flat())
             self.assertEqual(cosmo.omega_m(), _cosmo.omega_m())
