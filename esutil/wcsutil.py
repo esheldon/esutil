@@ -137,7 +137,7 @@ class WCS(object):
     A class to do WCS transformations.  Currently supports TAN projections
     for 
 
-        RA--TPV, DEC-TPV
+        RA---TPV, DEC--TPV
         RA---TAN and DEC--TAN
         RA---TAN--SIP,DEC--TAN--SIP
 
