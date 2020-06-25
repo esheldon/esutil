@@ -185,7 +185,7 @@ class WCS(object):
         x,y = wcs.sky2image(ra,dec)
 
     """
-    def __init__(self, wcs, longpole=180.0, latpole=90.0, theta0=90.0):
+    def __init__(self, wcs, longpole=180.0, latpole=90.0, theta0=90.0, compute_inverse=False):
 
         # Convert to internal dictionary and set some attributes of this
         # instance
@@ -198,7 +198,7 @@ class WCS(object):
 
         # Now set a bunch more instance attributes from the wcs in a form
         # that is easier to work with 
-        self.ExtractFromWCS()
+        self.ExtractFromWCS(compute_inverse=compute_inverse)
 
         # for finding the inverse trans
         self.lonlat_answer = numpy.zeros(2,dtype='f8')
@@ -637,6 +637,11 @@ class WCS(object):
         the application of the CD matrix as opposed to SIP.  
 
         """
+        if not self._inverse_computed and inverse:
+            self._inverse_computed = True
+            self.InvertDistortion()
+            self.distort['ap_order'] = self.distort['a_order'] + 1
+            self.distort['bp_order'] = self.distort['b_order'] + 1
 
         # Sometimes there is no distortion model present
         if self.distort is None or self.distort['name'] == 'none':
@@ -1021,7 +1026,7 @@ class WCS(object):
         return matrix, count, order
 
 
-    def ExtractDistortionModel(self):
+    def ExtractDistortionModel(self, compute_inverse=False):
         if self.projection not in _allowed_projections:
             raise ValueError("Projection must be on of %s " % \
                     ", ".join(_allowed_projections))
@@ -1062,13 +1067,19 @@ class WCS(object):
 
                 # If inverse not there, calculate it
                 if cap == 0 or cbp == 0:
-                    self.InvertDistortion()
-                    self.distort['ap_order'] = self.distort['a_order']+1
-                    self.distort['bp_order'] = self.distort['b_order']+1
+                    if compute_inverse:
+                        self._inverse_computed = True
+                        self.InvertDistortion()
+                        self.distort['ap_order'] = self.distort['a_order']+1
+                        self.distort['bp_order'] = self.distort['b_order']+1
+                    else:
+                        self._inverse_computed = False
+                else:
+                    self._inverse_computed = True
 
 
 
-    def ExtractFromWCS(self):
+    def ExtractFromWCS(self, compute_inverse=False):
 
         # for easier notation
         wcs = self.wcs
@@ -1127,7 +1138,8 @@ class WCS(object):
         self.rotation_matrix = self.CreateRotationMatrix()
 
         # Extract the distortion model
-        self.ExtractDistortionModel()
+        self._inverse_computed = False
+        self.ExtractDistortionModel(compute_inverse=compute_inverse)
 
     def _set_naxis(self):
         wcs=self.wcs
