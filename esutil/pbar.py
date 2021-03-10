@@ -18,6 +18,8 @@ def PBar(iterable, desc='', total=None, leave=True, file=sys.stderr,
 
     parameters
     ----------
+    iterable: iterable
+        An iterable that is iterated over; the objects are yielded
     desc: string, optional
         An optional short string, describing the progress, that is added
         in the beginning of the line.
@@ -73,7 +75,7 @@ def PBar(iterable, desc='', total=None, leave=True, file=sys.stderr,
 
     if not leave:
         sp.print_status('')
-        sys.stdout.write('\r')
+        file.write('\r')
     else:
         if last_print_n < n:
             cur_t = time.time()
