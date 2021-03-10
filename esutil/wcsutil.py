@@ -137,7 +137,7 @@ class WCS(object):
     A class to do WCS transformations.  Currently supports TAN projections
     for 
 
-        RA--TPV, DEC-TPV
+        RA---TPV, DEC--TPV
         RA---TAN and DEC--TAN
         RA---TAN--SIP,DEC--TAN--SIP
 
@@ -191,6 +191,7 @@ class WCS(object):
         # instance
         self.wcs = self.ConvertWCS(wcs)
         self._set_naxis()
+        self._inverse_computed = False
 
         # Set these as attributes, either from above keywords or from the
         # wcs header
@@ -637,6 +638,11 @@ class WCS(object):
         the application of the CD matrix as opposed to SIP.  
 
         """
+        if not self._inverse_computed and inverse:
+            self._inverse_computed = True
+            self.InvertDistortion()
+            self.distort['ap_order'] = self.distort['a_order'] + 1
+            self.distort['bp_order'] = self.distort['b_order'] + 1
 
         # Sometimes there is no distortion model present
         if self.distort is None or self.distort['name'] == 'none':
@@ -1060,11 +1066,10 @@ class WCS(object):
                 self.distort['bp'] = bp
                 self.distort['bp_order'] = bporder
 
-                # If inverse not there, calculate it
-                if cap == 0 or cbp == 0:
-                    self.InvertDistortion()
-                    self.distort['ap_order'] = self.distort['a_order']+1
-                    self.distort['bp_order'] = self.distort['b_order']+1
+                # If inverse can't be computed, treat it as if it
+                # already were computed
+                if cap == 0 and cbp == 0:
+                    self._inverse_computed = True
 
 
 

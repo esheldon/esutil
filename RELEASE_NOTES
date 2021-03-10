@@ -1,3 +1,18 @@
+v0.6.5
+--------------------------
+
+New Features
+    - Added ability to pickle cosmology objects (Jacob Ider Chitham)
+    - in wcs, change inverse computation to lazy-computation speeding up
+      initialization.
+
+Compatability
+    - reran the SWIG bindings for htm to avoid warnings on newer python
+      versions
+
+Bug Fixes
+    - check for None header keywords when loading WCS objects
+
 v0.6.4
 -------------------------
 
