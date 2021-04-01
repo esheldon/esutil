@@ -127,6 +127,7 @@ from . import hdfs
 from . import random
 from . import recfile
 from . import htm
+from . import pbar
 
 from . import unit_tests
 from .unit_tests import test
