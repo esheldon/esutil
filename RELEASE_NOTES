@@ -1,3 +1,9 @@
+unreleased
+--------------------------
+
+Bug Fixes
+    - Fixed wrong WCS jacobian elements when ra wraps around zero
+
 v0.6.5
 --------------------------
 
@@ -21,7 +27,7 @@ New Features
     - make htm picklable (B. Van Klaveren)
 
 Compatability
-    - Adapt to new pyyaml requirements to specify a loader, in io.read_yaml 
+    - Adapt to new pyyaml requirements to specify a loader, in io.read_yaml
       (M. Becker)
     - Updating setup.py for better macOS support (D. Munha)
 
@@ -34,7 +40,7 @@ New Features
         A class to stage a file in to local disk for reading.
     - ostools.StagedOutFile
         A context manager for staging files from temporary directories to
-        a final destination.        
+        a final destination.
     - added dorot option for dealing with random cap generation at the pole
     - added coords.rotate to do euler rotations
     - smart copying of Cosmo objects
