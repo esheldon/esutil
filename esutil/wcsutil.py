@@ -268,8 +268,8 @@ class WCS(object):
         ra_0m, dec_0m = self.image2sky(x, ym, distort=distort)
 
         # in arcsec/pixel
-        dra_dx = fac*3600.0*(ra_p0-ra_m0)
-        dra_dy = fac*3600.0*(ra_0p-ra_0m)
+        dra_dx = fac*3600.0*wrap_ra_diff(ra_p0-ra_m0)
+        dra_dy = fac*3600.0*wrap_ra_diff(ra_0p-ra_0m)
         ddec_dx = fac*3600.0*(dec_p0-dec_m0)
         ddec_dy = fac*3600.0*(dec_0p-dec_0m)
 
@@ -1305,6 +1305,67 @@ def Ncoeff(order, constant=True):
     if not constant:
         ncoeff -= 1
     return ncoeff
+
+
+def wrap_ra_diff(dra):
+    """Given an input ra difference, wrap it to range -180, 180.
+
+    Parameters
+    ----------
+    dra : float or np.ndarray
+        The input difference in degrees.
+
+    Returns
+    -------
+    wrapped_dra : float or np.ndarray
+        Thje wrapped difference in degrees in the range [-180, 180].
+    """
+    if numpy.ndim(dra) == 0:
+        if not numpy.isfinite(dra):
+            return dra
+
+        while dra < -180.0:
+            dra += 360.0
+        while dra > 180.0:
+            dra -= 360.0
+    else:
+        msk_finite = numpy.isfinite(dra)
+        msk = (dra < -180.0) & msk_finite
+        while numpy.any(msk):
+            dra[msk] = dra[msk] + 360.0
+            msk = (dra < -180.0) & msk_finite
+
+        msk = (dra > 180.0) & msk_finite
+        while numpy.any(msk):
+            dra[msk] = dra[msk] - 360.0
+            msk = (dra > 180.0) & msk_finite
+
+    return dra
+
+
+def test_wrap_dra_array():
+    dra = numpy.array([-350, -170, 0, 350, 350 + 360*10, -350 - 360*10])
+    ans = numpy.array([10, -170, 0, -10, -10, 10])
+    assert numpy.allclose(wrap_ra_diff(dra), ans)
+
+    for _dra, _ans in zip(dra, ans):
+        assert numpy.allclose(wrap_ra_diff(_dra), _ans)
+
+
+def test_wrap_dra_scalar_nan_inf():
+    assert numpy.isnan(wrap_ra_diff(numpy.nan))
+    assert numpy.isinf(wrap_ra_diff(numpy.inf))
+
+
+def test_wrap_dra_array_nan_inf():
+    dra = numpy.array([
+        numpy.nan, numpy.inf, -350, -170, 0, 350, 350 + 360*10, -350 - 360*10
+    ])
+    ans = numpy.array([numpy.nan, numpy.inf, 10, -170, 0, -10, -10, 10])
+    msk = numpy.isfinite(dra)
+    assert numpy.allclose(wrap_ra_diff(dra[msk]), ans[msk])
+    assert numpy.isnan(ans[0])
+    assert numpy.isinf(ans[1])
 
 
 def test_invert_2dpoly(porder, fac=5, constant=True, order_increase=0,
