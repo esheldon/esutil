@@ -29,13 +29,14 @@ Classes:
 from __future__ import print_function
 
 import numpy
-from numpy import log, exp, sqrt, pi
+from numpy import log, exp, pi
 
 
 # for checking function type, method type
 from types import FunctionType, MethodType
 
 from . import stat
+from .numpy_util import arrscl
 
 LOWVAL = -9999.0e47
 

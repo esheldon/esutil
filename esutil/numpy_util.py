@@ -156,10 +156,6 @@ import numpy
 
 from . import misc as eu_misc
 
-# for backwards compatibility
-from .random import random_indices as random_subset  # noqa
-from .random import randind  # noqa
-
 
 def where1(conditional_expression):
     """
