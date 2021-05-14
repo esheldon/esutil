@@ -137,3 +137,19 @@ def test_htm_pickle():
     pickled = pickle.dumps(h)
     result = pickle.loads(pickled)
     assert h.get_depth() == result.get_depth()
+
+
+def test_htm_match_self():
+
+    h = eu.htm.HTM()
+    rng = np.random.RandomState(312)
+
+    nrand = 1000
+    ra, dec = eu.coords.randsphere(
+        nrand, rng=rng, ra_range=[200, 210], dec_range=[-10, 10],
+    )
+
+    rad = 1.0/3600.0
+    m1, m2, d12 = h.match(ra, dec, ra, dec, rad, maxmatch=1)
+
+    assert np.all(d12 == 0.0)
