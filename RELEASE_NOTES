@@ -1,6 +1,8 @@
 v0.6.7 (unreleased)
 -------------------
 
+- coords sphdist and gcirc return zero distance of ra, dec match
+  exactly
 - made htm distance always zero when ra, dec exactly match
 - randsphere, randcap take optional rng
 - converted unit over to pytest style. Also moved out various tests from
