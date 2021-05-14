@@ -98,4 +98,3 @@ match(): match against a set of ra,dec points
 
 from . import htm
 from .htm import HTM, Matcher, read_pairs
-from . import unit_tests
