@@ -18,6 +18,8 @@ import tempfile
 from tempfile import NamedTemporaryFile
 # import sys
 from sys import stdout
+from . import ostools
+from . import recfile
 
 
 # sqlite only has integer and real types.  Because we don't
@@ -535,13 +537,12 @@ class SqliteConnection(sqlite3.Connection):
         curs.close()
 
     def import_file(self, filename, tablename):
-        import esutil
         command = r"""
             sqlite3 -separator '|' %s ".import %s %s"
         """ % (self.dbfile, filename, tablename)
 
         status, stdo, stde = \
-            esutil.ostools.exec_process(command, verbose=self.verbose)
+            ostools.exec_process(command, verbose=self.verbose)
 
         if status != 0:
             mess = """
@@ -553,7 +554,6 @@ class SqliteConnection(sqlite3.Connection):
             raise RuntimeError(mess)
 
     def write_import_file(self, fname, data):
-        from esutil import recfile
 
         if self.verbose:
             stdout.write("Writing to temporary file: %s\n" % fname)
@@ -899,7 +899,6 @@ def dict2table(data, dbfile, tablename,
     Convert a dict or list of dicts to an sqlite table, creating the table if
     needed.  If the table exists, the data are appended.
     """
-    import esutil
 
     # ensure we have a list of dicts
     data = dict_ensurelist(data)
@@ -969,7 +968,7 @@ def dict2table(data, dbfile, tablename,
         sqlite3 -separator ',' %s ".import %s %s"
     """ % (dbpath, csvtmp, tablename)
 
-    esutil.ostools.exec_process(comm, verbose=verbose)
+    ostools.exec_process(comm, verbose=verbose)
 
     if cleanup:
         if verbose:
