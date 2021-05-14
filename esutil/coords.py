@@ -1052,14 +1052,15 @@ def _check_range(rng, allowed):
             raise ValueError("lon_range should be within [%s,%s]" % allowed)
     return rng
 
-def randsphere(num, ra_range=None, dec_range=None, system='eq'):
+
+def randsphere(num, ra_range=None, dec_range=None, system='eq', rng=None):
     """
     Generate random points on the sphere
 
     You can limit the range in ra and dec.  To generate on a spherical cap, see
     randcap()
 
-    parameters
+    Parameters
     ----------
     num: integer
         The number of randoms to generate
@@ -1070,55 +1071,56 @@ def randsphere(num, ra_range=None, dec_range=None, system='eq'):
     system: string
         Default is 'eq' for the ra-dec system.  Can also be 'xyz'.
 
-    output
+    Returns
     ------
         for system == 'eq' the return is a tuple
             ra,dec = randsphere(...)
         for system == 'xyz' the return is a tuple
             x,y,z = randsphere(...)
 
-    examples
+    Examples
     --------
-        ra,dec = randsphere(2000, ra_range=[10,35], dec_range=[-25,15])
-        x,y,z = randsphere(2000, system='xyz')
-
+        ra, dec = randsphere(2000, ra_range=[10,35], dec_range=[-25,15])
+        x, y, z = randsphere(2000, system='xyz')
     """
 
-    ra_range = _check_range(ra_range, [0.0,360.0])
-    dec_range = _check_range(dec_range, [-90.0,90.0])
+    if rng is None:
+        rng = numpy.random.RandomState()
 
-    ra = numpy.random.random(num)
-    ra *= (ra_range[1]-ra_range[0])
-    if ra_range[0] > 0:
-        ra += ra_range[0]
+    ra_range = _check_range(ra_range, [0.0, 360.0])
+    dec_range = _check_range(dec_range, [-90.0, 90.0])
+
+    ra = rng.uniform(low=ra_range[0], high=ra_range[1], size=num)
 
     # number [-1,1)
     cosdec_min = cos(deg2rad(90.0+dec_range[0]))
     cosdec_max = cos(deg2rad(90.0+dec_range[1]))
-    v = numpy.random.random(num)
-    v *= (cosdec_max-cosdec_min)
-    v += cosdec_min
 
-    numpy.clip(v,-1.0,1.0,v)
+    v = rng.uniform(low=cosdec_min, high=cosdec_max, size=num)
+
+    numpy.clip(v, -1.0, 1.0, v)
+
     # Now this generates on [0,pi)
     dec = numpy.arccos(v)
 
     # convert to degrees
-    rad2deg(dec,dec)
+    rad2deg(dec, dec)
+
     # now in range [-90,90.0)
     dec -= 90.0
 
     if system == 'xyz':
-        x,y,z = eq2xyz(ra, dec)
-        return x,y,z
+        x, y, z = eq2xyz(ra, dec)
+        return x, y, z
     else:
         return ra, dec
 
-def randcap(nrand, ra, dec, rad, get_radius=False, dorot=False):
+
+def randcap(nrand, ra, dec, rad, get_radius=False, dorot=False, rng=None):
     """
     Generate random points in a sherical cap
 
-    parameters
+    Parameters
     ----------
 
     nrand:
@@ -1134,7 +1136,14 @@ def randcap(nrand, ra, dec, rad, get_radius=False, dorot=False):
         If dorot is True, generate the points on the equator and rotate them to
         be centered at the desired location.  This is the default when the dec
         is within 0.1 degrees of the pole, to avoid calculation issues
+
+    Returns
+    --------
+    ra, dec
     """
+
+    if rng is None:
+        rng = numpy.random.RandomState()
 
     # generate uniformly in r**2
     if dec >= 89.9 or dec <= -89.9:
@@ -1142,19 +1151,21 @@ def randcap(nrand, ra, dec, rad, get_radius=False, dorot=False):
 
     if dorot:
         tra, tdec = 90.0, 0.0
-        rand_ra,rand_dec, rand_r = randcap(nrand, 90.0, 0.0, rad, get_radius=True)
+        rand_ra,rand_dec, rand_r = randcap(
+            nrand, 90.0, 0.0, rad, get_radius=True, rng=rng,
+        )
         rand_ra,rand_dec = rotate(0.0, dec-tdec, 0.0, rand_ra, rand_dec)
         rand_ra,rand_dec = rotate(ra-tra, 0.0, 0.0, rand_ra, rand_dec)
     else:
 
-        rand_r = numpy.random.random(nrand)
+        rand_r = rng.random(nrand)
         rand_r = sqrt(rand_r)*rad
 
         # put in degrees
         numpy.deg2rad(rand_r,rand_r)
 
-        # generate position angle uniformly 0,2*PI
-        rand_posangle = numpy.random.random(nrand)*2*PI
+        # generate position angle uniformly 0, 2*PI
+        rand_posangle = rng.uniform(low=0, high=2*PI, size=nrand)
 
         theta = numpy.array(dec, dtype='f8',ndmin=1,copy=True)
         phi = numpy.array(ra,dtype='f8',ndmin=1,copy=True)
