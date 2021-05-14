@@ -85,9 +85,9 @@ def test_htm_bincount():
     ten = 10.0/3600.
     eighty = 30.0/3600.0
     hundred = 100.0/3600.0
-    ra1 = np.array([200.0, 200.0, 200.0, 175.23,  21.36])
+    ra1 = np.array([200.0, 200.0, 200.0, 175.23, 21.36])
     dec1 = np.array([24.3, 24.3, 24.3, -28.25, -15.32])
-    ra2 = np.array([200.0, 200.0, 200.0, 175.23,  55.25])
+    ra2 = np.array([200.0, 200.0, 200.0, 175.23, 55.25])
     dec2 = np.array([24.3+two, 24.3 + ten, 24.3 - eighty, -28.25 + hundred,  75.22])  # noqa
 
     # these must be in degrees unless scale is sent, in which case it is in
