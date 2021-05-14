@@ -35,10 +35,10 @@ jobs:
 
           pip install --no-deps -e .
 
-      # - name: lint
-      #   shell: bash -l {0}
-      #   run: |
-      #     flake8 descwl_shear_sims
+      - name: lint
+        shell: bash -l {0}
+        run: |
+          flake8 esutil
 
       - name: test
         shell: bash -l {0}

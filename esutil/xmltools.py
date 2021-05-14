@@ -1,17 +1,10 @@
-import sys
-from sys import stderr
 
-have_element_tree=True
 try:
-    # works in python 2.5
     from xml.etree import cElementTree as ElementTree
-except:
-    try:
-        # works in python 2.4
-        import cElementTree as ElementTree
-    except:
-        have_element_tree=False
-        stderr.write('Failed to import ElementTree')
+    have_element_tree = True
+except ImportError:
+    have_element_tree = False
+
 
 # calling example
 def testxml():
@@ -32,7 +25,6 @@ def testxml():
     tree.write('config.new.xml')
 
 
-
 class XmlDictObject(dict):
     """
     Adds object like functionality to the standard dictionary.
@@ -42,13 +34,13 @@ class XmlDictObject(dict):
         if initdict is None:
             initdict = {}
         dict.__init__(self, initdict)
-    
+
     def __getattr__(self, item):
         return self.__getitem__(item)
-    
+
     def __setattr__(self, item, value):
         self.__setitem__(item, value)
-    
+
     def __str__(self):
         if '_text' in self:
             return self.__getitem__('_text')
@@ -62,7 +54,7 @@ class XmlDictObject(dict):
         """
 
         if isinstance(x, dict):
-            return XmlDictObject((k, XmlDictObject.Wrap(v)) for (k, v) in list(x.items()))
+            return XmlDictObject((k, XmlDictObject.Wrap(v)) for (k, v) in list(x.items()))  # noqa
         elif isinstance(x, list):
             return [XmlDictObject.Wrap(v) for v in x]
         else:
@@ -71,15 +63,16 @@ class XmlDictObject(dict):
     @staticmethod
     def _UnWrap(x):
         if isinstance(x, dict):
-            return dict((k, XmlDictObject._UnWrap(v)) for (k, v) in list(x.items()) )
+            return dict((k, XmlDictObject._UnWrap(v)) for (k, v) in list(x.items()))  # noqa
         elif isinstance(x, list):
             return [XmlDictObject._UnWrap(v) for v in x]
         else:
             return x
-        
+
     def UnWrap(self):
         """
-        Recursively converts an XmlDictObject to a standard dictionary and returns the result.
+        Recursively converts an XmlDictObject to a standard dictionary and
+        returns the result.
         """
 
         return XmlDictObject._UnWrap(self)
@@ -88,18 +81,18 @@ class XmlDictObject(dict):
 def xml2dict(root, dictclass=XmlDictObject, seproot=False, noroot=False):
     """
 
-    d=xml2dict(element or filename, dictclass=XmlDictObject, 
+    d=xml2dict(element or filename, dictclass=XmlDictObject,
                noroot=False, seproot=False)
 
     Converts an XML file or ElementTree Element to a dictionary
 
     If noroot=True then the root tag is not included in the dictionary and
-        xmldict[roottag] 
+        xmldict[roottag]
     is returned.
 
     If seproot=True then the root tag is not included in the dictionary, and
-    instead the tuple 
-        (xmldict[roottag], roottag) 
+    instead the tuple
+        (xmldict[roottag], roottag)
     is returned.  The name of the roottag is lost in this case.
     """
 
@@ -108,14 +101,14 @@ def xml2dict(root, dictclass=XmlDictObject, seproot=False, noroot=False):
                           "be imported")
 
     # If a string is passed in, try to open it as a file
-    if type(root) == type(''):
+    if isinstance(root, str):
         root = ElementTree.parse(root).getroot()
     elif not isinstance(root, ElementTree.Element):
         raise TypeError('Expected ElementTree.Element or file path string')
 
     xmldict = dictclass({root.tag: _xml2dict_recurse(root, dictclass)})
 
-    keys = list( xmldict.keys() )
+    keys = list(xmldict.keys())
     roottag = keys[0]
     if seproot:
         return xmldict[roottag], roottag
@@ -124,19 +117,20 @@ def xml2dict(root, dictclass=XmlDictObject, seproot=False, noroot=False):
     else:
         return xmldict
 
+
 def _xml2dict_recurse(node, dictclass):
     nodedict = dictclass()
-    
+
     if len(list(node.items())) > 0:
         # if we have attributes, set them
-        nodedict.update(dict( list(node.items()) ))
-    
+        nodedict.update(dict(list(node.items())))
+
     for child in node:
         # recursively add the element's children
         newitem = _xml2dict_recurse(child, dictclass)
         if child.tag in nodedict:
             # found duplicate tag, force a list
-            if type(nodedict[child.tag]) is type([]):
+            if isinstance(nodedict[child.tag], list):
                 # append to existing list
                 nodedict[child.tag].append(newitem)
             else:
@@ -146,22 +140,21 @@ def _xml2dict_recurse(node, dictclass):
             # only one, directly set the dictionary
             nodedict[child.tag] = newitem
 
-    if node.text is None: 
+    if node.text is None:
         text = ''
-    else: 
+    else:
         text = node.text.strip()
-    
-    if len(nodedict) > 0:            
-        # if we have a dictionary add the text as a dictionary value (if there is any)
+
+    if len(nodedict) > 0:
+        # if we have a dictionary add the text as a dictionary value (if there
+        # is any)
         if len(text) > 0:
             nodedict['_text'] = text
     else:
         # if we don't have child nodes or attributes, just set the text
         nodedict = text
-        
+
     return nodedict
-
-
 
 
 def dict2xml(xmldict, filename_or_obj=None, roottag=None):
@@ -183,7 +176,7 @@ def dict2xml(xmldict, filename_or_obj=None, roottag=None):
                           "be imported")
 
     if roottag is None:
-        keys = list( xmldict.keys() )
+        keys = list(xmldict.keys())
         roottag = keys[0]
         root = ElementTree.Element(roottag)
         _dict2xml_recurse(root, xmldict[roottag])
@@ -205,7 +198,7 @@ def xml_indent(elem, level=0):
     From http://infix.se/2007/02/06/gentlemen-indent-your-xml
     Input should be an element (perhaps root) of an element tree.
     e.g.
-        tree = ElementTree.parse(somefile) 
+        tree = ElementTree.parse(somefile)
         xml_indent(tree.getroot())
         tree.write(filename)
     """
@@ -225,25 +218,21 @@ def xml_indent(elem, level=0):
 
 
 def _dict2xml_recurse(parent, dictitem):
-    assert type(dictitem) is not type([])
+    assert not isinstance(dictitem, list)
 
     if isinstance(dictitem, dict):
-        for (tag, child) in list(dictitem.items() ):
+        for (tag, child) in list(dictitem.items()):
             if str(tag) == '_text':
                 parent.text = str(child)
-            elif type(child) is type([]):
+            elif isinstance(child, list):
                 # iterate through the array and convert
                 for listchild in child:
                     elem = ElementTree.Element(tag)
                     parent.append(elem)
                     _dict2xml_recurse(elem, listchild)
-            else:                
+            else:
                 elem = ElementTree.Element(tag)
                 parent.append(elem)
                 _dict2xml_recurse(elem, child)
     else:
         parent.text = str(dictitem)
-    
-
-       
-
