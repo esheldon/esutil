@@ -82,17 +82,10 @@ Sub-packages and modules:
     oracle_util
 
 """
-# version info
-# You need to run 'svn propset svn:keywords HeadURL' on the file and commit
-# before this works.
-#
-# Don't edit these svn properties by hand
-
-_property_headurl='$HeadURL$'
 
 import sys
 
-__version__ = "0.6.6"
+__version__ = "0.6.7"
 
 def version():
     return __version__
