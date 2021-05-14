@@ -1,32 +1,21 @@
+import sys
+import os
+import numpy
 
-import sys, os
+lower_default = True
 
-try:
-    import cx_Oracle as cxo
-    have_oracle=True
-except:
-    have_oracle=False
-
-try:
-    import numpy
-    have_numpy=True
-except:
-    have_numpy=False
-
-lower_default=True
-
-__doc__="""
+__doc__ = """
     NAME
         oracle_util
     PURPOSE
 
         Defines a wrapper class for cx_Oracle and some utility functions,
         including the ability to convert the results of an oracle query to
-        numerical python (NumPy) arrays.  
+        numerical python (NumPy) arrays.
 
-        This is pure python code.  This is rather inefficient because 
+        This is pure python code.  This is rather inefficient because
         cx_Oracle must first convert the results to python objects and then
-        they must be converted to NumPy arrays.  A more efficient version 
+        they must be converted to NumPy arrays.  A more efficient version
         would wrap the C API and convert directly to NumPy arrays.
 
         Also, I had to hack cx_Oracle to replace None objects with something
@@ -41,7 +30,7 @@ __doc__="""
                 if appropriate
             Quick(query, limit=None)
                 Execute the query and display the results in a nice format.
-                Use the limit= keyword to limit the number of results 
+                Use the limit= keyword to limit the number of results
                 displayed.
             Describe(table, columns=None)
                 Print a description of the requested table
@@ -52,18 +41,18 @@ __doc__="""
 
     FUNCTIONS
         Cursor2Array(oracle_cursor, dtype=None)
-            Convert an cx_ Oracle cursor object into a NumPy array.  If the 
-            dtype is not given, the description field is converted to a NumPy 
+            Convert an cx_ Oracle cursor object into a NumPy array.  If the
+            dtype is not given, the description field is converted to a NumPy
             type list using the NumpyDescriptor() function.
         Res2Array(fetched_results, dtype=None)
-            Convert fetched results from a cx_ Oracle cursor object into a NumPy
-            array.  The dtype can be gotten by running the NumpyDescriptor()
-            function on the cursor.description field.  This is less efficient
-            that using Cursor2Array since extra memory is used in the fetching
-            process.
+            Convert fetched results from a cx_ Oracle cursor object into a
+            NumPy array.  The dtype can be gotten by running the
+            NumpyDescriptor() function on the cursor.description field.  This
+            is less efficient that using Cursor2Array since extra memory is
+            used in the fetching process.
         NumpyDescriptor(oracle descriptioin list)
-            Convert a list of cx_ Oracle descriptions to a list of NumPy type 
-            descriptions.  This cx_Oracle description list is gotten from the 
+            Convert a list of cx_ Oracle descriptions to a list of NumPy type
+            descriptions.  This cx_Oracle description list is gotten from the
             cursor description field
                 cursor.description
         NumpyType(oracle description)
@@ -83,29 +72,28 @@ __doc__="""
 
 """
 
-if 'ORACLE_CONNINFO' in os.environ:
-    defconn=os.environ['ORACLE_CONNINFO']
+if "ORACLE_CONNINFO" in os.environ:
+    defconn = os.environ["ORACLE_CONNINFO"]
 else:
-    defconn=""
+    defconn = ""
 
-_defs={}
-_defs['f4_digits'] = 6
-_defs['f8_digits'] = 15
+_defs = {}
+_defs["f4_digits"] = 6
+_defs["f8_digits"] = 15
 
 
-_binary_err='size of %s not allowed for BINARY floating point types'
+_binary_err = "size of %s not allowed for BINARY floating point types"
 
-_flt_digits_err=\
-"""WARNING: Digits for field "%s" of %s exceeds that of an
+_flt_digits_err = """WARNING: Digits for field "%s" of %s exceeds that of an
 8-byte floating point
-Setting to type "f16" which may or may not exceed 8-bytes in size, 
+Setting to type "f16" which may or may not exceed 8-bytes in size,
 depending on your platform\n"""
 
-_int_digits_err=\
-"""WARNING: Digits for field "%s" of %s exceeds largest available 
+_int_digits_err = """WARNING: Digits for field "%s" of %s exceeds largest available
 (18 digits for 8-byte binary integer).  Setting to 8-byte integer\n"""
 
-_string_err='The size of field "%s" is %s but must be greater than zero'
+_string_err = 'The size of field "%s" is %s but must be greater than zero'
+
 
 class Connection(object):
     """
@@ -116,14 +104,14 @@ class Connection(object):
         for working quickly with queries and tables.
     INPUTS
         conninfo:  A string containing the connection info.  The format
-            should be 
+            should be
                 user/password@host.address/dsn
             Where dsn is the data source name.  The default connection info
             is taken from the ORACLE_CONNINFO environment variable if it
             exists, otherwise it is set to ""
         f4_digits, f8_digits:  The number of digits to demand when converting
             to these types from number(digits,n).  The default is 6 or less
-            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15  
+            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15
             For example if you want everything to be double use f4_digits=0
     CLASS METHODS
         Execute(query)
@@ -147,67 +135,82 @@ class Connection(object):
         newarray = arr['field1']*arr['field2']
         prit newarray
     """
-    def __init__(self, f4_digits=_defs['f4_digits'], f8_digits=_defs['f8_digits'], conninfo=defconn):
+
+    def __init__(
+        self,
+        f4_digits=_defs["f4_digits"],
+        f8_digits=_defs["f8_digits"],
+        conninfo=defconn,
+    ):
+        import cx_Oracle as cxo  # noqa
+
         self.conn = cxo.connect(conninfo)
         self.f4_digits = f4_digits
         self.f8_digits = f8_digits
 
     def test(self):
 
-        tilename='BCS2316-5455'
-        run='BCS20080710_BCS2316-5455'
-        query="""
-            SELECT 
+        tilename = "BCS2316-5455"
+        run = "BCS20080710_BCS2316-5455"
+        query = """
+            SELECT
                 cobj.coadd_objects_id, cobj.alpha_j2000, cobj.delta_j2000,
-                cobj.x_image, cobj.y_image 
-            FROM 
+                cobj.x_image, cobj.y_image
+            FROM
                 coadd_objects cobj, catalog cat
             WHERE
-                cat.id = cobj.catalogid_i 
-                    AND cat.tilename = '%s' 
-                    AND cat.run = '%s' 
+                cat.id = cobj.catalogid_i
+                    AND cat.tilename = '%s'
+                    AND cat.run = '%s'
                     AND rownum <= 10
-            """ % (tilename, run)
+            """ % (
+            tilename,
+            run,
+        )
 
-        sys.stdout.write('\nExecuting query: '+query+'\n\n\n')
+        sys.stdout.write("\nExecuting query: " + query + "\n\n\n")
         self.Quick(query)
 
-
-        query="""
-            SELECT 
-                id,tilename,band,run 
-            FROM 
-                coadd 
+        query = """
+            SELECT
+                id,tilename,band,run
+            FROM
+                coadd
             WHERE
-                tilename='%s' 
-                    AND band='g' 
+                tilename='%s'
+                    AND band='g'
                     AND run='%s'
-            """ % (tilename, run)
+            """ % (
+            tilename,
+            run,
+        )
 
-        sys.stdout.write('\nExecuting query: '+query+'\n\n\n')
+        sys.stdout.write("\nExecuting query: " + query + "\n\n\n")
         self.Quick(query)
 
-        query="""
-            SELECT 
-                image.parentid 
-            FROM 
-                image,coadd_src 
+        query = """
+            SELECT
+                image.parentid
+            FROM
+                image,coadd_src
             WHERE
-                coadd_src.coadd_imageid=5427611 
+                coadd_src.coadd_imageid=5427611
                     AND coadd_src.src_imageid=image.id
             """
 
-        sys.stdout.write('\nExecuting query: '+query+'\n\n\n')
+        sys.stdout.write("\nExecuting query: " + query + "\n\n\n")
         self.Quick(query)
 
     def Connect(self, conninfo=defconn):
         """
         Create a new connection, closing the old one if necessary
         """
+        import cx_Oracle as cxo  # noqa
+
         # might not be open
         try:
             self.conn.close()
-        except:
+        except Exception:
             pass
         self.conn = cxo.connect(conninfo)
 
@@ -217,9 +220,8 @@ class Connection(object):
         """
         try:
             self.conn.close()
-        except:
+        except Exception:
             pass
-
 
     def Describe(self, table, columns=None, verbose=False):
         """
@@ -230,13 +232,13 @@ class Connection(object):
             keyword is sent, then just print the description of that column
             or list of columns
         """
-        q="""
+        q = """
             SELECT
-                column_name, 
-                CAST(data_type as VARCHAR2(15)) as type, 
-                CAST(data_length as VARCHAR(6)) as length, 
-                CAST(data_precision as VARCHAR(9)) as precision, 
-                CAST(data_scale as VARCHAR(5)) as scale, 
+                column_name,
+                CAST(data_type as VARCHAR2(15)) as type,
+                CAST(data_length as VARCHAR(6)) as length,
+                CAST(data_precision as VARCHAR(9)) as precision,
+                CAST(data_scale as VARCHAR(5)) as scale,
                 CAST(nullable as VARCHAR(8)) as nullable
             FROM
                 all_tab_columns
@@ -247,55 +249,65 @@ class Connection(object):
                 AND column_name <> 'TABLETYPE'
                 AND column_name <> 'REMARKS'"""
 
-        if columns != None:
-            q = q + """
+        if columns is not None:
+            q = (
+                q
+                + """
                 AND column_name IN ("""
-            if type(columns) == type(''):
+            )
+            if isinstance(columns, str):
                 tc = [columns]
             else:
                 tc = columns
-            tc=["'"+c.upper()+"'" for c in tc]
+            tc = ["'" + c.upper() + "'" for c in tc]
             tc = ",".join(tc)
             q += tc + ")"
 
-        q = q + """
-            ORDER BY 
+        q = (
+            q
+            + """
+            ORDER BY
                 column_id
         """
+        )
 
         q = q % (table.upper(),)
 
         if verbose:
-            sys.stdout.write('%s\n' % q)
+            sys.stdout.write("%s\n" % q)
 
         curs = self.conn.cursor()
-        curs.execute(q) 
+        curs.execute(q)
         PrintCursor(curs)
 
         # now indexes
 
-        q = """
+        q = (
+            """
             select
                 index_name, column_name, column_position, descend
             from
                 all_ind_columns
             where
                 table_name = '%s' order by index_name, column_position
-        """ % table.upper()
-
-
+        """
+            % table.upper()
+        )
 
         curs.execute(q)
         PrintCursor(curs)
 
         curs.close()
 
-
-    def Execute(self, query, cursor=False,
-                f4_digits=None,
-                f8_digits=None,
-                dictlist=False,
-                lower=lower_default):
+    def Execute(
+        self,
+        query,
+        cursor=False,
+        f4_digits=None,
+        f8_digits=None,
+        dictlist=False,
+        lower=lower_default,
+    ):
         """
 
         Does job of executing the query, converting to a numpy array or list of
@@ -305,11 +317,11 @@ class Connection(object):
         """
 
         if f4_digits is None:
-            f4_digits=self.f4_digits
+            f4_digits = self.f4_digits
         if f8_digits is None:
-            f8_digits=self.f8_digits
+            f8_digits = self.f8_digits
 
-        curs=self.conn.cursor()
+        curs = self.conn.cursor()
         curs.execute(query)
         if cursor:
             return curs
@@ -317,25 +329,22 @@ class Connection(object):
         if dictlist:
             return Cursor2Dictlist(curs, lower=lower)
 
-        result = Cursor2Array(curs, 
-                              f4_digits=f4_digits, 
-                              f8_digits=f8_digits,
-                              lower=lower)
+        result = Cursor2Array(
+            curs, f4_digits=f4_digits, f8_digits=f8_digits, lower=lower
+        )
         if result.size == 0:
-            result=None
+            result = None
 
         curs.close()
         return result
-
-
 
     def Quick(self, query, fname=None, limit=None, maxwidth=30):
         """
         NAME
             Quick(query, fname=None, limit=None)
-        PURPOSE 
+        PURPOSE
             Execute the query and display the results in a nice format.
-            Use the limit= keyword to limit the number of results 
+            Use the limit= keyword to limit the number of results
             displayed.
 
         """
@@ -348,14 +357,16 @@ class Connection(object):
 
         return None
 
-
     def GetConnection(self):
         return self.conn
+
     def GetCursor(self):
         return self.conn.cursor()
 
 
-def NumpyType(odesc, f4_digits=_defs['f4_digits'], f8_digits=_defs['f8_digits']):
+def NumpyType(odesc,
+              f4_digits=_defs["f4_digits"],
+              f8_digits=_defs["f8_digits"]):
     """
     NAME
         NumpyType
@@ -369,14 +380,14 @@ def NumpyType(odesc, f4_digits=_defs['f4_digits'], f8_digits=_defs['f8_digits'])
             description list.  This list is gotten from the cursor object:
                 cursor.description
             An element of this list contains the following:
-                (name, cx_Oracle_type, display_size, internal_size, 
+                (name, cx_Oracle_type, display_size, internal_size,
                 precision, scale, null_ok)
         f4_digits, f8_digits:  The number of digits to demand when converting
             to these types from number(digits,n).  The default is 6 or less
-            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15  
+            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15
             For example if you want everything to be double use f4_digits=0
     Currently recognizes the following cx_Oracle types
-        NATIVE_FLOAT.  This corresponds to the Oracle types 
+        NATIVE_FLOAT.  This corresponds to the Oracle types
             BINARY_FLOAT and BINARY_DOUBLE
         NUMBER with various precision, both floating point and fixed point
             NUMBER(p,s) is floating point, NUMBER(p) is integer
@@ -391,7 +402,8 @@ def NumpyType(odesc, f4_digits=_defs['f4_digits'], f8_digits=_defs['f8_digits'])
         in practice usually limited to less precision.
     """
 
-    err='size of %s not allowed for type %s'
+    import cx_Oracle as cxo  # noqa
+
     name = odesc[0]
     otype = odesc[1]
     size = odesc[3]
@@ -400,74 +412,80 @@ def NumpyType(odesc, f4_digits=_defs['f4_digits'], f8_digits=_defs['f8_digits'])
     if otype == cxo.NATIVE_FLOAT:
         # This one is easy: sizes indicate everything!
         if size == 4:
-            Ntype='f4'
-        elif size==8:
-            Ntype='f8'
+            Ntype = "f4"
+        elif size == 8:
+            Ntype = "f8"
         else:
             raise ValueError(_binary_err % (size,))
     elif otype == cxo.NUMBER:
         if scale != 0:
             if digits <= f4_digits:
-                Ntype='f4'
+                Ntype = "f4"
             elif digits <= f8_digits:
-                Ntype='f8'
+                Ntype = "f8"
             else:
-                sys.stdout.write(_flt_digits_err % (name,digits))
-                Ntype='f16'
+                sys.stdout.write(_flt_digits_err % (name, digits))
+                Ntype = "f16"
         else:
             if digits == 0:
-                Ntype = 'i8'
+                Ntype = "i8"
             elif digits <= 4:
-                Ntype = 'i2'
+                Ntype = "i2"
             elif digits <= 9:
-                Ntype = 'i4'
+                Ntype = "i4"
             elif digits <= 18:
-                Ntype= 'i8'
+                Ntype = "i8"
             else:
-                sys.stdout.write(_int_digits_err % (name,digits))
-                Ntype='i8'
+                sys.stdout.write(_int_digits_err % (name, digits))
+                Ntype = "i8"
 
     elif otype == cxo.STRING:
         if size <= 0:
             raise ValueError(_string_err % (name, size))
-        Ntype= 'S'+str(size)
+        Ntype = "S" + str(size)
     else:
         if size <= 0:
             raise ValueError(_string_err % (name, size))
-        Ntype= 'S'+str(size)
-        #raise ValueError,'Unsupported data type: '+repr(otype)
+        Ntype = "S" + str(size)
+        # raise ValueError,'Unsupported data type: '+repr(otype)
 
     return Ntype
 
 
-def NumpyDescriptor(odesc, f4_digits=_defs['f4_digits'], f8_digits=_defs['f8_digits'], lower=lower_default):
+def NumpyDescriptor(
+    odesc,
+    f4_digits=_defs["f4_digits"],
+    f8_digits=_defs["f8_digits"],
+    lower=lower_default,
+):
     """
     NAME
-        NumpyDescriptor(cx_Oracle_description, f4_digits=6, f8_digits=15, 
+        NumpyDescriptor(cx_Oracle_description, f4_digits=6, f8_digits=15,
                         lower=True)
     PURPOSE
-        Convert a list of cx_ Oracle descriptions to a list of NumPy type 
-        descriptions.  This cx_Oracle description list is gotten from the 
+        Convert a list of cx_ Oracle descriptions to a list of NumPy type
+        descriptions.  This cx_Oracle description list is gotten from the
         cursor description field
             cursor.description
         See NumpyType for the the conversion process.
 
         f4_digits, f8_digits:  The number of digits to demand when converting
             to these types from number(digits,n).  The default is 6 or less
-            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15  
+            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15
             For example if you want everything to be double use f4_digits=0
         lower: If True then all names are converted to lower case
     """
-    dtype=[]
+    dtype = []
 
     for d in odesc:
         name = d[0]
         if lower:
-            name=name.lower()
+            name = name.lower()
         Ntype = NumpyType(d, f4_digits=f4_digits, f8_digits=f8_digits)
-        dtype.append( (name, Ntype) )
+        dtype.append((name, Ntype))
 
     return dtype
+
 
 def Res2Array(res, dtype):
     """
@@ -489,19 +507,26 @@ def Res2Array(res, dtype):
     arr = numpy.array(res, dtype=dtype)
     return arr
 
-def Cursor2Array(curs, dtype=None, f4_digits=_defs['f4_digits'], f8_digits=_defs['f8_digits'], lower=lower_default):
+
+def Cursor2Array(
+    curs,
+    dtype=None,
+    f4_digits=_defs["f4_digits"],
+    f8_digits=_defs["f8_digits"],
+    lower=lower_default,
+):
     """
     NAME
         Cursor2Array(curs, dtype=None, f4_digits=6, f8_digits=15, lower=True)
     PURPOSE
-        Convert an cx_ Oracle cursor object into a NumPy array.  If the 
-        dtype is not given, the description field is converted to a NumPy 
-        type list using the NumpyDescriptor() function.  This is more 
+        Convert an cx_ Oracle cursor object into a NumPy array.  If the
+        dtype is not given, the description field is converted to a NumPy
+        type list using the NumpyDescriptor() function.  This is more
         efficient than using Res2Array since no extra memory is used.
 
         f4_digits, f8_digits:  The number of digits to demand when converting
             to these types from number(digits,n).  The default is 6 or less
-            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15  
+            for floats and 7-15 for double, e.g. f4_digits=6, f8_digits=15
             For example if you want everything to be double use f4_digits=0
     EXAMPLES
         curs=conn.cursor()
@@ -509,36 +534,39 @@ def Cursor2Array(curs, dtype=None, f4_digits=_defs['f4_digits'], f8_digits=_defs
         arr = Cursor2Array(curs)
     """
     if dtype is None:
-        dtype=NumpyDescriptor(curs.description, 
-                              f4_digits=f4_digits, f8_digits=f8_digits,
-                              lower=lower)
+        dtype = NumpyDescriptor(
+            curs.description, f4_digits=f4_digits,
+            f8_digits=f8_digits, lower=lower
+        )
     arr = numpy.fromiter(curs, dtype=dtype)
     return arr
+
 
 def Cursor2Dictlist(curs, lower=lower_default):
     if curs is None:
         return None
 
-    keys=[]
+    keys = []
     for d in curs.description:
-        key=d[0]
+        key = d[0]
         if lower:
-            key=key.lower()
+            key = key.lower()
         keys.append(key)
-        
-    output=[]
+
+    output = []
     for row in curs:
-        tmp={}
-        i=0
+        tmp = {}
+        i = 0
         for val in row:
-            tmp[keys[i]] = val    
-            i+=1
+            tmp[keys[i]] = val
+            i += 1
         output.append(tmp)
 
     return output
 
-def PrintCursor(curs, delim=' ', fname=None, limit=None, maxwidth=30):
-    """ 
+
+def PrintCursor(curs, delim=" ", fname=None, limit=None, maxwidth=30):
+    """
     NAME
         PrintCursor(curs, limit=None, maxwidth=30)
     PURPOSE
@@ -549,38 +577,38 @@ def PrintCursor(curs, delim=' ', fname=None, limit=None, maxwidth=30):
     """
 
     if fname is None:
-        isfile=False
-        fout=sys.stdout
+        isfile = False
+        fout = sys.stdout
     else:
-        isfile=True
-        fout=open(fname,'w')
+        isfile = True
+        fout = open(fname, "w")
 
     # build up a format string
-    formats=[]
-    separators=[]
-    names=[]
+    formats = []
+    separators = []
+    names = []
     for d in curs.description:
         dsize = d[2]
         if dsize > maxwidth:
-            dsize=maxwidth
+            dsize = maxwidth
 
-        formats.append('%'+repr(dsize)+'s')
+        formats.append("%" + repr(dsize) + "s")
         names.append(d[0])
-        separators.append('-'*dsize)
+        separators.append("-" * dsize)
 
-    format=delim.join(formats)
+    format = delim.join(formats)
 
     count = 0
     for row in curs:
         if ((count % 50) == 0) and (not isfile):
-            fout.write('\n')
+            fout.write("\n")
             fout.write(format % tuple(names))
-            fout.write('\n')
+            fout.write("\n")
             fout.write(format % tuple(separators))
-            fout.write('\n')
+            fout.write("\n")
 
         fout.write(format % row)
-        fout.write('\n')
+        fout.write("\n")
 
         count += 1
         if (limit is not None) and (count == limit):
@@ -595,97 +623,101 @@ def Numpy2Tabledef(descr, table_name, def_dict={}):
     """
 
     if def_dict is None:
-        def_dict={}
+        def_dict = {}
 
-    defs=[]
-    def_template='%s %s not null'
+    defs = []
+    def_template = "%s %s not null"
     for d in descr:
-        name=d[0]
-        ot=get_oracle_type(d[1])
+        name = d[0]
+        ot = get_oracle_type(d[1])
 
         if name in def_dict:
             defs += def_dict[name]
         elif len(d) == 2:
             # this is a scalar column... easy!
-            defi=def_template % (name,ot)
+            defi = def_template % (name, ot)
             defs.append(defi)
         else:
-            dims=d[2]
-            if not isinstance(dims,tuple):
-                dims=(dims,)
-            names=get_arr_colnames(name,dims)
-            
+            dims = d[2]
+            if not isinstance(dims, tuple):
+                dims = (dims,)
+            names = get_arr_colnames(name, dims)
+
             for n in names:
-                defi=def_template % (n,ot)
+                defi = def_template % (n, ot)
                 defs.append(defi)
 
-    defs=',\n'.join(defs)
+    defs = ",\n".join(defs)
 
-    statement="""
+    statement = """
 create table {table_name} (
 {defs}
-) compress\n""".format(table_name=table_name, defs=defs)
+) compress\n""".format(
+        table_name=table_name, defs=defs
+    )
 
     return statement
 
 
 def get_arr_colnames(name, dims):
     """
-    Get db names for an array, naming 
+    Get db names for an array, naming
         name_{num1}_{num2}...
     """
-    ndim=len(dims)
-    if ndim==1:
-        names=get_arr1_colnames(name,dims)
-    elif ndim==2:
-        names=get_arr2_colnames(name,dims)
+    ndim = len(dims)
+    if ndim == 1:
+        names = get_arr1_colnames(name, dims)
+    elif ndim == 2:
+        names = get_arr2_colnames(name, dims)
     else:
         raise ValueError("only support 1 and 2 d arrays")
 
     return names
 
+
 def get_arr1_colnames(name, dims):
     """
-    Get db names for an array, naming 
+    Get db names for an array, naming
         name_{num}
     """
-    names=[]
-    for n in xrange(1,dims[0]+1):
-        names.append( '%s_%d' % (name,n) )
+    names = []
+    for n in range(1, dims[0] + 1):
+        names.append("%s_%d" % (name, n))
 
     return names
 
+
 def get_arr2_colnames(name, dims):
     """
-    Get db names for an array, naming 
+    Get db names for an array, naming
         name_{num1}_{num2}
     """
-    names=[]
-    for n1 in xrange(1,dims[0]+1):
-        for n2 in xrange(1,dims[1]+1):
-            names.append( '%s_%d_%d' % (name,n1,n2) )
+    names = []
+    for n1 in range(1, dims[0] + 1):
+        for n2 in range(1, dims[1] + 1):
+            names.append("%s_%d_%d" % (name, n1, n2))
 
     return names
 
 
 def get_oracle_type(nt):
-    if 'f4' in nt:
-        ot='binary_float'
-    elif 'f8' in nt:
-        ot='binary_double'
-    elif 'i1' in nt or 'u1' in nt:
-        ot='number(3)'
-    elif 'i2' in nt or 'u2' in nt:
-        ot='number(5)'
-    elif 'i4' in nt:
-        ot='number(10)'
-    elif 'i8' in nt:
-        ot='number(19)'
-    elif 'u8' in nt:
-        ot='number(20)'
-    elif 'S' in nt:
-        slen=nt[1:]
-        ot='varchar(%s)' % slen
+    if "f4" in nt:
+        ot = "binary_float"
+    elif "f8" in nt:
+        ot = "binary_double"
+    elif "i1" in nt or "u1" in nt:
+        ot = "number(3)"
+    elif "i2" in nt or "u2" in nt:
+        ot = "number(5)"
+    elif "i4" in nt:
+        ot = "number(10)"
+    elif "i8" in nt:
+        ot = "number(19)"
+    elif "u8" in nt:
+        ot = "number(20)"
+    elif "S" in nt:
+        slen = nt[1:]
+        ot = "varchar(%s)" % slen
     else:
         raise ValueError("unsupported numpy type: '%s'" % nt)
 
