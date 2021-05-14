@@ -18,70 +18,37 @@ dict_select
 
 isstring
   Returns True if the input object is a string.
-
-
-"""
-
-license="""
-  Copyright (C) 2010  Erin Sheldon
-
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of version 2 of the GNU General Public License as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
 """
 
 import os
 from sys import stdout, stderr
-
-try:
-    basestring
-except:
-    basestring=str
-
-try:
-    xrange
-except:
-    xrange=range
-
-try:
-    import numpy
-    have_numpy=True
-except:
-    have_numpy=False
-
 import pydoc
 
 
 def wlog(*args):
     narg = len(args)
-    for i,arg in enumerate(args):
+    for i, arg in enumerate(args):
         stderr.write("%s" % arg)
-        if i < (narg-1):
+        if i < (narg - 1):
             stderr.write(" ")
-    stderr.write('\n')
+    stderr.write("\n")
+
 
 def center_text(text, width):
     text = text.strip()
     space = width - len(text)
-    return ' '*(space//2) + text + ' '*(space//2 + space%2)
+    return " " * (space // 2) + text + " " * (space // 2 + space % 2)
+
 
 def iformat(i):
     """
     Format an integer with commas deliminating every factor of 1000
     """
     import locale
-    locale.setlocale(locale.LC_ALL, 'en_US')
-    return locale.format('%d',i, grouping=True)
+
+    locale.setlocale(locale.LC_ALL, "en_US")
+    return locale.format("%d", i, grouping=True)
+
 
 def colprint(*args, **keys):
     """
@@ -91,7 +58,7 @@ def colprint(*args, **keys):
         print the input sequences or arrays in columns.  All must be the
         same length.
     Calling Sequence:
-        colprint(var1, var2, ..., nlines=all, sep=' ', format=None, 
+        colprint(var1, var2, ..., nlines=all, sep=' ', format=None,
                  names=None, nformat=None, file=None, page=False)
 
     Inputs:
@@ -99,20 +66,20 @@ def colprint(*args, **keys):
         be the same length.
 
     Optional Inputs:
-        nlines:  
+        nlines:
             Number of lines to print.  Default is all.
-        sep: 
+        sep:
             Separator, default is ' '
-        file:  
+        file:
             A file path or file object.  Default is to print to standard
             output. Ignored if paging.
 
-        format: 
+        format:
             A format string to apply to every argument.  E.g. format='%15s'
             Since every arg gets the same format, only %s type formats should
             be used unless the types are homogeneous.
 
-        names: 
+        names:
             A list of names for each argument.  There must be an entry for
             each argument. The names are printed above each column.
         nformat:
@@ -129,74 +96,71 @@ def colprint(*args, **keys):
     if nargs == 0:
         return
 
-    try:
-        n1 = len(args[0])
-    except:
-        raise ValueError("Could not get len() of argument 1")
+    n1 = len(args[0])
 
     # Should we print only a subset?
-    nlines = keys.get('nlines',n1)
+    nlines = keys.get("nlines", n1)
     if nlines is None:
         nlines = n1
     elif nlines > n1:
         nlines = n1
 
     # what separator should be used?
-    sep = keys.get('sep',' ')
+    sep = keys.get("sep", " ")
 
     # should we page the results?
-    page = keys.get('page', False)
+    page = keys.get("page", False)
 
     if not page:
         # should we print to a file?
-        f = keys.get('file', stdout)
-        if hasattr(f, 'write'):
+        f = keys.get("file", stdout)
+        if hasattr(f, "write"):
             fobj = f
         else:
             f = os.path.expandvars(f)
             f = os.path.expanduser(f)
-            fobj = open(f,'w')
+            fobj = open(f, "w")
 
     # make sure all the arguments are the same length.
     for i in range(nargs):
-        try:
-            l=len(args[i])
-        except:
-            raise ValueError("Could not get len() of argument %s" % (i+1))
-        if l != n1:
-            e="argument %s has non-matching length.  %s instead of %s" \
-                    % (i+1, l, n1)
+        arglen = len(args[i])
+        if arglen != n1:
+            e = "argument %s has non-matching length.  %s instead of %s" % (
+                i + 1,
+                arglen,
+                n1,
+            )
             raise ValueError(e)
 
     # if we are paging, we will store the lines, otherwise this won't be used
     lines = []
 
     # print a header
-    names = keys.get('names',None)
+    names = keys.get("names", None)
     if names is not None:
-        if isinstance(names, basestring):
+        if isinstance(names, str):
             names = [names]
         nnames = len(names)
         if len(names) != nargs:
-            raise ValueError("Expected %s names, got %s" % (nargs,nnames))
-        
+            raise ValueError("Expected %s names, got %s" % (nargs, nnames))
+
         # see if explicit format has been requested.
-        nformat =keys.get('nformat',None)
+        nformat = keys.get("nformat", None)
 
         if nformat is not None:
-            nformat = [nformat]*nnames
+            nformat = [nformat] * nnames
         else:
             # try to use the other format
-            fmt=keys.get('format','%s')
+            fmt = keys.get("format", "%s")
             if fmt is None:
-                fmt='%s'
-            nformat=[fmt]*nnames
+                fmt = "%s"
+            nformat = [fmt] * nnames
 
         nformat = sep.join(nformat)
         try:
             line = nformat % tuple(names)
-        except:
-            nformat = ['%s']*nnames
+        except Exception:
+            nformat = ["%s"] * nnames
             nformat = sep.join(nformat)
             line = nformat % tuple(names)
 
@@ -204,15 +168,14 @@ def colprint(*args, **keys):
             lines.append(line)
         else:
             fobj.write(line)
-            fobj.write('\n')
-
+            fobj.write("\n")
 
     # format for columns.  Same is used for all.
-    format = keys.get('format','%s')
+    format = keys.get("format", "%s")
     if format is not None:
-        format = [format]*nargs
+        format = [format] * nargs
     else:
-        format = ['%s']*nargs
+        format = ["%s"] * nargs
 
     format = sep.join(format)
 
@@ -221,20 +184,20 @@ def colprint(*args, **keys):
         data = []
         for iarg in range(nargs):
             data.append(args[iarg][i])
-        
+
         data = tuple(data)
 
         line = format % data
-        line = line.replace('\n','')
+        line = line.replace("\n", "")
 
         if page:
             lines.append(line)
         else:
             fobj.write(line)
-            fobj.write('\n')
+            fobj.write("\n")
 
     if page:
-        lines = '\n'.join(lines)
+        lines = "\n".join(lines)
         pydoc.pager(lines)
     else:
         # close if this is not stdout
@@ -242,15 +205,15 @@ def colprint(*args, **keys):
             fobj.close()
 
 
-def ptime(seconds, fobj=None, format='%s\n'):
+def ptime(seconds, fobj=None, format="%s\n"):
     """
     Name:
         ptime(seconds, fobj=None, format='%s\n')
     Purpose:
-        Print a pretty version of the input seconds.  
+        Print a pretty version of the input seconds.
     Calling Sequence:
         ptime(seconds, fobj=None, format='%s\n')
-    
+
     Inputs:
         Time in seconds.
 
@@ -271,24 +234,23 @@ def ptime(seconds, fobj=None, format='%s\n'):
     min, sec = divmod(seconds, 60.0)
     hr, min = divmod(min, 60.0)
     days, hr = divmod(hr, 24.0)
-    yrs,days = divmod(days, 365.0)
+    yrs, days = divmod(days, 365.0)
 
     if yrs > 0:
-        tstr="%d years %d days %d hours %d min %f sec" % (yrs,days,hr,min,sec)
+        tstr = "%d years %d days %d hours %d min %f sec" % (yrs, days, hr, min, sec)  # noqa
     elif days > 0:
-        tstr="%d days %d hours %d min %f sec" % (days,hr,min,sec)
+        tstr = "%d days %d hours %d min %f sec" % (days, hr, min, sec)
     elif hr > 0:
-        tstr="%d hours %d min %f sec" % (hr,min,sec)
+        tstr = "%d hours %d min %f sec" % (hr, min, sec)
     elif min > 0:
-        tstr="%d min %f sec" % (min,sec)
+        tstr = "%d min %f sec" % (min, sec)
     else:
-        tstr="%f sec" % sec
+        tstr = "%f sec" % sec
 
     if fobj is None:
         stdout.write(format % tstr)
     else:
         fobj.write(format % tstr)
-
 
 
 def dict_select(input_dict, keep=None, remove=None):
@@ -305,16 +267,16 @@ def dict_select(input_dict, keep=None, remove=None):
         dict: the input dictionary.
 
     Optional Inputs:
-        keep=None: 
+        keep=None:
             A list of keys to keep. If the input is None or [] all keys are
             returned that are not in the remove list.  Default [].
 
-        remove=None: 
+        remove=None:
             A list of keys to ignore.  Defaults to [].
 
     """
 
-    outdict={}
+    outdict = {}
 
     if keep is None:
         keep = []
@@ -323,7 +285,7 @@ def dict_select(input_dict, keep=None, remove=None):
 
     if len(keep) == 0:
         # wrap in list() for py3k in which keys() does not return a list.
-        keep = list( input_dict.keys() )
+        keep = list(input_dict.keys())
 
     for key in keep:
         if key in input_dict and key not in remove:
@@ -332,9 +294,8 @@ def dict_select(input_dict, keep=None, remove=None):
     return outdict
 
 
-
 def isstring(obj):
-    if isinstance(obj, basestring):
+    if isinstance(obj, str):
         return True
     else:
         return False
@@ -348,11 +309,11 @@ def collect_keyby(data, key):
     The  elements of the collection must support key access
     """
 
-    d={}
+    d = {}
     for di in data:
         key_val = di[key]
         if key_val not in d:
-            d[key_val]=[di]
+            d[key_val] = [di]
         else:
             d[key_val].append(di)
 
