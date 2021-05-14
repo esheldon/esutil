@@ -2,6 +2,45 @@ import numpy as np
 import pytest
 import esutil as eu
 
+def test_coords_conversions_smoke():
+    rng = np.random.RandomState(18)
+    num = 10000
+
+    ra, dec = eu.coords.randsphere(num, rng=rng)
+
+    x, y, z = eu.coords.eq2xyz(ra, dec)
+    ra_new, dec_new = eu.coords.xyz2eq(x, y, z)
+
+    assert np.allclose(ra, ra_new)
+    assert np.allclose(dec, dec_new)
+
+    clambda, ceta = eu.coords.eq2sdss(ra, dec)
+    ra_new, dec_new = eu.coords.sdss2eq(clambda, ceta)
+
+    assert np.allclose(ra, ra_new)
+    assert np.allclose(dec, dec_new)
+
+
+@pytest.mark.parametrize('b1950', [False, True])
+def test_coords_conversions_smoke_equinox(b1950):
+    rng = np.random.RandomState(91)
+    num = 10000
+
+    ra, dec = eu.coords.randsphere(num, rng=rng)
+
+    gal_l, gal_b = eu.coords.eq2gal(ra, dec, b1950=b1950)
+    ra_new, dec_new = eu.coords.gal2eq(gal_l, gal_b, b1950=b1950)
+
+    assert np.allclose(ra, ra_new)
+    assert np.allclose(dec, dec_new)
+
+    lam, beta = eu.coords.eq2ec(ra, dec, b1950=b1950)
+    ra_new, dec_new = eu.coords.ec2eq(lam, beta, b1950=b1950)
+
+    assert np.allclose(ra, ra_new)
+    assert np.allclose(dec, dec_new)
+
+
 @pytest.mark.parametrize('ra_cen', [0.0, 20.0, 300.0, 360.0])
 @pytest.mark.parametrize('dec_cen', [-90.0, -15.0, 25.0, 90.0])
 @pytest.mark.parametrize('radius', [0.01, 0.1])
