@@ -59,7 +59,7 @@ def _pickle_compare(cosmo):
         _compare(cosmo, _cosmo)
 
 
-def test_pickle_compare1():
+def test_cosmology_pickle_compare1():
     """
     Test case 1
     """
@@ -70,7 +70,7 @@ def test_pickle_compare1():
     _pickle_compare(cosmo=cosmo)
 
 
-def test_pickle_compare2():
+def test_cosmology_pickle_compare2():
     """
     Test case 2
     """
@@ -81,7 +81,7 @@ def test_pickle_compare2():
     _pickle_compare(cosmo=cosmo)
 
 
-def test_pickle_compare3():
+def test_cosmology_pickle_compare3():
     """
     Test case 3
     """

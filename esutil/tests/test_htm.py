@@ -6,7 +6,7 @@ import pickle
 import esutil as eu
 
 
-def test_hist_smoke():
+def test_htm_smoke():
     depth = 10
     h = eu.htm.HTM(depth)
 
@@ -22,7 +22,7 @@ def test_hist_smoke():
     assert np.all(htmid == expected)
 
 
-def test_intersect():
+def test_htm_intersect():
     depth = 10
     h = eu.htm.HTM(depth)
 
@@ -35,7 +35,7 @@ def test_intersect():
     assert np.all(idlist == expected)
 
 
-def test_match():
+def test_htm_match():
     depth = 10
     h = eu.htm.HTM(depth)
 
@@ -76,7 +76,7 @@ def test_match():
         assert pairs.size == expected
 
 
-def test_bincount():
+def test_htm_bincount():
 
     depth = 10
     h = eu.htm.HTM(depth)
@@ -132,7 +132,7 @@ def test_bincount():
     assert np.all(counts == counts_truth)
 
 
-def test_pickle():
+def test_htm_pickle():
     h = eu.htm.HTM(5)
     pickled = pickle.dumps(h)
     result = pickle.loads(pickled)
