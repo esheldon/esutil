@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from .import Util
 from .Util import Recfile
 from .Util import write, read

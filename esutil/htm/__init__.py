@@ -18,15 +18,15 @@ HTM
     using 32-bit integers for the indices.
 
     A primary advantage of the HTM over other schemes is that it deals
-    perfectly well with the poles.  
+    perfectly well with the poles.
 
     The HTM was developed by astrophysicists at JHU, see their page for a full
     explanation:
 
         http://www.sdss.jhu.edu/htm/
 
-    At this point a few tasks can be peformed with this code: 
-    
+    At this point a few tasks can be peformed with this code:
+
         1) Find the id of the triangle a point or set of points belongs to.
 
         2) Calculate the area of triangles at the current depth.
@@ -39,7 +39,7 @@ Methods:
 
     get_depth(): get the depth of the HTM tree
 
-    lookup_id(ra, dec):  
+    lookup_id(ra, dec):
 
         Return the index of the input ra/dec at the current htm depth.
         ra/dec may be arrays.
@@ -68,10 +68,10 @@ Methods:
 
         If you need to match the same set multiple times, use a Matcher
         object
-    
+
     read(filename)
         Read the pairs from a file written by the match() code.
-        
+
     See the docs for each method for more details.  For example, in ipython:
         >>> import esutil
         >>> h=esutil.htm.HTM(depth)
@@ -94,6 +94,7 @@ match(): match against a set of ra,dec points
 
 """
 
+# flake8: noqa
 
 
 from . import htm

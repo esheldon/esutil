@@ -25,6 +25,8 @@ Cosmo:
 
 """
 
+# flake8: noqa
+
 from . import cosmology
 from .cosmology import Cosmo
 
