@@ -1154,14 +1154,3 @@ def _fix_range(i, maxval):
 def Open(filename, mode='r', **keys):
     sf = SFile(filename, mode=mode, **keys)
     return sf
-
-def test():
-    """
-    very simple test
-    """
-    import tempfile
-    tmpfile = tempfile.mktemp(suffix='.rec')
-    data=numpy.array([(1.0, 3),(4.5,2)], dtype=[('fcol','f4'),('icol','i4')])
-
-    write(data, tmpfile)
-    read(tmpfile)
