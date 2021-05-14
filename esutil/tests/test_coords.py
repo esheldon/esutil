@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import esutil as eu
 
+
 def test_coords_conversions_smoke():
     rng = np.random.RandomState(18)
     num = 10000
