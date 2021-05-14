@@ -1,14 +1,8 @@
-import sys
 import os
 from esutil import sfile
 import numpy as np
 import tempfile
 import pytest
-
-if sys.version_info > (3, 0, 0):
-    stype = (str, bytes)
-else:
-    stype = str
 
 
 def get_data():
@@ -154,42 +148,6 @@ def get_data():
     return data, swap_data, header
 
 
-def is_object(arr):
-    if arr.dtype.descr[0][1][1] == 'O':
-        return True
-    else:
-        return False
-
-
-def get_prefix(name, delim, doswap):
-    if delim is not None:
-        delimstr = delim.replace(" ", "space")
-        delimstr = delim.replace(" ", "space")
-        delimstr = delimstr.replace("\t", "tab")
-    else:
-        delimstr = "binary"
-
-    prefix = "sfile-%s-%s-%s-" % (name, delimstr, doswap)
-    return prefix
-
-
-def get_testfile(name, delim, doswap):
-    prefix = get_prefix(name, delim, doswap)
-    fname = tempfile.mktemp(prefix=prefix, suffix=".rec")
-    return fname
-
-
-def compare_names(read_names, true_names, lower=False, upper=False):
-    for nread, ntrue in zip(read_names, true_names):
-        if lower:
-            tname = ntrue.lower()
-            mess = "lower: '%s' vs '%s'" % (nread, tname)
-        else:
-            tname = ntrue.upper()
-            mess = "upper: '%s' vs '%s'" % (nread, tname)
-        assert nread == tname, mess
-
-
 def compare_header(h1, h2):
     """
     The headers as dictionaries
@@ -203,31 +161,7 @@ def compare_header(h1, h2):
         assert v1 == v2, "testing header key '%s'" % key
 
 
-def compare_array_tol(arr1, arr2, tol, name):
-    mess = "testing arrays '%s' shapes are equal: " "input %s, read: %s" % (
-        name,
-        arr1.shape,
-        arr2.shape,
-    )
-
-    assert arr1.shape == arr2.shape, mess
-
-    adiff = np.abs((arr1 - arr2) / arr1)
-    maxdiff = adiff.max()
-    res = np.where(adiff > tol)
-    for i, w in enumerate(res):
-        mess = (
-            "testing array '%s' dim %d are "
-            "equal within tolerance %e, found "
-            "max diff %e" % (name, i, tol, maxdiff)
-        )
-
-        assert w.size == 0, mess
-
-
 def compare_array(arr1, arr2, name):
-    # print("\narr1:",arr1)
-    # print("arr2:",arr2)
     mess = "testing arrays '%s' shapes are equal: " "input %s, read: %s" % (
         name,
         arr1.shape,
@@ -261,119 +195,9 @@ def compare_rec(rec1, rec2, name):
             assert w.size == 0, "testing column %s" % f
 
 
-def compare_rec_subrows(rec1, rec2, rows, name):
-    for f in rec1.dtype.names:
-        mess = (
-            "testing '%s' field '%s' shapes are equal: "
-            "input %s, read: %s"
-        )
-        mess = mess % (
-            name,
-            f,
-            rec1[f].shape,
-            rec2[f].shape,
-        )
-        assert rec1[f][rows].shape == rec2[f].shape, mess
-
-        res = np.where(rec1[f][rows] != rec2[f])
-        for w in res:
-            assert w.size == 0, "testing column %s" % f
-
-
-def compare_rec_with_var(rec1, rec2, name, rows=None):
-    """
-
-    First one *must* be the one with object arrays
-
-    Second can have fixed length
-
-    both should be same number of rows
-
-    """
-
-    if rows is None:
-        rows = np.arange(rec2.size)
-        assert rec1.size == rec2.size, (
-            "testing '%s' same number of rows" % name
-        )
-
-    # rec2 may have fewer fields
-    for f in rec2.dtype.names:
-
-        # f1 will have the objects
-        if is_object(rec1[f]):
-            compare_object_array(
-                rec1[f],
-                rec2[f],
-                "testing '%s' field '%s'" % (name, f),
-                rows=rows,
-            )
-        else:
-            compare_array(
-                rec1[f][rows],
-                rec2[f],
-                "testing '%s' num field '%s' equal" % (name, f),
-            )
-
-
-def compare_object_array(arr1, arr2, name, rows=None):
-    """
-    The first must be object
-    """
-    if rows is None:
-        rows = np.arange(arr1.size)
-
-    for i, row in enumerate(rows):
-        if isinstance(arr2[i], stype):
-            assert arr1[row] == arr2[i], "%s str el %d equal" % (name, i)
-        else:
-            delement = arr2[i]
-            orig = arr1[row]
-            s = len(orig)
-            compare_array(
-                orig,
-                delement[0:s],
-                "%s num el %d equal" % (name, i),
-            )
-
-
-def compare_rec_with_var_subrows(rec1, rec2, name, rows):
-    """
-
-    Second one must be the one with object arrays
-
-    """
-    for f in rec1.dtype.names:
-        if is_object(rec2[f]):
-
-            for i in range(rec2.size):
-                if isinstance(rec2[f][i], stype):
-                    assert (
-                        rec1[f][i] == rec2[f][i]
-                    ), "testing '%s' str field '%s' el %d equal" % (name, f, i)
-                else:
-                    delement = rec1[f][i]
-                    orig = rec2[f][i]
-                    s = orig.size
-                    tname = (
-                        "testing '%s' num field '%s' "
-                        "el %d equal" % (name, f, i)
-                    )
-                    compare_array(
-                        orig,
-                        delement[0:s],
-                        tname,
-                    )
-        else:
-            compare_array(
-                rec1[f],
-                rec2[f],
-                "testing '%s' num field '%s' equal" % (name, f),
-            )
-
-
 @pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
-def test_sfile_writeread(delim):
+@pytest.mark.parametrize('doswap', [False, True])
+def test_sfile_writeread(delim, doswap):
     """
     Test a basic table write, data and a header, then reading back in to
     check the values
@@ -381,228 +205,208 @@ def test_sfile_writeread(delim):
 
     data, swap_data, header = get_data()
 
-    for doswap in [False, True]:
+    if doswap:
+        data = swap_data
+    else:
+        data = data
 
-        if doswap:
-            data = swap_data
-        else:
-            data = data
+    with tempfile.TemporaryDirectory() as tdir:
+        fname = os.path.join(tdir, 'test.rec')
 
-        try:
-            fname = get_testfile("testWriteRead", delim, doswap)
-            with sfile.SFile(fname, mode="w", delim=delim) as sf:
+        with sfile.SFile(fname, mode="w", delim=delim) as sf:
 
-                try:
-                    sf.write(data, header=header)
-                    write_success = True
-                except:  # noqa
-                    write_success = False
+            sf.write(data, header=header)
 
-                assert write_success, (
-                    "testing write does not raise an "
-                    "error doswap: %s" % doswap
-                )
+        with sfile.SFile(fname) as sf:
+            d, h = sf.read(header=True)
 
-            with sfile.SFile(fname) as sf:
-                d, h = sf.read(header=True)
+        compare_rec(data, d, "table read/write")
+        compare_header(header, h)
 
-            compare_rec(data, d, "table read/write")
-            compare_header(header, h)
-
-            # see if our convenience functions are working
-            sfile.write(fname, data, delim=delim, header=header)
-            d, h = sfile.read(fname, header=True)
-            tname = (
-                "test read/write with convenience "
-                "functions doswap: %s" % doswap
-            )
-            compare_rec(data, d, tname)
-            compare_header(header, h)
-
-        finally:
-            if os.path.exists(fname):
-                os.remove(fname)
+        # see if our convenience functions are working
+        sfile.write(fname, data, delim=delim, header=header)
+        d, h = sfile.read(fname, header=True)
+        tname = (
+            "test read/write with convenience "
+            "functions doswap: %s" % doswap
+        )
+        compare_rec(data, d, tname)
+        compare_header(header, h)
 
 
-def test_sfile_subsets():
+@pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
+@pytest.mark.parametrize('doswap', [False, True])
+def test_sfile_subsets(delim, doswap):
     """
     Test reading subsets and slices
     """
 
     data, swap_data, header = get_data()
-    for delim in [None, ",", ":", "\t", " "]:
-        for doswap in [False, True]:
-            sstr = " doswap: %s" % doswap
+    sstr = " doswap: %s" % doswap
 
-            if doswap:
-                data = swap_data
-            else:
-                data = data
+    if doswap:
+        data = swap_data
+    else:
+        data = data
 
-            try:
-                fname = get_testfile("testSubsets", delim, doswap)
-                with sfile.SFile(fname, mode="w", delim=delim) as sf:
-                    # initial write
-                    sf.write(data)
+    with tempfile.TemporaryDirectory() as tdir:
+        fname = os.path.join(tdir, 'test.rec')
 
-                with sfile.SFile(fname) as sf:
+        with sfile.SFile(fname, mode="w", delim=delim) as sf:
+            # initial write
+            sf.write(data)
 
-                    # row slices
-                    d = sf[:]
-                    compare_rec(data, d, "row range all" + sstr)
+        with sfile.SFile(fname) as sf:
 
-                    d = sf[1:3]
-                    compare_rec(data[1:3], d, "row range" + sstr)
+            # row slices
+            d = sf[:]
+            compare_rec(data, d, "row range all" + sstr)
 
-                    d = sf[0:4:2]
-                    compare_rec(data[0:4:2], d, "row range step 2" + sstr)
+            d = sf[1:3]
+            compare_rec(data[1:3], d, "row range" + sstr)
 
-                    # test reading single columns
-                    for f in data.dtype.names:
-                        d = sf[f][:]
+            d = sf[0:4:2]
+            compare_rec(data[0:4:2], d, "row range step 2" + sstr)
 
-                        d = sf.read(columns=f)
-                        tname = (
-                            "test read all rows %s column subset "
-                            "scalar name %s" % (f, sstr)
-                        )
-                        compare_array(
-                            data[f],
-                            d,
-                            tname,
-                        )
+            # test reading single columns
+            for f in data.dtype.names:
+                d = sf[f][:]
 
-                        d = sf.read(columns=[f])
-                        tname = (
-                            "test read all rows %s column "
-                            "subset %s" % (f, sstr)
-                        )
-                        compare_array(
-                            data[f],
-                            d[f],
-                            tname,
-                        )
+                d = sf.read(columns=f)
+                tname = (
+                    "test read all rows %s column subset "
+                    "scalar name %s" % (f, sstr)
+                )
+                compare_array(
+                    data[f],
+                    d,
+                    tname,
+                )
 
-                        d = sf[f][:]
-                        compare_array(
-                            data[f],
-                            d,
-                            ("test read all rows %s column "
-                             "subset slice %s" % (f, sstr)),
-                        )
+                d = sf.read(columns=[f])
+                tname = (
+                    "test read all rows %s column "
+                    "subset %s" % (f, sstr)
+                )
+                compare_array(
+                    data[f],
+                    d[f],
+                    tname,
+                )
 
-                        rows = [1, 3]
-                        d = sf.read(columns=f, rows=rows)
-                        compare_array(
-                            data[f][rows],
-                            d,
-                            "test read rows %s column subset scalar name %s"
-                            % (f, sstr),
-                        )
+                d = sf[f][:]
+                compare_array(
+                    data[f],
+                    d,
+                    ("test read all rows %s column "
+                     "subset slice %s" % (f, sstr)),
+                )
 
-                        d = sf.read(columns=[f], rows=rows)
-                        compare_array(
-                            data[f][rows],
-                            d[f],
-                            "test read rows %s column subset %s" % (f, sstr),
-                        )
+                rows = [1, 3]
+                d = sf.read(columns=f, rows=rows)
+                compare_array(
+                    data[f][rows],
+                    d,
+                    "test read rows %s column subset scalar name %s"
+                    % (f, sstr),
+                )
 
-                    cols = ["u2scalar", "f4vec", "Sarr"]
+                d = sf.read(columns=[f], rows=rows)
+                compare_array(
+                    data[f][rows],
+                    d[f],
+                    "test read rows %s column subset %s" % (f, sstr),
+                )
 
-                    # column subset
-                    d = sf.read(columns=cols)
-                    for f in d.dtype.names:
-                        compare_array(
-                            data[f], d[f], "test column list %s %s" % (f, sstr)
-                        )
+            cols = ["u2scalar", "f4vec", "Sarr"]
 
-                    # column subset and rows subset
-                    rows = [1, 3]
-                    d = sf[cols][rows]
-                    for f in d.dtype.names:
-                        compare_array(
-                            data[f][rows],
-                            d[f],
-                            ("test column list %s row "
-                             "subset slice %s" % (f, sstr)),
-                        )
+            # column subset
+            d = sf.read(columns=cols)
+            for f in d.dtype.names:
+                compare_array(
+                    data[f], d[f], "test column list %s %s" % (f, sstr)
+                )
 
-                    d = sf.read(rows=rows, columns=cols)
-                    for f in d.dtype.names:
-                        compare_array(
-                            data[f][rows],
-                            d[f],
-                            "test column list %s row subset %s" % (f, sstr),
-                        )
+            # column subset and rows subset
+            rows = [1, 3]
+            d = sf[cols][rows]
+            for f in d.dtype.names:
+                compare_array(
+                    data[f][rows],
+                    d[f],
+                    ("test column list %s row "
+                     "subset slice %s" % (f, sstr)),
+                )
 
-                    # combined with row slices
+            d = sf.read(rows=rows, columns=cols)
+            for f in d.dtype.names:
+                compare_array(
+                    data[f][rows],
+                    d[f],
+                    "test column list %s row subset %s" % (f, sstr),
+                )
 
-                    d = sf[cols][:]
-                    for f in d.dtype.names:
-                        compare_array(
-                            data[f], d[f],
-                            "test column list %s slice %s" % (f, sstr)
-                        )
+            # combined with row slices
 
-                    d = sf[cols][1:3]
-                    for f in d.dtype.names:
-                        compare_array(
-                            data[f][1:3],
-                            d[f],
-                            "test column list %s row slice %s" % (f, sstr),
-                        )
+            d = sf[cols][:]
+            for f in d.dtype.names:
+                compare_array(
+                    data[f], d[f],
+                    "test column list %s slice %s" % (f, sstr)
+                )
 
-                    d = sf[cols][0:4:2]
-                    for f in d.dtype.names:
-                        compare_array(
-                            data[f][0:4:2],
-                            d[f],
-                            ("test column list %s row slice "
-                             "step 2 %s" % (f, sstr)),
-                        )
+            d = sf[cols][1:3]
+            for f in d.dtype.names:
+                compare_array(
+                    data[f][1:3],
+                    d[f],
+                    "test column list %s row slice %s" % (f, sstr),
+                )
 
-            finally:
-                if os.path.exists(fname):
-                    os.remove(fname)
+            d = sf[cols][0:4:2]
+            for f in d.dtype.names:
+                compare_array(
+                    data[f][0:4:2],
+                    d[f],
+                    ("test column list %s row slice "
+                     "step 2 %s" % (f, sstr)),
+                )
 
 
-def test_sfile_append():
+@pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
+@pytest.mark.parametrize('doswap', [False, True])
+def test_sfile_append(delim, doswap):
     """
     Test creating a table and appending new rows.
     """
 
     data, swap_data, header = get_data()
-    for delim in [None, ",", ":", "\t", " "]:
-        for doswap in [False, True]:
 
-            if doswap:
-                data = swap_data
-            else:
-                data = data
+    if doswap:
+        data = swap_data
+    else:
+        data = data
 
-            try:
-                fname = get_testfile("testAppend", delim, doswap)
-                with sfile.SFile(fname, mode="w", delim=delim) as sf:
-                    # initial write
-                    sf.write(data)
+    with tempfile.TemporaryDirectory() as tdir:
+        fname = os.path.join(tdir, 'test.rec')
 
-                    # appending
-                    data2 = data.copy()
-                    data2["f4scalar"] = 3
-                    sf.write(data2)
+        with sfile.SFile(fname, mode="w", delim=delim) as sf:
+            # initial write
+            sf.write(data)
 
-                with sfile.SFile(fname) as sf:
+            # appending
+            data2 = data.copy()
+            data2["f4scalar"] = 3
+            sf.write(data2)
 
-                    d = sf.read()
-                    assert d.size == data.size * 2
+        with sfile.SFile(fname) as sf:
 
-                    compare_rec(
-                        data, d[0: data.size], "Comparing initial write"
-                    )
-                    compare_rec(
-                        data2, d[data.size:], "Comparing appended data"
-                    )
+            d = sf.read()
+            assert d.size == data.size * 2
 
-            finally:
-                if os.path.exists(fname):
-                    os.remove(fname)
+            compare_rec(
+                data, d[0: data.size], "Comparing initial write"
+            )
+            compare_rec(
+                data2, d[data.size:], "Comparing appended data"
+            )
