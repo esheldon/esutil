@@ -228,25 +228,10 @@ if have_numpy:
     packages.append('esutil.integrate')
 
 
-    packages.append('esutil.unit_tests')
-
 long_description="""
 A python package including a wide variety of utilities, focused primarily on
 numerical python, statistics, and file input/output.   Includes specialized
 tools for astronomers.
-
-For full documentation see the project web site http://code.google.com/p/esutil/
-
-
-Tests
------
-
-All tests should pass
-
-```python
-import esutil as eu
-eu.test()
-```
 """
 
 classifiers = [
@@ -267,7 +252,7 @@ classifiers = [
 
 
 setup(name='esutil',
-      version="0.6.6",
+      version="0.6.7",
       author="Erin Scott Sheldon",
       author_email="erin.sheldon@gmail.com",
       classifiers=classifiers,
