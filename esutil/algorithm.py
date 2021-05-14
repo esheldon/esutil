@@ -10,14 +10,16 @@ Functions:
 
         quicksort(data):
             Run quick sort on an array or list, or something similar with a []
-            operator.  Taken from http://hetland.org/coding/python/quicksort.html
+            operator.  Taken from
+            http://hetland.org/coding/python/quicksort.html
 
         quicksort_keyvalue(keys,values):
-            Run quick sort on key value pairs, which should be in lists, arrays or
-            something similar with a [] operator.  The sorting is performed on
-            the keys. Based on http://hetland.org/coding/python/quicksort.html
-
+            Run quick sort on key value pairs, which should be in lists, arrays
+            or something similar with a [] operator.  The sorting is performed
+            on the keys. Based on
+            http://hetland.org/coding/python/quicksort.html
 """
+
 
 def quicksort(data):
     """
@@ -36,53 +38,51 @@ def quicksort(data):
     """
 
     start = 0
-    end =len(data)-1
+    end = len(data)-1
     _quicksort(data, start, end)
 
 
 def _quicksort(data, start, end):
-    if start < end:                            # If there are two or more elements...
-        split = partition(data, start, end)    # ... partition the subdata...
-        _quicksort(data, start, split-1)        # ... and sort both halves.
+    if start < end:  # If there are two or more elements...
+        split = partition(data, start, end)  # ... partition the subdata...
+        _quicksort(data, start, split-1)  # ... and sort both halves.
         _quicksort(data, split+1, end)
     else:
         return
 
 
 def partition(data, start, end):
-    pivot = data[end]                          # Partition around the last value
-    bottom = start-1                           # Start outside the area to be partitioned
-    top = end                                  # Ditto
+    pivot = data[end]   # Partition around the last value
+    bottom = start-1    # Start outside the area to be partitioned
+    top = end           # Ditto
 
     done = 0
-    while not done:                            # Until all elements are partitioned...
+    while not done:  # Until all elements are partitioned...
 
-        while not done:                        # Until we find an out of place element...
-            bottom = bottom+1                  # ... move the bottom up.
+        while not done:  # Until we find an out of place element...
+            bottom = bottom+1  # ... move the bottom up.
 
-            if bottom == top:                  # If we hit the top...
-                done = 1                       # ... we are done.
+            if bottom == top:  # If we hit the top...
+                done = 1  # ... we are done.
                 break
 
-            if data[bottom] > pivot:           # Is the bottom out of place?
-                data[top] = data[bottom]       # Then put it at the top...
-                break                          # ... and start searching from the top.
+            if data[bottom] > pivot:  # Is the bottom out of place?
+                data[top] = data[bottom]  # Then put it at the top...
+                break                 # ... and start searching from the top.
 
-        while not done:                        # Until we find an out of place element...
-            top = top-1                        # ... move the top down.
+        while not done:          # Until we find an out of place element...
+            top = top-1          # ... move the top down.
 
-            if top == bottom:                  # If we hit the bottom...
-                done = 1                       # ... we are done.
+            if top == bottom:    # If we hit the bottom...
+                done = 1         # ... we are done.
                 break
 
-            if data[top] < pivot:              # Is the top out of place?
-                data[bottom] = data[top]       # Then put it at the bottom...
-                break                          # ...and start searching from the bottom.
+            if data[top] < pivot:     # Is the top out of place?
+                data[bottom] = data[top]  # Then put it at the bottom...
+                break                # ...and start searching from the bottom.
 
-    data[top] = pivot                          # Put the pivot in its place.
-    return top                                 # Return the split point
-
-
+    data[top] = pivot                # Put the pivot in its place.
+    return top                       # Return the split point
 
 
 def quicksort_keyvalue(keys, data):
@@ -103,61 +103,56 @@ def quicksort_keyvalue(keys, data):
         See also the quicksort function.
     """
 
-
     start = 0
-    end =len(data)-1
+    end = len(data)-1
     _quicksort_keyvalue(keys, data, start, end)
 
 
-
-
 def partition_keyvalue(keys, data, start, end):
-    pivot = keys[end]                          # Partition around the last value
+    pivot = keys[end]        # Partition around the last value
     pivot_data = data[end]
 
-    bottom = start-1                           # Start outside the area to be partitioned
-    top = end                                  # Ditto
+    bottom = start-1         # Start outside the area to be partitioned
+    top = end                # Ditto
 
     done = 0
-    while not done:                            # Until all elements are partitioned...
+    while not done:             # Until all elements are partitioned...
 
-        while not done:                        # Until we find an out of place element...
-            bottom = bottom+1                  # ... move the bottom up.
+        while not done:         # Until we find an out of place element...
+            bottom = bottom+1   # ... move the bottom up.
 
-            if bottom == top:                  # If we hit the top...
-                done = 1                       # ... we are done.
+            if bottom == top:   # If we hit the top...
+                done = 1        # ... we are done.
                 break
 
-            if keys[bottom] > pivot:           # Is the bottom out of place?
+            if keys[bottom] > pivot:      # Is the bottom out of place?
                 keys[top] = keys[bottom]
-                data[top] = data[bottom]       # Then put it at the top...
-                break                          # ... and start searching from the top.
+                data[top] = data[bottom]  # Then put it at the top...
+                break                 # ... and start searching from the top.
 
-        while not done:                        # Until we find an out of place element...
-            top = top-1                        # ... move the top down.
+        while not done:           # Until we find an out of place element...
+            top = top-1                   # ... move the top down.
 
-            if top == bottom:                  # If we hit the bottom...
-                done = 1                       # ... we are done.
+            if top == bottom:             # If we hit the bottom...
+                done = 1                  # ... we are done.
                 break
 
-            if keys[top] < pivot:              # Is the top out of place?
-                keys[bottom] = keys[top]       # Then put it at the bottom...
-                data[bottom] = data[top]       # Then put it at the bottom...
-                break                          # ...and start searching from the bottom.
+            if keys[top] < pivot:         # Is the top out of place?
+                keys[bottom] = keys[top]  # Then put it at the bottom...
+                data[bottom] = data[top]  # Then put it at the bottom...
+                break                # ...and start searching from the bottom.
 
-    keys[top] = pivot                          # Put the pivot in its place.
-    data[top] = pivot_data                          # Put the pivot in its place.
-    return top                                 # Return the split point
-
-
+    keys[top] = pivot                     # Put the pivot in its place.
+    data[top] = pivot_data                # Put the pivot in its place.
+    return top                            # Return the split point
 
 
 def _quicksort_keyvalue(keys, data, start, end):
-    if start < end:                            # If there are two or more elements...
-        split = partition_keyvalue(keys, data, start, end)    # ... partition the subdata...
-        _quicksort_keyvalue(keys, data, start, split-1)        # ... and sort both halves.
+    if start < end:   # If there are two or more elements...
+        # ... partition the subdata...
+        split = partition_keyvalue(keys, data, start, end)
+        # ... and sort both halves.
+        _quicksort_keyvalue(keys, data, start, split-1)
         _quicksort_keyvalue(keys, data, split+1, end)
     else:
         return
-
-
