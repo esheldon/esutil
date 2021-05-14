@@ -37,36 +37,27 @@ cor2cov(cor, diagerr)
 """
 from __future__ import print_function
 
-from sys import stdout, stderr
-
-try:
-    xrange=xrange
-except:
-    xrange=range
+from sys import stderr
 
 # used to live in this module
-#from esutil.random import cholesky_sample
-#from esutil.random import random_indices
+# from esutil.random import cholesky_sample
+# from esutil.random import random_indices
 
-# the external C++ code for doing 
+# the external C++ code for doing
 # histograms.
 try:
     from . import _chist
-    have_chist=True
-except:
-    have_chist=False
+
+    have_chist = True
+except ImportError:
+    have_chist = False
 
 # for checking function type, method type
-from types import *
+# from types import *
 
-try:
-    import numpy
-    from numpy import zeros, sqrt, newaxis
-    have_numpy=True
-except:
-    have_numpy=False
+import numpy as np
+from numpy import zeros, sqrt, newaxis
 
-from . import _stat_util
 
 class Binner(dict):
     """
@@ -108,36 +99,37 @@ class Binner(dict):
         b['ymean'], b['ystd'], b['yerr'], b['yerr2']
 
     """
+
     def __init__(self, x, y=None, weights=None):
-        self.x = numpy.array(x, dtype='f8', ndmin=1, copy=False)
+        self.x = np.array(x, dtype="f8", ndmin=1, copy=False)
         self.y = y
         self.weights = weights
 
         self.sort_index = None
 
-        self.xpref=''
+        self.xpref = ""
         if y is not None:
-            self.xpref = 'x'
-            self.y = numpy.array(y, dtype='f8', ndmin=1, copy=False)
+            self.xpref = "x"
+            self.y = np.array(y, dtype="f8", ndmin=1, copy=False)
             if self.y.size != self.x.size:
                 raise ValueError("y must be same len as x")
 
         if weights is not None:
-            self.weights = numpy.array(weights, dtype='f8', ndmin=1, copy=False)
+            self.weights = np.array(weights, dtype="f8", ndmin=1, copy=False)
             if self.weights.size != self.x.size:
                 raise ValueError("Weights must be same len as data")
 
-
-
-    def dohist(self,
-               binsize=None,
-               nbin=None,
-               nperbin=None,
-               min=None,
-               max=None,
-               rev=False,
-               mergelast=True,
-               calc_stats=True):
+    def dohist(
+        self,
+        binsize=None,
+        nbin=None,
+        nperbin=None,
+        min=None,
+        max=None,
+        rev=False,
+        mergelast=True,
+        calc_stats=True,
+    ):
         """
         Perform the basic histogram, optionally getting reverse indices. Note
         if weights were sent, reverse indices will always be calculated
@@ -172,7 +164,7 @@ class Binner(dict):
 
         # if y is sent, we use rev to get mean y in the bins
         if self.y is not None:
-            rev=True
+            rev = True
 
         # get self['wsort'] and self.dmin, self.dmax
         self._get_minmax_and_indices(min=min, max=max)
@@ -190,104 +182,104 @@ class Binner(dict):
     def _hist_by_binsize_or_nbin(self, binsize, nbin, rev):
 
         if binsize is not None:
-            nbin = numpy.int64( (self.dmax-self.dmin)/binsize ) + 1
+            nbin = np.int64((self.dmax - self.dmin) / binsize) + 1
         elif nbin is not None:
-            binsize = float(self.dmax-self.dmin)/nbin
+            binsize = float(self.dmax - self.dmin) / nbin
         else:
             raise RuntimeError("Expected binsize or nbin")
-        self['binsize'] = binsize
-        self['nbin'] = nbin
+        self["binsize"] = binsize
+        self["nbin"] = nbin
 
-        h,r = self._do_hist(self.x, self.dmin, self['wsort'], binsize, nbin, rev=rev)
+        h, r = self._do_hist(
+            self.x, self.dmin, self["wsort"], binsize, nbin, rev=rev,
+        )
 
-        self['hist'] = h
+        self["hist"] = h
         if r is not None:
-            self['rev'] = r
+            self["rev"] = r
 
     def _hist_by_num(self, nperbin, mergelast=True):
-        
+
         # histogram indices into array
         # binsize is nperbin
-        ind = numpy.arange(self['wsort'].size)
+        ind = np.arange(self["wsort"].size)
         # already sorted
         inds = ind
         bsize = float(nperbin)
         indmax = ind[-1]
         indmin = 0
-        nbin = numpy.int64( (indmax-indmin)/bsize ) + 1
+        nbin = np.int64((indmax - indmin) / bsize) + 1
 
-        f8ind = numpy.array(ind, dtype='f8', ndmin=1, copy=False)
-        hist,rev = self._do_hist(f8ind, 0, inds, bsize, nbin, True)
+        f8ind = np.array(ind, dtype="f8", ndmin=1, copy=False)
+        hist, rev = self._do_hist(f8ind, 0, inds, bsize, nbin, True)
 
         # convert the indices in rev to the unlimited, unsorted frame
-        self['low'] = numpy.zeros(nbin, dtype='f8')
-        self['high'] = numpy.zeros(nbin, dtype='f8')
-        for i in xrange(nbin):
-            if rev[i] != rev[i+1]:
-                w = rev[ rev[i]:rev[i+1] ]
+        self["low"] = np.zeros(nbin, dtype="f8")
+        self["high"] = np.zeros(nbin, dtype="f8")
+        for i in range(nbin):
+            if rev[i] != rev[i + 1]:
+                w = rev[rev[i]: rev[i + 1]]
 
-                w = self['wsort'][w]
+                w = self["wsort"][w]
 
-                rev[ rev[i]:rev[i+1] ] = w
+                rev[rev[i]: rev[i + 1]] = w
 
-                self['low'][i] = self.x[w[0]]
-                self['high'][i] = self.x[w[-1]]
+                self["low"][i] = self.x[w[0]]
+                self["high"][i] = self.x[w[-1]]
 
-
-        self['hist'] = hist
-        self['rev'] = rev
-        self['nperbin'] = nperbin
+        self["hist"] = hist
+        self["rev"] = rev
+        self["nperbin"] = nperbin
 
         if hist[-1] != nperbin and mergelast:
             self._merge_last()
 
     def _merge_last(self):
-        rev=self['rev']
+        rev = self["rev"]
 
-        nbin = self['hist'].size
+        nbin = self["hist"].size
         if nbin < 2:
             return
-        hist=self['hist'][0:nbin-1]
-        low=self['low'][0:nbin-1]
-        high=self['high'][0:nbin-1]
+        hist = self["hist"][0: nbin - 1]
+        low = self["low"][0: nbin - 1]
+        high = self["high"][0: nbin - 1]
 
-        hist[-1] = self['hist'][-2] + self['hist'][-1]
-        low[-1] = self['low'][-2]
-        high[-1] = self['high'][-1]
+        hist[-1] = self["hist"][-2] + self["hist"][-1]
+        low[-1] = self["low"][-2]
+        high[-1] = self["high"][-1]
 
-        r2 = rev[0:rev.size-1]
-        r2[nbin-1] = rev[nbin]
-        r2[nbin:] = rev[nbin+1:]
+        r2 = rev[0: rev.size - 1]
+        r2[nbin - 1] = rev[nbin]
+        r2[nbin:] = rev[nbin + 1:]
         r2[0:nbin] -= 1
 
-        self['hist'] = hist
-        self['rev'] = r2
-        self['low'] = low
-        self['high'] = high
+        self["hist"] = hist
+        self["rev"] = r2
+        self["low"] = low
+        self["high"] = high
 
     def _do_hist(self, data, dmin, sortind, bsize, nbin, rev=False):
-        dorev=rev
+        dorev = rev
 
         if self.weights is not None:
             # force rev so we can add up in bins with weights
-            dorev=True
+            dorev = True
 
         if have_chist:
             # compute using the external C++ code
 
-            hist = numpy.zeros(nbin, dtype='i8')
+            hist = np.zeros(nbin, dtype="i8")
             if dorev:
                 revsize = sortind.size + nbin + 1
-                revind = numpy.zeros(revsize, dtype='i8')
+                revind = np.zeros(revsize, dtype="i8")
             else:
-                revind=None
+                revind = None
 
             _chist.chist(
                 data,
                 dmin,
                 sortind,
                 bsize,
-
                 hist,
                 revind,
             )
@@ -296,23 +288,22 @@ class Binner(dict):
             # compute in a python loop
 
             if dorev:
-                revsize = sortind.size + nbin+1
-                revind = numpy.zeros(revsize, dtype='i8')
+                revsize = sortind.size + nbin + 1
+                revind = np.zeros(revsize, dtype="i8")
             else:
                 # this is just a dummy variable
-                revind=None
-            hist = numpy.zeros(nbin, dtype='i8')
+                revind = None
+            hist = np.zeros(nbin, dtype="i8")
 
             _dohist(data, dmin, sortind, bsize, hist, revind=revind)
 
         return hist, revind
 
-
     def _get_sort_index(self):
         if self.sort_index is None:
             self.sort_index = self.x.argsort()
         # make it visible too
-        self['sort_index'] = self.sort_index
+        self["sort_index"] = self.sort_index
 
     def _get_minmax_and_indices(self, min=None, max=None):
         """
@@ -320,45 +311,46 @@ class Binner(dict):
         min/max range.
         """
         self._get_sort_index()
-        s=self['sort_index']
+        s = self["sort_index"]
 
-        dowhere=False
+        dowhere = False
         if min is not None:
             xmin = min
-            dowhere=True
+            dowhere = True
         else:
             xmin = self.x[s[0]]
 
-
         if max is not None:
             xmax = max
-            dowhere=True
+            dowhere = True
         else:
             xmax = self.x[s[-1]]
-        
+
         self.dmin = xmin
         self.dmax = xmax
 
-        self[self.xpref+'min'] = xmin
-        self[self.xpref+'max'] = xmax
+        self[self.xpref + "min"] = xmin
+        self[self.xpref + "max"] = xmax
 
         if dowhere:
             # where function will preserve order, so subscript with s
-            w,=numpy.where( (self.x[s] >= xmin) & (self.x[s] <= xmax) )
+            (w,) = np.where((self.x[s] >= xmin) & (self.x[s] <= xmax))
             if w.size == 0:
-                raise ValueError("No data in specified min/max range: [%s,%s]" % (xmin,xmax))
-            self['wsort'] = s[w]
+                raise ValueError(
+                    "No data in specified min/max range: [%s,%s]" % (xmin, xmax)  # noqa
+                )
+            self["wsort"] = s[w]
         else:
-            self['wsort'] = s
+            self["wsort"] = s
 
     def calc_stats(self):
-        if 'hist' not in self:
+        if "hist" not in self:
             raise ValueError("run dohist first")
 
-        xpref=self.xpref
+        xpref = self.xpref
 
-        nhist = len(self['hist'])
-        if 'nperbin' in self:
+        nhist = len(self["hist"])
+        if "nperbin" in self:
             # we need to get the actual bin edges
             # from the reverse indices
             pass
@@ -366,46 +358,45 @@ class Binner(dict):
             # if we used a binsize or nbin, we return the
             # edges and center of the bin
 
-            low = numpy.arange(nhist, dtype='f8')
-            low = self.dmin + low*self['binsize']
+            low = np.arange(nhist, dtype="f8")
+            low = self.dmin + low * self["binsize"]
 
-            high = low + self['binsize']
-            center = low + 0.5*self['binsize']
+            high = low + self["binsize"]
+            center = low + 0.5 * self["binsize"]
 
-            self[xpref+'low'] = low
-            self[xpref+'high'] = high
-            self[xpref+'center'] = center
+            self[xpref + "low"] = low
+            self[xpref + "high"] = high
+            self[xpref + "center"] = center
 
-
-        if 'rev' in self:
-            revind = self['rev']
+        if "rev" in self:
+            revind = self["rev"]
             # calculate the mean in the bins
-            xmean   = numpy.zeros(nhist) - 9999.0
-            xstd    = xmean.copy()
-            xerr    = xmean.copy()
+            xmean = np.zeros(nhist) - 9999.0
+            xstd = xmean.copy()
+            xerr = xmean.copy()
             xmedian = xmean.copy()
             if self.y is not None:
-                ymean   = xmean.copy()
-                ystd    = xmean.copy()
-                yerr    = xmean.copy()
+                ymean = xmean.copy()
+                ystd = xmean.copy()
+                yerr = xmean.copy()
                 ymedian = xmean.copy()
 
             if self.weights is not None:
                 whist = xmean.copy()
                 whist[:] = 0
                 wxmean = xmean.copy()
-                wxstd  = xmean.copy()
-                wxerr  = xmean.copy()
+                wxstd = xmean.copy()
+                wxerr = xmean.copy()
                 wxerr2 = xmean.copy()
                 if self.y is not None:
                     wymean = xmean.copy()
-                    wystd  = xmean.copy()
-                    wyerr  = xmean.copy()
+                    wystd = xmean.copy()
+                    wyerr = xmean.copy()
                     wyerr2 = xmean.copy()
 
-            for i in xrange(nhist):
-                if revind[i] != revind[i+1]:
-                    w = revind[ revind[i]:revind[i+1] ]
+            for i in range(nhist):
+                if revind[i] != revind[i + 1]:
+                    w = revind[revind[i]: revind[i + 1]]
 
                     if w.size == 1:
                         xmean[i] = self.x[w[0]]
@@ -419,7 +410,7 @@ class Binner(dict):
                             yerr[i] = ymean[i]
 
                         if self.weights is not None:
-                            whist[i] = self.x[w[0]]*self.weights[w[0]]
+                            whist[i] = self.x[w[0]] * self.weights[w[0]]
                             wxmean[i] = xmean[i]
                             wxstd[i] = 0
                             wxerr[i] = wxmean[i]
@@ -430,70 +421,81 @@ class Binner(dict):
                                 wyerr[i] = wymean[i]
                                 wyerr2[i] = wymean[i]
 
-
                     else:
                         xmean[i] = self.x[w].mean()
                         xstd[i] = self.x[w].std()
-                        xerr[i] = xstd[i]/numpy.sqrt(w.size)
-                        xmedian[i] = numpy.median(self.x[w])
+                        xerr[i] = xstd[i] / np.sqrt(w.size)
+                        xmedian[i] = np.median(self.x[w])
                         if self.y is not None:
                             ymean[i] = self.y[w].mean()
                             ystd[i] = self.y[w].std()
-                            yerr[i] = ystd[i]/numpy.sqrt(w.size)
-                            ymedian[i] = numpy.median(self.y[w])
+                            yerr[i] = ystd[i] / np.sqrt(w.size)
+                            ymedian[i] = np.median(self.y[w])
 
                         if self.weights is not None:
                             whist[i] = self.weights[w].sum()
-                            wm,we,ws=wmom(self.x[w],self.weights[w],sdev=True)
-                            j1,we2=wmom(self.x[w],self.weights[w], calcerr=True)
+                            wm, we, ws = wmom(
+                                self.x[w], self.weights[w], sdev=True,
+                            )
+                            j1, we2 = wmom(
+                                self.x[w], self.weights[w], calcerr=True,
+                            )
                             wxmean[i] = wm
                             wxstd[i] = ws
                             wxerr[i] = we
                             wxerr2[i] = we2
 
                             if self.y is not None:
-                                wm,we,ws=wmom(self.y[w],self.weights[w],sdev=True)
-                                j1,we2=wmom(self.y[w],self.weights[w], calcerr=True)
+                                wm, we, ws = wmom(
+                                    self.y[w], self.weights[w], sdev=True,
+                                )
+                                j1, we2 = wmom(
+                                    self.y[w], self.weights[w], calcerr=True,
+                                )
                                 wymean[i] = wm
                                 wystd[i] = ws
                                 wyerr[i] = we
                                 wyerr2[i] = we2
 
-
-
-
-            self[xpref+'mean']   = xmean
-            self[xpref+'std']    = xstd
-            self[xpref+'err']    = xerr
-            self[xpref+'median'] = xmedian
+            self[xpref + "mean"] = xmean
+            self[xpref + "std"] = xstd
+            self[xpref + "err"] = xerr
+            self[xpref + "median"] = xmedian
             if self.y is not None:
-                self['ymean']   = ymean
-                self['ystd']    = ystd
-                self['yerr']    = yerr
-                self['ymedian'] = ymedian
-
+                self["ymean"] = ymean
+                self["ystd"] = ystd
+                self["yerr"] = yerr
+                self["ymedian"] = ymedian
 
             if self.weights is not None:
-                self['whist']          = whist
-                self['w'+xpref+'mean'] = wxmean
-                self['w'+xpref+'std']  = wxstd
-                self['w'+xpref+'err']  = wxerr
-                self['w'+xpref+'err2'] = wxerr2
+                self["whist"] = whist
+                self["w" + xpref + "mean"] = wxmean
+                self["w" + xpref + "std"] = wxstd
+                self["w" + xpref + "err"] = wxerr
+                self["w" + xpref + "err2"] = wxerr2
                 if self.y is not None:
-                    self['wymean'] = wymean
-                    self['wystd']  = wystd
-                    self['wyerr']  = wyerr
-                    self['wyerr2'] = wyerr2
+                    self["wymean"] = wymean
+                    self["wystd"] = wystd
+                    self["wyerr"] = wyerr
+                    self["wyerr2"] = wyerr2
 
 
-
-def histogram(data, weights=None, binsize=1., nbin=None, 
-              nperbin=None, mergelast=True,
-              min=None, max=None, 
-              rev=False, more=False, **keys):
+def histogram(
+    data,
+    weights=None,
+    binsize=1.0,
+    nbin=None,
+    nperbin=None,
+    mergelast=True,
+    min=None,
+    max=None,
+    rev=False,
+    more=False,
+    **keys
+):
     """
-    Calculate the histogram of the input data.  
-    
+    Calculate the histogram of the input data.
+
     Similar to IDL histogram.  The reverse indices are also optionally
     calculated.  This routine uses the Binner class in this module for the
     computations.  If you need something more flexible, or need to calculate
@@ -501,7 +503,7 @@ def histogram(data, weights=None, binsize=1., nbin=None,
 
     Parameters
     ----------
-    data: 
+    data:
         A numpy array or a sequence that can be converted.
 
     weights: optional
@@ -525,7 +527,7 @@ def histogram(data, weights=None, binsize=1., nbin=None,
 
 
     rev: boolean, optional
-        If true, return a tuple 
+        If true, return a tuple
             h, rev
         Where rev is the reverse indices.   Default is false.  Note if weights
         are sent, or more=True, the result is always a dictionary.  See below.
@@ -541,7 +543,7 @@ def histogram(data, weights=None, binsize=1., nbin=None,
                 'low': The lower edge of the bins
                 'high' Upper edge of the bins.
                 'center': Center of the bins
-                
+
             if the keyword rev=True or weights are sent:
                 'mean': The mean value in the bin. -9999 if there are
                     no data in the bin.
@@ -555,7 +557,7 @@ def histogram(data, weights=None, binsize=1., nbin=None,
                 'werr': The weighted error in the bin, calculated as
                     sqrt(1/sum(weights))
                 'werr2': The weighted error calculated from the
-                    weighted variance: 
+                    weighted variance:
                       sqrt( (w**2 * (arr-mean)**2).sum() )/weights.sum()
 
 
@@ -571,14 +573,21 @@ def histogram(data, weights=None, binsize=1., nbin=None,
     """
 
     if nbin is not None:
-        binsize=None
+        binsize = None
 
     if more:
-        rev=True
+        rev = True
 
     b = Binner(data, weights=weights)
-    b.dohist(binsize=binsize, nbin=nbin, nperbin=nperbin, mergelast=mergelast,
-             min=min, max=max, rev=rev)
+    b.dohist(
+        binsize=binsize,
+        nbin=nbin,
+        nperbin=nperbin,
+        mergelast=mergelast,
+        min=min,
+        max=max,
+        rev=rev,
+    )
 
     if more or weights is not None:
         b.calc_stats()
@@ -587,24 +596,23 @@ def histogram(data, weights=None, binsize=1., nbin=None,
         return b
 
     if rev:
-        return b['hist'], b['rev']
+        return b["hist"], b["rev"]
     else:
-        return b['hist']
-
+        return b["hist"]
 
 
 def _dohist(data, dmin, s, binsize, hist, revind=None):
     """
     This is the slower python-only implementation
     """
-    
-    dorev=False
-    if revind is not None:
-        dorev=True
 
-    nbin=hist.size
-    offset = nbin+1
-    i=0
+    dorev = False
+    if revind is not None:
+        dorev = True
+
+    nbin = hist.size
+    offset = nbin + 1
+    i = 0
     binnum_old = -1
 
     while i < s.size:
@@ -614,7 +622,7 @@ def _dohist(data, dmin, s, binsize, hist, revind=None):
 
         val = data[data_index]
 
-        binnum = numpy.int64( (val-dmin)/binsize )
+        binnum = np.int64((val - dmin) / binsize)
         if binnum >= 0 and binnum < nbin:
             if binnum > binnum_old:
                 tbin = binnum_old + 1
@@ -637,20 +645,23 @@ def _dohist(data, dmin, s, binsize, hist, revind=None):
             tbin += 1
 
 
-def histogram2d(x, y,
-                z=None,
-                weights=None,
-                nx=None,
-                ny=None,
-                xbin=None,
-                ybin=None,
-                xmin=None,
-                xmax=None,
-                ymin=None,
-                ymax=None,
-                rev=False,
-                more=False,
-                **kw):
+def histogram2d(
+    x,
+    y,
+    z=None,
+    weights=None,
+    nx=None,
+    ny=None,
+    xbin=None,
+    ybin=None,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    rev=False,
+    more=False,
+    **kw
+):
     """
     Histogram two-dimensional data.
 
@@ -705,67 +716,68 @@ def histogram2d(x, y,
         If z is sent, more is implied.
     """
 
-    x = numpy.array(x, ndmin=1, copy=False)
-    y = numpy.array(y, ndmin=1, copy=False)
+    x = np.array(x, ndmin=1, copy=False)
+    y = np.array(y, ndmin=1, copy=False)
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
 
     if z is not None:
-        rev=True
-        z = numpy.array(z, ndmin=1, copy=False)
+        rev = True
+        z = np.array(z, ndmin=1, copy=False)
         if x.size != z.size:
             raise ValueError("x,y,z must be the same size")
 
     # binsizes will take precedence
-    dobinsizes=False
-    donbin=False
-    if (xbin != None) and (ybin != None):
-        dobinsizes=True
-    elif (nx != None) or (ny != None):
-        donbin=True
+    dobinsizes = False
+    # donbin = False
+    if xbin is not None and ybin is not None:
+        dobinsizes = True
+    elif nx is not None or ny is not None:
+        # donbin = True
+        pass
     else:
         raise ValueError("Enter either nx,ny or xbin,ybin")
 
     if xmin is None:
-        xmin=x.min()
+        xmin = x.min()
     if xmax is None:
-        xmax=x.max()
+        xmax = x.max()
     if ymin is None:
-        ymin=y.min()
+        ymin = y.min()
     if ymax is None:
-        ymax=y.max()
+        ymax = y.max()
 
-    w, = numpy.where( (x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax) )
+    (w,) = np.where((x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax))
     if w.size == 0:
         raise ValueError("No data in specified min/max range\n")
 
     if dobinsizes:
         # determine nx,ny from binsizes
-        nx = numpy.int64(  (xmax-xmin)/float(xbin) ) + 1
-        ny = numpy.int64(  (ymax-ymin)/float(ybin) ) + 1
+        nx = np.int64((xmax - xmin) / float(xbin)) + 1
+        ny = np.int64((ymax - ymin) / float(ybin)) + 1
     else:
-        xbin = (xmax-xmin)/float(nx)
-        ybin = (ymax-ymin)/float(ny)
+        xbin = (xmax - xmin) / float(nx)
+        ybin = (ymax - ymin) / float(ny)
 
-    xind=numpy.floor((x[w]-xmin)*(float(nx)/(xmax-xmin)))
-    yind=numpy.floor((y[w]-ymin)*(float(ny)/(ymax-ymin)))
+    xind = np.floor((x[w] - xmin) * (float(nx) / (xmax - xmin)))
+    yind = np.floor((y[w] - ymin) * (float(ny) / (ymax - ymin)))
 
-    #ind=xind+nx*yind
+    # ind=xind+nx*yind
     # fixed so that row,col is the indexing
-    ind=yind+ny*xind
+    ind = yind + ny * xind
 
     if weights is not None:
-        more=True
-        res = histogram(ind, min=0, max=nx*ny-1, weights=weights[w])
-        hist=res['hist']
-        whist=res['whist'].reshape(nx,ny)
-        revind=res['rev']
+        more = True
+        res = histogram(ind, min=0, max=nx * ny - 1, weights=weights[w])
+        hist = res["hist"]
+        whist = res["whist"].reshape(nx, ny)
+        revind = res["rev"]
     elif rev:
-        hist, revind = histogram(ind, min=0, max=nx*ny-1, rev=True)
+        hist, revind = histogram(ind, min=0, max=nx * ny - 1, rev=True)
     else:
-        hist = histogram(ind, min=0, max=nx*ny-1)
+        hist = histogram(ind, min=0, max=nx * ny - 1)
 
-    hist = hist.reshape(nx,ny)
+    hist = hist.reshape(nx, ny)
 
     if not more and z is None:
         if rev:
@@ -774,57 +786,58 @@ def histogram2d(x, y,
             return hist
     else:
 
-        output={}
-        output['hist'] = hist
+        output = {}
+        output["hist"] = hist
 
         if weights is not None:
-            output['whist']=whist
+            output["whist"] = whist
 
         # create the bin edges and centers
-        xlow = numpy.arange(nx, dtype='f8')
-        xlow = xmin + xlow*xbin
+        xlow = np.arange(nx, dtype="f8")
+        xlow = xmin + xlow * xbin
         xhigh = xlow + xbin
-        xcenter = xlow + 0.5*xbin
+        xcenter = xlow + 0.5 * xbin
 
-        ylow = numpy.arange(ny, dtype='f8')
-        ylow = ymin + ylow*ybin
+        ylow = np.arange(ny, dtype="f8")
+        ylow = ymin + ylow * ybin
         yhigh = ylow + ybin
-        ycenter = ylow + 0.5*ybin
+        ycenter = ylow + 0.5 * ybin
 
-        output['xlow'] = xlow
-        output['xhigh'] = xhigh
-        output['xcenter'] = xcenter
+        output["xlow"] = xlow
+        output["xhigh"] = xhigh
+        output["xcenter"] = xcenter
 
-        output['ylow'] = ylow
-        output['yhigh'] = yhigh
-        output['ycenter'] = ycenter
+        output["ylow"] = ylow
+        output["yhigh"] = yhigh
+        output["ycenter"] = ycenter
 
-        output['nx'] = nx
-        output['xbin'] = xbin
-        output['xmin'] = xmin
-        output['xmax'] = xmax
+        output["nx"] = nx
+        output["xbin"] = xbin
+        output["xmin"] = xmin
+        output["xmax"] = xmax
 
-        output['ny'] = ny
-        output['ybin'] = ybin
-        output['ymin'] = ymin
-        output['ymax'] = ymax
+        output["ny"] = ny
+        output["ybin"] = ybin
+        output["ymin"] = ymin
+        output["ymax"] = ymax
 
-        output['ranges'] = ( (xmin,ymin), (xmax,ymax) )
+        output["ranges"] = ((xmin, ymin), (xmax, ymax))
         # useful for biggles
-        output['ranges_reverse'] = ( (ymin,xmin), (ymax,xmax) )
+        output["ranges_reverse"] = ((ymin, xmin), (ymax, xmax))
 
         if rev:
-            output['rev'] = revind
+            output["rev"] = revind
 
         if z is not None:
-            zmean=numpy.zeros(nx*ny)
-            for i in xrange(hist.size):
-                if revind[i] != revind[i+1]:
-                    wbin=revind[ revind[i]:revind[i+1] ]
+            zmean = np.zeros(nx * ny)
+            for i in range(hist.size):
+                if revind[i] != revind[i + 1]:
+                    wbin = revind[revind[i]: revind[i + 1]]
                     zmean[i] = z[w[wbin]].mean()
 
-            output['zmean'] = zmean.reshape(nx,ny)
+            output["zmean"] = zmean.reshape(nx, ny)
         return output
+
 
 def boxcar_average(x, N):
     """
@@ -838,8 +851,10 @@ def boxcar_average(x, N):
         Size of the window
     """
     from numpy import convolve, ones
-    kernel=ones((N,))/N
-    return convolve(x, kernel)[(N-1):]
+
+    kernel = ones((N,)) / N
+    return convolve(x, kernel)[(N - 1):]
+
 
 def get_stats(arr_in, weights=None, doprint=False, **kw):
     """
@@ -870,69 +885,69 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
      'max':amax}
     """
 
-    arr = numpy.array(arr_in, dtype='f8', ndmin=1, copy=False)
+    arr = np.array(arr_in, dtype="f8", ndmin=1, copy=False)
 
     amin = arr.min(axis=0)
     amax = arr.max(axis=0)
 
-    if 'nsig' in kw or 'niter' in kw:
-        do_sigma_clip=True
-        scalarify=False
-        ndim=None
+    if "nsig" in kw or "niter" in kw:
+        do_sigma_clip = True
+        scalarify = False
+        ndim = None
     else:
-        do_sigma_clip=False
+        do_sigma_clip = False
 
         if len(arr.shape) == 1:
-            scalarify=True
-            arr = arr[:,newaxis]
+            scalarify = True
+            arr = arr[:, newaxis]
         else:
-            scalarify=False
+            scalarify = False
         ndim = arr.shape[1]
 
     if do_sigma_clip:
-        kw['get_err']=True
-        mn,std,err = sigma_clip(arr, weights=weights, **kw)
+        kw["get_err"] = True
+        mn, std, err = sigma_clip(arr, weights=weights, **kw)
     elif weights is not None:
-        kw['sdev']=True
-        if 'calcerr' not in kw:
-            kw['calcerr']=True
-        mn,err,std=wmom(arr, weights, **kw)
+        kw["sdev"] = True
+        if "calcerr" not in kw:
+            kw["calcerr"] = True
+        mn, err, std = wmom(arr, weights, **kw)
     else:
         mn = arr.mean(axis=0)
         std = arr.std(axis=0)
-        err = std/sqrt(arr.shape[0])
-
+        err = std / sqrt(arr.shape[0])
 
     if doprint:
-        nsig=kw.get("nsigma_print",1.0)
+        nsig = kw.get("nsigma_print", 1.0)
         if nsig != 1.0:
-            errs='err * %.1f' % nsig
+            errs = "err * %.1f" % nsig
         else:
-            errs='err'
-        head = ('min','max','mean',errs,'std')
-        nh=len(head)
-        headfmt = ' '.join( ['%12s']*nh )
-        numfmt = ' '.join( ['%12g']*nh )
-
+            errs = "err"
+        head = ("min", "max", "mean", errs, "std")
+        nh = len(head)
+        headfmt = " ".join(["%12s"] * nh)
+        numfmt = " ".join(["%12g"] * nh)
 
         print(headfmt % head)
         if ndim is None:
-            print(numfmt % (amin,amax,mn,nsig*err,std))
+            print(numfmt % (amin, amax, mn, nsig * err, std))
         else:
-            for i in xrange(ndim):
+            for i in range(ndim):
                 if scalarify:
-                    print(numfmt % (amin,amax,mn[i],nsig*err[i],std[i]))
+                    print(numfmt % (amin, amax, mn[i], nsig * err[i], std[i]))
                 else:
-                    print(numfmt % (amin[i],amax[i],mn[i],nsig*err[i],std[i]))
+                    print(numfmt % (amin[i], amax[i], mn[i],
+                                    nsig * err[i], std[i]))
 
     if scalarify:
-        mn=mn[0]
-        std=std[0]
-        err=err[0]
+        mn = mn[0]
+        std = std[0]
+        err = err[0]
 
-    res = {'mean':mn, 'std':std, 'err':err, 'min':amin, 'max':amax}
+    res = {"mean": mn, "std": std, "err": err, "min": amin, "max": amax}
 
     return res
+
 
 def print_stats(arr, nsigma=1.0, **kw):
     """
@@ -956,11 +971,15 @@ def print_stats(arr, nsigma=1.0, **kw):
     None
     """
 
-    kw['doprint']=True
-    kw['nsigma_print']=nsigma
+    kw["doprint"] = True
+    kw["nsigma_print"] = nsigma
     get_stats(arr, **kw)
 
-def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored_kw):
+
+def wmom(
+    arrin, weights_in, inputmean=None, calcerr=False,
+    sdev=False, **ignored_kw,
+):
     """
     Calculate the weighted moments of the input array.
 
@@ -993,47 +1012,49 @@ def wmom(arrin, weights_in, inputmean=None, calcerr=False, sdev=False, **ignored
     """
 
     # no copy made if they are already arrays
-    arr = numpy.array(arrin, ndmin=1, copy=False)
+    arr = np.array(arrin, ndmin=1, copy=False)
 
     # Weights is forced to be type double. All resulting calculations
     # will also be double
-    weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
-
+    weights = np.array(weights_in, ndmin=1, dtype="f8", copy=False)
 
     if len(arr.shape) > 1:
         ndim = arr.shape[1]
         if len(weights.shape) == 1:
-            weights = weights[:,newaxis]
+            weights = weights[:, newaxis]
     else:
-        ndim=1
+        ndim = 1
         if weights.shape != arr.shape:
-            raise ValueError("weights should have one dimension "
-                             "or have same shape as data, got "
-                             "%s %s" % (arr.shape,weights.shape))
+            raise ValueError(
+                "weights should have one dimension "
+                "or have same shape as data, got "
+                "%s %s" % (arr.shape, weights.shape)
+            )
     wtot = weights.sum(axis=0)
 
     # user has input a mean value
     if inputmean is None:
-        wmean = ( weights*arr ).sum(axis=0)/wtot
+        wmean = (weights * arr).sum(axis=0) / wtot
     else:
-        wmean=float(inputmean)
+        wmean = float(inputmean)
 
     # how should error be calculated?
     if calcerr:
-        werr2 = ( weights**2 * (arr-wmean)**2 ).sum(axis=0)
-        werr = numpy.sqrt( werr2 )/wtot
+        werr2 = (weights ** 2 * (arr - wmean) ** 2).sum(axis=0)
+        werr = np.sqrt(werr2) / wtot
     else:
-        werr = 1.0/numpy.sqrt(wtot)
-        if not numpy.isscalar(werr) and len(werr) < ndim:
-            werr = numpy.array([werr[0]]*ndim,dtype='f8')
+        werr = 1.0 / np.sqrt(wtot)
+        if not np.isscalar(werr) and len(werr) < ndim:
+            werr = np.array([werr[0]] * ndim, dtype="f8")
 
     # should output include the weighted standard deviation?
     if sdev:
-        wvar = ( weights*(arr-wmean)**2 ).sum(axis=0)/wtot
-        wsdev = numpy.sqrt(wvar)
-        return wmean,werr,wsdev
+        wvar = (weights * (arr - wmean) ** 2).sum(axis=0) / wtot
+        wsdev = np.sqrt(wvar)
+        return wmean, werr, wsdev
     else:
-        return wmean,werr
+        return wmean, werr
+
 
 def wmedian(arr_in, weights_in):
     """
@@ -1042,19 +1063,19 @@ def wmedian(arr_in, weights_in):
     http://stackoverflow.com/questions/9794558/weighted-median-computation
     """
     # no copy made if they are already arrays
-    arr = numpy.array(arr_in, ndmin=1, copy=False)
+    arr = np.array(arr_in, ndmin=1, copy=False)
 
-    sind=arr.argsort()
+    sind = arr.argsort()
 
     # Weights is forced to be type double. All resulting calculations
     # will also be double
-    weights = numpy.array(weights_in, ndmin=1, dtype='f8', copy=False)
+    weights = np.array(weights_in, ndmin=1, dtype="f8", copy=False)
 
     wtot = weights.sum()
-    wtot2 = wtot/2.
+    wtot2 = wtot / 2.0
 
-    k=0
-    sum = wtot-weights[sind[0]]
+    k = 0
+    sum = wtot - weights[sind[0]]
 
     while sum > wtot2:
         k += 1
@@ -1063,8 +1084,18 @@ def wmedian(arr_in, weights_in):
     return arr[sind[k]]
 
 
-def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=False, extra={},
-               verbose=False, silent=False, **ignored_kw):
+def sigma_clip(
+    arrin,
+    weights=None,
+    niter=4,
+    nsig=4,
+    get_err=False,
+    get_indices=False,
+    extra={},
+    verbose=False,
+    silent=False,
+    **ignored_kw
+):
     """
     Calculate the mean/stdev of an array with sigma clipping.
 
@@ -1099,37 +1130,41 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
       Added weights option
     """
 
-    arr = numpy.array(arrin, ndmin=1, copy=False)
+    arr = np.array(arrin, ndmin=1, copy=False)
 
     if len(arr.shape) > 1:
         raise ValueError("only 1-dimensional arrays suppored, "
                          "got %s" % (arr.shape,))
 
     if weights is not None:
-        weights = numpy.array(weights, ndmin=1, copy=False)
+        weights = np.array(weights, ndmin=1, copy=False)
 
         if weights.size != arr.size:
-            raise ValueError("weights should have same size as "
-                             "array, got "
-                             "%s %s" % (arr.size,weights.size))
+            raise ValueError(
+                "weights should have same size as "
+                "array, got "
+                "%s %s" % (arr.size, weights.size)
+            )
 
-    indices = numpy.arange( arr.size )
+    indices = np.arange(arr.size)
     nold = arr.size
 
     tarr, tweights = _get_sigma_clip_subset(arr, indices, weights=weights)
 
-    m,e,s=_get_sigma_clip_stats(tarr, weights=tweights)
+    m, e, s = _get_sigma_clip_stats(tarr, weights=tweights)
     if verbose:
         _print_sigma_clip_stats(0, indices.size, m, s)
 
-    for i in xrange(1,niter+1):
+    for i in range(1, niter + 1):
 
-        w, = numpy.where( (numpy.abs(tarr - m)) < nsig*s)
+        (w,) = np.where((np.abs(tarr - m)) < nsig * s)
 
-        if (w.size == 0):
-            if (not silent):
-                stderr.write("nsig too small. Everything clipped on "
-                             "iteration %d\n" % (i+1))
+        if w.size == 0:
+            if not silent:
+                stderr.write(
+                    "nsig too small. Everything clipped on "
+                    "iteration %d\n" % (i + 1)
+                )
             break
 
         if w.size == nold:
@@ -1139,12 +1174,11 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
         tarr, tweights = _get_sigma_clip_subset(arr, indices, weights=weights)
         nold = w.size
 
-        m,e,s=_get_sigma_clip_stats(tarr, weights=tweights)
+        m, e, s = _get_sigma_clip_stats(tarr, weights=tweights)
         if verbose:
             _print_sigma_clip_stats(i, indices.size, m, s)
 
-
-    res=[]
+    res = []
     res.append(m)
     res.append(s)
     if get_err:
@@ -1152,32 +1186,36 @@ def sigma_clip(arrin, weights=None, niter=4, nsig=4, get_err=False, get_indices=
     if get_indices:
         res.append(indices)
 
-    extra['indices'] = indices
+    extra["indices"] = indices
 
     return res
+
 
 def _get_sigma_clip_subset(arr, indices, weights=None):
     tarr = arr[indices]
     if weights is not None:
-        tweights=weights[indices]
+        tweights = weights[indices]
     else:
-        tweights=None
+        tweights = None
 
     return tarr, tweights
 
+
 def _get_sigma_clip_stats(arr, weights=None):
     if weights is not None:
-        m,e,s=wmom(arr, weights, calcerr=True, sdev=True)
+        m, e, s = wmom(arr, weights, calcerr=True, sdev=True)
     else:
         m = arr.mean()
         s = arr.std()
-        e = s/numpy.sqrt(arr.shape[0])
+        e = s / np.sqrt(arr.shape[0])
 
-    return m,e,s
+    return m, e, s
+
 
 def _print_sigma_clip_stats(iter, nuse, mean, stdev):
-    mess='iter: %d  nuse: %d mean: %10.3g stdev: %10.3g'
+    mess = "iter: %d  nuse: %d mean: %10.3g stdev: %10.3g"
     print(mess % (iter, nuse, mean, stdev))
+
 
 def interplin(vin, xin, uin):
     """
@@ -1202,9 +1240,9 @@ def interplin(vin, xin, uin):
       Created: 2006-10-24, Erin Sheldon, NYU
     """
     # Make sure inputs are arrays.  Copy only made if they are not.
-    v=numpy.array(vin, ndmin=1, copy=False)
-    x=numpy.array(xin, ndmin=1, copy=False)
-    u=numpy.array(uin, ndmin=1, copy=False)
+    v = np.array(vin, ndmin=1, copy=False)
+    x = np.array(xin, ndmin=1, copy=False)
+    u = np.array(uin, ndmin=1, copy=False)
 
     # Find closest indices
     xm = x.searchsorted(u) - 1
@@ -1212,16 +1250,16 @@ def interplin(vin, xin, uin):
     # searchsorted returns size(array) when the input is larger than xmax
     # Also, we need the index to be less than the last since we interpolate
     # *between* points.
-    w, = numpy.where(xm >= (x.size-1))
+    (w,) = np.where(xm >= (x.size - 1))
     if w.size > 0:
-        xm[w] = x.size-2
+        xm[w] = x.size - 2
 
-    w, = numpy.where(xm < 0)
+    (w,) = np.where(xm < 0)
     if w.size > 0:
         xm[w] = 0
 
-    xmp1 = xm+1
-    return (u-x[xm])*(v[xmp1] - v[xm])/(x[xmp1] - x[xm]) + v[xm]
+    xmp1 = xm + 1
+    return (u - x[xm]) * (v[xmp1] - v[xm]) / (x[xmp1] - x[xm]) + v[xm]
 
 
 def cor2cov(cor, diagerr):
@@ -1245,18 +1283,23 @@ def cor2cov(cor, diagerr):
     if len(cor.shape) != 2:
         raise ValueError("expected 2-d correlation matrix, got %s" % cor.shape)
     if cor.shape[0] != cor.shape[1]:
-        raise ValueError("expected square correlation matrix, got %s" % cor.shape)
+        raise ValueError(
+            "expected square correlation matrix, got %s" % cor.shape,
+        )
     if cor.shape[0] != diagerr.shape[0]:
-        raise ValueError("expected shape agreement for cor (%s) and "
-                         "errors (%s) " % (cor.shape,diagerr.shape))
+        raise ValueError(
+            "expected shape agreement for cor (%s) and "
+            "errors (%s) " % (cor.shape, diagerr.shape)
+        )
 
-    cov=numpy.zeros(cor.shape, dtype='f8')
+    cov = np.zeros(cor.shape, dtype="f8")
 
-    for ix in xrange(diagerr.shape[0]):
-        for iy in xrange(diagerr.shape[0]):
-            cov[ix,iy] = cor[ix,iy]*diagerr[ix]*diagerr[iy]
+    for ix in range(diagerr.shape[0]):
+        for iy in range(diagerr.shape[0]):
+            cov[ix, iy] = cor[ix, iy] * diagerr[ix] * diagerr[iy]
 
     return cov
+
 
 def cov2cor(cov):
     """
@@ -1276,19 +1319,18 @@ def cov2cor(cov):
     """
     cor = zeros(cov.shape)
 
-    for ix in xrange(cov.shape[0]):
-        cxx=cov[ix,ix]
+    for ix in range(cov.shape[0]):
+        cxx = cov[ix, ix]
         if cxx <= 0.0:
-            raise ValueError("diagonal cov[%d,%d]=%e is not positive" % (ix,ix,cxx))
-        for iy in xrange(cov.shape[1]):
-            cyy=cov[iy,iy]
+            raise ValueError(
+                "diagonal cov[%d,%d]=%e is not positive" % (ix, ix, cxx)
+            )
+        for iy in range(cov.shape[1]):
+            cyy = cov[iy, iy]
             if cyy <= 0.0:
-                raise ValueError("diagonal cov[%d,%d]=%e is not positive" % (iy,iy,cyy))
-            cor[ix,iy] = cov[ix,iy]/sqrt(cxx*cyy)
+                raise ValueError(
+                    "diagonal cov[%d,%d]=%e is not positive" % (iy, iy, cyy)
+                )
+            cor[ix, iy] = cov[ix, iy] / sqrt(cxx * cyy)
 
     return cor
-
-
-
-
-
