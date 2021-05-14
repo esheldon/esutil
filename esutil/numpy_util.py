@@ -148,37 +148,18 @@ Utilities for using and manipulating numerical python arrays (NumPy).
 from __future__ import print_function
 
 import os
-import sys
-from sys import stdout, stderr
+from sys import stdout
 import copy
 import pydoc
 import stat
-
-try:
-    import numpy
-    have_numpy=True
-except:
-    have_numpy=False
-
-# python3 compatibility
-try:
-    basestring
-except:
-    basestring=str
-try:
-    xrange
-except:
-    xrange=range
-try:
-    long
-except:
-    long=int
+import numpy
 
 from . import misc as eu_misc
 
 # for backwards compatibility
-from .random import random_indices as random_subset
-from .random import randind
+from .random import random_indices as random_subset  # noqa
+from .random import randind  # noqa
+
 
 def where1(conditional_expression):
     """
@@ -196,8 +177,9 @@ def where1(conditional_expression):
             w=where1( (x > 0.1) & (x < 1.5) )
             print x[w]
     """
-    w, = numpy.where(conditional_expression)
+    (w,) = numpy.where(conditional_expression)
     return w
+
 
 def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     """
@@ -241,12 +223,11 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
 
     """
 
-
     # make sure the data can be viewed as a
     # numpy ndarray.  pyfits in particular is
     # a problem case that we must get a view of
     # as ndarray.
-    if not hasattr(array_in,'view'):
+    if not hasattr(array_in, "view"):
         raise ValueError("data must be an array or have the .view method")
 
     array = array_in.view(numpy.ndarray)
@@ -254,35 +235,33 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     names = array.dtype.names
     descr = array.dtype.descr
 
+    topformat = "size: %s  nfields: %s  type: %s\n"
 
-    topformat="size: %s  nfields: %s  type: %s\n"
-
-    lines=[]
+    lines = []
     if names is None:
-        type=descr[0][1]
-        nfields=0
-        line=topformat % (array.size, nfields, type)
+        type = descr[0][1]
+        nfields = 0
+        line = topformat % (array.size, nfields, type)
         lines.append(line)
-        #stdout.write(line)
 
     else:
-        line=topformat % (array.size, len(names), 'records')
+        line = topformat % (array.size, len(names), "records")
         lines.append(line)
-        #stdout.write(line)
-        flines=_get_field_info(array,
-                               recurse=recurse,
-                               pretty=pretty,
-                               index=index)
+        flines = _get_field_info(
+            array, recurse=recurse, pretty=pretty, index=index
+        )
         lines += flines
 
-    lines='\n'.join(lines)
+    lines = "\n".join(lines)
 
     if not page:
         stdout.write(lines)
-        stdout.write('\n')
+        stdout.write("\n")
     else:
         import pydoc
+
         pydoc.pager(lines)
+
 
 def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
     names = array.dtype.names
@@ -290,82 +269,74 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
         raise ValueError("array has no fields")
 
     if len(array.shape) == 0:
-        is_scalar=True
+        is_scalar = True
     else:
-        is_scalar=False
+        is_scalar = False
 
-
-    lines=[]
-    spacing = ' '*nspace
+    lines = []
+    spacing = " " * nspace
 
     nname = 15
     ntype = 6
 
     # this format makes something machine readable
-    #format = spacing + "%-" + str(nname) + "s %" + str(ntype) + "s  %s\n"
-    # this one is prettier since lines wrap after long names
-    #pformat = spacing + "%-" + str(nname) + "s\n %" + str(nspace+nname+ntype) + "s  %s\n"
-
-
-    # this format makes something machine readable
     format = spacing + "%-" + str(nname) + "s %" + str(ntype) + "s  %s"
     # this one is prettier since lines wrap after long names
-    pformat = spacing + "%-" + str(nname) + "s\n %" + str(nspace+nname+ntype) + "s  %s"
+    pformat = (
+        spacing + "%-" + str(nname) + "s\n %" + str(nspace + nname + ntype) + "s  %s"  # noqa
+    )
 
     max_pretty_slen = 25
 
     for i in range(len(names)):
 
-        hasfields=False
+        hasfields = False
 
+        n = names[i]
 
-        n=names[i]
-
-        type=array.dtype.descr[i][1]
+        type = array.dtype.descr[i][1]
 
         if is_scalar:
             fdata = array[n]
         else:
             fdata = array[n][index]
 
-
         if numpy.isscalar(fdata):
             if isinstance(fdata, numpy.string_):
-                d=fdata
+                d = fdata
 
                 # if pretty printing, reduce string lengths
                 if pretty and len(d) > max_pretty_slen:
                     d = fdata[0:max_pretty_slen]
-                    #d = "'" + d +"'"
+                    # d = "'" + d +"'"
                     d = "'%s'..." % d
-                    #d = d+'...'
+                    # d = d+'...'
                 else:
                     if pretty:
                         d = "'%s'" % d
             else:
                 d = fdata
         else:
-            shape_str = ','.join( str(s) for s in fdata.shape)
+            shape_str = ",".join(str(s) for s in fdata.shape)
             if fdata.dtype.names is not None:
-                type = 'rec[%s]' % shape_str
-                d=''
-                hasfields=True
+                type = "rec[%s]" % shape_str
+                d = ""
+                hasfields = True
             else:
-                d = 'array[%s]' % shape_str
+                d = "array[%s]" % shape_str
 
         if pretty and len(n) > 15:
-            l = pformat % (n,type,d)
+            tline = pformat % (n, type, d)
         else:
-            l = format % (n,type,d)
-        lines.append(l)
-        #stdout.write(l)
+            tline = format % (n, type, d)
+        lines.append(tline)
 
         if hasfields and recurse:
-            #new_nspace = nspace + nname + 1 + ntype + 2
+            # new_nspace = nspace + nname + 1 + ntype + 2
             new_nspace = nspace + 4
-            morelines = _get_field_info(array[n],
-                                        nspace=new_nspace,
-                                        recurse=recurse)
+            morelines = _get_field_info(
+                array[n], nspace=new_nspace, recurse=recurse
+            )
             lines += morelines
 
     return lines
@@ -487,20 +458,20 @@ def aprint(array, **keys):
 
         # fancy printing with a title
         >>> aprint(arr, title='My Data',type='fancy')
-                            My Data                     
-               x       |       y       |     sigma0     
+                            My Data
+               x       |       y       |     sigma0
         ---------------+---------------+---------------
-         1383.91540527 | 200.237106323 | 0.266301675406 
-         802.613586426 | 249.544662476 | 0.921706936925 
-         968.170288086 | 206.072280884 | 0.702349236707 
+         1383.91540527 | 200.237106323 | 0.266301675406
+         802.613586426 | 249.544662476 | 0.921706936925
+         968.170288086 | 206.072280884 | 0.702349236707
          ...
 
 
     """
 
-    if 'sep' in keys:
-        if 'delim' not in keys:
-            keys['delim'] = keys['sep']
+    if "sep" in keys:
+        if "delim" not in keys:
+            keys["delim"] = keys["sep"]
 
     aw = ArrayWriter(**keys)
     aw.write(array, **keys)
@@ -508,16 +479,14 @@ def aprint(array, **keys):
     return
 
 
-
-
-
-def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
+def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype="f8"):
     """
     NAME:
       arrscl()
 
     CALLING SEQUENCE:
-      newarr = arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8')
+      newarr = arrscl(arr, minval, maxval, arrmin=None, arrmax=None,
+                      dtype='f8')
 
     PURPOSE:
       Rescale the range of an array to be between minval and maxval.
@@ -549,23 +518,26 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype='f8'):
 
     output = numpy.array(arr, dtype=dtype, copy=True)
 
-    if arrmin == None: arrmin = output.min()
-    if arrmax == None: arrmax = output.max()
+    if arrmin is None:
+        arrmin = output.min()
+    if arrmax is None:
+        arrmax = output.max()
 
     if output.size == 1:
         return output
 
-    if (arrmin == arrmax):
-        raise ValueError('arrmin must not equal arrmax')
+    if arrmin == arrmax:
+        raise ValueError("arrmin must not equal arrmax")
 
-    a = (maxval - minval)/(arrmax - arrmin)
-    b = (arrmax*minval - arrmin*maxval)/(arrmax - arrmin)
+    a = (maxval - minval) / (arrmax - arrmin)
+    b = (arrmax * minval - arrmin * maxval) / (arrmax - arrmin)
 
     # in place
     numpy.multiply(output, a, output)
     numpy.add(output, b, output)
 
     return output
+
 
 def make_xy_grid(n, xrang, yrang):
     """
@@ -582,18 +554,19 @@ def make_xy_grid(n, xrang, yrang):
         Created: mid 2009, Erin Sheldon, BNL
     """
 
-    rng = numpy.arange(n, dtype='f8')
-    ones = numpy.ones(n, dtype='f8')
+    rng = numpy.arange(n, dtype="f8")
+    ones = numpy.ones(n, dtype="f8")
 
     x = arrscl(rng, xrang[0], xrang[1])
     y = arrscl(rng, yrang[0], yrang[1])
 
-    x= numpy.outer(x, ones)
-    y= numpy.outer(ones, y)
+    x = numpy.outer(x, ones)
+    y = numpy.outer(ones, y)
     x = x.flatten(1)
     y = y.flatten(1)
 
-    return x,y
+    return x, y
+
 
 def combine_arrlist(arrlist, keep=False):
     """
@@ -614,11 +587,11 @@ def combine_arrlist(arrlist, keep=False):
     REVISION HISTORY:
         Inspired by combine_ptrlist from SDSSIDL.  2007.  Erin Sheldon, BNL
     """
-    if not isinstance(arrlist,list):
-        raise RuntimeError('Input must be a list of arrays')
+    if not isinstance(arrlist, list):
+        raise RuntimeError("Input must be a list of arrays")
 
     if len(arrlist) == 0:
-        return numpy.zeros(0,dtype='i8')
+        return numpy.zeros(0, dtype="i8")
 
     if len(arrlist) == 1:
         return arrlist[0]
@@ -627,33 +600,33 @@ def combine_arrlist(arrlist, keep=False):
     isrec = isinstance(arrlist[0], numpy.recarray)
 
     if not isarray:
-        mess = 'Input must be a list of arrays or recarrays. Found %s' % \
-                type(arrlist[0])
+        mess = "Input must be a list of arrays or recarrays. Found %s" % type(
+            arrlist[0]
+        )
         raise RuntimeError(mess)
 
-
     # loop and get total number of entries
-    counts=0
+    counts = 0
     for data in arrlist:
-        counts = counts+data.size
+        counts = counts + data.size
 
     output = numpy.zeros(counts, dtype=arrlist[0].dtype)
     if isrec:
         output = output.view(numpy.recarray)
 
-    beg=0
+    beg = 0
     if keep:
         for data in arrlist:
             num = data.size
-            output[beg:beg+num] = data
-            beg=beg+num
+            output[beg: beg + num] = data
+            beg = beg + num
     else:
         while len(arrlist) > 0:
             data = arrlist.pop(0)
             num = data.size
-            output[beg:beg+num] = data
+            output[beg: beg + num] = data
             del data
-            beg=beg+num
+            beg = beg + num
 
     return output
 
@@ -675,14 +648,15 @@ def copy_fields(arr1, arr2):
 
     """
     if arr1.size != arr2.size:
-        raise ValueError('arr1 and arr2 must be the same size')
+        raise ValueError("arr1 and arr2 must be the same size")
 
-    names1=arr1.dtype.names
-    names2=arr2.dtype.names
+    names1 = arr1.dtype.names
+    names2 = arr2.dtype.names
 
     for name in names1:
         if name in names2:
             arr2[name] = arr1[name]
+
 
 def extract_fields(arr, keepnames, strict=True):
     """
@@ -712,10 +686,10 @@ def extract_fields(arr, keepnames, strict=True):
         Created 2007, Erin Sheldon, NYU.
         Added strict keyword, 2010-04-07, Erin Sheldon, BNL
     """
-    if not isinstance(keepnames, (tuple,list,numpy.ndarray)):
+    if not isinstance(keepnames, (tuple, list, numpy.ndarray)):
         keepnames = [keepnames]
 
-    arrnames = list( arr.dtype.names )
+    arrnames = list(arr.dtype.names)
 
     if strict:
         for name in keepnames:
@@ -724,23 +698,17 @@ def extract_fields(arr, keepnames, strict=True):
 
     new_descr = []
     for d in arr.dtype.descr:
-        name=d[0]
+        name = d[0]
         if name in keepnames:
             new_descr.append(d)
 
     if len(new_descr) == 0:
-        raise ValueError('No fields kept')
+        raise ValueError("No fields kept")
 
     shape = arr.shape
-    new_arr = numpy.zeros(shape,dtype=new_descr)
+    new_arr = numpy.zeros(shape, dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
-
-
-
-
-
-
 
 
 def remove_fields(arr, rmnames):
@@ -760,21 +728,22 @@ def remove_fields(arr, rmnames):
         Created 2007, Erin Sheldon, NYU.
     """
     if type(rmnames) != list:
-        rmnames=[rmnames]
+        rmnames = [rmnames]
     descr = arr.dtype.descr
     new_descr = []
     for d in descr:
-        name=d[0]
+        name = d[0]
         if name not in rmnames:
             new_descr.append(d)
 
     if len(new_descr) == 0:
-        raise ValueError('Error: All fields would be removed')
+        raise ValueError("Error: All fields would be removed")
 
     shape = arr.shape
     new_arr = numpy.zeros(shape, dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
+
 
 def add_fields(arr, add_dtype_or_descr, defaults=None):
     """
@@ -807,13 +776,12 @@ def add_fields(arr, add_dtype_or_descr, defaults=None):
     new_descr = copy.deepcopy(old_descr)
 
     old_names = list(arr.dtype.names)
-    new_names = list(add_dtype.names)
     for d in add_descr:
-        name=d[0]
-        if old_names.count(name) ==0:
+        name = d[0]
+        if old_names.count(name) == 0:
             new_descr.append(d)
         else:
-            raise ValueError( 'field '+str(name)+' already exists')
+            raise ValueError("field " + str(name) + " already exists")
 
     shape = arr.shape
     new_arr = numpy.zeros(shape, dtype=new_descr)
@@ -823,9 +791,9 @@ def add_fields(arr, add_dtype_or_descr, defaults=None):
     # See if the user has indicated default values for the new fields
     if defaults is not None:
         if type(defaults) != list:
-            defaults=[defaults]
+            defaults = [defaults]
         if len(defaults) != len(add_descr):
-            raise ValueError('defaults must be same length as new dtype')
+            raise ValueError("defaults must be same length as new dtype")
         copy_fields_by_name(new_arr, list(add_dtype.names), defaults)
 
     return new_arr
@@ -859,21 +827,21 @@ def reorder_fields(arr, ordered_names, strict=True):
         Added strict keyword, 2010-04-07, Erin Sheldon, BNL
     """
 
-    if not isinstance(ordered_names, (tuple,list,numpy.ndarray)):
+    if not isinstance(ordered_names, (tuple, list, numpy.ndarray)):
         ordered_names = [ordered_names]
 
     # this is so we can get indices
-    original_names = numpy.array( arr.dtype.names )
+    original_names = numpy.array(arr.dtype.names)
     original_descr = arr.dtype.descr
 
     new_names = []
     new_descr = []
 
     for name in ordered_names:
-        w, = numpy.where( original_names == name )
+        (w,) = numpy.where(original_names == name)
         if w.size != 0:
             new_names.append(name)
-            new_descr.append( original_descr[w[0]] )
+            new_descr.append(original_descr[w[0]])
         else:
             if strict:
                 raise ValueError("field not found: '%s'" % name)
@@ -886,11 +854,9 @@ def reorder_fields(arr, ordered_names, strict=True):
             new_descr.append(original_descr[i])
 
     shape = arr.shape
-    new_arr = numpy.zeros(shape,dtype=new_descr)
+    new_arr = numpy.zeros(shape, dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
-
-
 
 
 def copy_fields_by_name(arr, names, vals):
@@ -921,14 +887,14 @@ def copy_fields_by_name(arr, names, vals):
 
     """
     if type(names) != list and type(names) != numpy.ndarray:
-        names=[names]
+        names = [names]
     if type(vals) != list and type(vals) != numpy.ndarray:
-        vals=[vals]
+        vals = [vals]
     if len(names) != len(vals):
-        raise ValueError('Length of names and values must be the same')
+        raise ValueError("Length of names and values must be the same")
 
     arrnames = list(arr.dtype.names)
-    for name,val in zip(names,vals):
+    for name, val in zip(names, vals):
         if name in arrnames:
             arr[name] = val
 
@@ -969,29 +935,25 @@ def split_fields(data, fields=None, getnames=False):
 
     if allfields is None:
         if fields is not None:
-            raise ValueError("Could not extract fields: data has "
-                             "no fields")
+            raise ValueError("Could not extract fields: data has " "no fields")
         return (data,)
 
     if fields is None:
         fields = allfields
     else:
-        if isinstance(fields, (str,unicode)):
-            fields=[fields]
+        if isinstance(fields, str):
+            fields = [fields]
 
     for field in fields:
         if field not in allfields:
             raise ValueError("Field not found: '%s'" % field)
-        outlist.append( data[field] )
+        outlist.append(data[field])
 
     output = tuple(outlist)
     if getnames:
         return output, fields
     else:
         return output
-
-
-
 
 
 def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):
@@ -1037,14 +999,16 @@ def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):
             if n not in arr2.dtype.names:
                 nfail += 1
                 if verbose:
-                    stdout.write("\n        Field '%s' found only in "
-                                 "array1" % n)
+                    stdout.write(
+                        "\n        Field '%s' found only in " "array1" % n
+                    )
         for n in arr2.dtype.names:
             if n not in arr1.dtype.names:
                 nfail += 1
                 if verbose:
-                    stdout.write("\n        Field '%s' found only in "
-                                 "array2" % n)
+                    stdout.write(
+                        "\n        Field '%s' found only in " "array2" % n
+                    )
 
         if verbose:
             if nfail == 0:
@@ -1055,41 +1019,42 @@ def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):
         if verbose:
             stdout.write("    Not checking that all fields names match\n")
 
-
     # Compare the data for matchine names
     for n in arr1.dtype.names:
         if n in arr2.dtype.names:
             # the field was found, let's see if the data match
             if verbose:
                 stdout.write("    testing field: '%s'\n" % n)
-                stdout.write('        shape...........')
+                stdout.write("        shape...........")
             if arr2[n].shape != arr1[n].shape:
                 nfail += 1
                 if verbose:
-                    stdout.write('shapes differ\n')
+                    stdout.write("shapes differ\n")
             else:
                 if verbose:
-                    stdout.write('OK\n')
-                    stdout.write('        elements........')
-                w,=numpy.where(arr1[n].ravel() != arr2[n].ravel())
+                    stdout.write("OK\n")
+                    stdout.write("        elements........")
+                (w,) = numpy.where(arr1[n].ravel() != arr2[n].ravel())
                 if w.size > 0:
                     nfail += 1
                     if verbose:
-                        stdout.write('\n        '+\
-                            "%s elements in field '%s' differ\n" % (w.size,n))
+                        stdout.write(
+                            "\n        "
+                            + "%s elements in field '%s' differ\n" % (w.size, n)  # noqa
+                        )
                 else:
                     if verbose:
-                        stdout.write('OK\n')
-
+                        stdout.write("OK\n")
 
     if nfail == 0:
         if verbose:
-            stdout.write('All tests passed\n')
+            stdout.write("All tests passed\n")
         return True
     else:
         if verbose:
-            stdout.write('%d differences found\n' % nfail)
+            stdout.write("%d differences found\n" % nfail)
         return False
+
 
 def replicate(value, shape, dtype=None):
     """
@@ -1123,11 +1088,12 @@ def replicate(value, shape, dtype=None):
     """
     if dtype is None:
         tmp = numpy.array([value])
-        data = numpy.empty(shape,dtype=tmp.dtype)
+        data = numpy.empty(shape, dtype=tmp.dtype)
     else:
-        data = numpy.empty(shape,dtype=dtype)
+        data = numpy.empty(shape, dtype=dtype)
     data.fill(value)
     return data
+
 
 def is_big_endian(array):
     """
@@ -1151,12 +1117,13 @@ def is_big_endian(array):
     """
 
     if numpy.little_endian:
-        machine_big=False
+        machine_big = False
     else:
-        machine_big=True
+        machine_big = True
 
     byteorder = array.dtype.base.byteorder
-    return (byteorder == '>') or (machine_big and byteorder == '=')
+    return (byteorder == ">") or (machine_big and byteorder == "=")
+
 
 def is_little_endian(array):
     """
@@ -1180,12 +1147,12 @@ def is_little_endian(array):
     """
 
     if numpy.little_endian:
-        machine_little=True
+        machine_little = True
     else:
-        machine_little=False
+        machine_little = False
 
     byteorder = array.dtype.base.byteorder
-    return (byteorder == '<') or (machine_little and byteorder == '=')
+    return (byteorder == "<") or (machine_little and byteorder == "=")
 
 
 def to_native(array, inplace=False, keep_dtype=False):
@@ -1212,13 +1179,12 @@ def to_native(array, inplace=False, keep_dtype=False):
         Created 2009, Erin Sheldon, NYU.
     """
 
-
     if numpy.little_endian:
-        machine_little=True
+        machine_little = True
     else:
-        machine_little=False
+        machine_little = False
 
-    data_little=False
+    data_little = False
     if array.dtype.names is None:
         data_little = is_little_endian(array)
     else:
@@ -1226,22 +1192,21 @@ def to_native(array, inplace=False, keep_dtype=False):
         # little endian
         for fname in array.dtype.names:
             if is_little_endian(array[fname]):
-                data_little=True
+                data_little = True
                 break
 
-    if ( (machine_little and not data_little) 
-            or (not machine_little and data_little) ):
-        doswap=True
+    if (machine_little and not data_little) or (not machine_little and data_little):  # noqa
+        doswap = True
     else:
-        doswap=False
+        doswap = False
 
     if doswap:
         outdata = byteswap(array, inplace, keep_dtype=keep_dtype)
     else:
         if inplace:
-            outdata=array
+            outdata = array
         else:
-            outdata=array.copy()
+            outdata = array.copy()
 
     return outdata
 
@@ -1256,7 +1221,7 @@ def descr_to_native(descr):
     descr:
         Numpy type descriptor.  Note a dtype object.
     """
-    newd=[]
+    newd = []
     for d in descr:
         nd = list(copy.deepcopy(d))
         # remove any byte order info from front of type
@@ -1290,27 +1255,28 @@ def to_big_endian(array, inplace=False, keep_dtype=False):
         Created 2009, Erin Sheldon, NYU.
     """
 
-    doswap=False
+    doswap = False
     if array.dtype.names is None:
         if not is_big_endian(array):
-            doswap=True
+            doswap = True
     else:
         # assume all are same byte order: we only need to find one with
         # little endian
         for fname in array.dtype.names:
             if not is_big_endian(array[fname]):
-                doswap=True
+                doswap = True
                 break
 
     if doswap:
         outdata = byteswap(array, inplace, keep_dtype=keep_dtype)
     else:
         if inplace:
-            outdata=array
+            outdata = array
         else:
-            outdata=array.copy()
+            outdata = array.copy()
 
     return outdata
+
 
 def to_little_endian(array, inplace=False, keep_dtype=False):
     """
@@ -1336,29 +1302,27 @@ def to_little_endian(array, inplace=False, keep_dtype=False):
         Created 2009, Erin Sheldon, NYU.
     """
 
-    doswap=False
+    doswap = False
     if array.dtype.names is None:
         if not is_little_endian(array):
-            doswap=True
+            doswap = True
     else:
         # assume all are same byte order: we only need to find one with
         # little endian
         for fname in array.dtype.names:
             if not is_little_endian(array[fname]):
-                doswap=True
+                doswap = True
                 break
 
     if doswap:
         outdata = byteswap(array, inplace, keep_dtype=keep_dtype)
     else:
         if inplace:
-            outdata=array
+            outdata = array
         else:
-            outdata=array.copy()
-
+            outdata = array.copy()
 
     return outdata
-
 
 
 def byteswap(array, inplace=False, keep_dtype=False):
@@ -1376,8 +1340,8 @@ def byteswap(array, inplace=False, keep_dtype=False):
         ordering.
 
     KEYWORDS:
-        inplace:  Default False.  If True the data are byteswapped 
-            in place and a reference to the original array is returned.  
+        inplace:  Default False.  If True the data are byteswapped
+            in place and a reference to the original array is returned.
             If False a copy is always retured, even if no data were
             swapped.
         keep_dtype: Default False.  Setting to True prevents the dtype from
@@ -1392,6 +1356,7 @@ def byteswap(array, inplace=False, keep_dtype=False):
         outdata.dtype = outdata.dtype.newbyteorder()
 
     return outdata
+
 
 def unique(arr, values=False):
     """
@@ -1414,12 +1379,12 @@ def unique(arr, values=False):
         Created 2009, Erin Sheldon, NYU.
     """
     n = arr.size
-    keep = numpy.zeros(n, dtype='i8')
+    keep = numpy.zeros(n, dtype="i8")
 
     s = arr.argsort()
 
     val = arr[0]
-    i=1
+    i = 1
     nkeep = 0
     while i < n:
         ind = s[i]
@@ -1429,7 +1394,7 @@ def unique(arr, values=False):
             keep[nkeep] = ind
         i += 1
 
-    keep = keep[0:nkeep+1]
+    keep = keep[0: nkeep + 1]
     if values:
         return arr[keep]
     else:
@@ -1456,23 +1421,23 @@ def rem_dup(arr, flag, values=False):
     """
 
     n = arr.size
-    if n==1:
+    if n == 1:
         if values:
             return 0, arr
         else:
             return 0
 
-    s = arr.argsort()   # sort indices
-    sarr = arr[s]       # sorted array
+    s = arr.argsort()  # sort indices
+    sarr = arr[s]  # sorted array
 
-    keep = numpy.zeros(n, dtype='i8')  # indices of values to keep
+    keep = numpy.zeros(n, dtype="i8")  # indices of values to keep
     nkeep = 0
     sflag = flag[s]  # flags to match sorted array
 
-    val = sarr[0]    # first value to process
-    f = sflag[0]     # flag for first value
+    val = sarr[0]  # first value to process
+    f = sflag[0]  # flag for first value
 
-    for i in range(1,n):
+    for i in range(1, n):
         if sarr[i] != val:
             val = sarr[i]
             f = sflag[i]
@@ -1483,13 +1448,14 @@ def rem_dup(arr, flag, values=False):
                 f = sflag[i]
                 keep[nkeep] = i
 
-    keep = keep[0:nkeep+1]
+    keep = keep[0: nkeep + 1]
     s = s[keep]
     s.sort()
     if values:
         return s, arr[s]
     else:
         return s
+
 
 def match(arr1input, arr2input, presorted=False):
     """
@@ -1515,29 +1481,28 @@ def match(arr1input, arr2input, presorted=False):
         Created 2015, Eli Rykoff, SLAC.
 
     """
-    
+
     # make sure 1D
     arr1 = numpy.array(arr1input, ndmin=1, copy=False)
     arr2 = numpy.array(arr2input, ndmin=1, copy=False)
 
     # check for integer data...
-    if (not issubclass(arr1.dtype.type,numpy.integer) or
-        not issubclass(arr2.dtype.type,numpy.integer)) :
-        mess="Error: only works with integer types, got %s %s"
-        mess = mess % (arr1.dtype.type,arr2.dtype.type)
+    if not issubclass(arr1.dtype.type, numpy.integer) or not issubclass(
+        arr2.dtype.type, numpy.integer
+    ):
+        mess = "Error: only works with integer types, got %s %s"
+        mess = mess % (arr1.dtype.type, arr2.dtype.type)
         raise ValueError(mess)
 
-
-    if (arr1.size == 0) or (arr2.size == 0) :
-        mess="Error: arr1 and arr2 must each be non-zero length"
+    if (arr1.size == 0) or (arr2.size == 0):
+        mess = "Error: arr1 and arr2 must each be non-zero length"
         raise ValueError(mess)
-    
-    
+
     # make sure that arr1 has unique values...
-    test=numpy.unique(arr1)
+    test = numpy.unique(arr1)
     if test.size != arr1.size:
         raise ValueError("Error: the arr1input must be unique")
-    
+
     # sort arr1 if not presorted
     if not presorted:
         st1 = numpy.argsort(arr1)
@@ -1545,30 +1510,31 @@ def match(arr1input, arr2input, presorted=False):
         st1 = None
 
     # search the sorted array
-    sub1=numpy.searchsorted(arr1,arr2,sorter=st1)
+    sub1 = numpy.searchsorted(arr1, arr2, sorter=st1)
 
     # check for out-of-bounds at the high end if necessary
-    if (arr2.max() > arr1.max()) :
-        bad,=numpy.where(sub1 == arr1.size)
-        sub1[bad] = arr1.size-1
+    if arr2.max() > arr1.max():
+        (bad,) = numpy.where(sub1 == arr1.size)
+        sub1[bad] = arr1.size - 1
 
     if not presorted:
-        sub2,=numpy.where(arr1[st1[sub1]] == arr2)
-        sub1=st1[sub1[sub2]]
+        (sub2,) = numpy.where(arr1[st1[sub1]] == arr2)
+        sub1 = st1[sub1[sub2]]
     else:
-        sub2,=numpy.where(arr1[sub1] == arr2)
-        sub1=sub1[sub2]
+        (sub2,) = numpy.where(arr1[sub1] == arr2)
+        sub1 = sub1[sub2]
 
-    return sub1,sub2
+    return sub1, sub2
 
 
-def match_multi(arr1input, arr2input,presorted=False):
+def match_multi(arr1input, arr2input, presorted=False):
     """
     See numpy_util.match()
 
     """
 
-    return match(arr1input, arr2input,presorted=False)
+    return match(arr1input, arr2input, presorted=False)
+
 
 def strmatch(arr, regex):
     """
@@ -1591,7 +1557,7 @@ def strmatch(arr, regex):
     import re
 
     r = re.compile(regex)
-    vmatch = numpy.vectorize(lambda x:bool(r.match(x)))
+    vmatch = numpy.vectorize(lambda x: bool(r.match(x)))
     return vmatch(arr)
 
 
@@ -1621,41 +1587,43 @@ def dict2array(d, sort=False, keys=None):
         late 2009 created.  Erin Sheldon, BNL
 
     """
-    desc=[]
+    desc = []
 
     if keys is None:
         if sort:
-            keys=sorted(d)
+            keys = sorted(d)
         else:
-            keys=list(d.keys())
+            keys = list(d.keys())
 
     for key in keys:
         # check key existence in case a set of keys was sent
         if key not in d:
             raise KeyError("Requested key %s not in dictionary" % key)
 
-        if not isinstance(d[key], (int,long,float,str,unicode)):
+        if not isinstance(d[key], (int, float, str)):
             try:
-                strval = '%s' % d[key]
+                strval = "%s" % d[key]
                 val = eval(strval)
-            except:
+            except Exception:
                 val = str(d[key])
         else:
             val = d[key]
 
-        if isinstance(val, (int,long)):
-            dt=long
+        if isinstance(val, int):
+            dt = int
         elif isinstance(val, float):
-            dt=float
-        elif isinstance(val, (str,unicode)):
-            dt='S%s' % len(val)
+            dt = float
+        elif isinstance(val, str):
+            dt = "S%s" % len(val)
         else:
-            raise ValueError("Only support int, float, string currently, "
-                             "found %s" % type(d[key]))
+            raise ValueError(
+                "Only support int, float, string currently, "
+                "found %s" % type(d[key])
+            )
 
-        desc.append( (key, dt) )
+        desc.append((key, dt))
 
-    a=numpy.zeros(1, dtype=desc)
+    a = numpy.zeros(1, dtype=desc)
 
     for key in keys:
         a[key] = d[key]
@@ -1683,19 +1651,17 @@ def dictlist2array(dlist, keys=None, sort=False):
     if len(dlist) == 0:
         return numpy.array([])
 
-
     if keys is None:
         keys = dlist[0].keys()
 
         if sort:
-            keys=sorted(keys)
+            keys = sorted(keys)
 
-        keys=list(keys)
+        keys = list(keys)
 
-
-    types={}
+    types = {}
     # for ordering
-    names=[]
+    names = []
     for key in keys:
 
         names.append(key)
@@ -1705,56 +1671,56 @@ def dictlist2array(dlist, keys=None, sort=False):
 
         for d in dlist:
 
-            val=d[key]
+            val = d[key]
 
-            if isinstance(val, basestring):
-                slen=len(val)
+            if isinstance(val, str):
+                slen = len(val)
                 if key in types:
-                    if types[key]['basetype'] != 'S':
+                    if types[key]["basetype"] != "S":
                         raise ValueError("type mismatch for field '%s'" % key)
 
-                    types[key]['len'] = max(slen, types[key]['len'])
+                    types[key]["len"] = max(slen, types[key]["len"])
                 else:
                     types[key] = {}
-                    types[key]['basetype'] = 'S'
-                    types[key]['len'] = slen
+                    types[key]["basetype"] = "S"
+                    types[key]["len"] = slen
             else:
-                if not isinstance(val, (int,long,float)):
-                    raise ValueError("only basic types currently supported, "
-                                     "got '%s'" % type(val))
+                if not isinstance(val, (int, float)):
+                    raise ValueError(
+                        "only basic types currently supported, "
+                        "got '%s'" % type(val)
+                    )
 
-                if isinstance(val, (int,long)):
-                    dt='i8'
+                if isinstance(val, int):
+                    dt = "i8"
                 else:
-                    dt='f8'
+                    dt = "f8"
 
                 if key in types:
-                    if types[key]['basetype'] != dt:
+                    if types[key]["basetype"] != dt:
                         raise ValueError("type mismatch for field '%s'" % key)
                 else:
                     types[key] = {}
-                    types[key]['basetype'] = dt
+                    types[key]["basetype"] = dt
 
-    dtype=[]
+    dtype = []
     for name in names:
 
         tinfo = types[name]
-        if tinfo['basetype'] == 'S':
-            t = 'S%d' % tinfo['len']
+        if tinfo["basetype"] == "S":
+            t = "S%d" % tinfo["len"]
         else:
-            t = tinfo['basetype']
+            t = tinfo["basetype"]
 
-        dtype.append( (name, t) )
+        dtype.append((name, t))
 
     arr = numpy.zeros(len(dlist), dtype=dtype)
 
-    for i,d in enumerate(dlist):
+    for i, d in enumerate(dlist):
         for key in d:
             arr[key][i] = d[key]
 
-
     return arr
-
 
 
 def splitarray(nper, var_input):
@@ -1799,26 +1765,26 @@ def splitarray(nper, var_input):
 
     """
 
-
     var = numpy.array(var_input, ndmin=0, copy=False)
 
     ind = numpy.arange(var.size)
 
     # this will tell us which bin the object belongs to
-    bin_nums = ind//int(nper)
+    bin_nums = ind // int(nper)
 
-    h,rev = stat.histogram(bin_nums, binsize=1, min=0, rev=True)
+    h, rev = stat.histogram(bin_nums, binsize=1, min=0, rev=True)
 
     split_list = []
     for i in range(len(h)):
-        if rev[i] != rev[i+1]:
-            w=rev[ rev[i]:rev[i+1] ]
+        if rev[i] != rev[i + 1]:
+            w = rev[rev[i]: rev[i + 1]]
 
             split_list.append(var[w])
 
     return split_list
 
-def between(arr, lowval, highval, type='[)'):
+
+def between(arr, lowval, highval, type="[)"):
     """
     test values of an array are between the specified values
 
@@ -1856,20 +1822,21 @@ def between(arr, lowval, highval, type='[)'):
     w,=numpy.where( (a==3) | between(a,10,100,'[]') )
     """
 
-    if type=='[)':
-        logic=(arr >= lowval) & (arr <  highval)
-    elif type=='[]':
-        logic=(arr >= lowval) & (arr <= highval)
-    elif type=='()':
-        logic=(arr >  lowval) & (arr <  highval)
-    elif type=='(]':
-        logic=(arr >  lowval) & (arr <= highval)
+    if type == "[)":
+        logic = (arr >= lowval) & (arr < highval)
+    elif type == "[]":
+        logic = (arr >= lowval) & (arr <= highval)
+    elif type == "()":
+        logic = (arr > lowval) & (arr < highval)
+    elif type == "(]":
+        logic = (arr > lowval) & (arr <= highval)
     else:
         raise ValueError("bad range type: '%s'" % type)
 
     return logic
 
-def outside(arr, lowval, highval, type=')('):
+
+def outside(arr, lowval, highval, type=")("):
     """
     test values of an array are outside the specified values
 
@@ -1905,18 +1872,19 @@ def outside(arr, lowval, highval, type=')('):
 
     """
 
-    if type==')(':
-        logic=(arr <  lowval) | (arr >  highval)
-    elif type=='][':
-        logic=(arr <= lowval) | (arr >= highval)
-    elif type=='](':
-        logic=(arr <= lowval) | (arr >  highval)
-    elif type==')[':
-        logic=(arr <  lowval) | (arr >= highval)
+    if type == ")(":
+        logic = (arr < lowval) | (arr > highval)
+    elif type == "][":
+        logic = (arr <= lowval) | (arr >= highval)
+    elif type == "](":
+        logic = (arr <= lowval) | (arr > highval)
+    elif type == ")[":
+        logic = (arr < lowval) | (arr >= highval)
     else:
         raise ValueError("bad range type: '%s'" % type)
 
     return logic
+
 
 def select_percentile(x, perc, get_ranges=False, **keys):
     """
@@ -1973,29 +1941,29 @@ def select_percentile(x, perc, get_ranges=False, **keys):
       [0.79958802092575598, 0.90532323138237181]]
     """
 
-    x=numpy.asanyarray(x)
+    x = numpy.asanyarray(x)
 
     if numpy.isscalar(perc):
-        perc=[perc]
+        perc = [perc]
 
     nperc = len(perc)
 
     pcuts = numpy.percentile(x, perc, **keys)
 
     wlist = []
-    ranges=[]
-    for i in xrange(nperc+1):
-        if i==0:
-            w,=numpy.where( x < pcuts[i] )
+    ranges = []
+    for i in range(nperc + 1):
+        if i == 0:
+            (w,) = numpy.where(x < pcuts[i])
 
-            ranges.append( [x.min(), pcuts[i]] )
-        elif i==nperc:
-            w,=numpy.where( x > pcuts[i-1] )
+            ranges.append([x.min(), pcuts[i]])
+        elif i == nperc:
+            (w,) = numpy.where(x > pcuts[i - 1])
 
-            ranges.append( [pcuts[i-1], x.max()] )
+            ranges.append([pcuts[i - 1], x.max()])
         else:
-            w,=numpy.where( (x > pcuts[i-1]) & (x < pcuts[i]) )
-            ranges.append( [pcuts[i-1], pcuts[i]])
+            (w,) = numpy.where((x > pcuts[i - 1]) & (x < pcuts[i]))
+            ranges.append([pcuts[i - 1], pcuts[i]])
 
         wlist.append(w)
 
@@ -2019,9 +1987,9 @@ class ArrayWriter:
         is python only it is more flexible.
 
     Constructor:
-        aw = ArrayWriter(file=None, 
+        aw = ArrayWriter(file=None,
                          type='table',
-                         delim=' ', 
+                         delim=' ',
                          array_delim=' ',
                          bracket_arrays=False,
                          page=False)
@@ -2090,12 +2058,12 @@ class ArrayWriter:
         # specified on construction or write()
         >>> aw = ArrayWriter(fancy=True)
         >>> aw.write(arr1, title='My Data')
-                            My Data                     
-               x       |       y       |     sigma0     
+                            My Data
+               x       |       y       |     sigma0
         ---------------+---------------+---------------
-         1383.91540527 | 200.237106323 | 0.266301675406 
-         802.613586426 | 249.544662476 | 0.921706936925 
-         968.170288086 | 206.072280884 | 0.702349236707 
+         1383.91540527 | 200.237106323 | 0.266301675406
+         802.613586426 | 249.544662476 | 0.921706936925
+         968.170288086 | 206.072280884 | 0.702349236707
          ...
 
 
@@ -2107,49 +2075,50 @@ class ArrayWriter:
         self.open(**keys)
 
     def set_defaults(self):
-        self._delim = ' '
-        self._array_delim = ' '
-        self._bracket_arrays=False
+        self._delim = " "
+        self._array_delim = " "
+        self._bracket_arrays = False
 
         self._fobj = stdout
         self._close_the_fobj = False
 
-        self._page=False
-        self._fancy=False
-        self._type = 'table'
+        self._page = False
+        self._fancy = False
+        self._type = "table"
 
     def set_keywords(self, **keys):
-        self._delim = keys.get('delim',self._delim)
-        self._page = keys.get('page',self._page)
-        self._type = keys.get('type',self._type)
+        self._delim = keys.get("delim", self._delim)
+        self._page = keys.get("page", self._page)
+        self._type = keys.get("type", self._type)
 
         # deal with deprecated fancy= keyword, superceded
         # by type=
-        self._fancy=keys.get('fancy',self._fancy)
+        self._fancy = keys.get("fancy", self._fancy)
         if self._fancy:
-            self._type = 'fancy'
+            self._type = "fancy"
 
-        if self._type == 'fancy':
-            self._bracket_arrays=True
+        if self._type == "fancy":
+            self._bracket_arrays = True
         else:
-            self._bracket_arrays = keys.get('bracket_arrays',
-                                            self._bracket_arrays)
+            self._bracket_arrays = keys.get(
+                "bracket_arrays", self._bracket_arrays
+            )
 
-        if self._type in ['latex','latex-deluxe']:
-            self._delim = ' & '
-            self._array_delim = ' '
+        if self._type in ["latex", "latex-deluxe"]:
+            self._delim = " & "
+            self._array_delim = " "
         else:
-            if not 'array_delim' in keys:
+            if "array_delim" not in keys:
                 if self._bracket_arrays:
                     # default to commas in arrays when we are bracketing
-                    self._array_delim = ','
+                    self._array_delim = ","
                 else:
                     # otherwise use the same as delim
                     self._array_delim = self._delim
             else:
-                self._array_delim = keys['array_delim']
+                self._array_delim = keys["array_delim"]
 
-    def open(self,**keys):
+    def open(self, **keys):
 
         self.set_keywords(**keys)
 
@@ -2159,17 +2128,16 @@ class ArrayWriter:
         # which in turn can only be true if fancy
         # is also True
         if not self._page:
-            fobj = keys.get('file',stdout)
+            fobj = keys.get("file", stdout)
 
-            #if isinstance(fobj,file):
-            if hasattr(fobj,'read'):
+            # if isinstance(fobj,file):
+            if hasattr(fobj, "read"):
                 self._fobj = fobj
             else:
-                self._close_the_fobj=True
+                self._close_the_fobj = True
                 fname = os.path.expanduser(fobj)
                 fname = os.path.expandvars(fname)
-                self._fobj = open(fname,'w')
-
+                self._fobj = open(fname, "w")
 
     def write(self, arr, **keys):
         """
@@ -2213,8 +2181,8 @@ class ArrayWriter:
 
             format:
                 A format string to apply to every argument.  E.g. format='%15s'
-                Since every arg gets the same format, only %s type formats should
-                be used unless the types are homogeneous.
+                Since every arg gets the same format, only %s type formats
+                should be used unless the types are homogeneous.
 
             title:
                 A title to place above the printout when using fancy printing.
@@ -2223,9 +2191,9 @@ class ArrayWriter:
 
         self.set_keywords(**keys)
 
-        if self._type == 'fancy':
+        if self._type == "fancy":
             self.fancy_write(arr, **keys)
-        elif self._type in ['latex','latex-deluxe']:
+        elif self._type in ["latex", "latex-deluxe"]:
             self.latex_write(arr, **keys)
         else:
             self.simple_write(arr, **keys)
@@ -2233,10 +2201,11 @@ class ArrayWriter:
 
     def simple_write(self, arrin, **keys):
 
-        # if we are paging, we will store the lines, otherwise this won't be used
+        # if we are paging, we will store the lines, otherwise this won't be
+        # used
         lines = []
 
-        arr=arrin.view(numpy.ndarray)
+        arr = arrin.view(numpy.ndarray)
         allnames = arr.dtype.names
 
         if allnames is None:
@@ -2245,25 +2214,24 @@ class ArrayWriter:
                 for val in arr:
                     print(val)
             else:
-                arr.tofile(self._fobj, sep='\n')
+                arr.tofile(self._fobj, sep="\n")
             return
 
         nall = len(allnames)
 
-        nlines = keys.get('nlines', arr.size)
-        if 'fields' in keys:
-            names_in = keys['fields']
-        elif 'columns' in keys:
-            names_in = keys['columns']
+        nlines = keys.get("nlines", arr.size)
+        if "fields" in keys:
+            names_in = keys["fields"]
+        elif "columns" in keys:
+            names_in = keys["columns"]
         else:
             names_in = allnames
-        header = keys.get('header',False)
-        trailer = keys.get('trailer',None)
+        header = keys.get("header", False)
+        trailer = keys.get("trailer", None)
 
-        altnames = keys.get('altnames',None)
+        altnames = keys.get("altnames", None)
 
-        format = keys.get('format',None)
-
+        format = keys.get("format", None)
 
         if eu_misc.isstring(names_in[0]):
             names = names_in
@@ -2276,13 +2244,15 @@ class ArrayWriter:
 
         nnames = len(names)
 
-        if header == True or eu_misc.isstring(header):
-            if header==True:
+        if header is True or eu_misc.isstring(header):
+            if header is True:
                 # create a header from the names
                 if altnames is not None:
                     if len(altnames) != nnames:
-                        raise ValueError("altnames must be same length as fields "
-                                         "to print")
+                        raise ValueError(
+                            "altnames must be same length as fields "
+                            "to print"
+                        )
                     header = copy.copy(altnames)
                 else:
                     header = copy.copy(names)
@@ -2294,20 +2264,21 @@ class ArrayWriter:
                 lines.append(header)
             else:
                 self._fobj.write(header)
-                self._fobj.write('\n')
+                self._fobj.write("\n")
 
         # we have fields
-        astr = ArrayStringifier(delim=self._array_delim,
-                                brackets=self._bracket_arrays)
+        astr = ArrayStringifier(
+            delim=self._array_delim, brackets=self._bracket_arrays
+        )
 
-        for i in xrange(nlines):
-            line=''
-            iname=0
+        for i in range(nlines):
+            line = ""
+            iname = 0
             for n in names:
 
                 data = arr[n][i]
                 if data.ndim > 0:
-                    strval=astr.stringify(data)
+                    strval = astr.stringify(data)
                     if format is not None:
                         strval = format % strval
                 else:
@@ -2318,16 +2289,16 @@ class ArrayWriter:
 
                 line += strval
 
-                if iname < (nnames-1):
+                if iname < (nnames - 1):
                     line += self._delim
                 iname += 1
             if self._page:
                 lines.append(line)
             else:
                 self._fobj.write(line)
-                self._fobj.write('\n')
+                self._fobj.write("\n")
 
-            if i == (nlines-1):
+            if i == (nlines - 1):
                 break
 
         if trailer is not None:
@@ -2335,18 +2306,17 @@ class ArrayWriter:
                 lines.append(trailer)
             else:
                 self._fobj.write(trailer)
-                self._fobj.write('\n')
-
+                self._fobj.write("\n")
 
         if self._page:
-            lines = '\n'.join(lines)
+            lines = "\n".join(lines)
             pydoc.pager(lines)
         else:
             self._fobj.flush()
 
     def latex_write(self, arrin, **keys):
 
-        arr=arrin.view(numpy.ndarray)
+        arr = arrin.view(numpy.ndarray)
         allnames = arr.dtype.names
 
         if allnames is None:
@@ -2355,19 +2325,19 @@ class ArrayWriter:
                 for val in arr:
                     print(val)
             else:
-                arr.tofile(self._fobj, sep='\n')
+                arr.tofile(self._fobj, sep="\n")
             return
 
         nall = len(allnames)
 
-        if 'fields' in keys:
-            names_in = keys['fields']
-        elif 'columns' in keys:
-            names_in = keys['columns']
+        if "fields" in keys:
+            names_in = keys["fields"]
+        elif "columns" in keys:
+            names_in = keys["columns"]
         else:
             names_in = allnames
 
-        format = keys.get('format',None)
+        format = keys.get("format", None)
 
         if eu_misc.isstring(names_in[0]):
             names = names_in
@@ -2381,18 +2351,19 @@ class ArrayWriter:
         nnames = len(names)
 
         # we have fields
-        astr = ArrayStringifier(delim=self._array_delim,
-                                brackets=self._bracket_arrays)
+        astr = ArrayStringifier(
+            delim=self._array_delim, brackets=self._bracket_arrays
+        )
 
         nlines = arr.size
-        for i in xrange(nlines):
-            line=''
-            iname=0
+        for i in range(nlines):
+            line = ""
+            iname = 0
             for n in names:
 
                 data = arr[n][i]
                 if data.ndim > 0:
-                    strval=astr.stringify(data)
+                    strval = astr.stringify(data)
                     if format is not None:
                         strval = format % strval
                 else:
@@ -2403,88 +2374,91 @@ class ArrayWriter:
 
                 line += strval
 
-                if iname < (nnames-1):
+                if iname < (nnames - 1):
                     line += self._delim
                 iname += 1
             self._fobj.write(line)
-            if i < (nlines-1):
-                self._fobj.write(r' \\')
+            if i < (nlines - 1):
+                self._fobj.write(r" \\")
 
-            self._fobj.write('\n')
-
+            self._fobj.write("\n")
 
         self._fobj.flush()
 
     def fancy_write(self, arrin, **keys):
-        array=arrin.view(numpy.ndarray)
+        array = arrin.view(numpy.ndarray)
 
-        title = keys.get('title', None)
+        title = keys.get("title", None)
 
-        # if we are paging, we will store the lines, otherwise this won't be used
+        # if we are paging, we will store the lines, otherwise this won't be
+        # used
         lines = []
 
-        if 'fields' in keys:
-            fields = keys['fields']
-        elif 'columns' in keys:
-            fields = keys['columns']
+        if "fields" in keys:
+            fields = keys["fields"]
+        elif "columns" in keys:
+            fields = keys["columns"]
         else:
             fields = array.dtype.names
 
-        printnames = keys.get('altnames', fields)
+        printnames = keys.get("altnames", fields)
 
         if len(fields) != len(printnames):
-            raise ValueError("altnames must correspond directly to the fields "
-                             "being printed")
+            raise ValueError(
+                "altnames must correspond directly to the fields "
+                "being printed"
+            )
 
-        nlines = keys.get('nlines', array.size)
- 
+        nlines = keys.get("nlines", array.size)
+
         max_lens = {}
         for name in fields:
             max_lens[name] = len(name)
 
-
         # first pass through data to get lengths
 
         # for array fields
-        astr = ArrayStringifier(delim=self._array_delim,
-                                brackets=self._bracket_arrays)
-        for i in xrange(nlines):
+        astr = ArrayStringifier(
+            delim=self._array_delim, brackets=self._bracket_arrays
+        )
+        for i in range(nlines):
             for name in fields:
                 if array[name][i].ndim > 0:
-                    strval=astr.stringify(array[name][i])
+                    strval = astr.stringify(array[name][i])
                     max_lens[name] = max(max_lens[name], len(strval))
                 else:
-                    max_lens[name] = max(max_lens[name], len(str(array[name][i])))
+                    max_lens[name] = max(
+                        max_lens[name], len(str(array[name][i]))
+                    )
 
         # now create the forms for writing each field
         forms = {}
-        separator = ''
-        i=0
+        separator = ""
+        i = 0
         ntot = len(fields)
         for name in fields:
-            if isinstance(array[name][0], numpy.string_)  \
-                    or (array[name][0].ndim > 0):
-                forms[name]    = ' %-'+str(max_lens[name])+'s '
+            if isinstance(array[name][0], numpy.string_) or (array[name][0].ndim > 0):  # noqa
+                forms[name] = " %-" + str(max_lens[name]) + "s "
             else:
-                forms[name]    = ' %'+str(max_lens[name])+'s '
+                forms[name] = " %" + str(max_lens[name]) + "s "
 
             pad = 2
-            if i == (ntot-1):
-                pad=1
-            this_sep = '%s' % '-'*(max_lens[name]+pad)
+            if i == (ntot - 1):
+                pad = 1
+            this_sep = "%s" % "-" * (max_lens[name] + pad)
 
             if i > 0:
-                forms[name] = '|' + forms[name]
-                this_sep = '+' + this_sep
+                forms[name] = "|" + forms[name]
+                this_sep = "+" + this_sep
             separator += this_sep
-            i+=1
+            i += 1
 
         # possible header and title
-        header = ''
-        for i in xrange(len(fields)): 
-            n=fields[i]
-            pname=printnames[i]
-            header += forms[n] % eu_misc.center_text(pname,max_lens[n])
+        header = ""
+        for i in range(len(fields)):
+            n = fields[i]
+            pname = printnames[i]
+            header += forms[n] % eu_misc.center_text(pname, max_lens[n])
 
         if title is not None:
             title = eu_misc.center_text(title, len(header))
@@ -2498,16 +2472,16 @@ class ArrayWriter:
         else:
             if title is not None:
                 self._fobj.write(title)
-                self._fobj.write('\n')
+                self._fobj.write("\n")
 
             self._fobj.write(header)
-            self._fobj.write('\n')
+            self._fobj.write("\n")
 
             self._fobj.write(separator)
-            self._fobj.write('\n')
+            self._fobj.write("\n")
 
-        for i in xrange(nlines):
-            line = ''
+        for i in range(nlines):
+            line = ""
             for name in fields:
                 val = array[name][i]
 
@@ -2522,34 +2496,32 @@ class ArrayWriter:
             if self._page:
                 lines.append(line)
             else:
-                self._fobj.write('\n')
+                self._fobj.write("\n")
 
-        trailer=keys.get('trailer',None)
+        trailer = keys.get("trailer", None)
         if trailer is not None:
             if self._page:
                 lines.append(trailer)
             else:
                 self._fobj.write(trailer)
-                self._fobj.write('\n')
+                self._fobj.write("\n")
 
         if self._page:
-            lines = '\n'.join(lines)
+            lines = "\n".join(lines)
             pydoc.pager(lines)
         else:
             self._fobj.flush()
-
-
 
     def write_array(self, arr):
         """
         Write a simple array, possibly with brackets indicating the dimensions.
         """
         if self._bracket_arrays:
-            self._fobj.write('{')
+            self._fobj.write("{")
 
-        i=0
+        i = 0
 
-        dimsize=arr.shape[0]
+        dimsize = arr.shape[0]
 
         for a in arr:
             if a.ndim > 0:
@@ -2557,13 +2529,12 @@ class ArrayWriter:
             else:
                 self._fobj.write(str(a))
 
-            if i < (dimsize-1):
-                self._fobj.write(',')
-            i+=1
+            if i < (dimsize - 1):
+                self._fobj.write(",")
+            i += 1
 
         if self._bracket_arrays:
-            self._fobj.write('}')
-
+            self._fobj.write("}")
 
     def close(self):
         if self._close_the_fobj:
@@ -2573,35 +2544,38 @@ class ArrayWriter:
         if self._close_the_fobj:
             self._fobj.close()
 
-def arr2str(arr, delim=',', brackets=False):
-    astr = ArrayStringifier(delim=delim,brackets=brackets)
+
+def arr2str(arr, delim=",", brackets=False):
+    astr = ArrayStringifier(delim=delim, brackets=brackets)
     return astr.stringify(arr)
+
 
 class ArrayStringifier:
     """
     Stringify a simple array using a delimiter and
     possibly brackets
     """
-    def __init__(self, delim=',', brackets=False):
-        self._delim=delim
-        self._brackets=brackets
-        self._values=[]
+
+    def __init__(self, delim=",", brackets=False):
+        self._delim = delim
+        self._brackets = brackets
+        self._values = []
 
     def stringify(self, arr):
-        self._values=[]
+        self._values = []
         if arr.dtype.names is not None:
             raise ValueError("array must be simple, not structured")
         self._process(arr)
-        return ''.join(self._values)
+        return "".join(self._values)
 
     def _process(self, arr):
 
         if self._brackets:
-            self._values.append('{')
+            self._values.append("{")
 
-        i=0
+        i = 0
 
-        dimsize=arr.shape[0]
+        dimsize = arr.shape[0]
 
         for a in arr:
             if a.ndim > 0:
@@ -2609,12 +2583,9 @@ class ArrayStringifier:
             else:
                 self._values.append(str(a))
 
-            if i < (dimsize-1):
+            if i < (dimsize - 1):
                 self._values.append(self._delim)
-            i+=1
+            i += 1
 
         if self._brackets:
-            self._values.append('}')
-
-
-
+            self._values.append("}")
