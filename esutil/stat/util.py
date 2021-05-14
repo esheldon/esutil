@@ -637,60 +637,6 @@ def _dohist(data, dmin, s, binsize, hist, revind=None):
             tbin += 1
 
 
-
-
-
-
-def testhist(doplot=False):
-    """
-    testhist(doplot=False)
-
-    Run some tests on the histogram function.  If doplot=True is sent, you must
-    have the biggles plotting program installed.
-
-    """
-    import esutil
-    from sys import stdout
-    d = numpy.random.random(100000)
-    weights = d.copy()
-    weights[:] = 0.5
-
-    stdout.write("Testing straight hist\n")
-    binsize=0.1
-    h=histogram(d,binsize=binsize)
-    esutil.misc.colprint(h,names='hist',min=0,max=1)
-    stdout.write('\n')
-
-    stdout.write("Testing weights=0.5\n")
-    res=histogram(d,binsize=0.1,min=0,max=1,weights=weights)
-
-    form='%12g'
-    nform='%12s'
-    names=['low','center','high',
-           'median',
-           'mean','std','err',
-           'hist',
-           'wmean','wstd','werr','werr2',
-           'whist']
-    esutil.misc.colprint(res['low'],res['center'],res['high'],
-                         res['median'],
-                         res['mean'],res['std'],res['err'],
-                         res['hist'],
-                         res['wmean'],res['wstd'],res['werr'],res['werr2'],
-                         res['whist'],
-                         names=names, format=form,nformat=nform)
-
-    if doplot:
-        import biggles
-        plt=biggles.FramedPlot()
-        d=biggles.Histogram(res['hist'], x0=min(res['low']), binsize=binsize)
-        plt.add(d)
-        plt.xlabel = 'data'
-        plt.ylabel = 'counts'
-        plt.show()
-
-
-
 def histogram2d(x, y,
                 z=None,
                 weights=None,
