@@ -253,8 +253,11 @@ if have_numpy:
     ext_modules.append(cgauleg_module)
     packages.append("esutil.integrate")
 
-with open(os.path.join(os.path.dirname(__file__), "README.md")) as fp:
-    long_description = fp.read()
+long_description = """
+A python package including a wide variety of utilities, focused primarily on
+numerical python, statistics, and file input/output. Includes specialized
+tools for astronomers.
+"""
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
