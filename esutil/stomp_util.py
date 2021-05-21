@@ -4,16 +4,17 @@ from sys import stdout
 try:
     import stomp
 
-    have_stomp = True
-
     INSIDE_MAP = stomp.cvar.Map_INSIDE_MAP
     FIRST_QUADRANT_OK = stomp.cvar.Map_FIRST_QUADRANT_OK
     SECOND_QUADRANT_OK = stomp.cvar.Map_SECOND_QUADRANT_OK
     THIRD_QUADRANT_OK = stomp.cvar.Map_THIRD_QUADRANT_OK
     FOURTH_QUADRANT_OK = stomp.cvar.Map_FOURTH_QUADRANT_OK
 
-except ImportError:
+except Exception:
     have_stomp = False
+
+else:
+    have_stomp = True
 
 import numpy as np
 
