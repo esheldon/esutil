@@ -882,7 +882,7 @@ def set_minor_ticks(ax, xloc=None, yloc=None):
     ax.yaxis.set_minor_locator(ml(yloc))
 
 
-def mwhiskers(plt, xin, yin, uin, vin, 
+def mwhiskers(plt, xin, yin, uin, vin, color='black',
               scale=1.0, linewidth=0.5, **plotting_keywords):
     """
     Name:
