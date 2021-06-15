@@ -116,7 +116,7 @@ class DirStack(object):
 
     """
     def __init__(self, verbose=False):
-        self.verbose=verbose
+        self.verbose = verbose
         self._home = os.path.expanduser('~')
         self._dirs = []
 
@@ -125,8 +125,8 @@ class DirStack(object):
         push(dir):  Change to the indicated dir and push the current
             working directory onto the stack
         """
-        dir=os.path.expandvars(dir)
-        dir=os.path.expanduser(dir)
+        dir = os.path.expandvars(dir)
+        dir = os.path.expanduser(dir)
 
         old_dir = os.getcwd()
 
@@ -136,7 +136,6 @@ class DirStack(object):
         self._dirs.append(old_dir)
         if self.verbose:
             self.print_stack()
-
 
     def pop(self):
         """
@@ -161,15 +160,14 @@ class DirStack(object):
 
     def print_stack(self):
         self.print_dir(os.getcwd())
-        for i in xrange(len(self._dirs)-1,-1,-1):
-            d=self._dirs[i]
+        for i in range(len(self._dirs)-1, -1, -1):
+            d = self._dirs[i]
             self.print_dir(d)
         stdout.write('\n')
+
     def print_dir(self, dir):
         dir = dir.replace(self._home, '~')
         stdout.write('%s ' % dir)
-
-
 
 
 def path_join(*paths):
@@ -202,22 +200,23 @@ def path_join(*paths):
         p=path_join(['/tmp',['test1','test2']], 'file.txt')
     """
 
-    plist=[]
+    plist = []
     for path in paths:
         # for py3k unicode will disappear
-        if isinstance(path, str) or isinstance(path, unicode):
+        if isinstance(path, str):
             plist.append(path)
-        elif isinstance(path, list) or isinstance(path, tuple):
+        elif isinstance(path, (list, tuple)):
             for p in path:
                 tpath = path_join(p)
-                plist.append( tpath )
+                plist.append(tpath)
         else:
             raise ValueError('paths must be strings or sequences of strings')
 
     # We now have a list of strings.
-    path = os.sep.join( plist )
+    path = os.sep.join(plist)
 
     return path
+
 
 def getenv_check(name):
     """
@@ -232,7 +231,7 @@ def getenv_check(name):
         if the variable is not found.
 
     """
-    val=os.getenv(name)
+    val = os.getenv(name)
     if val is None:
         raise RuntimeError("Environment variable '%s' is not set" % name)
     return val
@@ -254,8 +253,9 @@ def expand_path(filename):
     fname = os.path.expandvars(fname)
     return fname
 
+
 # synonym
-expand_filename=expand_path
+expand_filename = expand_path
 
 
 def exec_process(command,
@@ -300,39 +300,35 @@ def exec_process(command,
 
     """
 
-
     # the user can send file names, PIPE, or a file object
     if isinstance(stdout_file, str):
-        stdout_was_entered=False
+        stdout_was_entered = False
         stdout_fileobj = open(stdout_file, 'w')
     else:
-        stdout_was_entered=True
-        stdout_fileobj=stdout_file
+        stdout_was_entered = True
+        stdout_fileobj = stdout_file
 
     if isinstance(stderr_file, str):
-        stderr_was_entered=False
+        stderr_was_entered = False
         stderr_fileobj = open(stderr_file, 'w')
     else:
-        stderr_was_entered=True
+        stderr_was_entered = True
         stderr_fileobj = stderr_file
-
 
     # if a list was entered, convert to a string.  Also print the command
     # if requested
     if verbose:
-        print('Executing command',file=stderr)
+        print('Executing command', file=stderr)
     if isinstance(command, list):
         cmd = ' '.join(command)
         if verbose:
-            print(command[0],'   \\', file=stderr)
+            print(command[0], '   \\', file=stderr)
             for c in command[1:]:
                 print('   '+c+'    \\', file=stderr)
     else:
-        cmd=command
+        cmd = command
         if verbose:
             print(cmd, file=stderr)
-
-
 
     stdout.flush()
     pobj = subprocess.Popen(
@@ -343,7 +339,9 @@ def exec_process(command,
     )
 
     if timeout is not None:
-        exit_status, stdout_ret, stderr_ret = _poll_subprocess(pobj, timeout, poll)
+        exit_status, stdout_ret, stderr_ret = _poll_subprocess(
+            pobj, timeout, poll
+        )
     else:
         # this just waits for the process to end
         stdout_ret, stderr_ret = pobj.communicate()
@@ -357,6 +355,7 @@ def exec_process(command,
         stderr_fileobj.close()
 
     return exit_status, stdout_ret, stderr_ret
+
 
 def _poll_subprocess(pobj, timeout, poll):
     import time
@@ -379,7 +378,7 @@ def _poll_subprocess(pobj, timeout, poll):
             if tm > timeout:
                 break
     except KeyboardInterrupt:
-        mess='Keyboard Interrupt encountered, halted process %s' % pobj.pid
+        mess = 'Keyboard Interrupt encountered, halted process %s' % pobj.pid
         os.kill(pobj.pid, signal.SIGTERM)
         raise KeyboardInterrupt(mess)
 
@@ -395,7 +394,6 @@ def _poll_subprocess(pobj, timeout, poll):
         stdout_ret, stderr_ret = pobj.communicate()
 
     return exit_status, stdout_ret, stderr_ret
-
 
 
 def makedirs_fromfile(f, verbose=False, allow_fail=False):
@@ -415,19 +413,19 @@ def makedirs_fromfile(f, verbose=False, allow_fail=False):
     import errno
     from esutil import hdfs
 
-    d=os.path.dirname(f)
-    if d=='':
+    d = os.path.dirname(f)
+    if d == '':
         return
 
     if hdfs.is_in_hdfs(f):
         if not hdfs.exists(d):
             if verbose:
-                print('creating dir:',d)
+                print('creating dir:', d)
             hdfs.mkdir(d)
     else:
         if not os.path.exists(d):
             if verbose:
-                print('creating dir:',d)
+                print('creating dir:', d)
             try:
                 os.makedirs(d)
             except OSError as ex:

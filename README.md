@@ -2,15 +2,17 @@ A python package including a wide variety of utilities, focused primarily on
 numerical python, statistics, and file input/output.   Includes specialized
 tools for astronomers.
 
-For full documentation see the project web site http://code.google.com/p/esutil/
+Installation
+------------
+The easiest way is through conda which has pre-compiled binaries
+```
+conda install esutil
 
+# or if you don't have conda forge in your channels
+conda install -c conda-forge esutil
+```
 
-Tests
------
-
-All tests should pass
-
-```python
-import esutil as eu
-eu.test()
+You can also use pip
+```
+pip install esutil
 ```

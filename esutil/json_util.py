@@ -1,15 +1,15 @@
 """
 
-Some convenience functions for working with json files.  
+Some convenience functions for working with json files.
     http://en.wikipedia.org/wiki/JSON
 
 Functions:
 
-    json_util.read(file):  
-        
+    json_util.read(file):
+
         Read from the file name or opened file object. If the faster cjson is
         available, an attempt to use it is made.  If this fails (cjson is known
-        to fail in certain corner cases) ordinary json is tried.  
+        to fail in certain corner cases) ordinary json is tried.
 
     json_util.write(obj, file, pretty=True):
 
@@ -23,39 +23,40 @@ Functions:
 
 try:
     import json
-    have_json=True
-except:
-    have_json=False
+    have_json = True
+except ImportError:
+    have_json = False
 
 try:
     import cjson
-    have_cjson=True
-except:
-    have_cjson=False
+    have_cjson = True
+except ImportError:
+    have_cjson = False
+
 
 def read(fname, **keys):
     """
-    obj = json_util.read(file):  
+    obj = json_util.read(file):
 
     Read from the file name or opened file object. If the faster cjson is
     available, an attempt to use it is made.  If this fails (cjson is known
-    to fail in certain corner cases) ordinary json is tried.  
+    to fail in certain corner cases) ordinary json is tried.
     """
 
     if not have_json and not have_cjson:
         raise ImportError("Neither cjson or json could be imported")
 
-    input_fileobj=False
-    if isinstance(fname, file):
-        input_fileobj=True
-        fobj=fname
+    input_fileobj = False
+    if hasattr(fname, 'write'):
+        input_fileobj = True
+        fobj = fname
     else:
-        fobj=open(fname)
+        fobj = open(fname)
 
     if have_cjson:
         try:
             data = cjson.decode(fobj.read())
-        except: 
+        except Exception:
             # fall back to using json
             fobj.seek(0)
             data = json.load(fobj)
@@ -65,6 +66,7 @@ def read(fname, **keys):
     if not input_fileobj:
         fobj.close()
     return data
+
 
 def write(obj, fname, pretty=True, **keys):
     """
@@ -79,13 +81,14 @@ def write(obj, fname, pretty=True, **keys):
     if not have_json and not have_cjson:
         raise ImportError("Neither cjson or json could be imported")
 
-    input_fileobj=False
-    if isinstance(fname,file):
-        input_fileobj=True
-        fobj=fname
+    input_fileobj = False
+
+    if hasattr(fname, 'write'):
+        input_fileobj = True
+        fobj = fname
     else:
-        fobj=open(fname,'w')
-    
+        fobj = open(fname, 'w')
+
     if not pretty and have_cjson:
         jstring = cjson.encode(obj)
         fobj.write(jstring)
@@ -94,4 +97,3 @@ def write(obj, fname, pretty=True, **keys):
 
     if not input_fileobj:
         fobj.close()
-

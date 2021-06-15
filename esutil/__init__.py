@@ -1,3 +1,4 @@
+# flake8: noqa
 """
 Package:
     esutil
@@ -82,17 +83,10 @@ Sub-packages and modules:
     oracle_util
 
 """
-# version info
-# You need to run 'svn propset svn:keywords HeadURL' on the file and commit
-# before this works.
-#
-# Don't edit these svn properties by hand
-
-_property_headurl='$HeadURL$'
 
 import sys
 
-__version__ = "0.6.5"
+__version__ = "0.6.7.2"
 
 def version():
     return __version__
@@ -127,9 +121,7 @@ from . import hdfs
 from . import random
 from . import recfile
 from . import htm
-
-from . import unit_tests
-from .unit_tests import test
+from . import pbar
 
 try:
     from .import sqlite_util

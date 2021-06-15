@@ -6,6 +6,9 @@
 #include "htmc.h"
 #include <algorithm> // for transform
 
+#define NPY_PI 3.141592653589793238462643383279502884L
+#define R2D (180.0/NPY_PI)
+#define D2R (NPY_PI/180.0)
 
 #if PY_MAJOR_VERSION >= 3
 static int *init_numpy(void) {
@@ -19,19 +22,72 @@ static void init_numpy(void) {
 #endif
 
 
+/*
+// alternative sphdist, might be a bit more accurate, a bit slower
+void eq2xyz(long double ra, long double dec, long double* x, long double* y, long double* z) {
+    // static const long double D2R = 0.0174532925199433;
+    static const long double node = 1.6580627893946132;
+
+    long double theta = ra * D2R - node;
+    long double phi = dec * D2R;
+
+    *x = cosl(theta)*cosl(phi);
+    *y = sinl(theta)*cosl(phi);
+    *z = sinl(phi);
+}
+
 // A couple of utility functions
 // raturn great circle distance in degrees
+long double sphdist(long double ra1, long double dec1, 
+               long double ra2, long double dec2,
+               bool degrees) {
+
+    // static const long double D2R=0.0174532925199433;
+    // static const long double R2D=57.29577951308232;
+
+    if (ra1 == ra2 && dec1 == dec2) {
+        return 0.0;
+    }
+    long double x1, y1, z1,
+           x2, y2, z2;
+    long double cosdis, dis;
+
+    eq2xyz(ra1, dec1, &x1, &y1, &z1);
+    eq2xyz(ra2, dec2, &x2, &y2, &z2);
+
+    cosdis = x1*x2 + y1*y2 + z1*z2;
+
+    if (cosdis < -1.0) {
+        cosdis = -1.0;
+    }
+    if (cosdis > 1.0) {
+        cosdis = 1.0;
+    }
+
+    dis = acosl(cosdis);
+
+    if (degrees) {
+        dis *= R2D;
+    }
+
+    return dis;
+}
+*/
+
+// A couple of utility functions
+// raturn great circle distance in degrees
+
 double gcirc(double ra1, double dec1, 
              double ra2, double dec2,
              bool degrees)
-
 {
 
     double sindec1, cosdec1, sindec2, cosdec2, 
            radiff, cosradiff, dis, cosdis; 
 
-    static const double
-        D2R=0.0174532925199433;
+    if (ra1 == ra2 && dec1 == dec2) {
+        return 0.0;
+    }
 
     sindec1 = sin(dec1*D2R);
     cosdec1 = cos(dec1*D2R);
@@ -49,16 +105,11 @@ double gcirc(double ra1, double dec1,
 
     dis = acos(cosdis);
     if (degrees) {
-        dis /= D2R;
+        dis *= R2D;
     }
     return( dis );
 
 }
-
-
-
-
-
 
 
 HTMC::HTMC(int depth) throw (const char *) {
@@ -95,7 +146,7 @@ PyObject* HTMC::intersect(double ra, // all in degrees
                           double radius, // degrees
                           int inclusive) throw (const char *) {
 
-    static const double D2R=0.0174532925199433;
+    // static const double D2R=0.0174532925199433;
     npy_intp nfound=0;
 
     // This is used in the basic calculations
@@ -206,7 +257,7 @@ PyObject* HTMC::cbincount(double rmin, // units of scale*angle in radians
     // This is used in the basic calculations
     const SpatialIndex &index = mHtmInterface.index();
 
-    static const double D2R=0.0174532925199433;
+    // static const double D2R=0.0174532925199433;
     int step=500;
     int linelen=70*step;
     npy_intp totcount=0;
@@ -294,6 +345,7 @@ PyObject* HTMC::cbincount(double rmin, // units of scale*angle in radians
                         double ra2  = *(double *) PyArray_GETPTR1(ra2_array,  i2);
                         double dec2 = *(double *) PyArray_GETPTR1(dec2_array, i2);
 
+                        // double dis = sphdist(ra1, dec1, ra2, dec2, degrees);
                         double dis = gcirc(ra1, dec1, ra2, dec2, degrees);
                         if (dis <= maxangle) {
                             double logr = logscale + log10(dis);
@@ -410,8 +462,7 @@ PyObject* Matcher::match(PyObject* ra_array, // all in degrees
         }
     }
 
-    static const double
-        D2R=0.0174532925199433;
+    // static const double D2R=0.0174532925199433;
 
     // This is used in the basic calculations
     const SpatialIndex &index = this->htm_interface.index();
@@ -485,11 +536,12 @@ PyObject* Matcher::match(PyObject* ra_array, // all in degrees
                     double tra  = *(double *) PyArray_GETPTR1(this->ra, i_this);
                     double tdec = *(double *) PyArray_GETPTR1(this->dec, i_this);
 
+                    // double dis = sphdist(ra, dec, tra, tdec, true);
                     double dis = gcirc(ra, dec, tra, tdec, true);
 
                     // Turns out, this pushing is not a bottleneck!
                     // Time is negligible compared to the leaf finding
-                    // and the gcirc.
+                    // and the distance calculations
                     if (dis <= rad) {
                         PAIR_INFO pi;
                         pi.i1 = i_input;

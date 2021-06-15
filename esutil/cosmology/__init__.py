@@ -25,16 +25,9 @@ Cosmo:
 
 """
 
+# flake8: noqa
+
 from . import cosmology
 from .cosmology import Cosmo
-
-def test():
-    c=Cosmo()
-    c.test()
-
-    try:
-        c.test_vs_purepy()
-    except:
-        pass
 
 __version__="1.1.0"

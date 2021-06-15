@@ -6,14 +6,15 @@ import numpy
 
 try:
     import pyfits
-    have_pyfits=True
-except:
-    have_pyfits=False
+
+    have_pyfits = True
+except ImportError:
+    have_pyfits = False
 
 from . import recfile
-from . import numpy_util
 
-modemap={'r':'readonly'}
+modemap = {"r": "readonly"}
+
 
 def read(filename, ext, **keys):
     """
@@ -21,24 +22,24 @@ def read(filename, ext, **keys):
         https://github.com/esheldon/fitsio
 
     Read data from a FITS file using the FITS class.
-    
+
 
     Currently this is a wrapper for pyfits designed to allow reading subsets of
     rows and columns from binary tables.  The recfile package is used for this
     purpose.  It can be found in esutil, where most of the development occurs,
-    and it's own package on google code.  
-    
+    and it's own package on google code.
+
     Images are always read whole.
 
     Parameters
     ----------
-    ext: number 
+    ext: number
         The extension
 
     rows: scalar,sequence,array
         A scalar, sequence or array indicating a subset of rows to read.
         Only used when the extension is a table.
-    fields or columns: scalar, sequence, array 
+    fields or columns: scalar, sequence, array
         A subset of field to read. fields and columns mean the same thing.
         Only used when the extension is a table.
     view: type object
@@ -66,8 +67,9 @@ def read(filename, ext, **keys):
 
 
     """
-    f=FITS(filename, **keys)
+    f = FITS(filename, **keys)
     return f.read(ext, **keys)
+
 
 class FITS(list):
     """
@@ -76,8 +78,8 @@ class FITS(list):
     Currently this is a wrapper for pyfits designed to allow reading subsets of
     rows and columns from binary tables.  The recfile package is used for this
     purpose.  It can be found in esutil, where most of the development occurs,
-    and it's own package on google code.  
-    
+    and it's own package on google code.
+
     Images are always read whole.
 
     Examples
@@ -98,24 +100,24 @@ class FITS(list):
 
 
     """
-    def __init__(self, filename=None, mode='r', **keys):
-        self.filename=filename
+
+    def __init__(self, filename=None, mode="r", **keys):
+        self.filename = filename
         if filename is not None:
             self.open(filename, mode, **keys)
 
-    def open(self, filename, mode='r', **keys):
+    def open(self, filename, mode="r", **keys):
         while len(self) > 0:
             self.pop()
 
         if mode not in modemap:
-            raise ValueError('only support modes: %s' % list(modemap.keys()))
+            raise ValueError("only support modes: %s" % list(modemap.keys()))
 
-        if mode == 'r':
-            mode='readonly'
-        hdulist = pyfits.core.open(filename,mode)
-        for i in xrange(len(hdulist)):
+        if mode == "r":
+            mode = "readonly"
+        hdulist = pyfits.core.open(filename, mode)
+        for i in range(len(hdulist)):
             self.append(hdulist[i])
-
 
     def read(self, ext, **keys):
         """
@@ -123,13 +125,13 @@ class FITS(list):
 
         Table Parameters
         -----------------
-        ext: number 
+        ext: number
             The extension
 
         rows: scalar,sequence,array
             A scalar, sequence or array indicating a subset of rows to read.
             Only used when the extension is a table.
-        fields or columns: scalar, sequence, array 
+        fields or columns: scalar, sequence, array
             A subset of field to read. fields and columns mean the same thing.
             Only used when the extension is a table.
         view: type object
@@ -165,16 +167,17 @@ class FITS(list):
 
     def read_table(self, ext, **keys):
         """
-        Read data from a fits binary table, possibly selecting rows and columns.
+        Read data from a fits binary table, possibly selecting rows and
+        columns.
 
         Parameters
         ----------
-        ext: number 
+        ext: number
             The extension
 
         rows: scalar,sequence,array
             A scalar, sequence or array indicating a subset of rows to read.
-        fields or columns: scalar, sequence, array 
+        fields or columns: scalar, sequence, array
             A subset of field to read. fields and columns mean the same thing.
         view: type object
             Specify an alternative view of the data.  Should be a subclass
@@ -185,8 +188,8 @@ class FITS(list):
             If upper, all names are converted to upper case.
 
         split: boolean
-            Return a tuple of results rather than a rec array. Note the data
-            are still stored in one big chunk, this is just an alternative access
+            Get a tuple of results rather than a rec array. Note the data are
+            still stored in one big chunk, this is just an alternative access
             method.  E.g.
 
             # this might return a rec array with fields accessed
@@ -205,17 +208,16 @@ class FITS(list):
         if not isinstance(self[ext], pyfits.BinTableHDU):
             raise ValueError("Extension %s is not a BinTableHDU" % ext)
 
-        hdu = self[ext] 
+        hdu = self[ext]
         hdu._file.seek(hdu._datLoc)
-        
-        dtype=self.get_dtype(hdu, **keys)
-        nrows = hdu.size()//dtype.itemsize
+
+        dtype = self.get_dtype(hdu, **keys)
+        nrows = hdu.size() // dtype.itemsize
         robj = recfile.Recfile(hdu._file, dtype=dtype, nrows=nrows)
 
         res = robj.read(**keys)
-        
+
         return res
-        
 
     def read_header(self, ext, **keys):
         self._check_ext(ext)
@@ -226,38 +228,37 @@ class FITS(list):
         Copied from pyfits.core._get_tbdata and modified
         """
 
-        lower=keys.get('lower',False)
-        upper=keys.get('upper',False)
+        lower = keys.get("lower", False)
+        upper = keys.get("upper", False)
 
         # get the right shape for the data part of the random group,
         # since binary table does not support ND yet
         if isinstance(hdu, pyfits.GroupsHDU):
-            f = hdu._dimShape()[:-1] + tmp._dat_format
+            f = hdu._dimShape()[:-1] + hdu._dat_format
             dtype = pyfits.core._convert_format(f)
         else:
-            dtype=[]
+            dtype = []
             for c in hdu.columns:
                 name = c.name
                 if lower:
-                    name=name.lower()
+                    name = name.lower()
                 elif upper:
-                    name=name.upper()
+                    name = name.upper()
 
                 format = c.format
                 dt = pyfits.core._convert_format(format)
-                dtype.append( (name, dt) )
-        
+                dtype.append((name, dt))
+
         dtype = numpy.dtype(dtype)
 
         # if this is a little endian machine, swap the byteorder of our dtype
         if numpy.little_endian:
-            dtype = dtype.newbyteorder('>')
+            dtype = dtype.newbyteorder(">")
         return dtype
-
 
     def _check_ext(self, ext):
         if len(self) == 0:
             raise ValueError("Open a file first")
-        maxext = len(self)-1
+        maxext = len(self) - 1
         if ext > maxext:
-            raise ValueError("ext is outside of range [%s,%s]" % (0,maxext))
+            raise ValueError("ext is outside of range [%s,%s]" % (0, maxext))
