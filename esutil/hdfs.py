@@ -89,7 +89,7 @@ def ls(hdfs_url="", recurse=False, full=False):
         )
 
     flist = []
-    lines = stdo.split("\n")
+    lines = stdo.split(b"\n")
     for line in lines:
         ls = line.split()
         if len(ls) == 8:
@@ -136,7 +136,7 @@ def du(hdfs_url="", total=False, dict=False):
     if len(stdo) == 0:
         return flist
 
-    lines = stdo.split("\n")
+    lines = stdo.split(b"\n")
 
     tot = 0
     for line in lines:
