@@ -74,14 +74,11 @@ Sub-packages and modules:
     random:
         A class to generate random numbers from arbitrary distributions.
 
-
-    stomp_util
     ostools
     plotting
     sfile
     xmltools
     oracle_util
-
 """
 
 import sys
@@ -115,7 +112,6 @@ from . import wcsutil
 from . import cosmology
 from . import coords
 from . import coords as astro_util
-from . import stomp_util
 from . import plotting
 from . import hdfs
 from . import random
