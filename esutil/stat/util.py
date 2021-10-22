@@ -978,7 +978,7 @@ def print_stats(arr, nsigma=1.0, **kw):
 
 def wmom(
     arrin, weights_in, inputmean=None, calcerr=False,
-    sdev=False, **ignored_kw,
+    sdev=False, **ignored_kw
 ):
     """
     Calculate the weighted moments of the input array.

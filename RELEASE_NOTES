@@ -1,3 +1,19 @@
+v0.6.9 (not yet released)
+-------------------------
+
+Bug Fixes
+
+    - Fix bugs for 2.7 syntax
+
+v0.6.8
+-------------------------
+
+Bug Fixes
+
+    - hdfs py3 fixes
+    - protect stomp import
+    - fix color keyword in mwhiskers
+
 v0.6.7
 -------------------
 
