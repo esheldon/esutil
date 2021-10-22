@@ -38,7 +38,8 @@ jobs:
       - name: lint
         shell: bash -l {0}
         run: |
-          flake8 esutil
+          # no flake8 for py27
+          if [ $(which flake8) != "" ]; then flake8 esutil; fi
 
       - name: test
         shell: bash -l {0}
