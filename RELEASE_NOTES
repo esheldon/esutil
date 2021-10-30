@@ -2,12 +2,13 @@ v0.6.9 (not yet released)
 -------------------------
 
 Removed stomp_util module; stomp was abandoned years
-ago and the name stomp conflicts with a new package 
+ago and the name stomp conflicts with a new package
 that does something different
 
 Bug Fixes
 
     - Fix bugs for 2.7 syntax
+    - Fixed bug in lazy WCS distorion inverse computation.
 
 v0.6.8
 -------------------------
