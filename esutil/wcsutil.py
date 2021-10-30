@@ -1043,7 +1043,7 @@ class WCS(object):
                 self.distort["bp"] = bp
                 self.distort["bp_order"] = bporder
 
-                # If inverse can't be found, make sure we computed it later
+                # If inverse can't be found, make sure we compute it later
                 if cap == 0 or cbp == 0:
                     self._inverse_computed = False
 
