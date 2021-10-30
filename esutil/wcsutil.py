@@ -1043,10 +1043,9 @@ class WCS(object):
                 self.distort["bp"] = bp
                 self.distort["bp_order"] = bporder
 
-                # If inverse can't be computed, treat it as if it
-                # already were computed
-                if cap == 0 and cbp == 0:
-                    self._inverse_computed = True
+                # If inverse can't be found, make sure we computed it later
+                if cap == 0 or cbp == 0:
+                    self._inverse_computed = False
 
     def ExtractFromWCS(self):
 
