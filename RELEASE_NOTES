@@ -5,6 +5,10 @@ Removed stomp_util module; stomp was abandoned years
 ago and the name stomp conflicts with a new package
 that does something different
 
+New Features
+
+    - Add get_ntriangles method to HTM objects
+
 Bug Fixes
 
     - Fix bugs for 2.7 syntax
