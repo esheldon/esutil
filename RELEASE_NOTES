@@ -1,4 +1,4 @@
-v0.6.9 (not yet released)
+v0.6.9
 -------------------------
 
 Removed stomp_util module; stomp was abandoned years
