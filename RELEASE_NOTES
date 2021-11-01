@@ -7,6 +7,8 @@ that does something different
 
 New Features
 
+    - add function esutil.numpy_util.combine_fields, which
+      combines the fields from a set of arrays
     - Add get_ntriangles method to HTM objects
 
 Bug Fixes
