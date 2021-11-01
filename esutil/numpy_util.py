@@ -27,6 +27,10 @@ Utilities for using and manipulating numerical python arrays (NumPy).
         Combine the list of arrays into one big array.  Arrays must all have
         the same datatype.
 
+    combine_fields(arrlist)
+        Combine the field names and data from multiple arrays.  The arrays must
+        be the same size and have disjoint sets of fields
+
     copy_fields(array1, array2)
         Copy common fields from one numpy array to another.  The name
         matching is case senitive.
@@ -152,7 +156,7 @@ from sys import stdout
 import copy
 import pydoc
 import stat
-import numpy
+import numpy as np
 
 from . import misc as eu_misc
 
@@ -166,14 +170,14 @@ def where1(conditional_expression):
         w = where1(conditional_expression)
 
     Purpose:
-        A wrapper for numpy.where() for 1-d arrays.  It is the equivalent of
+        A wrapper for np.where() for 1-d arrays.  It is the equivalent of
             w, = where(logical expression)
 
         E.g.
             w=where1( (x > 0.1) & (x < 1.5) )
             print x[w]
     """
-    (w,) = numpy.where(conditional_expression)
+    (w,) = np.where(conditional_expression)
     return w
 
 
@@ -226,7 +230,7 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     if not hasattr(array_in, "view"):
         raise ValueError("data must be an array or have the .view method")
 
-    array = array_in.view(numpy.ndarray)
+    array = array_in.view(np.ndarray)
 
     names = array.dtype.names
     descr = array.dtype.descr
@@ -297,8 +301,8 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
         else:
             fdata = array[n][index]
 
-        if numpy.isscalar(fdata):
-            if isinstance(fdata, numpy.string_):
+        if np.isscalar(fdata):
+            if isinstance(fdata, np.string_):
                 d = fdata
 
                 # if pretty printing, reduce string lengths
@@ -512,7 +516,7 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype="f8"):
 
     """
 
-    output = numpy.array(arr, dtype=dtype, copy=True)
+    output = np.array(arr, dtype=dtype, copy=True)
 
     if arrmin is None:
         arrmin = output.min()
@@ -529,8 +533,8 @@ def arrscl(arr, minval, maxval, arrmin=None, arrmax=None, dtype="f8"):
     b = (arrmax * minval - arrmin * maxval) / (arrmax - arrmin)
 
     # in place
-    numpy.multiply(output, a, output)
-    numpy.add(output, b, output)
+    np.multiply(output, a, output)
+    np.add(output, b, output)
 
     return output
 
@@ -550,14 +554,14 @@ def make_xy_grid(n, xrang, yrang):
         Created: mid 2009, Erin Sheldon, BNL
     """
 
-    rng = numpy.arange(n, dtype="f8")
-    ones = numpy.ones(n, dtype="f8")
+    rng = np.arange(n, dtype="f8")
+    ones = np.ones(n, dtype="f8")
 
     x = arrscl(rng, xrang[0], xrang[1])
     y = arrscl(rng, yrang[0], yrang[1])
 
-    x = numpy.outer(x, ones)
-    y = numpy.outer(ones, y)
+    x = np.outer(x, ones)
+    y = np.outer(ones, y)
     x = x.flatten(1)
     y = y.flatten(1)
 
@@ -587,13 +591,13 @@ def combine_arrlist(arrlist, keep=False):
         raise RuntimeError("Input must be a list of arrays")
 
     if len(arrlist) == 0:
-        return numpy.zeros(0, dtype="i8")
+        return np.zeros(0, dtype="i8")
 
     if len(arrlist) == 1:
         return arrlist[0]
 
-    isarray = isinstance(arrlist[0], numpy.ndarray)
-    isrec = isinstance(arrlist[0], numpy.recarray)
+    isarray = isinstance(arrlist[0], np.ndarray)
+    isrec = isinstance(arrlist[0], np.recarray)
 
     if not isarray:
         mess = "Input must be a list of arrays or recarrays. Found %s" % type(
@@ -606,9 +610,9 @@ def combine_arrlist(arrlist, keep=False):
     for data in arrlist:
         counts = counts + data.size
 
-    output = numpy.zeros(counts, dtype=arrlist[0].dtype)
+    output = np.zeros(counts, dtype=arrlist[0].dtype)
     if isrec:
-        output = output.view(numpy.recarray)
+        output = output.view(np.recarray)
 
     beg = 0
     if keep:
@@ -625,6 +629,43 @@ def combine_arrlist(arrlist, keep=False):
             beg = beg + num
 
     return output
+
+
+def combine_fields(arrlist):
+    """
+    Combine the field names and data from multiple arrays.  The arrays must be
+    the same size and have disjoint sets of fields
+
+    Parameters
+    ----------
+    arr1: ndarray
+        An array with fields
+    arr2: ndarray
+        An array with fields
+
+    Returns
+    -------
+    combined array
+    """
+    if len(arrlist) == 0:
+        raise ValueError('send at least one array')
+
+    if len(arrlist) == 1:
+        return arrlist[0]
+
+    num = arrlist[0].size
+    descr = []
+    for arr in arrlist:
+        if arr.size != num:
+            raise ValueError('not all arrays are the same size')
+        descr += arr.dtype.descr
+
+    new_array = np.zeros(num, dtype=descr)
+
+    for arr in arrlist:
+        copy_fields(arr, new_array)
+
+    return new_array
 
 
 def copy_fields(arr1, arr2):
@@ -682,7 +723,7 @@ def extract_fields(arr, keepnames, strict=True):
         Created 2007, Erin Sheldon, NYU.
         Added strict keyword, 2010-04-07, Erin Sheldon, BNL
     """
-    if not isinstance(keepnames, (tuple, list, numpy.ndarray)):
+    if not isinstance(keepnames, (tuple, list, np.ndarray)):
         keepnames = [keepnames]
 
     arrnames = list(arr.dtype.names)
@@ -702,7 +743,7 @@ def extract_fields(arr, keepnames, strict=True):
         raise ValueError("No fields kept")
 
     shape = arr.shape
-    new_arr = numpy.zeros(shape, dtype=new_descr)
+    new_arr = np.zeros(shape, dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
 
@@ -736,7 +777,7 @@ def remove_fields(arr, rmnames):
         raise ValueError("Error: All fields would be removed")
 
     shape = arr.shape
-    new_arr = numpy.zeros(shape, dtype=new_descr)
+    new_arr = np.zeros(shape, dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
 
@@ -766,7 +807,7 @@ def add_fields(arr, add_dtype_or_descr, defaults=None):
     """
     # the descr is a list of tuples
     old_descr = arr.dtype.descr
-    add_dtype = numpy.dtype(add_dtype_or_descr)
+    add_dtype = np.dtype(add_dtype_or_descr)
     add_descr = add_dtype.descr
 
     new_descr = copy.deepcopy(old_descr)
@@ -780,7 +821,7 @@ def add_fields(arr, add_dtype_or_descr, defaults=None):
             raise ValueError("field " + str(name) + " already exists")
 
     shape = arr.shape
-    new_arr = numpy.zeros(shape, dtype=new_descr)
+    new_arr = np.zeros(shape, dtype=new_descr)
 
     copy_fields(arr, new_arr)
 
@@ -823,18 +864,18 @@ def reorder_fields(arr, ordered_names, strict=True):
         Added strict keyword, 2010-04-07, Erin Sheldon, BNL
     """
 
-    if not isinstance(ordered_names, (tuple, list, numpy.ndarray)):
+    if not isinstance(ordered_names, (tuple, list, np.ndarray)):
         ordered_names = [ordered_names]
 
     # this is so we can get indices
-    original_names = numpy.array(arr.dtype.names)
+    original_names = np.array(arr.dtype.names)
     original_descr = arr.dtype.descr
 
     new_names = []
     new_descr = []
 
     for name in ordered_names:
-        (w,) = numpy.where(original_names == name)
+        (w,) = np.where(original_names == name)
         if w.size != 0:
             new_names.append(name)
             new_descr.append(original_descr[w[0]])
@@ -850,7 +891,7 @@ def reorder_fields(arr, ordered_names, strict=True):
             new_descr.append(original_descr[i])
 
     shape = arr.shape
-    new_arr = numpy.zeros(shape, dtype=new_descr)
+    new_arr = np.zeros(shape, dtype=new_descr)
     copy_fields(arr, new_arr)
     return new_arr
 
@@ -882,9 +923,9 @@ def copy_fields_by_name(arr, names, vals):
         Created 2007, Erin Sheldon, NYU.
 
     """
-    if type(names) != list and type(names) != numpy.ndarray:
+    if type(names) != list and type(names) != np.ndarray:
         names = [names]
-    if type(vals) != list and type(vals) != numpy.ndarray:
+    if type(vals) != list and type(vals) != np.ndarray:
         vals = [vals]
     if len(names) != len(vals):
         raise ValueError("Length of names and values must be the same")
@@ -1030,7 +1071,7 @@ def compare_arrays(arr1, arr2, verbose=False, ignore_missing=True):
                 if verbose:
                     stdout.write("OK\n")
                     stdout.write("        elements........")
-                (w,) = numpy.where(arr1[n].ravel() != arr2[n].ravel())
+                (w,) = np.where(arr1[n].ravel() != arr2[n].ravel())
                 if w.size > 0:
                     nfail += 1
                     if verbose:
@@ -1083,10 +1124,10 @@ def replicate(value, shape, dtype=None):
            [-9999., -9999.]])
     """
     if dtype is None:
-        tmp = numpy.array([value])
-        data = numpy.empty(shape, dtype=tmp.dtype)
+        tmp = np.array([value])
+        data = np.empty(shape, dtype=tmp.dtype)
     else:
-        data = numpy.empty(shape, dtype=dtype)
+        data = np.empty(shape, dtype=dtype)
     data.fill(value)
     return data
 
@@ -1112,7 +1153,7 @@ def is_big_endian(array):
 
     """
 
-    if numpy.little_endian:
+    if np.little_endian:
         machine_big = False
     else:
         machine_big = True
@@ -1142,7 +1183,7 @@ def is_little_endian(array):
 
     """
 
-    if numpy.little_endian:
+    if np.little_endian:
         machine_little = True
     else:
         machine_little = False
@@ -1175,7 +1216,7 @@ def to_native(array, inplace=False, keep_dtype=False):
         Created 2009, Erin Sheldon, NYU.
     """
 
-    if numpy.little_endian:
+    if np.little_endian:
         machine_little = True
     else:
         machine_little = False
@@ -1375,7 +1416,7 @@ def unique(arr, values=False):
         Created 2009, Erin Sheldon, NYU.
     """
     n = arr.size
-    keep = numpy.zeros(n, dtype="i8")
+    keep = np.zeros(n, dtype="i8")
 
     s = arr.argsort()
 
@@ -1410,7 +1451,7 @@ def rem_dup(arr, flag, values=False):
         Return unique values of an array, and optionally their
         indices in the array.  Keep the duplicate with the
         largest value of flag.
-        (If flag is not needed, use numpy.unique() instead.)
+        (If flag is not needed, use np.unique() instead.)
 
     REVISION HISTORY:
         Created 2013, Amy Kimball, CASS.
@@ -1426,7 +1467,7 @@ def rem_dup(arr, flag, values=False):
     s = arr.argsort()  # sort indices
     sarr = arr[s]  # sorted array
 
-    keep = numpy.zeros(n, dtype="i8")  # indices of values to keep
+    keep = np.zeros(n, dtype="i8")  # indices of values to keep
     nkeep = 0
     sflag = flag[s]  # flags to match sorted array
 
@@ -1479,12 +1520,12 @@ def match(arr1input, arr2input, presorted=False):
     """
 
     # make sure 1D
-    arr1 = numpy.array(arr1input, ndmin=1, copy=False)
-    arr2 = numpy.array(arr2input, ndmin=1, copy=False)
+    arr1 = np.array(arr1input, ndmin=1, copy=False)
+    arr2 = np.array(arr2input, ndmin=1, copy=False)
 
     # check for integer data...
-    if not issubclass(arr1.dtype.type, numpy.integer) or not issubclass(
-        arr2.dtype.type, numpy.integer
+    if not issubclass(arr1.dtype.type, np.integer) or not issubclass(
+        arr2.dtype.type, np.integer
     ):
         mess = "Error: only works with integer types, got %s %s"
         mess = mess % (arr1.dtype.type, arr2.dtype.type)
@@ -1495,29 +1536,29 @@ def match(arr1input, arr2input, presorted=False):
         raise ValueError(mess)
 
     # make sure that arr1 has unique values...
-    test = numpy.unique(arr1)
+    test = np.unique(arr1)
     if test.size != arr1.size:
         raise ValueError("Error: the arr1input must be unique")
 
     # sort arr1 if not presorted
     if not presorted:
-        st1 = numpy.argsort(arr1)
+        st1 = np.argsort(arr1)
     else:
         st1 = None
 
     # search the sorted array
-    sub1 = numpy.searchsorted(arr1, arr2, sorter=st1)
+    sub1 = np.searchsorted(arr1, arr2, sorter=st1)
 
     # check for out-of-bounds at the high end if necessary
     if arr2.max() > arr1.max():
-        (bad,) = numpy.where(sub1 == arr1.size)
+        (bad,) = np.where(sub1 == arr1.size)
         sub1[bad] = arr1.size - 1
 
     if not presorted:
-        (sub2,) = numpy.where(arr1[st1[sub1]] == arr2)
+        (sub2,) = np.where(arr1[st1[sub1]] == arr2)
         sub1 = st1[sub1[sub2]]
     else:
-        (sub2,) = numpy.where(arr1[sub1] == arr2)
+        (sub2,) = np.where(arr1[sub1] == arr2)
         sub1 = sub1[sub2]
 
     return sub1, sub2
@@ -1553,7 +1594,7 @@ def strmatch(arr, regex):
     import re
 
     r = re.compile(regex)
-    vmatch = numpy.vectorize(lambda x: bool(r.match(x)))
+    vmatch = np.vectorize(lambda x: bool(r.match(x)))
     return vmatch(arr)
 
 
@@ -1619,7 +1660,7 @@ def dict2array(d, sort=False, keys=None):
 
         desc.append((key, dt))
 
-    a = numpy.zeros(1, dtype=desc)
+    a = np.zeros(1, dtype=desc)
 
     for key in keys:
         a[key] = d[key]
@@ -1645,7 +1686,7 @@ def dictlist2array(dlist, keys=None, sort=False):
         If True, sort the keys.  default False
     """
     if len(dlist) == 0:
-        return numpy.array([])
+        return np.array([])
 
     if keys is None:
         keys = dlist[0].keys()
@@ -1710,7 +1751,7 @@ def dictlist2array(dlist, keys=None, sort=False):
 
         dtype.append((name, t))
 
-    arr = numpy.zeros(len(dlist), dtype=dtype)
+    arr = np.zeros(len(dlist), dtype=dtype)
 
     for i, d in enumerate(dlist):
         for key in d:
@@ -1740,7 +1781,7 @@ def splitarray(nper, var_input):
         A list with all the sub-arrays.
 
     Example:
-        In [1]: l=numpy.arange(25)
+        In [1]: l=np.arange(25)
         In [2]: nper = 3
         In [3]: split_list = eu.numpy_util.splitarray(nper, l)
         In [4]: split_list
@@ -1761,9 +1802,9 @@ def splitarray(nper, var_input):
 
     """
 
-    var = numpy.array(var_input, ndmin=0, copy=False)
+    var = np.array(var_input, ndmin=0, copy=False)
 
-    ind = numpy.arange(var.size)
+    ind = np.arange(var.size)
 
     # this will tell us which bin the object belongs to
     bin_nums = ind // int(nper)
@@ -1808,14 +1849,14 @@ def between(arr, lowval, highval, type="[)"):
     # select elements that equal 3 or are between 10 and 100 with slice
     # symantics [), e.g. [10,100)
 
-    a=numpy.arange(200)
-    w,=numpy.where( (a==3) | between(a,10,100) )
+    a=np.arange(200)
+    w,=np.where( (a==3) | between(a,10,100) )
 
     # select elements that equal 3 or are between 10 and 100, inclusive, e.g.
     # [10,100]
 
-    a=numpy.arange(200)
-    w,=numpy.where( (a==3) | between(a,10,100,'[]') )
+    a=np.arange(200)
+    w,=np.where( (a==3) | between(a,10,100,'[]') )
     """
 
     if type == "[)":
@@ -1858,12 +1899,12 @@ def outside(arr, lowval, highval, type=")("):
     -------
 
     # select elements that equal 25 or are outside 10 and 100, exclusive
-    a=numpy.arange(200)
-    w,=numpy.where( (a==5) | outside(a,10,100) )
+    a=np.arange(200)
+    w,=np.where( (a==5) | outside(a,10,100) )
 
     # select elements that are outside 10 and 100, inclusive
-    a=numpy.arange(200)
-    w,=numpy.where( outside(a,10,100,'][') )
+    a=np.arange(200)
+    w,=np.where( outside(a,10,100,'][') )
 
 
     """
@@ -1896,7 +1937,7 @@ def select_percentile(x, perc, get_ranges=False, **keys):
     get_ranges: bool, optional
         If true, output the ranges as well as the selections
     **keys:
-        Extra keywords for numpy.percentile  See docs for that
+        Extra keywords for np.percentile  See docs for that
         function for more details.
 
     returns
@@ -1920,7 +1961,7 @@ def select_percentile(x, perc, get_ranges=False, **keys):
 
     examples
     --------
-    >>> x=numpy.random.random(10)
+    >>> x=np.random.random(10)
 
     >>> x
         array([ 0.34704303,  0.56085122,  0.90532323,  0.59691811,  0.8905648 ,
@@ -1937,28 +1978,28 @@ def select_percentile(x, perc, get_ranges=False, **keys):
       [0.79958802092575598, 0.90532323138237181]]
     """
 
-    x = numpy.asanyarray(x)
+    x = np.asanyarray(x)
 
-    if numpy.isscalar(perc):
+    if np.isscalar(perc):
         perc = [perc]
 
     nperc = len(perc)
 
-    pcuts = numpy.percentile(x, perc, **keys)
+    pcuts = np.percentile(x, perc, **keys)
 
     wlist = []
     ranges = []
     for i in range(nperc + 1):
         if i == 0:
-            (w,) = numpy.where(x < pcuts[i])
+            (w,) = np.where(x < pcuts[i])
 
             ranges.append([x.min(), pcuts[i]])
         elif i == nperc:
-            (w,) = numpy.where(x > pcuts[i - 1])
+            (w,) = np.where(x > pcuts[i - 1])
 
             ranges.append([pcuts[i - 1], x.max()])
         else:
-            (w,) = numpy.where((x > pcuts[i - 1]) & (x < pcuts[i]))
+            (w,) = np.where((x > pcuts[i - 1]) & (x < pcuts[i]))
             ranges.append([pcuts[i - 1], pcuts[i]])
 
         wlist.append(w)
@@ -2201,7 +2242,7 @@ class ArrayWriter:
         # used
         lines = []
 
-        arr = arrin.view(numpy.ndarray)
+        arr = arrin.view(np.ndarray)
         allnames = arr.dtype.names
 
         if allnames is None:
@@ -2312,7 +2353,7 @@ class ArrayWriter:
 
     def latex_write(self, arrin, **keys):
 
-        arr = arrin.view(numpy.ndarray)
+        arr = arrin.view(np.ndarray)
         allnames = arr.dtype.names
 
         if allnames is None:
@@ -2382,7 +2423,7 @@ class ArrayWriter:
         self._fobj.flush()
 
     def fancy_write(self, arrin, **keys):
-        array = arrin.view(numpy.ndarray)
+        array = arrin.view(np.ndarray)
 
         title = keys.get("title", None)
 
@@ -2433,7 +2474,7 @@ class ArrayWriter:
         i = 0
         ntot = len(fields)
         for name in fields:
-            if isinstance(array[name][0], numpy.string_) or (array[name][0].ndim > 0):  # noqa
+            if isinstance(array[name][0], np.string_) or (array[name][0].ndim > 0):  # noqa
                 forms[name] = " %-" + str(max_lens[name]) + "s "
             else:
                 forms[name] = " %" + str(max_lens[name]) + "s "
