@@ -21,6 +21,8 @@ def test_htm_smoke():
 
     assert np.all(htmid == expected)
 
+    assert h.get_ntriangles() == 8 * 4**(depth-1)
+
 
 def test_htm_intersect():
     depth = 10
