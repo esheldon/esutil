@@ -45,6 +45,17 @@ class HTM(htmc.HTMC):
 
     area = get_area
 
+    def get_ntriangles(self):
+        """
+        Get the number of triangles in the mesh
+
+        Returns
+        -------
+        number of triangles, 8 * 4**(depth-1)
+        """
+        depth = self.get_depth()
+        return 8 * 4**(depth-1)
+
     def lookup_id(self, ra, dec):
         """
         look up the htm index for the input ra,dec
