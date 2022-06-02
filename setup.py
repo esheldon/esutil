@@ -123,6 +123,8 @@ def check_flags(compiler):
     cflags = extra_compile_args
     lflags = extra_link_args
 
+    cflags += ["-std=c++11"]
+
     if platform.system() == "Darwin":
         # Usually Macs need this, but they might not, so try it, and only add
         # if it works.
