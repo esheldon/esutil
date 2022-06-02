@@ -1,3 +1,8 @@
+v0.6.10 (not yet released)
+--------------------------
+
+Added numpy to install_requires in setup.py
+
 v0.6.9
 -------------------------
 
