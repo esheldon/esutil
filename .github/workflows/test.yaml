@@ -38,7 +38,7 @@ jobs:
       - name: lint
         shell: bash -l {0}
         run: |
-          flake8 --config .flake8 esutil
+          flake8 esutil
 
       - name: test
         shell: bash -l {0}
