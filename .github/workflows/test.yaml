@@ -29,9 +29,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda config --set always_yes yes
-          conda install -q mamba
-
-          mamba install -q flake8 pytest scipy
+          conda install -q flake8 pytest scipy
 
           pip install --no-deps -e .
 
