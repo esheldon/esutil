@@ -16,6 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set up Python ${{ matrix.pyver }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.pyver }}
+
       - name: Install code
         run: pip install -e .
 
