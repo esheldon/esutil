@@ -1,7 +1,10 @@
-v0.6.10 (not yet released)
+v0.6.10
 --------------------------
 
-Added numpy to install_requires in setup.py
+Bug Fixes
+
+    - Added numpy to install_requires in setup.py
+    - Fixed building on GCC11
 
 v0.6.9
 -------------------------
