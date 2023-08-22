@@ -764,8 +764,10 @@ def remove_fields(arr, rmnames):
     REVISION HISTORY:
         Created 2007, Erin Sheldon, NYU.
     """
-    if type(rmnames) != list:
+
+    if not isinstance(rmnames, list):
         rmnames = [rmnames]
+
     descr = arr.dtype.descr
     new_descr = []
     for d in descr:
@@ -827,7 +829,7 @@ def add_fields(arr, add_dtype_or_descr, defaults=None):
 
     # See if the user has indicated default values for the new fields
     if defaults is not None:
-        if type(defaults) != list:
+        if not isinstance(defaults, list):
             defaults = [defaults]
         if len(defaults) != len(add_descr):
             raise ValueError("defaults must be same length as new dtype")
@@ -923,10 +925,12 @@ def copy_fields_by_name(arr, names, vals):
         Created 2007, Erin Sheldon, NYU.
 
     """
-    if type(names) != list and type(names) != np.ndarray:
+    if not isinstance(names, (list, np.ndarray)):
         names = [names]
-    if type(vals) != list and type(vals) != np.ndarray:
+
+    if not isinstance(vals, (list, np.ndarray)):
         vals = [vals]
+
     if len(names) != len(vals):
         raise ValueError("Length of names and values must be the same")
 

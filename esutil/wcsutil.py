@@ -908,7 +908,7 @@ class WCS(object):
         # Convert the wcs to a local dictionary
 
         wcs = {}
-        if type(wcs_in) == np.ndarray or hasattr(wcs_in, "dtype"):
+        if isinstance(wcs_in, np.ndarray) or hasattr(wcs_in, "dtype"):
             if wcs_in.dtype.fields is None:
                 raise ValueError("wcs array must have fields")
 
