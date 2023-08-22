@@ -1,6 +1,4 @@
 import os
-import time
-from sys import stdout
 from glob import glob
 import platform
 import tempfile
@@ -280,7 +278,7 @@ setup(
     packages=packages,
     cmdclass={"build_ext": MyBuilder},
     ext_modules=ext_modules,
-    install_requires=['numpy','scipy'],
+    install_requires=['numpy', 'scipy'],
 )
 
 # If we get to here, then all was fine.  Go ahead and delete the files in the
