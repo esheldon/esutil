@@ -8,10 +8,17 @@ jobs:
   tests:
     name: tests
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         pyver: [3.7, 3.8, 3.9]
+        compiler: [gcc]
+        include:
+            - os: macos-latest
+              pyver: 3.9
+              compiler: clang
 
-    runs-on: "ubuntu-latest"
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
@@ -22,6 +29,8 @@ jobs:
           python-version: ${{ matrix.pyver }}
 
       - name: Install code
+        env:
+            CC: ${{ matrix.compiler }}
         run: pip install -e .
 
       - name: lint
