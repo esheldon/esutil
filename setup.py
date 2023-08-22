@@ -24,7 +24,7 @@ extra_link_args = []
 local_tmp = "tmp"
 
 
-def try_compile(cpp_code, compiler, cflags=[], lflags=[]):
+def try_compile(cpp_code, compiler, cflags=[], lflags=[], c_not_cpp=False):
     """
     Check if compiling some code with the given compiler and flags works
     properly.
@@ -38,7 +38,7 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[]):
     # tmp directory so the user can troubleshoot the problem if they were
     # expecting it to work.
     with tempfile.NamedTemporaryFile(
-        delete=False, suffix=".cpp", dir=local_tmp
+        delete=False, suffix=".c" if c_not_cpp else ".cpp" , dir=local_tmp
     ) as cpp_file:
         cpp_file.write(cpp_code.encode())
         cpp_name = cpp_file.name
@@ -81,6 +81,9 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[]):
         # Don't delete files in case helpful for troubleshooting.
         return False
 
+    if lflags == []:
+        return returncode == 0
+
     # Link
     cc = compiler.linker_so[0]
     cmd = [cc] + compiler.linker_so[1:] + lflags + [o_name, "-o", exe_name]
@@ -111,7 +114,10 @@ def check_flags(compiler):
     cflags = extra_compile_args
     lflags = extra_link_args
 
-    cflags += ["-std=c++11"]
+    # Check whether we can safely add -std=c++11
+    if try_compile("int main (int argc, char **argv) { return 0; }",
+                   compiler, ["-std=c++11"], [], c_not_cpp=True):
+        cflags += ["-std=c++11"]
 
     if platform.system() == "Darwin":
         # Usually Macs need this, but they might not, so try it, and only add
