@@ -38,7 +38,7 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], c_not_cpp=False):
     # tmp directory so the user can troubleshoot the problem if they were
     # expecting it to work.
     with tempfile.NamedTemporaryFile(
-        delete=False, suffix=".c" if c_not_cpp else ".cpp" , dir=local_tmp
+        delete=False, suffix=".c" if c_not_cpp else ".cpp", dir=local_tmp
     ) as cpp_file:
         cpp_file.write(cpp_code.encode())
         cpp_name = cpp_file.name
@@ -273,7 +273,7 @@ classifiers = [
 
 setup(
     name="esutil",
-    version="0.6.10",
+    version="0.6.11",
     author="Erin Scott Sheldon",
     author_email="erin.sheldon@gmail.com",
     classifiers=classifiers,
