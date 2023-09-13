@@ -3,6 +3,7 @@ v0.6.11
 
 Bug Fixes
 
+    - use pyproject.toml (Jo Bovy)
     - Fix installation on newer systems (Jo Bovy)
 
 v0.6.10
