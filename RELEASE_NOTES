@@ -1,5 +1,12 @@
+unreleased
+----------
+
+Bug Fixes
+
+    - Fixed bug in inverting WCS to map ra,dec to x,y near ra = 0
+
 v0.6.11
--------
+--------------------------
 
 Bug Fixes
 

@@ -547,6 +547,7 @@ class WCS(object):
         lonlat[0] = lon
         lonlat[1] = lat
         diff = lonlat - self.lonlat_answer
+        diff[0] = wrap_ra_diff(diff[0])
         return diff
 
     def _fsolve_xy(self, xyguess, xtol=DEFTOL):
