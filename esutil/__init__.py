@@ -83,7 +83,7 @@ Sub-packages and modules:
 
 import sys
 
-__version__ = "0.6.11"
+__version__ = "0.6.12"
 
 def version():
     return __version__
