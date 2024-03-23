@@ -968,12 +968,12 @@ def print_stats(arr, nsigma=1.0, **kw):
 
     returns
     ------
-    None
+    The statistics (see get_stats for details)
     """
 
     kw["doprint"] = True
     kw["nsigma_print"] = nsigma
-    get_stats(arr, **kw)
+    return get_stats(arr, **kw)
 
 
 def wmom(
