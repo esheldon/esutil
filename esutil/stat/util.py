@@ -949,7 +949,7 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
     return res
 
 
-def print_stats(arr, nsigma=1.0, **kw):
+def print_stats(arr, nsigma=1.0, get=False, **kw):
     """
     print stats for the input array
 
@@ -959,8 +959,10 @@ def print_stats(arr, nsigma=1.0, **kw):
         An array for which to calculate statistics
     weights: array, optional
         Optional weights for the calculation
-    nsig: float, optional
+    nsigma: float, optional
         Optional number of sigma to clip the array
+    get: bool, optional
+        If get is set to True, return the stats
     **sigma_clip_keywords:
         Extra keywords for sigma_clip
     **wmom_keywords:
@@ -973,7 +975,12 @@ def print_stats(arr, nsigma=1.0, **kw):
 
     kw["doprint"] = True
     kw["nsigma_print"] = nsigma
-    return get_stats(arr, **kw)
+    stats = get_stats(arr, **kw)
+
+    if get:
+        return stats
+    else:
+        return None
 
 
 def wmom(
