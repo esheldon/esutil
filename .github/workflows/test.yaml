@@ -15,7 +15,13 @@ jobs:
         compiler: [gcc]
         include:
             - os: macos-latest
-              pyver: 3.9
+              pyver: "3.9"
+              compiler: clang
+            - os: macos-latest
+              pyver: "3.10"
+              compiler: clang
+            - os: macos-latest
+              pyver: "3.11"
               compiler: clang
 
     runs-on: ${{ matrix.os }}
