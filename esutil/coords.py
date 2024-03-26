@@ -473,7 +473,7 @@ def _xyz2thetaphi(x, y, z):
     return theta, phi
 
 
-def eq2xyz(ra, dec, dtype="f8", units="deg"):
+def eq2xyz(ra, dec, dtype="f8", units="deg", stomp=False):
     """
     Convert equatorial coordinates RA and DEC to x,y,z on the unit sphere
 
@@ -486,9 +486,8 @@ def eq2xyz(ra, dec, dtype="f8", units="deg"):
     units: string, optional
         'deg' if the input is degrees, 'rad' if input
         is in radians.  Default is degrees.
-
-    Notes:
-        This follows the same convention as the STOMP package.
+    stomp: bool, optional
+        if set to True, use the stomp convention.
     """
 
     theta = np.array(ra, ndmin=1, copy=True, dtype=dtype)
@@ -499,12 +498,13 @@ def eq2xyz(ra, dec, dtype="f8", units="deg"):
         np.deg2rad(theta, theta)
         np.deg2rad(phi, phi)
 
-    theta -= _sdsspar["node"]
+    if stomp:
+        theta -= _sdsspar["node"]
 
     return _thetaphi2xyz(theta, phi)
 
 
-def xyz2eq(xin, yin, zin, units="deg"):
+def xyz2eq(xin, yin, zin, units="deg", stomp=False):
     """
     Convert x,y,z on the unit sphere to RA DEC.
 
@@ -515,9 +515,8 @@ def xyz2eq(xin, yin, zin, units="deg"):
     units: string, optional
         'deg' if the output is to be degrees, 'rad' if it is to be radians.
         Default is degrees.
-
-    Notes:
-        This follows the same convention as the STOMP package.
+    stomp: bool, optional
+        if set to True, use the stomp convention.
     """
 
     x = np.array(xin, ndmin=1, copy=False)
@@ -525,7 +524,8 @@ def xyz2eq(xin, yin, zin, units="deg"):
     z = np.array(zin, ndmin=1, copy=False)
 
     theta, phi = _xyz2thetaphi(x, y, z)
-    theta += _sdsspar["node"]
+    if stomp:
+        theta += _sdsspar["node"]
 
     if units == "deg":
         np.rad2deg(theta, theta)
@@ -550,6 +550,12 @@ def sphdist(ra1, dec1, ra2, dec2, units=["deg", "deg"]):
         A sequence containing the units of the input and output.  Default
         ['deg',deg'], which means inputs and outputs are in degrees.  Units
         can be 'deg' or 'rad'
+
+    Credits
+    -------
+    Method from galsim.CelestialCoord.distanceTo(), vectorization
+        from Josh Meyers
+    This replaces the less precise previous method
     """
 
     units_in, units_out = units
@@ -558,10 +564,13 @@ def sphdist(ra1, dec1, ra2, dec2, units=["deg", "deg"]):
     x1, y1, z1 = eq2xyz(ra1, dec1, units=units_in)
     x2, y2, z2 = eq2xyz(ra2, dec2, units=units_in)
 
-    cosdis = x1 * x2 + y1 * y2 + z1 * z2
-    cosdis.clip(-1.0, 1.0, out=cosdis)
-
-    dis = arccos(cosdis)
+    dsq = (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2
+    dis = 2*np.arcsin(0.5*np.sqrt(dsq))
+    w = dsq >= 3.99
+    if np.any(w):
+        cross = np.cross(np.array([x1, y1, z1])[w], np.array([x2, y2, z2])[w])
+        crosssq = cross[0]**2 + cross[1]**2 + cross[2]**2
+        dis[w] = np.pi - np.arcsin(np.sqrt(crosssq))
 
     if units_out == "deg":
         np.rad2deg(dis, dis)

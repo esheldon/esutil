@@ -968,7 +968,7 @@ def print_stats(arr, nsigma=1.0, **kw):
 
     returns
     ------
-    None
+    The statistics (see get_stats for details)
     """
 
     kw["doprint"] = True

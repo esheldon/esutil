@@ -11,11 +11,20 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        pyver: [3.7, 3.8, 3.9]
+        pyver: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         compiler: [gcc]
         include:
             - os: macos-latest
-              pyver: 3.9
+              pyver: "3.9"
+              compiler: clang
+            - os: macos-latest
+              pyver: "3.10"
+              compiler: clang
+            - os: macos-latest
+              pyver: "3.11"
+              compiler: clang
+            - os: macos-latest
+              pyver: "3.12"
               compiler: clang
 
     runs-on: ${{ matrix.os }}
