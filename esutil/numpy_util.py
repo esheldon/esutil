@@ -161,6 +161,12 @@ import numpy as np
 from . import misc as eu_misc
 
 
+if np.lib.NumpyVersion(numpy.__version__) < "1.28.0":
+    np_vers = 1
+else:
+    np_vers = 2
+
+
 def where1(conditional_expression):
     """
     Name:
@@ -302,7 +308,11 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
             fdata = array[n][index]
 
         if np.isscalar(fdata):
-            if isinstance(fdata, np.string_):
+            if np_vers == 2:
+                string_types = (np.str_, np.bytes_)
+            else:
+                string_types = (np.str_, np.string_)
+            if isinstance(fdata, string_types):
                 d = fdata
 
                 # if pretty printing, reduce string lengths
@@ -2477,8 +2487,14 @@ class ArrayWriter:
         separator = ""
         i = 0
         ntot = len(fields)
+
+        if np_vers == 2:
+            string_types = (np.str_, np.bytes_)
+        else:
+            string_types = (np.str_, np.string_)
+
         for name in fields:
-            if isinstance(array[name][0], np.string_) or (array[name][0].ndim > 0):  # noqa
+            if isinstance(array[name][0], string_types) or (array[name][0].ndim > 0):  # noqa
                 forms[name] = " %-" + str(max_lens[name]) + "s "
             else:
                 forms[name] = " %" + str(max_lens[name]) + "s "
