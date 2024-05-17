@@ -1099,9 +1099,18 @@ def _match_key(d, key, require=False):
 _major_pyvers = int(sys.version_info[0])
 
 
+if np.lib.NumpyVersion(np.__version__) < "1.28.0":
+    np_vers = 1
+else:
+    np_vers = 2
+
+
 def isstring(obj):
     if _major_pyvers >= 3:
-        string_types = (str, np.string_)
+        if np_vers == 2:
+            string_types = (str, np.str_, np.bytes_)
+        else:
+            string_types = (str, np.str_, np.string_)
     else:
         string_types = (str, np.string_)
 

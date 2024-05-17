@@ -949,9 +949,18 @@ def split_fields(data, fields=None, getnames=False):
 _major_pyvers = int(sys.version_info[0])
 
 
+if numpy.lib.NumpyVersion(numpy.__version__) < "1.28.0":
+    np_vers = 1
+else:
+    np_vers = 2
+
+
 def isstring(obj):
     if _major_pyvers >= 3:
-        string_types = (str, numpy.string_)
+        if np_vers == 2:
+            string_types = (str, numpy.str_, numpy.bytes_,)
+        else:
+            string_types = (str, numpy.str_, numpy.string_)
     else:
         string_types = (str, numpy.string_)
 

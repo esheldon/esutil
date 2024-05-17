@@ -455,7 +455,7 @@ npy_intp Records::get_nrows_to_read(PyObject* rows)
 
     npy_intp nrows = mNrows;
     if (rows != Py_None) {
-        nrows = PyArray_SIZE(rows);
+        nrows = PyArray_SIZE((PyArrayObject *) rows);
     }
 
     return nrows;
@@ -466,7 +466,7 @@ npy_intp Records::get_ncols_to_read(PyObject* colnums)
 
     npy_intp ncols = mNfields;
     if (colnums != Py_None) {
-        ncols = PyArray_SIZE(colnums);
+        ncols = PyArray_SIZE((PyArrayObject *) colnums);
     }
 
     return ncols;
@@ -541,12 +541,12 @@ void Records::read_text_columns(PyObject* arrayobj,
     goto_offset();
 
     for (npy_intp irow=0; irow<nrows2read; irow++) {
-        char *ptr= (char *) PyArray_GETPTR1(arrayobj, irow);
+        char *ptr= (char *) PyArray_GETPTR1((PyArrayObject *) arrayobj, irow);
 
         if (doall_rows) {
             row2read = irow;
         } else {
-            row2read = *(npy_int64 *) PyArray_GETPTR1(rows, irow);
+            row2read = *(npy_int64 *) PyArray_GETPTR1((PyArrayObject *) rows, irow);
             if (row2read > current_row) {
                 skip_rows(current_row, row2read);
                 current_row=row2read;
@@ -559,7 +559,7 @@ void Records::read_text_columns(PyObject* arrayobj,
             if (doall_cols) {
                 col2read=icol;
             } else {
-                col2read = *(npy_int64 *) PyArray_GETPTR1(colnums, icol);
+                col2read = *(npy_int64 *) PyArray_GETPTR1((PyArrayObject *) colnums, icol);
             }
 
             if (col2read > current_col) {
@@ -619,12 +619,12 @@ void Records::read_binary_columns(PyObject* arrayobj,
     goto_offset();
 
     for (npy_intp irow=0; irow<nrows2read; irow++) {
-        char *ptr= (char *) PyArray_GETPTR1(arrayobj, irow);
+        char *ptr= (char *) PyArray_GETPTR1((PyArrayObject *) arrayobj, irow);
 
         if (doall_rows) {
             row2read = irow;
         } else {
-            row2read = *(npy_int64 *) PyArray_GETPTR1(rows, irow);
+            row2read = *(npy_int64 *) PyArray_GETPTR1((PyArrayObject *) rows, irow);
         }
 
         //fprintf(stderr,"current_row: %ld row2read: %ld\n", current_row, row2read);
@@ -639,7 +639,7 @@ void Records::read_binary_columns(PyObject* arrayobj,
 
         for (npy_intp icol=0; icol<ncols2read; icol++) {
             //fprintf(stderr,"col2read: %ld\n", col2read);
-            col2read = *(npy_int64 *) PyArray_GETPTR1(colnums, icol);
+            col2read = *(npy_int64 *) PyArray_GETPTR1((PyArrayObject *) colnums, icol);
             colsize=mSizes[col2read];
 
             if (col2read > current_col) {
@@ -739,7 +739,7 @@ PyObject* Records::read_binary_slice(PyObject* arrayobj,
 
     if (step==1) {
         // we can use a single fread
-        void *ptr = PyArray_GETPTR1(arrayobj, 0);
+        void *ptr = PyArray_GETPTR1((PyArrayObject *) arrayobj, 0);
 
         npy_intp nread = (npy_intp) fread(ptr, mRowSize, nrows2read, mFptr);
         if (nread != nrows2read) {
@@ -750,7 +750,7 @@ PyObject* Records::read_binary_slice(PyObject* arrayobj,
 
         for (npy_intp irow=0; irow<nrows2read; irow++) {
 
-            void *ptr = PyArray_GETPTR1(arrayobj, irow);
+            void *ptr = PyArray_GETPTR1((PyArrayObject *) arrayobj, irow);
 
             size_t nread = fread(ptr, mRowSize, 1, mFptr);
             if (nread != 1) {
@@ -1564,13 +1564,13 @@ PyObject* Records::Write(PyObject* obj)
 	}
 	mNrows = PyArray_Size(obj);
 
-	PyArray_Descr* descr = PyArray_DESCR(obj);
+	PyArray_Descr* descr = PyArray_DESCR((PyArrayObject *) obj);
 
 	copy_field_info(descr);
 
 	mNfields = mNames.size();
 
-	mData = (char* ) PyArray_DATA(obj);
+	mData = (char* ) PyArray_DATA((PyArrayObject *) obj);
 
 	if (mDebug) debugout("Writing data");
 	if (mFileType == BINARY_FILE) {
@@ -1995,7 +1995,7 @@ void Records::copy_field_info(PyArray_Descr* descr)
 	copy_descr_ordered_names(descr);
 	if (mDebug) debugout("Copying offsets");
 	copy_descr_ordered_offsets(descr);
-	mRowSize= descr->elsize;
+        mRowSize = PyDataType_ELSIZE(descr);
 }
 
 void Records::copy_descr_ordered_names(PyArray_Descr* descr)
@@ -2003,9 +2003,9 @@ void Records::copy_descr_ordered_names(PyArray_Descr* descr)
 	// Get the ordered names
 	mNames.clear();
 
-	for (long long i=0; i<PyTuple_Size(descr->names); i++) {
+	for (long long i=0; i<PyTuple_Size(PyDataType_NAMES(descr)); i++) {
 
-		PyObject* tmp = PyTuple_GET_ITEM(descr->names, i);
+                PyObject* tmp = PyTuple_GET_ITEM(PyDataType_NAMES(descr), i);
 		string tname=get_object_as_string(tmp);
 		if (mDebug) {cerr<<"  "<<tname<<endl;}
 		mNames.push_back(tname);
@@ -2032,7 +2032,7 @@ void Records::copy_descr_ordered_offsets(PyArray_Descr* descr)
 	if (mDebug) {cerr<<"Copying ordered descr info:"<<endl;fflush(stdout);}
 	for (unsigned long long i=0; i<mNames.size(); i++) {
 		PyObject* item=
-			PyDict_GetItemString(descr->fields, mNames[i].c_str());
+                        PyDict_GetItemString(PyDataType_FIELDS(descr), mNames[i].c_str());
 
 
         // default 0 dimensions
@@ -2045,17 +2045,17 @@ void Records::copy_descr_ordered_offsets(PyArray_Descr* descr)
 				{cerr<<"Field: "<<mNames[i]<<" not right format"<<endl;}
 			} else {
 				mOffsets[i] = offset;
-				mSizes[i] = fdescr->elsize;
+				mSizes[i] = PyDataType_ELSIZE(fdescr);
 				mTypeNums[i] = fdescr->type_num;
-				if (fdescr->subarray != NULL) {
+				if (PyDataType_SUBARRAY(fdescr) != NULL) {
                     //cerr<<"subarray is not NULL for '"<<mNames[i]<<"'\n";
 					// Here we are implicitly only allowing subarrays
 					// if basic numbers or strings
-					mNel[i] = mSizes[i]/fdescr->subarray->base->elsize;
-					mTypeNums[i] = fdescr->subarray->base->type_num;
+                                        mNel[i] = mSizes[i]/PyDataType_ELSIZE(PyDataType_SUBARRAY(fdescr)->base);
+					mTypeNums[i] = PyDataType_SUBARRAY(fdescr)->base->type_num;
 
 
-                    PyObject* shape = fdescr->subarray->shape;
+                                PyObject* shape = PyDataType_SUBARRAY(fdescr)->shape;
 #if PY_MAJOR_VERSION >= 3
                     if (PyLong_Check(shape) ) {
 #else
