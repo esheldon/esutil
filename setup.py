@@ -120,32 +120,6 @@ def check_flags(compiler):
                    compiler, ["-std=c++11"], []):
         cflags += ["-std=c++11"]
 
-    if platform.system() == "Darwin":
-        # Usually Macs need this, but they might not, so try it, and only add
-        # if it works.
-        cflags1 = cppflags + ["-stdlib=libc++"]
-        lflags1 = lflags + ["-stdlib=libc++"]
-        cpp_code = r"""
-            #include <iostream>
-            int main() {
-                std::cout<<"Hello World\n";
-                return 0;
-            }
-            """
-        if try_compile(cpp_code, compiler, cflags1, lflags1):
-            # Success
-            print("Compilation succeeded with -stdlib=libc++.")
-            cflags = cflags1
-            lflags = lflags1
-        elif try_compile(cpp_code, compiler, cflags, lflags):
-            # Failed with stdlib, but success without
-            # Leave cflags, lflags as they are.
-            print("Compilation succeeded without -stdlib=libc++.")
-        else:
-            # Failed either way.  :(
-            print("Error: Unable to determine correct compile flags")
-            exit()
-
     return cflags, cppflags, lflags
 
 
