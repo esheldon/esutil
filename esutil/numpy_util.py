@@ -161,7 +161,7 @@ import numpy as np
 from . import misc as eu_misc
 
 
-if np.lib.NumpyVersion(numpy.__version__) < "1.28.0":
+if np.lib.NumpyVersion(np.__version__) < "1.28.0":
     np_vers = 1
 else:
     np_vers = 2

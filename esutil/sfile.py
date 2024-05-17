@@ -1099,7 +1099,7 @@ def _match_key(d, key, require=False):
 _major_pyvers = int(sys.version_info[0])
 
 
-if np.lib.NumpyVersion(numpy.__version__) < "1.28.0":
+if np.lib.NumpyVersion(np.__version__) < "1.28.0":
     np_vers = 1
 else:
     np_vers = 2
