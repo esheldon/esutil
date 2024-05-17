@@ -24,7 +24,7 @@ extra_link_args = []
 local_tmp = "tmp"
 
 
-def try_compile(cpp_code, compiler, cflags=[], lflags=[], c_not_cpp=False):
+def try_compile(cpp_code, compiler, cflags=[], lflags=[]):
     """
     Check if compiling some code with the given compiler and flags works
     properly.
@@ -38,7 +38,7 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], c_not_cpp=False):
     # tmp directory so the user can troubleshoot the problem if they were
     # expecting it to work.
     with tempfile.NamedTemporaryFile(
-        delete=False, suffix=".c" if c_not_cpp else ".cpp", dir=local_tmp
+        delete=False, suffix=".cpp", dir=local_tmp
     ) as cpp_file:
         cpp_file.write(cpp_code.encode())
         cpp_name = cpp_file.name
@@ -112,17 +112,18 @@ def check_flags(compiler):
     """Check if we need to adjust the standard cflags for specific systems"""
     # Start with a canonical set of flags to use
     cflags = extra_compile_args
+    cppflags = extra_compile_args
     lflags = extra_link_args
 
     # Check whether we can safely add -std=c++11
     if try_compile("int main (int argc, char **argv) { return 0; }",
-                   compiler, ["-std=c++11"], [], c_not_cpp=True):
+                   compiler, ["-std=c++11"], []):
         cflags += ["-std=c++11"]
 
     if platform.system() == "Darwin":
         # Usually Macs need this, but they might not, so try it, and only add
         # if it works.
-        cflags1 = cflags + ["-stdlib=libc++"]
+        cflags1 = cppflags + ["-stdlib=libc++"]
         lflags1 = lflags + ["-stdlib=libc++"]
         cpp_code = r"""
             #include <iostream>
@@ -145,18 +146,21 @@ def check_flags(compiler):
             print("Error: Unable to determine correct compile flags")
             exit()
 
-    return cflags, lflags
+    return cflags, cppflags, lflags
 
 
 class MyBuilder(build_ext):
     def build_extensions(self):
-        cflags, lflags = check_flags(self.compiler)
+        cflags, cppflags, lflags = check_flags(self.compiler)
 
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
-            e.extra_compile_args = cflags
-            for flag in lflags:
-                e.extra_link_args.append(flag)
+            if any(
+                ['.cc' in f or '.cpp' in f for f in e.sources]
+            ):
+                e.extra_compile_args = cflags
+                for flag in lflags:
+                    e.extra_link_args.append(flag)
 
         # Now run the normal build function.
         build_ext.build_extensions(self)
