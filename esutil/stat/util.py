@@ -101,7 +101,7 @@ class Binner(dict):
     """
 
     def __init__(self, x, y=None, weights=None):
-        self.x = np.array(x, dtype="f8", ndmin=1, copy=False)
+        self.x = np.atleast_1d(x).astype(np.float64)
         self.y = y
         self.weights = weights
 
@@ -110,12 +110,13 @@ class Binner(dict):
         self.xpref = ""
         if y is not None:
             self.xpref = "x"
-            self.y = np.array(y, dtype="f8", ndmin=1, copy=False)
+            self.y = np.atleast_1d(y).astype(np.float64)
+
             if self.y.size != self.x.size:
                 raise ValueError("y must be same len as x")
 
         if weights is not None:
-            self.weights = np.array(weights, dtype="f8", ndmin=1, copy=False)
+            self.weights = np.atleast_1d(weights).astype(np.float64)
             if self.weights.size != self.x.size:
                 raise ValueError("Weights must be same len as data")
 
@@ -210,7 +211,7 @@ class Binner(dict):
         indmin = 0
         nbin = np.int64((indmax - indmin) / bsize) + 1
 
-        f8ind = np.array(ind, dtype="f8", ndmin=1, copy=False)
+        f8ind = np.atleast_1d(ind).astype(np.float64)
         hist, rev = self._do_hist(f8ind, 0, inds, bsize, nbin, True)
 
         # convert the indices in rev to the unlimited, unsorted frame
@@ -716,14 +717,14 @@ def histogram2d(
         If z is sent, more is implied.
     """
 
-    x = np.array(x, ndmin=1, copy=False)
-    y = np.array(y, ndmin=1, copy=False)
+    x = np.atleast_1d(x)
+    y = np.atleast_1d(y)
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
 
     if z is not None:
         rev = True
-        z = np.array(z, ndmin=1, copy=False)
+        z = np.atleast_1d(z)
         if x.size != z.size:
             raise ValueError("x,y,z must be the same size")
 
@@ -885,7 +886,7 @@ def get_stats(arr_in, weights=None, doprint=False, **kw):
      'max':amax}
     """
 
-    arr = np.array(arr_in, dtype="f8", ndmin=1, copy=False)
+    arr = np.atleast_1d(arr_in).astype(np.float64)
 
     amin = arr.min(axis=0)
     amax = arr.max(axis=0)
@@ -1012,11 +1013,11 @@ def wmom(
     """
 
     # no copy made if they are already arrays
-    arr = np.array(arrin, ndmin=1, copy=False)
+    arr = np.atleast_1d(arrin)
 
     # Weights is forced to be type double. All resulting calculations
     # will also be double
-    weights = np.array(weights_in, ndmin=1, dtype="f8", copy=False)
+    weights = np.atleast_1d(weights_in).astype(np.float64)
 
     if len(arr.shape) > 1:
         ndim = arr.shape[1]
@@ -1063,13 +1064,13 @@ def wmedian(arr_in, weights_in):
     http://stackoverflow.com/questions/9794558/weighted-median-computation
     """
     # no copy made if they are already arrays
-    arr = np.array(arr_in, ndmin=1, copy=False)
+    arr = np.atleast_1d(arr_in)
 
     sind = arr.argsort()
 
     # Weights is forced to be type double. All resulting calculations
     # will also be double
-    weights = np.array(weights_in, ndmin=1, dtype="f8", copy=False)
+    weights = np.atleast_1d(weights_in).astype(np.float64)
 
     wtot = weights.sum()
     wtot2 = wtot / 2.0
@@ -1130,14 +1131,14 @@ def sigma_clip(
       Added weights option
     """
 
-    arr = np.array(arrin, ndmin=1, copy=False)
+    arr = np.atleast_1d(arrin)
 
     if len(arr.shape) > 1:
         raise ValueError("only 1-dimensional arrays suppored, "
                          "got %s" % (arr.shape,))
 
     if weights is not None:
-        weights = np.array(weights, ndmin=1, copy=False)
+        weights = np.atleast_1d(weights).astype(np.float64)
 
         if weights.size != arr.size:
             raise ValueError(
@@ -1240,9 +1241,9 @@ def interplin(vin, xin, uin):
       Created: 2006-10-24, Erin Sheldon, NYU
     """
     # Make sure inputs are arrays.  Copy only made if they are not.
-    v = np.array(vin, ndmin=1, copy=False)
-    x = np.array(xin, ndmin=1, copy=False)
-    u = np.array(uin, ndmin=1, copy=False)
+    v = np.atleast_1d(vin)
+    x = np.atleast_1d(xin)
+    u = np.atleast_1d(uin)
 
     # Find closest indices
     xm = x.searchsorted(u) - 1
