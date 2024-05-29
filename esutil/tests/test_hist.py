@@ -20,3 +20,13 @@ def test_hist():
 
     assert np.all(hexpect == h)
     assert np.all(revexpect == rev)
+
+    # Do a predictable input that should maintain sorting.
+
+    for dtype in (np.int64, np.float64):
+        data = np.zeros(100, dtype=dtype)
+        data[50:] = 1
+
+        h, rev = eu.stat.histogram(data, binsize=1, rev=True)
+
+        np.testing.assert_array_equal(rev[3:], np.sort(rev[3:]))
