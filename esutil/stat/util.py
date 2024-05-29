@@ -302,7 +302,7 @@ class Binner(dict):
 
     def _get_sort_index(self):
         if self.sort_index is None:
-            self.sort_index = self.x.argsort()
+            self.sort_index = self.x.argsort(kind="stable")
         # make it visible too
         self["sort_index"] = self.sort_index
 
