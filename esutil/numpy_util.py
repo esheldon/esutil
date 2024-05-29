@@ -155,7 +155,6 @@ import os
 from sys import stdout
 import copy
 import pydoc
-import stat
 import numpy as np
 
 from . import misc as eu_misc
@@ -1807,7 +1806,7 @@ def splitarray(nper, var_input):
          array([14, 12, 13]),
          array([15, 16, 17]),
          array([18, 19, 20]),
-         array([23, 21, 22]),
+         array([21, 22, 23]),
          array([24])]
 
 
@@ -1816,23 +1815,19 @@ def splitarray(nper, var_input):
 
     """
 
-    var = np.array(var_input, ndmin=0, copy=False)
+    var = np.array(var_input, ndmin=1, copy=False)
+    nchunks = var.size // nper
+    if var.size % nper != 0:
+        nchunks += 1
 
-    ind = np.arange(var.size)
+    chunks = []
+    for i in range(nchunks):
+        start = i * nper
+        end = (i + 1) * nper
+        chunk = var[start:end]
+        chunks.append(chunk)
 
-    # this will tell us which bin the object belongs to
-    bin_nums = ind // int(nper)
-
-    h, rev = stat.histogram(bin_nums, binsize=1, min=0, rev=True)
-
-    split_list = []
-    for i in range(len(h)):
-        if rev[i] != rev[i + 1]:
-            w = rev[rev[i]: rev[i + 1]]
-
-            split_list.append(var[w])
-
-    return split_list
+    return chunks
 
 
 def between(arr, lowval, highval, type="[)"):

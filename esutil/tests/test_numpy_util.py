@@ -40,3 +40,21 @@ def test_combine_fields_errors():
 
     with pytest.raises(ValueError):
         eu.numpy_util.combine_fields((a1, a2))
+
+
+def test_split_array():
+    arr = np.arange(25)
+    nper = 3
+
+    chunks = eu.numpy_util.splitarray(nper, arr)
+    assert len(chunks) == 9
+
+    assert np.all(chunks[0] == [0, 1, 2])
+    assert np.all(chunks[1] == [3, 4, 5])
+    assert np.all(chunks[2] == [6, 7, 8])
+    assert np.all(chunks[3] == [9, 10, 11])
+    assert np.all(chunks[4] == [12, 13, 14])
+    assert np.all(chunks[5] == [15, 16, 17])
+    assert np.all(chunks[6] == [18, 19, 20])
+    assert np.all(chunks[7] == [21, 22, 23])
+    assert np.all(chunks[8] == [24])
