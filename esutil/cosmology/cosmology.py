@@ -752,8 +752,5 @@ omega_k: %s
             print("C code is", tmpy / tm, "faster")
 
 
-def _as_c_order(arr_in):
-    arr = np.atleast_1d(arr_in).astype('f8')
-    if not arr.flags['C_CONTIGUOUS']:
-        arr = np.array(arr, order='C')
-    return arr
+def _as_c_order(arr):
+    return np.atleast_1d(np.asarray(arr, dtype='f8', order='C'))
