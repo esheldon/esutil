@@ -1533,8 +1533,8 @@ def match(arr1input, arr2input, presorted=False):
     """
 
     # make sure 1D
-    arr1 = np.array(arr1input, ndmin=1, copy=False)
-    arr2 = np.array(arr2input, ndmin=1, copy=False)
+    arr1 = np.atleast_1d(arr1input)
+    arr2 = np.atleast_1d(arr2input)
 
     # check for integer data...
     if not issubclass(arr1.dtype.type, np.integer) or not issubclass(
@@ -1815,7 +1815,7 @@ def splitarray(nper, var_input):
 
     """
 
-    var = np.array(var_input, ndmin=1, copy=False)
+    var = np.atleast_1d(var_input)
     nchunks = var.size // nper
     if var.size % nper != 0:
         nchunks += 1

@@ -323,8 +323,7 @@ class Recfile(object):
         get the column number for the input column name
         """
 
-        colnames = numpy.array(colnames, ndmin=1, copy=False)
-
+        colnames = numpy.atleast_1d(colnames)
         colnums = numpy.zeros(colnames.size, dtype="i8")
 
         for i in range(colnames.size):
@@ -680,7 +679,7 @@ class Recfile(object):
             return None
         try:
             # a sequence entered
-            rows2read = numpy.array(rows, ndmin=1, copy=False, dtype="i8")
+            rows2read = numpy.atleast_1d(rows).astype("i8")
             if rows2read.size == 1:
                 rows2read[0] = self._fix_range(rows2read[0], isslice=False)
         except Exception:
