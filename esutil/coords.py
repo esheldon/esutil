@@ -519,9 +519,9 @@ def xyz2eq(xin, yin, zin, units="deg", stomp=False):
         if set to True, use the stomp convention.
     """
 
-    x = np.array(xin, ndmin=1, copy=False)
-    y = np.array(yin, ndmin=1, copy=False)
-    z = np.array(zin, ndmin=1, copy=False)
+    x = np.atleast_1d(xin)
+    y = np.atleast_1d(yin)
+    z = np.atleast_1d(zin)
 
     theta, phi = _xyz2thetaphi(x, y, z)
     if stomp:
@@ -1242,8 +1242,8 @@ def rotate(phi, theta, psi, ra, dec):
     else:
         is_scalar = True
 
-    ra = np.array(ra, ndmin=1, copy=False)
-    dec = np.array(dec, ndmin=1, copy=False)
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
     if ra.size != dec.size:
         raise ValueError(
             "ra[%d] has different size than " "dec[%d]" % (ra.size, dec.size)

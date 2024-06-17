@@ -165,7 +165,7 @@ class Generator(object):
                     )
                 x = numpy.linspace(xrange[0], xrange[1], nx)
 
-            self.xinput = numpy.array(x, ndmin=1, copy=False)
+            self.xinput = numpy.atleast_1d(x)
 
             # input is some type of function
             self.isfunc = True
@@ -179,11 +179,11 @@ class Generator(object):
                     "corresponding x values"
                 )
 
-            self.xinput = numpy.array(x, ndmin=1, copy=False)
+            self.xinput = numpy.atleast_1d(x)
 
             # points were entered
             self.isfunc = False
-            self.pofx = numpy.array(pofx, ndmin=1, copy=False)
+            self.pofx = numpy.atleast_1d(pofx)
             if self.xinput.shape != self.pofx.shape:
                 raise ValueError("x and pofx must be same shape")
 

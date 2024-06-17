@@ -726,10 +726,10 @@ def bwhiskers(
     if "aspect_ratio" in keys:
         plt.aspect_ratio = keys["aspect_ratio"]
 
-    x = np.array(xin, copy=False, ndmin=1)
-    y = np.array(yin, copy=False, ndmin=1)
-    u = np.array(uin, copy=False, ndmin=1)
-    v = np.array(vin, copy=False, ndmin=1)
+    x = np.atleast_1d(xin)
+    y = np.atleast_1d(yin)
+    u = np.atleast_1d(uin)
+    v = np.atleast_1d(vin)
 
     if x.size != y.size or x.size != u.size or x.size != v.size:
         raise ValueError(
@@ -921,10 +921,10 @@ def mwhiskers(
 
     """
 
-    x = np.array(xin, copy=False, ndmin=1)
-    y = np.array(yin, copy=False, ndmin=1)
-    u = np.array(uin, copy=False, ndmin=1)
-    v = np.array(vin, copy=False, ndmin=1)
+    x = np.atleast_1d(xin)
+    y = np.atleast_1d(yin)
+    u = np.atleast_1d(uin)
+    v = np.atleast_1d(vin)
 
     if x.size != y.size or x.size != u.size or x.size != v.size:
         raise ValueError(
@@ -962,8 +962,8 @@ def plotrand(x, y, frac=0.1, get_indices=False, **keys):
     plot a random subset of the points
     """
 
-    x = np.array(x, ndmin=1, copy=False)
-    y = np.array(y, ndmin=1, copy=False)
+    x = np.atleast_1d(x)
+    y = np.atleast_1d(y)
     if x.size != y.size:
         raise ValueError("x,y must be same size")
     nrand = int(x.size * frac)
@@ -1029,7 +1029,7 @@ def transform_box(lonmin, lonmax, latmin, latmax, fromsys, tosys, **keys):
 
 
 def asinh_scale(image, alpha=0.02, nonlinearity=8.0):
-    image_out = np.array(image, dtype="f8", copy=True)
+    image_out = image.copy().astype('f8')
 
     image_out[:] = np.arcsinh(alpha * nonlinearity * image) / nonlinearity
 
@@ -1037,7 +1037,7 @@ def asinh_scale(image, alpha=0.02, nonlinearity=8.0):
 
 
 def image_norm(image, reverse=False):
-    image_out = np.array(image, dtype="f8", copy=True)
+    image_out = image.copy().astype('f8')
     image_out /= image_out.max()
 
     if reverse:

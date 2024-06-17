@@ -14,11 +14,11 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 // Numpy 1/2 compatibility shims
-#ifndef PyDataType_ELSIZE
-#define PyDataType_ELSIZE(descr) descr->elsize
-#define PyDataType_NAMES(descr) descr->names
-#define PyDataType_FIELDS(descr) descr->fields
-#define PyDataType_SUBARRAY(descr) descr->subarray
+#if NPY_ABI_VERSION < 0x02000000
+#define PyDataType_ELSIZE(descr) ((descr)->elsize)
+#define PyDataType_NAMES(descr) ((descr)->names)
+#define PyDataType_FIELDS(descr) ((descr)->fields)
+#define PyDataType_SUBARRAY(descr) ((descr)->subarray)
 #endif
 
 using namespace std;

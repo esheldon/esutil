@@ -1,6 +1,5 @@
 import os
 from glob import glob
-import platform
 import tempfile
 import subprocess
 import shutil

@@ -73,8 +73,8 @@ class HTM(htmc.HTMC):
             The htm index
         """
 
-        ra = np.array(ra, dtype="f8", ndmin=1, copy=False)
-        dec = np.array(dec, dtype="f8", ndmin=1, copy=False)
+        ra = np.atleast_1d(ra).astype('f8')
+        dec = np.atleast_1d(dec).astype('f8')
 
         if ra.size != dec.size:
             raise ValueError("ra and dec must be the same size")
@@ -215,11 +215,11 @@ class HTM(htmc.HTMC):
 
         """
 
-        ra1 = np.array(ra1, dtype="f8", ndmin=1, copy=False)
-        dec1 = np.array(dec1, dtype="f8", ndmin=1, copy=False)
-        ra2 = np.array(ra2, dtype="f8", ndmin=1, copy=False)
-        dec2 = np.array(dec2, dtype="f8", ndmin=1, copy=False)
-        radius = np.array(radius, dtype="f8", ndmin=1, copy=False)
+        ra1 = np.atleast_1d(ra1).astype('f8')
+        dec1 = np.atleast_1d(dec1).astype('f8')
+        ra2 = np.atleast_1d(ra2).astype('f8')
+        dec2 = np.atleast_1d(dec2).astype('f8')
+        radius = np.atleast_1d(radius).astype('f8')
 
         if ra1.size != dec1.size or ra2.size != ra2.size:
             stup = (ra1.size, dec1.size, ra2.size, dec2.size)
@@ -405,16 +405,16 @@ class HTM(htmc.HTMC):
         Added to HTM class in July 2010.
 
         """
-        ra1 = np.array(ra1, dtype="f8", ndmin=1, copy=False)
-        dec1 = np.array(dec1, dtype="f8", ndmin=1, copy=False)
-        z1 = np.array(z1, dtype="f8", ndmin=1, copy=False)
+        ra1 = np.atleast_1d(ra1).astype('f8')
+        dec1 = np.atleast_1d(dec1).astype('f8')
+        z1 = np.atleast_1d(z1).astype('f8')
 
-        ra2 = np.array(ra2, dtype="f8", ndmin=1, copy=False)
-        dec2 = np.array(dec2, dtype="f8", ndmin=1, copy=False)
-        z2 = np.array(z2, dtype="f8", ndmin=1, copy=False)
+        ra2 = np.atleast_1d(ra2).astype('f8')
+        dec2 = np.atleast_1d(dec2).astype('f8')
+        z2 = np.atleast_1d(z2).astype('f8')
 
-        radius = np.array(radius, dtype="f8", ndmin=1, copy=False)
-        dz = np.array(dz, dtype="f8", ndmin=1, copy=False)
+        radius = np.atleast_1d(radius).astype('f8')
+        dz = np.atleast_1d(dz).astype('f8')
 
         npts = ra1.size
         npts2 = ra2.size
@@ -684,10 +684,10 @@ class HTM(htmc.HTMC):
         else:
             verb = 0
 
-        ra1 = np.array(ra1, dtype="f8", ndmin=1, copy=False)
-        dec1 = np.array(dec1, dtype="f8", ndmin=1, copy=False)
-        ra2 = np.array(ra2, dtype="f8", ndmin=1, copy=False)
-        dec2 = np.array(dec2, dtype="f8", ndmin=1, copy=False)
+        ra1 = np.atleast_1d(ra1).astype('f8')
+        dec1 = np.atleast_1d(dec1).astype('f8')
+        ra2 = np.atleast_1d(ra2).astype('f8')
+        dec2 = np.atleast_1d(dec2).astype('f8')
 
         if ra1.size != dec1.size or ra2.size != ra2.size:
             stup = (ra1.size, dec1.size, ra2.size, dec2.size)
@@ -698,7 +698,7 @@ class HTM(htmc.HTMC):
             )
 
         if scale is not None:
-            scale = np.array(scale, dtype="f8", ndmin=1, copy=False)
+            scale = np.atleast_1d(scale).astype('f8')
             if scale.size != 1 and scale.size != ra1.size:
                 raise ValueError(
                     "scale size (%d) != 1 and"
@@ -710,7 +710,7 @@ class HTM(htmc.HTMC):
             minid = htmid2.min()
             maxid = htmid2.max()
         else:
-            htmid2 = np.array(htmid2, dtype="i8", ndmin=1, copy=False)
+            htmid2 = np.atleast_1d(htmid2).astype('i8')
             if htmid2.size != ra2.size:
                 raise ValueError(
                     "htmid2 size %d != " "ra size %d" % (htmid2.size, ra2.size)
@@ -759,8 +759,8 @@ class Matcher(htmc.Matcher):
 
     def __init__(self, depth, ra, dec):
 
-        ra = np.array(ra, dtype="f8", ndmin=1, copy=False)
-        dec = np.array(dec, dtype="f8", ndmin=1, copy=False)
+        ra = np.atleast_1d(ra).astype('f8')
+        dec = np.atleast_1d(dec).astype('f8')
 
         if ra.size != dec.size:
             raise ValueError(
@@ -815,9 +815,9 @@ class Matcher(htmc.Matcher):
         if file= is sent then then number of matches is returned.
         """
 
-        ra = np.array(ra, dtype="f8", ndmin=1, copy=False)
-        dec = np.array(dec, dtype="f8", ndmin=1, copy=False)
-        radius = np.array(radius, dtype="f8", ndmin=1, copy=False)
+        ra = np.atleast_1d(ra).astype('f8')
+        dec = np.atleast_1d(dec).astype('f8')
+        radius = np.atleast_1d(radius).astype('f8')
 
         if ra.size != dec.size:
             raise ValueError(

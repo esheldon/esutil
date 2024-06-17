@@ -1,10 +1,20 @@
 0.6.12
 ----------
 
+Enhancements
+
+    - use stable sort in histogram
+
 Bug Fixes
 
     - Fixed bug in inverting WCS to map ra,dec to x,y near ra = 0
       (Matt Becker)
+    - fix splitarray corner cases
+
+Comapatibility
+
+    - update for numpy 2 (Eli Rykoff)
+    - update to new scipy usage for scipy.integrate.cumulative_trapezoid
 
 v0.6.11
 --------------------------

@@ -201,8 +201,8 @@ class Cosmo(object):
         """
 
         # Make sure they are arrays, but don't copy if already an array
-        z1 = numpy.array(z1in, ndmin=1, copy=False)
-        z2 = numpy.array(z2in, ndmin=1, copy=False)
+        z1 = numpy.atleast_1d(z1in)
+        z2 = numpy.atleast_1d(z2in)
 
         # All the permutations of inputs
         dh = self.DH()
@@ -295,8 +295,8 @@ class Cosmo(object):
                 3) Two arrays of the same length.
         """
 
-        z1 = numpy.array(zmin, ndmin=1, copy=False)
-        z2 = numpy.array(zmax, ndmin=1, copy=False)
+        z1 = numpy.atleast_1d(zmin)
+        z2 = numpy.atleast_1d(zmax)
         d = self.Dm(z1, z2)
 
         da = numpy.where(z1 < z2, d / (1.0 + z2), d / (1.0 + z1))
@@ -327,8 +327,8 @@ class Cosmo(object):
                 3) Two arrays of the same length.
         """
 
-        z1 = numpy.array(zmin, ndmin=1, copy=False)
-        z2 = numpy.array(zmax, ndmin=1, copy=False)
+        z1 = numpy.atleast_1d(zmin)
+        z2 = numpy.atleast_1d(zmax)
         return self.Da(z1, z2) * (1.0 + z2) ** 2
 
     def distmod(self, z):
@@ -377,7 +377,7 @@ class Cosmo(object):
             comoving=True: Use comoving coords, default True.
         """
 
-        z = numpy.array(z_input, ndmin=1, copy=False)
+        z = numpy.atleast_1d(z_input)
 
         dh = self.DH()
         da = self.Da(0.0, z)
@@ -419,7 +419,7 @@ class Cosmo(object):
         ezivals = self.dV(zvals, comoving=comoving)
 
         v = f1 * ((ezivals * self.vwwi).sum())
-        v = numpy.array(v, ndmin=1)
+        v = numpy.atleast_1d(v)
         return v
 
     def extract_parms(self, omega_m, omega_l, omega_k, flat):
@@ -460,7 +460,7 @@ class Cosmo(object):
             ezi = cosmo.Ez_inverse(z)
         """
         if not isscalar(z):
-            z = numpy.array(z, copy=False)
+            z = numpy.array(z)
         arg = (
             self.omega_m * (1.0 + z) ** 3 + self.omega_k * (1.0 + z) ** 2 + self.omega_l  # noqa
         )
@@ -510,8 +510,8 @@ class Cosmo(object):
 
         """
 
-        zl = numpy.array(zl, ndmin=1, copy=False)
-        zs = numpy.array(zs, ndmin=1, copy=False)
+        zl = numpy.atleast_1d(zl)
+        zs = numpy.atleast_1d(zs)
 
         if (zl.size != 1) and (zs.size != 1):
             if zl.size != zs.size:
@@ -694,8 +694,8 @@ def Dc(z1in, z2in,
     )
 
     # Make sure they are arrays, but don't copy if already an array
-    z1 = numpy.array(z1in, ndmin=1, copy=False)
-    z2 = numpy.array(z2in, ndmin=1, copy=False)
+    z1 = numpy.atleast_1d(z1in)
+    z2 = numpy.atleast_1d(z2in)
 
     # All the permutations of inputs
     dh = DH(h=h)
@@ -799,8 +799,8 @@ def Da(zmin, zmax,
         npts: Number of points in the integration. Default 5, good to 1.e-8
             to redshift 1.
     """
-    z1 = numpy.array(zmin, ndmin=1, copy=False)
-    z2 = numpy.array(zmax, ndmin=1, copy=False)
+    z1 = numpy.atleast_1d(zmin)
+    z2 = numpy.atleast_1d(zmax)
     d = Dm(z1, z2, omega_m, omega_l, omega_k, h=h, flat=flat, npts=npts)
 
     da = numpy.where(z1 < z2, d / (1.0 + z2), d / (1.0 + z1))
