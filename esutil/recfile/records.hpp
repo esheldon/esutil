@@ -6,6 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdint.h>
+#include <stdio.h>
 #include "numpy/arrayobject.h"
 
 #ifndef _readfields_2_h
