@@ -7,7 +7,7 @@
 #define CLIGHT 2.99792458e5
 
 #ifndef M_PI
-import <cmath>
+# define M_PI           3.14159265358979323846
 #endif
 
 struct cosmo {
