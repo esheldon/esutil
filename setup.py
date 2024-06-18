@@ -141,7 +141,8 @@ class MyBuilder(build_ext):
 
 class MyBuilderWindows(build_ext):
     def build_extensions(self):
-        cflags = ['-std=c++11']
+        cflags = extra_compile_args
+        cflags += ['-std=c++11']
 
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
