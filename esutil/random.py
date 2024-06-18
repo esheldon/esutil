@@ -979,9 +979,11 @@ def cholesky_sample(cov, n, means=None, dist=None):
     return V.T
 
 
-def random_indices(imax, nrand, **keys):
+def random_indices(imax, nrand, unique=True, rng=None, seed=None):
     """
     Get a unique random selection of indices in [0,imax)
+
+    Now just calls numpy random choice
 
     parameters
     ----------
@@ -992,20 +994,21 @@ def random_indices(imax, nrand, **keys):
     unique:
         If False, the sample will have replacement, and nrand
         can be greater than imax
-    seed: int
-        A seed for the random number generator
+    rng: np.default_rng, optional
+        Optional random number generator
+    seed: int, optional
+        A seed to create a new rng
     """
-    unique = keys.get("unique", True)
-    seed = keys.get("seed", None)
-    if seed is None:
-        import time
 
-        seed = int(time.time())
+    if rng is None:
+        rng = numpy.random.default_rng(seed)
 
     if not unique:
-        return numpy.random.randint(0, imax, nrand)
+        replace = True
     else:
-        return stat._stat_util.random_sample(imax, nrand, seed)
+        replace = False
+
+    return rng.choice(imax, size=nrand, replace=replace)
 
 
 def randind(nmax, nrand, dtype=None):
