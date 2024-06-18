@@ -28,6 +28,16 @@ static int is_python_string(const PyObject* obj)
 #endif
 }
 
+
+
+int myfseeko(FILE *stream, off_t offset, int origin) {
+#ifdef _WIN32
+    return __fseeki64(stream, offset, origin);
+#else
+    return fseeko(stream, offset, origin);
+#endif
+}
+
 // unicode is common to python 2 and 3
 static char* get_unicode_as_string(PyObject* obj)
 {
@@ -256,7 +266,7 @@ void Records::goto_offset(void)
 
 void Records::do_seek(npy_intp seek_distance)  {
 	if (seek_distance > 0) {
-		if(fseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
+		if(myfseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
 			string err="Error skipping fields";
 			throw std::runtime_error(err);
 		}
@@ -301,7 +311,7 @@ void Records::skip_text_rows(long long nskip)
 void Records::skip_binary_rows(long long nskip) 
 {
 	if (nskip > 0) {
-		if (fseeko(mFptr, mRowSize*nskip, SEEK_CUR) != 0) {
+		if (myfseeko(mFptr, mRowSize*nskip, SEEK_CUR) != 0) {
 			throw std::runtime_error("Failed to fseek");
 		}
 	}
@@ -981,7 +991,7 @@ void Records::ReadBinaryFields()
 
 void Records::DoSeek(npy_intp seek_distance) {
 	if (seek_distance > 0) {
-		if(fseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
+		if(myfseeko(mFptr, seek_distance, SEEK_CUR) != 0) {
 			string err="Error skipping fields";
 			throw std::runtime_error(err);
 		}
