@@ -248,6 +248,11 @@ classifiers = [
 ]
 
 
+kw = {}
+
+if os.name != 'nt':
+    kw['cmdclass'] = {"build_ext": MyBuilder}
+
 setup(
     name="esutil",
     version="0.6.13",
@@ -259,9 +264,9 @@ setup(
     license="GPL",
     url="http://code.google.com/p/esutil/",
     packages=packages,
-    cmdclass={"build_ext": MyBuilder},
     ext_modules=ext_modules,
     install_requires=['numpy', 'scipy'],
+    **kw
 )
 
 # If we get to here, then all was fine.  Go ahead and delete the files in the
