@@ -215,16 +215,7 @@ chist_module = Extension(
     include_dirs=include_dirs,
 )
 ext_modules.append(chist_module)
-stat_util_sources = ["_stat_util.c"]
-stat_util_sources = ["esutil/stat/" + s for s in stat_util_sources]
-stat_util_module = Extension(
-    "esutil.stat._stat_util",
-    extra_compile_args=extra_compile_args,
-    extra_link_args=extra_link_args,
-    sources=stat_util_sources,
-    include_dirs=include_dirs,
-)
-ext_modules.append(stat_util_module)
+
 packages.append("esutil.stat")
 
 # integrate package
