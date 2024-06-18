@@ -142,7 +142,7 @@ class MyBuilder(build_ext):
 class MyBuilderWindows(build_ext):
     def build_extensions(self):
         cflags = extra_compile_args
-        cflags += ['-std=c++11']
+        # cflags += ['-std=c++11']
 
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
@@ -162,7 +162,6 @@ class MyBuilderWindows(build_ext):
 #
 
 # recfile
-include_dirs += ["esutil/recfile"]
 recfile_sources = [
     "esutil/recfile/records.cpp",
     "esutil/recfile/records_wrap.cpp",
@@ -172,7 +171,7 @@ recfile_module = Extension(
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     sources=recfile_sources,
-    include_dirs=include_dirs,
+    include_dirs=include_dirs + ["esutil/recfile"],
 )
 ext_modules.append(recfile_module)
 packages.append("esutil.recfile")
@@ -184,13 +183,12 @@ cosmo_module = Extension(
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     sources=cosmo_sources,
-    include_dirs=include_dirs,
+    include_dirs=include_dirs + ["esutil/cosmology"],
 )
 ext_modules.append(cosmo_module)
 packages.append("esutil.cosmology")
 
 # HTM
-include_dirs += ["esutil/htm", "esutil/htm/htm_src"]
 htm_sources = glob("esutil/htm/htm_src/*.cpp")
 htm_sources += ["esutil/htm/htmc.cc", "esutil/htm/htmc_wrap.cc"]
 htm_module = Extension(
@@ -198,7 +196,7 @@ htm_module = Extension(
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     sources=htm_sources,
-    include_dirs=include_dirs,
+    include_dirs=include_dirs + ["esutil/htm", "esutil/htm/htm_src"],
 )
 
 ext_modules.append(htm_module)
