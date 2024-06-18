@@ -39,10 +39,6 @@ from __future__ import print_function
 
 from sys import stderr
 
-# used to live in this module
-# from esutil.random import cholesky_sample
-# from esutil.random import random_indices
-
 # the external C++ code for doing
 # histograms.
 try:
