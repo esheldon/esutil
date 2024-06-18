@@ -32,7 +32,7 @@ static int is_python_string(const PyObject* obj)
 
 int myfseeko(FILE *stream, off_t offset, int origin) {
 #ifdef _WIN32
-    return __fseeki64(stream, offset, origin);
+    return _fseeki64(stream, offset, origin);
 #else
     return fseeko(stream, offset, origin);
 #endif
