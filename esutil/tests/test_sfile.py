@@ -195,8 +195,8 @@ def compare_rec(rec1, rec2, name):
             assert w.size == 0, "testing column %s" % f
 
 
-@pytest.mark.skipif('SKIP_RECFILE_TESTS' in os.environ,
-                    reason='SKIP_RECFILE_TESTS set')
+@pytest.mark.skipif(os.name == 'nt',
+                    reason='skip recfile tests on windows')
 @pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
 @pytest.mark.parametrize('doswap', [False, True])
 def test_sfile_writeread(delim, doswap):
@@ -236,8 +236,8 @@ def test_sfile_writeread(delim, doswap):
         compare_header(header, h)
 
 
-@pytest.mark.skipif('SKIP_RECFILE_TESTS' in os.environ,
-                    reason='SKIP_RECFILE_TESTS set')
+@pytest.mark.skipif(os.name == 'nt',
+                    reason='skip recfile tests on windows')
 @pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
 @pytest.mark.parametrize('doswap', [False, True])
 def test_sfile_subsets(delim, doswap):
@@ -377,8 +377,8 @@ def test_sfile_subsets(delim, doswap):
                 )
 
 
-@pytest.mark.skipif('SKIP_RECFILE_TESTS' in os.environ,
-                    reason='SKIP_RECFILE_TESTS set')
+@pytest.mark.skipif(os.name == 'nt',
+                    reason='skip recfile tests on windows')
 @pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
 @pytest.mark.parametrize('doswap', [False, True])
 def test_sfile_append(delim, doswap):
