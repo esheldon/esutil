@@ -139,24 +139,6 @@ class MyBuilder(build_ext):
         build_ext.build_extensions(self)
 
 
-class MyBuilderWindows(build_ext):
-    def build_extensions(self):
-        cflags = extra_compile_args
-        # cflags += ['-std=c++11']
-
-        # Add the appropriate extra flags for that compiler.
-        for e in self.extensions:
-            if any(
-                ['.cc' in f or '.cpp' in f for f in e.sources]
-            ):
-                e.extra_compile_args = cflags
-                # for flag in lflags:
-                #     e.extra_link_args.append(flag)
-
-        # Now run the normal build function.
-        build_ext.build_extensions(self)
-
-
 #
 # Make the extensions to be built
 #
@@ -257,9 +239,7 @@ classifiers = [
 
 kw = {}
 
-if os.name == 'nt':
-    kw['cmdclass'] = {"build_ext": MyBuilderWindows}
-else:
+if os.name != 'nt':
     kw['cmdclass'] = {"build_ext": MyBuilder}
 
 setup(
