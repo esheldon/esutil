@@ -16,3 +16,9 @@ You can also use pip
 ```
 pip install esutil
 ```
+
+Windows
+-------
+
+The unit tests pass on windows with the exception of the recfile package (and
+the sfile package that uses it).
