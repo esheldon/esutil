@@ -176,6 +176,43 @@ def compare_rec(rec1, rec2, name):
             assert w.size == 0, "testing column %s" % f
 
 
+@pytest.mark.parametrize('doswap', [False, True])
+def test_recfile_writeread_binary_only(doswap):
+    """
+    Test a basic table write, data and a header, then reading back in to
+    check the values
+    """
+
+    data, swap_data = get_data()
+
+    dtype = data.dtype
+
+    if doswap:
+        data = swap_data
+    else:
+        data = data
+
+    with tempfile.TemporaryDirectory() as tdir:
+        fname = os.path.join(tdir, 'test.rec')
+
+        with eu.recfile.Recfile(fname, mode='w') as robj:
+            robj.write(data)
+
+        with Recfile(fname, mode='r', dtype=dtype) as robj:
+            d = robj.read()
+
+        compare_rec(data, d, "table read/write")
+
+        # see if our convenience functions are working
+        eu.recfile.write(fname, data)
+        d = eu.recfile.read(fname, dtype)
+        compare_rec(
+            data, d,
+            ("test read/write with convenience "
+             "functions doswap: %s" % doswap)
+        )
+
+
 @pytest.mark.skipif(os.name == 'nt',
                     reason='skip recfile tests on windows')
 @pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
