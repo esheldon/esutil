@@ -1,3 +1,15 @@
+0.6.14
+------
+
+Enhancements
+
+    - Add code changes to C extensions to compile on windows.
+      Note recfile compiles but failst the unit tests, which
+      are skipped for windows CI.
+    - Add windows CI
+    - remove unused _stat_util.c extension
+
+
 0.6.13
 ------
 
