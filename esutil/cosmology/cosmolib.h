@@ -6,6 +6,10 @@
 #define FOUR_PI_G_OVER_C_SQUARED 6.0150504541630152e-07
 #define CLIGHT 2.99792458e5
 
+#ifndef M_PI
+# define M_PI           3.14159265358979323846
+#endif
+
 struct cosmo {
     int flat; // is this a flat cosmology?
 

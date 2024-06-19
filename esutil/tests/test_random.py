@@ -53,3 +53,18 @@ def test_cholesky(seed):
     for i in range(3):
         for j in range(3):
             assert abs(dcov[i, j] - cov[i, j]) < tol, '%d, %d' % (i, j)
+
+
+def test_random_indices():
+    seed = 5
+    rng = np.random.default_rng(seed)
+
+    ind = rng.choice(10, size=10, replace=False)
+    ind2 = eu.random.random_indices(10, 10, seed=seed)
+    assert np.all(ind == ind2)
+
+    rng = np.random.default_rng(seed)
+
+    ind = rng.choice(10, size=10, replace=True)
+    ind2 = eu.random.random_indices(10, 10, seed=seed, unique=False)
+    assert np.all(ind == ind2)

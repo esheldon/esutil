@@ -144,7 +144,6 @@ class MyBuilder(build_ext):
 #
 
 # recfile
-include_dirs += ["esutil/recfile"]
 recfile_sources = [
     "esutil/recfile/records.cpp",
     "esutil/recfile/records_wrap.cpp",
@@ -154,7 +153,7 @@ recfile_module = Extension(
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     sources=recfile_sources,
-    include_dirs=include_dirs,
+    include_dirs=include_dirs + ["esutil/recfile"],
 )
 ext_modules.append(recfile_module)
 packages.append("esutil.recfile")
@@ -166,13 +165,12 @@ cosmo_module = Extension(
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     sources=cosmo_sources,
-    include_dirs=include_dirs,
+    include_dirs=include_dirs + ["esutil/cosmology"],
 )
 ext_modules.append(cosmo_module)
 packages.append("esutil.cosmology")
 
 # HTM
-include_dirs += ["esutil/htm", "esutil/htm/htm_src"]
 htm_sources = glob("esutil/htm/htm_src/*.cpp")
 htm_sources += ["esutil/htm/htmc.cc", "esutil/htm/htmc_wrap.cc"]
 htm_module = Extension(
@@ -180,7 +178,7 @@ htm_module = Extension(
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     sources=htm_sources,
-    include_dirs=include_dirs,
+    include_dirs=include_dirs + ["esutil/htm", "esutil/htm/htm_src"],
 )
 
 ext_modules.append(htm_module)
@@ -199,16 +197,7 @@ chist_module = Extension(
     include_dirs=include_dirs,
 )
 ext_modules.append(chist_module)
-stat_util_sources = ["_stat_util.c"]
-stat_util_sources = ["esutil/stat/" + s for s in stat_util_sources]
-stat_util_module = Extension(
-    "esutil.stat._stat_util",
-    extra_compile_args=extra_compile_args,
-    extra_link_args=extra_link_args,
-    sources=stat_util_sources,
-    include_dirs=include_dirs,
-)
-ext_modules.append(stat_util_module)
+
 packages.append("esutil.stat")
 
 # integrate package
@@ -248,9 +237,14 @@ classifiers = [
 ]
 
 
+kw = {}
+
+if os.name != 'nt':
+    kw['cmdclass'] = {"build_ext": MyBuilder}
+
 setup(
     name="esutil",
-    version="0.6.13",
+    version="0.6.14",
     author="Erin Scott Sheldon",
     author_email="erin.sheldon@gmail.com",
     classifiers=classifiers,
@@ -259,9 +253,9 @@ setup(
     license="GPL",
     url="http://code.google.com/p/esutil/",
     packages=packages,
-    cmdclass={"build_ext": MyBuilder},
     ext_modules=ext_modules,
     install_requires=['numpy', 'scipy'],
+    **kw
 )
 
 # If we get to here, then all was fine.  Go ahead and delete the files in the
