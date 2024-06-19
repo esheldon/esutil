@@ -34,4 +34,5 @@ jobs:
       - name: test
         run: |
           pip install pytest
-          SKIP_RECFILE_TESTS=true pytest -vv esutil
+          set SKIP_RECFILE_TESTS="true"
+          pytest -vv esutil
