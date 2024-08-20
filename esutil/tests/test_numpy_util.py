@@ -58,3 +58,59 @@ def test_split_array():
     assert np.all(chunks[6] == [18, 19, 20])
     assert np.all(chunks[7] == [21, 22, 23])
     assert np.all(chunks[8] == [24])
+
+
+@pytest.mark.parametrize('presorted', [True, False])
+def test_match_int(presorted):
+    a1 = np.array([3, 10, 8, 4, 7])
+    a2 = np.array([8, 3])
+
+    if not presorted:
+        ind = np.array([4, 1, 0, 2, 3])
+        m1, m2 = eu.numpy_util.match(a1[ind], a2)
+        assert np.all(m1 == [3, 2])
+    else:
+        m1, m2 = eu.numpy_util.match(a1, a2)
+        assert np.all(m1 == [2, 0])
+
+
+@pytest.mark.parametrize('presorted', [True, False])
+def test_match_float(presorted):
+    a1 = np.array([1.25, 6.61, 8.51, 9.91, 11.25])
+    a2 = np.array([6.61, 9.91])
+
+    if not presorted:
+        ind = np.array([4, 1, 0, 2, 3])
+        m1, m2 = eu.numpy_util.match(a1[ind], a2)
+        assert np.all(m1 == [1, 4])
+    else:
+        m1, m2 = eu.numpy_util.match(a1, a2)
+        assert np.all(m1 == [1, 3])
+
+
+@pytest.mark.parametrize('presorted', [True, False])
+def test_match_str(presorted):
+    a1 = np.array(['blah', 'goodbye', 'hello', 'stuff', 'things'])
+    a2 = np.array(['goodbye', 'things', 'zz'])
+
+    if not presorted:
+        ind = np.array([3, 4, 0, 2, 1])
+        m1, m2 = eu.numpy_util.match(a1[ind], a2)
+        assert np.all(m1 == [4, 1])
+    else:
+        m1, m2 = eu.numpy_util.match(a1, a2)
+        assert np.all(m1 == [1, 4])
+
+
+@pytest.mark.parametrize('presorted', [True, False])
+def test_match_nomatch(presorted):
+    a1 = np.array(['blah', 'goodbye', 'hello', 'stuff', 'things'])
+    a2 = np.array(['zz', 'bb'])
+
+    if not presorted:
+        ind = np.array([3, 4, 0, 2, 1])
+        m1, m2 = eu.numpy_util.match(a1[ind], a2)
+    else:
+        m1, m2 = eu.numpy_util.match(a1, a2)
+
+    assert m1.size == 0 and m2.size == 0

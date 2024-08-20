@@ -1509,40 +1509,47 @@ def rem_dup(arr, flag, values=False):
 
 def match(arr1input, arr2input, presorted=False):
     """
-    NAME:
-        match
+    Match two arrays, returning the indicies of matches for each array, or
+    empty arrays if no matches are found.  This means arr1[ind1] == arr2[ind2]
+    is true for all corresponding pairs.  For floating-point data this implies
+    exact matching with no floating-point tolerance.
 
-    CALLING SEQUENCE:
-        ind1,ind2 = match(arr1, arr2, presorted=False)
+    The data type can be int, float, string or bytes.
 
-    PURPOSE:
-        Match two numpy arrays.  Return the indices of the matches or empty
-        arrays if no matches are found.  This means arr1[ind1] == arr2[ind2] is
-        true for all corresponding pairs.  arr1 must contain only unique
-        inputs, but arr2 may be non-unique.
-        If you know arr1 is sorted, set presorted=True and it will run
-        even faster
+    arr1 must contain only unique inputs, but arr2 may be non-unique.
 
-    METHOD:
-        uses searchsorted with some sugar.  Much faster than old version
-        based on IDL code.
+    If you know arr1 is sorted, set presorted=True and it will run even faster
 
-    REVISION HISTORY:
-        Created 2015, Eli Rykoff, SLAC.
 
+    Parameters
+    ----------
+    arr1: array
+        The first array, which must have unique elements.
+    arr2: array
+        The second array.
+    presorted: bool, optional
+        If set to True, the first array is assumed to be sorted.
+
+    Returns
+    -------
+    ind1, ind2: array, array
+        The index arrays of matches for each array
+
+    Revision history
+    -----------------
+    Created 2015, Eli Rykoff, SLAC.
     """
 
     # make sure 1D
     arr1 = np.atleast_1d(arr1input)
     arr2 = np.atleast_1d(arr2input)
 
-    # check for integer data...
-    if not issubclass(arr1.dtype.type, np.integer) or not issubclass(
-        arr2.dtype.type, np.integer
-    ):
-        mess = "Error: only works with integer types, got %s %s"
-        mess = mess % (arr1.dtype.type, arr2.dtype.type)
-        raise ValueError(mess)
+    el = arr1input[0]
+
+    if isinstance(el, str) or isinstance(el, bytes):
+        is_string = True
+    else:
+        is_string = False
 
     if (arr1.size == 0) or (arr2.size == 0):
         mess = "Error: arr1 and arr2 must each be non-zero length"
@@ -1563,7 +1570,7 @@ def match(arr1input, arr2input, presorted=False):
     sub1 = np.searchsorted(arr1, arr2, sorter=st1)
 
     # check for out-of-bounds at the high end if necessary
-    if arr2.max() > arr1.max():
+    if is_string or arr2.max() > arr1.max():
         (bad,) = np.where(sub1 == arr1.size)
         sub1[bad] = arr1.size - 1
 
