@@ -103,7 +103,7 @@ def test_match_str(presorted):
 
 
 @pytest.mark.parametrize('presorted', [True, False])
-def test_match_none(presorted):
+def test_match_nomatch(presorted):
     a1 = np.array(['blah', 'goodbye', 'hello', 'stuff', 'things'])
     a2 = np.array(['zz', 'bb'])
 
