@@ -3,7 +3,7 @@
 
 Enhancements
 
-    - numpy_util.match works for data types other than int
+    - numpy_util.match works for non-integer data types
 
 0.6.14
 ------
