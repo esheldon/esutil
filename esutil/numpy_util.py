@@ -1511,7 +1511,8 @@ def match(arr1input, arr2input, presorted=False):
     """
     Match two arrays, returning the indicies of matches for each array, or
     empty arrays if no matches are found.  This means arr1[ind1] == arr2[ind2]
-    is true for all corresponding pairs.
+    is true for all corresponding pairs.  For floating-point data this implies
+    exact matching with no floating-point tolerance.
 
     arr1 must contain only unique inputs, but arr2 may be non-unique.
 
