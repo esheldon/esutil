@@ -184,8 +184,13 @@ def format_meter(n, total, elapsed, n_bars=20):
 
         left_str = format_interval(elapsed / n * (total-n)) if n else '?'
 
-        return '|%s| %d/%d %s [elapsed: %s left: %s %s]' % (
-            bar, n, total, percentage, elapsed_str, left_str, rate_str)
+        totstr = str(total)
+        nfmt = '%' + str(len(totstr)) + 'd'
+        meter_fmt = '|%s| ' + nfmt + '/' + nfmt + ' %s [%s<%s %s]'
+
+        return meter_fmt % (
+            bar, n, total, percentage, elapsed_str, left_str, rate_str
+        )
 
     else:
         return '%d [elapsed: %s]' % (n, elapsed_str)
