@@ -3,13 +3,13 @@ heavily simplified version of the original simple tqdm from
 
 https://github.com/noamraph/tqdm
 """
-__all__ = ['PBar', 'prange']
+__all__ = ['PBar', 'pbar', 'prange']
 
 import sys
 import time
 
 
-def PBar(iterable, desc='', total=None, leave=True, file=sys.stderr,
+def pbar(iterable, desc='', total=None, leave=True, file=sys.stderr,
          mininterval=0.5, miniters=1, n_bars=20):
     """
     Get an iterable object, and return an iterator which acts exactly like the
@@ -90,19 +90,60 @@ def PBar(iterable, desc='', total=None, leave=True, file=sys.stderr,
         file.write('\n')
 
 
+PBar = pbar
+
+
 def prange(*args, **kwargs):
     """
-    A shortcut for writing PBar(range(...))
+    A shortcut for writing pbar(range(...))
+
+    Parameters
+    ----------
+    Same args as for range.   Extra keywords are sent to
+    Pbar
 
     e.g.
 
-    import time
-    from pbar import prange
     for i in prange(20):
         print(i)
         time.sleep(0.1)
     """
-    return PBar(range(*args), **kwargs)
+    return pbar(range(*args), **kwargs)
+
+
+def pmap(fn, iterable, chunksize=1, nproc=1, **kw):
+    """
+    Execute the function on the inputs using multiple processes, while showing
+    a progress bar.  The result is equivalent to doing
+
+        list(map(fn, iterable))
+
+    Parameters
+    ----------
+    fn: function
+        The function to execute
+    iterable: iterable data
+        The data over which to iterate
+    chunksize: int, optional
+        Default 1. It is often must faster to send large
+        chunks of data rather than 1.
+    nproc: int, optional
+        Number of processes to use, default 1
+    **kw:
+        Additional keyword arguments for the progress bar.
+        See pbar for details
+
+    Returns
+    -------
+    An list of data, the equivalent of
+        list(map(fn, iterable))
+    """
+    from concurrent.futures import ProcessPoolExecutor
+
+    with ProcessPoolExecutor(max_workers=nproc) as ex:
+        res = list(pbar(ex.map(fn, iterable, chunksize=chunksize), **kw))
+
+    return res
 
 
 def format_interval(t):
@@ -131,10 +172,25 @@ def format_meter(n, total, elapsed, n_bars=20):
 
         percentage = '%3d%%' % (frac * 100)
 
+        if elapsed > 0:
+            it_per_second = n / elapsed  # iterations per second
+            if it_per_second > 1:
+                rate_str = f'{it_per_second:.3g} it/s'
+            else:
+                second_per_it = elapsed / n
+                rate_str = f'{second_per_it:.3g} s/it'
+        else:
+            rate_str = '---'
+
         left_str = format_interval(elapsed / n * (total-n)) if n else '?'
 
-        return '|%s| %d/%d %s [elapsed: %s left: %s]' % (
-            bar, n, total, percentage, elapsed_str, left_str)
+        totstr = str(total)
+        nfmt = '%' + str(len(totstr)) + 'd'
+        meter_fmt = '|%s| ' + nfmt + '/' + nfmt + ' %s [%s<%s %s]'
+
+        return meter_fmt % (
+            bar, n, total, percentage, elapsed_str, left_str, rate_str
+        )
 
     else:
         return '%d [elapsed: %s]' % (n, elapsed_str)
