@@ -1055,8 +1055,8 @@ def randsphere(num, ra_range=None, dec_range=None, system="eq", rng=None):
     ra = rng.uniform(low=ra_range[0], high=ra_range[1], size=num)
 
     # number [-1,1)
-    cosdec_min = cos(deg2rad(90.0 + dec_range[0]))
-    cosdec_max = cos(deg2rad(90.0 + dec_range[1]))
+    cosdec_min = cos(deg2rad(90.0 + dec_range[1]))
+    cosdec_max = cos(deg2rad(90.0 + dec_range[0]))
 
     v = rng.uniform(low=cosdec_min, high=cosdec_max, size=num)
 
