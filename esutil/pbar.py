@@ -176,6 +176,7 @@ def sbar(iterable, desc='', total=None, file=sys.stderr):
 
     pnn(prefix + '|')
     plast = -1
+    tm0 = time.time()
     for i, obj in enumerate(iterable):
         yield obj
         i += 1
@@ -186,7 +187,9 @@ def sbar(iterable, desc='', total=None, file=sys.stderr):
             pnn(p)
             plast = p
 
-    print('|', file=file, flush=True)
+    tm = time.time() - tm0
+    tms = format_interval(tm)
+    print(f'| {tms}', file=file, flush=True)
 
 
 def prange(*args, **kwargs):
