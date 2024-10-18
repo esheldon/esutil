@@ -3,7 +3,7 @@
 
 Enhancements
 
-    - add simple pbar option to spam log files less
+    - add simple option to pbar to spam log files less
     - numpy_util.match works for non-integer data types
 
 0.6.14
