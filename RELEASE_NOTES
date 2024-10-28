@@ -3,8 +3,10 @@
 
 Enhancements
 
-    - add simple option to pbar to spam log files less
+    - add algorithms.isplit function,  get indices to split
+      a sequence into chunks
     - numpy_util.match works for non-integer data types
+    - add simple option to pbar to spam log files less
 
 0.6.14
 ------
