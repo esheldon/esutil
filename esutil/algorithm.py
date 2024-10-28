@@ -21,6 +21,55 @@ Functions:
 """
 
 
+def isplit(num, nchunks):
+    """
+    Get indices to split a sequence into a number of chunks.  This algorithm
+    produces nearly equal chunks when the data cannot be equally split.
+
+    Based on the algorithm for splitting arrays in numpy.array_split
+
+    Parameters
+    ----------
+    num: int
+        Number of elements to be split into chunks
+    nchunks: int
+        Number of chunks
+
+    Returns
+    -------
+    subs: array
+        Array with fields 'start' and 'end for each chunks, so a chunk can
+        be gotten with
+
+        subs = isplit(arr.size, nchunks)
+        for i in range(nchunks):
+            achunk = array[subs['start'][i]:subs['end'][i]]
+
+    """
+    import numpy as np
+
+    nchunks = int(nchunks)
+
+    if nchunks <= 0:
+        raise ValueError(f'got nchunks={nchunks} < 0')
+
+    neach_section, extras = divmod(num, nchunks)
+
+    section_sizes = (
+        [0] + extras * [neach_section+1]
+        + (nchunks-extras) * [neach_section]
+    )
+    div_points = np.array(section_sizes, dtype=np.intp).cumsum()
+
+    subs = np.zeros(nchunks, dtype=[('start', 'i8'), ('end', 'i8')])
+
+    for i in range(nchunks):
+        subs['start'][i] = div_points[i]
+        subs['end'][i] = div_points[i + 1]
+
+    return subs
+
+
 def quicksort(data):
     """
     Name:
