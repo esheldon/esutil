@@ -1,4 +1,4 @@
-0.6.15 (not yet released)
+0.6.15
 ------
 
 Enhancements
@@ -6,7 +6,9 @@ Enhancements
     - add algorithms.isplit function,  get indices to split
       a sequence into chunks
     - numpy_util.match works for non-integer data types
-    - add simple option to pbar to spam log files less
+    - added pmap to esutil.pbar, a parallel map with progress bar.
+    - add `simple` option for esutil.pbar that will spam log files less
+    - make randsphere with ranges work for np.random.default_rng
 
 0.6.14
 ------
