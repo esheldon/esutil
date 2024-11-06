@@ -1,3 +1,11 @@
+0.6.16
+------
+
+Bug Fixes
+
+    - numpy_util.match will now correctly check the element type when
+      non-numpy-array inputs are used.
+
 0.6.15
 ------
 
