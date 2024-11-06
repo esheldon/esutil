@@ -114,3 +114,24 @@ def test_match_nomatch(presorted):
         m1, m2 = eu.numpy_util.match(a1, a2)
 
     assert m1.size == 0 and m2.size == 0
+
+
+def test_match_scalar():
+    a1 = np.array([3, 4, 5])
+    a2 = 4
+
+    m1, m2 = eu.numpy_util.match(a1, a2)
+    assert m1.size == 1 and m2.size == 1
+
+    m1, m2 = eu.numpy_util.match(a2, a1)
+    assert m1.size == 1 and m2.size == 1
+
+    a1 = 5
+    a2 = 5
+    m1, m2 = eu.numpy_util.match(a2, a1)
+    assert m1.size == 1 and m2.size == 1
+
+    a1 = 5
+    a2 = 4
+    m1, m2 = eu.numpy_util.match(a2, a1)
+    assert m1.size == 0 and m2.size == 0
