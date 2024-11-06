@@ -1,9 +1,11 @@
-0.6.15 (not yet released)
+0.6.15
 ------
 
 Enhancements
 
     - numpy_util.match works for non-integer data types
+    - added pmap to esutil.pbar, a parallel map with progress bar.
+    - make randsphere with ranges work for np.random.default_rng
 
 0.6.14
 ------
