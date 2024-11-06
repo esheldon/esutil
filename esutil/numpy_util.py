@@ -1544,7 +1544,7 @@ def match(arr1input, arr2input, presorted=False):
     arr1 = np.atleast_1d(arr1input)
     arr2 = np.atleast_1d(arr2input)
 
-    el = arr1input[0]
+    el = arr1[0]
 
     if isinstance(el, str) or isinstance(el, bytes):
         is_string = True
