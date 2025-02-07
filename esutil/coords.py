@@ -1011,7 +1011,7 @@ def _check_range(rng, allowed):
             raise ValueError("range object does not have len() method")
 
         if rng[0] < allowed[0] or rng[1] > allowed[1]:
-            raise ValueError("lon_range should be within [%s,%s]" % allowed)
+            raise ValueError("lon_range %s not within %s" % (rng, allowed))
     return rng
 
 
