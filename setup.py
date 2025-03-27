@@ -244,7 +244,7 @@ if os.name != 'nt':
 
 setup(
     name="esutil",
-    version="0.6.16",
+    version="0.6.17",
     author="Erin Scott Sheldon",
     author_email="erin.sheldon@gmail.com",
     classifiers=classifiers,
