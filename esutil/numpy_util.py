@@ -1657,7 +1657,7 @@ def dict2array(d, sort=False, keys=None):
         if key not in d:
             raise KeyError("Requested key %s not in dictionary" % key)
 
-        if not isinstance(d[key], (int, float, str)):
+        if not isinstance(d[key], (int, float, str, bool)):
             try:
                 strval = "%s" % d[key]
                 val = eval(strval)
@@ -1666,15 +1666,17 @@ def dict2array(d, sort=False, keys=None):
         else:
             val = d[key]
 
-        if isinstance(val, int):
+        if isinstance(val, bool):
+            dt = bool
+        elif isinstance(val, int):
             dt = int
         elif isinstance(val, float):
             dt = float
         elif isinstance(val, str):
-            dt = "S%s" % len(val)
+            dt = "U%s" % len(val)
         else:
             raise ValueError(
-                "Only support int, float, string currently, "
+                "Only support int, float, string, bool currently, "
                 "found %s" % type(d[key])
             )
 

@@ -1,3 +1,10 @@
+0.6.17
+------
+
+Bug Fixes
+
+    - Fixed bug with bools not converted in numpy_util.dict2arr
+
 0.6.16
 ------
 

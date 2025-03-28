@@ -135,3 +135,29 @@ def test_match_scalar():
     a2 = 4
     m1, m2 = eu.numpy_util.match(a2, a1)
     assert m1.size == 0 and m2.size == 0
+
+
+def test_dict2array():
+    dct = {
+        'float': 3.5,
+        'bool': True,
+        'int': 55,
+        'str': 'stuff',
+    }
+
+    arr = eu.numpy_util.dict2array(dct)
+
+    assert set(dct.keys()) == set(arr.dtype.names)
+
+    for d in arr.dtype.descr:
+        name = d[0]
+        if name == 'float':
+            assert d[1][1:] == 'f8'
+        elif name == 'bool':
+            assert d[1][1:] == 'b1'
+        elif name == 'int':
+            assert d[1][1:] == 'i8'
+        elif name == 'str':
+            assert d[1][1] == 'U'
+
+        assert arr[name][0] == dct[name]
