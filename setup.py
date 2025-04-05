@@ -5,6 +5,10 @@ import subprocess
 import shutil
 import numpy
 
+# A bit hacky way to have numpy installed before continuing the script
+from setuptools import dist
+dist.Distribution().fetch_build_eggs(['numpy'])
+
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
