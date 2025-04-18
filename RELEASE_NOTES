@@ -1,9 +1,10 @@
-0.6.17
+0.6.17 (not yet released)
 ------
 
 Bug Fixes
 
     - Fixed bug with bools not converted in numpy_util.dict2arr
+    - stats were not being returned from stat.print_stats
 
 0.6.16
 ------
