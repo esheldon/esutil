@@ -1,4 +1,6 @@
+import copy
 import os
+import sys
 from glob import glob
 import tempfile
 import subprocess
@@ -16,6 +18,9 @@ include_dirs += ["esutil/include"]
 
 extra_compile_args = []
 extra_link_args = []
+
+if not sys.platform.startswith("win"):
+    extra_compile_args += ["-Wno-incompatible-pointer-types"]
 
 #
 # Figure out if we need to add any extra flags:
@@ -110,9 +115,11 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[]):
 def check_flags(compiler):
     """Check if we need to adjust the standard cflags for specific systems"""
     # Start with a canonical set of flags to use
-    cflags = extra_compile_args
-    cppflags = extra_compile_args
-    lflags = extra_link_args
+    # the way this file gets run by pip, you need copies here even though
+    # these variables are not marked as global.
+    cflags = copy.copy(extra_compile_args)
+    cppflags = copy.copy(extra_compile_args)
+    lflags = copy.copy(extra_link_args)
 
     # Check whether we can safely add -std=c++11
     if try_compile("int main (int argc, char **argv) { return 0; }",
