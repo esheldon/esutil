@@ -188,31 +188,30 @@ def where1(conditional_expression):
 
 def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
     """
-    Name:
-      ahelp()
+    Print out a formatted description of the input array or dict of arrays.
 
-    Purpose:
-        Print out a formatted description of the input array.   If the array
-        has fields, individual descriptions are printed for each field.  This
-        is designed to be similar to help, struct, /str in IDL.
+    If the the input fields, individual descriptions are printed for each
+    field.  This is designed to be similar to help, struct, /str in IDL.
 
-    Calling Sequence:
-        ahelp(array, recurse=False, pretty=True, page=False)
+    Parameters
+    ----------
+    array: A numpy array or dict
+        A play array, structured array with fields, or dict of arrays
 
-    Inputs:
-        array: A numpy array.
+    recurse: bool, optional
+        for an input with sub-arrays with fields, print out a full description.
+        default is False.
+    pretty:  bool, optional
+        If set to True, split field descriptions onto multiple lines if the
+        name is longer than 15 characters.  Nicer for the eye, but harder for a
+        machine to parse.  Also, strings are surrounded by quotes 'string'.
+        Default is True.
+    page: bool, optional
+        If set to True, run the output through a pager.
 
-    Optional Inputs:
-        recurse: for sub-arrays with fields, print out a full description.
-            default is False.
-        pretty:  If True, split field descriptions onto multiple lines if
-            the name is longer than 15 characters.  Nicer for the eye, but
-            harder for a machine to parse.  Also, strings are surrounded
-            by quotes 'string'.  Default is True.
-        page: If True, run the output through a pager.
-
-    Example:
-        ahelp(a)
+    Examples
+    --------
+        >>> ahelp(a)
         size: 1147506  nfields: 27  type: records
           run                >i4  1933
           rerun              |S3  '157'
@@ -225,35 +224,42 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
 
     Revision History:
         Created: 2010-04-05, Erin Sheldon, BNL
-
     """
 
-    # make sure the data can be viewed as a
-    # numpy ndarray.  pyfits in particular is
-    # a problem case that we must get a view of
-    # as ndarray.
-    if not hasattr(array_in, "view"):
-        raise ValueError("data must be an array or have the .view method")
+    if isinstance(array_in, dict):
+        array = array_in
+        names = list(array_in.keys())
+    else:
+        # make sure the data can be viewed as a
+        # numpy ndarray.  pyfits in particular is
+        # a problem case that we must get a view of
+        # as ndarray.
+        if not hasattr(array_in, "view"):
+            raise ValueError("data must be an array or have the .view method")
 
-    array = array_in.view(np.ndarray)
+        array = array_in.view(np.ndarray)
 
-    names = array.dtype.names
-    descr = array.dtype.descr
+        names = array.dtype.names
 
     topformat = "size: %s  nfields: %s  type: %s\n"
 
     lines = []
+
     if names is None:
-        type = descr[0][1]
+        # we simplify the view for a plan array
+        descr = array.dtype.descr
+        dtype = descr[0][1]
         nfields = 0
-        line = topformat % (array.size, nfields, type)
+        line = topformat % (array.size, nfields, dtype)
         lines.append(line)
 
     else:
-        line = topformat % (array.size, len(names), "records")
+        nel = array[names[0]].shape[0]
+
+        line = topformat % (nel, len(names), "records")
         lines.append(line)
         flines = _get_field_info(
-            array, recurse=recurse, pretty=pretty, index=index
+            array, names, recurse=recurse, pretty=pretty, index=index
         )
         lines += flines
 
@@ -268,12 +274,14 @@ def ahelp(array_in, recurse=False, pretty=True, index=0, page=False):
         pydoc.pager(lines)
 
 
-def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
-    names = array.dtype.names
+def _get_field_info(
+    array, names, nspace=2, recurse=False, pretty=True, index=0,
+):
+
     if names is None:
         raise ValueError("array has no fields")
 
-    if len(array.shape) == 0:
+    if len(array[names[0]].shape) == 0:
         is_scalar = True
     else:
         is_scalar = False
@@ -293,18 +301,17 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
 
     max_pretty_slen = 25
 
-    for i in range(len(names)):
+    for name in names:
 
         hasfields = False
 
-        n = names[i]
-
-        type = array.dtype.descr[i][1]
+        data = array[name]
+        dtype = data.dtype.descr[0][1]
 
         if is_scalar:
-            fdata = array[n]
+            fdata = data
         else:
-            fdata = array[n][index]
+            fdata = data[index]
 
         if np.isscalar(fdata):
             if np_vers == 2:
@@ -328,23 +335,23 @@ def _get_field_info(array, nspace=2, recurse=False, pretty=True, index=0):
         else:
             shape_str = ",".join(str(s) for s in fdata.shape)
             if fdata.dtype.names is not None:
-                type = "rec[%s]" % shape_str
+                dtype = "rec[%s]" % shape_str
                 d = ""
                 hasfields = True
             else:
                 d = "array[%s]" % shape_str
 
-        if pretty and len(n) > 15:
-            tline = pformat % (n, type, d)
+        if pretty and len(name) > 15:
+            tline = pformat % (name, dtype, d)
         else:
-            tline = format % (n, type, d)
+            tline = format % (name, dtype, d)
         lines.append(tline)
 
         if hasfields and recurse:
             # new_nspace = nspace + nname + 1 + ntype + 2
             new_nspace = nspace + 4
             morelines = _get_field_info(
-                array[n], nspace=new_nspace, recurse=recurse
+                data, nspace=new_nspace, recurse=recurse
             )
             lines += morelines
 
