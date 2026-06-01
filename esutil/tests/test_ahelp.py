@@ -114,12 +114,12 @@ def _fill_vla(data, name, rng, lo, hi, kind):
     if kind in ("s", "u"):
         pool = rng.integers(97, 123, size=total, dtype=np.uint8).tobytes()
         for i in range(n):
-            cell = pool[off[i] : off[i + 1]]
+            cell = pool[off[i]: off[i + 1]]
             out[i] = cell.decode() if kind == "u" else cell
     else:
         pool = rng.standard_normal(total).astype("f4")
         for i in range(n):
-            out[i] = pool[off[i] : off[i + 1]]
+            out[i] = pool[off[i]: off[i + 1]]
     data[name] = out
 
 
