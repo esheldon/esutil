@@ -1,6 +1,10 @@
 0.6.17 (not yet released)
 ------
 
+Enhancements
+
+    - numpy_util.ahelp can now show dict of arrays
+
 Bug Fixes
 
     - Fixed bug with bools not converted in numpy_util.dict2arr
