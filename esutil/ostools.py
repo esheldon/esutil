@@ -12,41 +12,16 @@ Classes:
         directory stack in Unix shells.  See the documentation
         for the DirStack class for more details.
 
-    Example:
-        >>> ds=esutil.ostools.DirStack(verbose=True)
-        >>> ds.push('~/data')
-        ~/data ~
-        >>> ds.push('/usr/bin')
-        /usr/bin ~/data ~
-        >>> ds.pop()
-        ~/data ~
-        >>> ds.pop()
-        ~
-
     Class Name:
         StagedOutFile
     Purpose:
         A context manager for staging files from temporary directories to
         a final destination.
 
-    Example:
-        >>> fname = "/home/jill/output.dat"
-        >>> tmpdir = "/tmp"
-        >>> with StagedOutFile(fname, tmpdir=tmpdir) as sf:
-        ...     with open(sf.path, 'w') as fobj:
-        ...         fobj.write("some data")
-
     Class Name:
         StagedInFile
     Purpose:
         A class to stage a file in to local disk for reading.
-
-    Example:
-        >>> fname="/home/jill/output.dat"
-        >>> tmpdir="/tmp"
-        >>> with StagedInFile(fname,tmpdir=tmpdir) as sf:
-        ...     with open(sf.path) as fobj:
-        ...         # read some data from fobj
 
 Functions:
     See docs for the individual functions for more info.
@@ -78,6 +53,7 @@ Functions:
         Extract the directory from a file name and create it if it doesn't
         exist.
 """
+
 from __future__ import print_function
 
 import os
@@ -113,8 +89,19 @@ class DirStack(object):
         ~/data ~
         >>> ds.pop()
         ~
-
+        #
+        # you can use as a context as well.  On exiting the
+        # context, all directories are popped
+        >>> print(os.getcwd())
+        '/home/username'
+        >>> with DirStack() as ds:
+            ds.push('/tmp')
+            print(os.getcwd())
+            '/tmp'
+        >>> print(os.getcwd())
+        '/home/username'
     """
+
     def __init__(self, verbose=False):
         self.verbose = verbose
         self._home = os.path.expanduser('~')
@@ -143,7 +130,6 @@ class DirStack(object):
             that directory.
         """
         if len(self._dirs) == 0:
-            stderr.write("Directory stack is empty\n")
             return
 
         dir = self._dirs.pop()
@@ -160,7 +146,7 @@ class DirStack(object):
 
     def print_stack(self):
         self.print_dir(os.getcwd())
-        for i in range(len(self._dirs)-1, -1, -1):
+        for i in range(len(self._dirs) - 1, -1, -1):
             d = self._dirs[i]
             self.print_dir(d)
         stdout.write('\n')
@@ -168,6 +154,13 @@ class DirStack(object):
     def print_dir(self, dir):
         dir = dir.replace(self._home, '~')
         stdout.write('%s ' % dir)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        while len(self._dirs) > 0:
+            self.pop()
 
 
 def path_join(*paths):
@@ -258,13 +251,15 @@ def expand_path(filename):
 expand_filename = expand_path
 
 
-def exec_process(command,
-                 timeout=None,
-                 poll=1,
-                 stdout_file=subprocess.PIPE,
-                 stderr_file=subprocess.PIPE,
-                 shell=True,
-                 verbose=False):
+def exec_process(
+    command,
+    timeout=None,
+    poll=1,
+    stdout_file=subprocess.PIPE,
+    stderr_file=subprocess.PIPE,
+    shell=True,
+    verbose=False,
+):
     """
     Name:
         exec_process
@@ -324,7 +319,7 @@ def exec_process(command,
         if verbose:
             print(command[0], '   \\', file=stderr)
             for c in command[1:]:
-                print('   '+c+'    \\', file=stderr)
+                print('   ' + c + '    \\', file=stderr)
     else:
         cmd = command
         if verbose:
@@ -374,7 +369,7 @@ def _poll_subprocess(pobj, timeout, poll):
             exit_status = pobj.poll()
             if exit_status is not None:
                 break
-            tm = time.time()-tm0
+            tm = time.time() - tm0
             if tm > timeout:
                 break
     except KeyboardInterrupt:
@@ -385,8 +380,10 @@ def _poll_subprocess(pobj, timeout, poll):
     # exit status will not be None upon completion.  If we passed
     # the timeout we want to kill the process.
     if exit_status is None:
-        stderr.write("Process is taking longer than %s seconds.  "
-                     "Ending process\n" % timeout)
+        stderr.write(
+            "Process is taking longer than %s seconds.  "
+            "Ending process\n" % timeout
+        )
         os.kill(pobj.pid, signal.SIGTERM)
         exit_status = 1024
         stdout_ret, stderr_ret = None, None
@@ -460,6 +457,7 @@ class StagedOutFile(object):
     ...     with open(sf.path, 'w') as fobj:
     ...         fobj.write("some data")
     """
+
     def __init__(self, fname, tmpdir=None, must_exist=False):
         self.must_exist = must_exist
         self.was_staged_out = False
@@ -514,8 +512,7 @@ class StagedOutFile(object):
 
             makedirs_fromfile(self.final_path)
 
-            print(
-                "staging out '%s' -> '%s'" % (self.path, self.final_path))
+            print("staging out '%s' -> '%s'" % (self.path, self.final_path))
             shutil.move(self.path, self.final_path)
 
         self.was_staged_out = True
@@ -549,6 +546,7 @@ class StagedInFile(object):
             # read some data
 
     """
+
     def __init__(self, fname, tmpdir=None):
 
         self._set_paths(fname, tmpdir=tmpdir)
