@@ -3,7 +3,11 @@ def test_dirstack_context():
     import os
     from esutil.ostools import DirStack
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory() as tmpdir_orig:
+        # we do this so the test works on macos
+        tmpdir = os.path.expandvars(tmpdir_orig)
+        tmpdir = os.path.expanduser(tmpdir)
+
         orig_dir = os.getcwd()
         with DirStack() as ds:
             ds.push(tmpdir)
@@ -17,7 +21,12 @@ def test_dirstack_nocontext():
     import os
     from esutil.ostools import DirStack
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory() as tmpdir_orig:
+
+        # we do this so the test works on macos
+        tmpdir = os.path.expandvars(tmpdir_orig)
+        tmpdir = os.path.expanduser(tmpdir)
+
         orig_dir = os.getcwd()
         ds = DirStack()
         ds.push(tmpdir)
