@@ -12,41 +12,16 @@ Classes:
         directory stack in Unix shells.  See the documentation
         for the DirStack class for more details.
 
-    Example:
-        >>> ds=esutil.ostools.DirStack(verbose=True)
-        >>> ds.push('~/data')
-        ~/data ~
-        >>> ds.push('/usr/bin')
-        /usr/bin ~/data ~
-        >>> ds.pop()
-        ~/data ~
-        >>> ds.pop()
-        ~
-
     Class Name:
         StagedOutFile
     Purpose:
         A context manager for staging files from temporary directories to
         a final destination.
 
-    Example:
-        >>> fname = "/home/jill/output.dat"
-        >>> tmpdir = "/tmp"
-        >>> with StagedOutFile(fname, tmpdir=tmpdir) as sf:
-        ...     with open(sf.path, 'w') as fobj:
-        ...         fobj.write("some data")
-
     Class Name:
         StagedInFile
     Purpose:
         A class to stage a file in to local disk for reading.
-
-    Example:
-        >>> fname="/home/jill/output.dat"
-        >>> tmpdir="/tmp"
-        >>> with StagedInFile(fname,tmpdir=tmpdir) as sf:
-        ...     with open(sf.path) as fobj:
-        ...         # read some data from fobj
 
 Functions:
     See docs for the individual functions for more info.
