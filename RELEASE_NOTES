@@ -4,6 +4,7 @@
 Enhancements
 
     - numpy_util.ahelp can now show dict of arrays
+    - ostools.DirStack can be used as a context
 
 Bug Fixes
 
