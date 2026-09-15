@@ -1,4 +1,4 @@
-0.6.17 (not yet released)
+0.6.17
 ------
 
 Enhancements
@@ -10,6 +10,8 @@ Bug Fixes
 
     - Fixed bug with bools not converted in numpy_util.dict2arr
     - stats were not being returned from stat.print_stats
+    - Refactor extra_compile_args to conditionally include flags based on
+      platform. Adjust compiler flags handling in setup.py
 
 0.6.16
 ------
