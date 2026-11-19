@@ -47,8 +47,8 @@ jobs:
 
       - name: lint
         run: |
-          pip install flake8
-          flake8 esutil tests
+          pip install ruff
+          ruff check .
 
       - name: test
         run: |

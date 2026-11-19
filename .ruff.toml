@@ -3,6 +3,9 @@ exclude = [
     "build",
     "dist",
     ".github",
+    # swig generated interface files
+    "esutil/htm/htmc.py",
+    "esutil/recfile/records.py",
 ]
 line-length = 79
 
