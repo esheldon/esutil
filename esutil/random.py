@@ -320,7 +320,9 @@ class Generator(object):
 
                 import scipy.integrate
 
-                pcum = scipy.integrate.cumulative_trapezoid(self.pofx, self.xinput)
+                pcum = scipy.integrate.cumulative_trapezoid(
+                    self.pofx, self.xinput,
+                )
                 self.norm = pcum[-1]
                 self.pcum = pcum / self.norm
 
@@ -347,7 +349,9 @@ class Generator(object):
 
                 pofxvals = self.pofx(self.xinput)
 
-                pcum = scipy.integrate.cumulative_trapezoid(pofxvals, self.xinput)
+                pcum = scipy.integrate.cumulative_trapezoid(
+                    pofxvals, self.xinput,
+                )
                 self.norm = pcum[-1]
                 self.pcum = pcum / self.norm
 

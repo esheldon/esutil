@@ -49,11 +49,19 @@ def get_data():
     names = data.dtype.names
 
     dtypes = [
-        "u1", "i1", "u2", "i2", "u4", "i4",
-        "i8", "f4", "f8", "c8", "c16",
+        "u1",
+        "i1",
+        "u2",
+        "i2",
+        "u4",
+        "i4",
+        "i8",
+        "f4",
+        "f8",
+        "c8",
+        "c16",
     ]
     for t in dtypes:
-
         sname = t + "scalar"
         vname = t + "vec"
         aname = t + "arr"
@@ -82,8 +90,8 @@ def get_data():
                 data[sname] = 1 + np.arange(nrows, dtype=t)
 
             if vname in names:
-                data[vname] = (
-                    1 + np.arange(nrows * nvec, dtype=t).reshape(nrows, nvec)
+                data[vname] = 1 + np.arange(nrows * nvec, dtype=t).reshape(
+                    nrows, nvec
                 )
 
             if aname in names:
@@ -100,11 +108,15 @@ def get_data():
 
         if vname in names:
             data[vname] = (
-                (np.arange(nrows * nvec) % 2 == 0).astype("?").reshape(nrows, nvec)  # noqa
+                (np.arange(nrows * nvec) % 2 == 0)
+                .astype("?")
+                .reshape(nrows, nvec)  # noqa
             )
 
         if aname in names:
-            arr = (np.arange(nrows * ashape[0] * ashape[1]) % 2 == 0).astype("?")  # noqa
+            arr = (np.arange(nrows * ashape[0] * ashape[1]) % 2 == 0).astype(
+                "?"
+            )  # noqa
             data[aname] = arr.reshape(nrows, ashape[0], ashape[1])
 
     if "Sscalar" in data.dtype.names:
@@ -143,7 +155,7 @@ def get_data():
 
 
 def compare_array(arr1, arr2, name):
-    mess = "testing arrays '%s' shapes are equal: " "input %s, read: %s" % (
+    mess = "testing arrays '%s' shapes are equal: input %s, read: %s" % (
         name,
         arr1.shape,
         arr2.shape,
@@ -158,10 +170,7 @@ def compare_array(arr1, arr2, name):
 
 def compare_rec(rec1, rec2, name):
     for f in rec1.dtype.names:
-        mess = (
-            "testing '%s' field '%s' shapes are equal: "
-            "input %s, read: %s"
-        )
+        mess = "testing '%s' field '%s' shapes are equal: input %s, read: %s"
         mess = mess % (
             name,
             f,
@@ -176,8 +185,7 @@ def compare_rec(rec1, rec2, name):
             assert w.size == 0, "testing column %s" % f
 
 
-@pytest.mark.skipif(os.name == 'nt',
-                    reason='skip recfile tests on windows')
+@pytest.mark.skipif(os.name == 'nt', reason='skip recfile tests on windows')
 @pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
 @pytest.mark.parametrize('doswap', [False, True])
 def test_recfile_writeread(delim, doswap):
@@ -210,14 +218,13 @@ def test_recfile_writeread(delim, doswap):
         eu.recfile.write(fname, data)
         d = eu.recfile.read(fname, dtype)
         compare_rec(
-            data, d,
-            ("test read/write with convenience "
-             "functions doswap: %s" % doswap)
+            data,
+            d,
+            ("test read/write with convenience functions doswap: %s" % doswap),
         )
 
 
-@pytest.mark.skipif(os.name == 'nt',
-                    reason='skip recfile tests on windows')
+@pytest.mark.skipif(os.name == 'nt', reason='skip recfile tests on windows')
 @pytest.mark.parametrize('delim', [None, ",", ":", "\t", " "])
 @pytest.mark.parametrize('doswap', [False, True])
 def test_recfile_subsets(delim, doswap):
@@ -238,7 +245,6 @@ def test_recfile_subsets(delim, doswap):
             robj.write(data)
 
         with Recfile(fname, mode='r', dtype=dtype, delim=delim) as robj:
-
             # row slices
             d = robj[:]
             compare_rec(data, d, "row range all" + sstr)
@@ -257,34 +263,42 @@ def test_recfile_subsets(delim, doswap):
                 compare_array(
                     data[f],
                     d,
-                    ("test read all rows %s column subset "
-                     "scalar name %s" % (f, sstr)),
+                    (
+                        "test read all rows %s column subset "
+                        "scalar name %s" % (f, sstr)
+                    ),
                 )
 
                 d = robj.read(columns=[f])
                 compare_array(
-                    data[f], d[f],
-                    "test read all rows %s column subset %s" % (f, sstr)
+                    data[f],
+                    d[f],
+                    "test read all rows %s column subset %s" % (f, sstr),
                 )
 
                 d = robj[f][:]
                 compare_array(
-                    data[f], d,
-                    "test read all rows %s column subset slice %s" % (f, sstr)
+                    data[f],
+                    d,
+                    "test read all rows %s column subset slice %s" % (f, sstr),
                 )
 
                 rows = [1, 3]
                 d = robj.read(columns=f, rows=rows)
                 compare_array(
-                    data[f][rows], d,
-                    ("test read rows %s column subset "
-                     "scalar name %s" % (f, sstr))
+                    data[f][rows],
+                    d,
+                    (
+                        "test read rows %s column subset "
+                        "scalar name %s" % (f, sstr)
+                    ),
                 )
 
                 d = robj.read(columns=[f], rows=rows)
                 compare_array(
-                    data[f][rows], d[f],
-                    "test read rows %s column subset %s" % (f, sstr)
+                    data[f][rows],
+                    d[f],
+                    "test read rows %s column subset %s" % (f, sstr),
                 )
 
             cols = ['u2scalar', 'f4vec', 'Sarr']
@@ -301,15 +315,17 @@ def test_recfile_subsets(delim, doswap):
             d = robj[cols][rows]
             for f in d.dtype.names:
                 compare_array(
-                    data[f][rows], d[f],
-                    "test column list %s row subset slice %s" % (f, sstr)
+                    data[f][rows],
+                    d[f],
+                    "test column list %s row subset slice %s" % (f, sstr),
                 )
 
             d = robj.read(rows=rows, columns=cols)
             for f in d.dtype.names:
                 compare_array(
-                    data[f][rows], d[f],
-                    "test column list %s row subset %s" % (f, sstr)
+                    data[f][rows],
+                    d[f],
+                    "test column list %s row subset %s" % (f, sstr),
                 )
 
             # combined with row slices
@@ -317,20 +333,21 @@ def test_recfile_subsets(delim, doswap):
             d = robj[cols][:]
             for f in d.dtype.names:
                 compare_array(
-                    data[f], d[f],
-                    "test column list %s slice %s" % (f, sstr)
+                    data[f], d[f], "test column list %s slice %s" % (f, sstr)
                 )
 
             d = robj[cols][1:3]
             for f in d.dtype.names:
                 compare_array(
-                    data[f][1:3], d[f],
-                    "test column list %s row slice %s" % (f, sstr)
+                    data[f][1:3],
+                    d[f],
+                    "test column list %s row slice %s" % (f, sstr),
                 )
 
             d = robj[cols][0:4:2]
             for f in d.dtype.names:
                 compare_array(
-                    data[f][0:4:2], d[f],
-                    "test column list %s row slice step 2 %s" % (f, sstr)
+                    data[f][0:4:2],
+                    d[f],
+                    "test column list %s row slice step 2 %s" % (f, sstr),
                 )

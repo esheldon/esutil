@@ -1,6 +1,6 @@
-
 try:
     from xml.etree import cElementTree as ElementTree
+
     have_element_tree = True
 except ImportError:
     have_element_tree = False
@@ -54,7 +54,9 @@ class XmlDictObject(dict):
         """
 
         if isinstance(x, dict):
-            return XmlDictObject((k, XmlDictObject.Wrap(v)) for (k, v) in list(x.items()))  # noqa
+            return XmlDictObject(
+                (k, XmlDictObject.Wrap(v)) for (k, v) in list(x.items())
+            )  # noqa
         elif isinstance(x, list):
             return [XmlDictObject.Wrap(v) for v in x]
         else:
@@ -63,7 +65,9 @@ class XmlDictObject(dict):
     @staticmethod
     def _UnWrap(x):
         if isinstance(x, dict):
-            return dict((k, XmlDictObject._UnWrap(v)) for (k, v) in list(x.items()))  # noqa
+            return dict(
+                (k, XmlDictObject._UnWrap(v)) for (k, v) in list(x.items())
+            )  # noqa
         elif isinstance(x, list):
             return [XmlDictObject._UnWrap(v) for v in x]
         else:
@@ -97,8 +101,9 @@ def xml2dict(root, dictclass=XmlDictObject, seproot=False, noroot=False):
     """
 
     if not have_element_tree:
-        raise ImportError("Neither cElementTree or ElementTree could "
-                          "be imported")
+        raise ImportError(
+            "Neither cElementTree or ElementTree could be imported"
+        )
 
     # If a string is passed in, try to open it as a file
     if isinstance(root, str):
@@ -172,8 +177,9 @@ def dict2xml(xmldict, filename_or_obj=None, roottag=None):
     """
 
     if not have_element_tree:
-        raise ImportError("Neither cElementTree or ElementTree could "
-                          "be imported")
+        raise ImportError(
+            "Neither cElementTree or ElementTree could be imported"
+        )
 
     if roottag is None:
         keys = list(xmldict.keys())
@@ -202,12 +208,12 @@ def xml_indent(elem, level=0):
         xml_indent(tree.getroot())
         tree.write(filename)
     """
-    i = "\n" + level*"  "
+    i = "\n" + level * "  "
     if len(elem):
         if not elem.text or not elem.text.strip():
             elem.text = i + "  "
         for e in elem:
-            xml_indent(e, level+1)
+            xml_indent(e, level + 1)
             if not e.tail or not e.tail.strip():
                 e.tail = i + "  "
         if not e.tail or not e.tail.strip():
@@ -221,7 +227,7 @@ def _dict2xml_recurse(parent, dictitem):
     assert not isinstance(dictitem, list)
 
     if isinstance(dictitem, dict):
-        for (tag, child) in list(dictitem.items()):
+        for tag, child in list(dictitem.items()):
             if str(tag) == '_text':
                 parent.text = str(child)
             elif isinstance(child, list):

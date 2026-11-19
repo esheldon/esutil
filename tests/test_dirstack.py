@@ -4,7 +4,6 @@ def test_dirstack_context():
     from esutil.ostools import DirStack
 
     with tempfile.TemporaryDirectory() as tmpdir:
-
         # on macos CI the actual directory has a different name
         # than tmpdir!  Do a first run to get that name
         orig_dir = os.getcwd()
@@ -25,7 +24,6 @@ def test_dirstack_nocontext():
     from esutil.ostools import DirStack
 
     with tempfile.TemporaryDirectory() as tmpdir:
-
         # on macos CI the actual directory has a different name
         # than tmpdir!  Do a first run to get that name
 

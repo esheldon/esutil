@@ -49,7 +49,11 @@ def test_coords_gcirc(ra_cen, dec_cen, radius):
     rng = np.random.RandomState(91)
     num = 10000
     ra, dec = eu.coords.randcap(
-        num, ra_cen, dec_cen, radius, rng=rng,
+        num,
+        ra_cen,
+        dec_cen,
+        radius,
+        rng=rng,
     )
 
     dis = eu.coords.sphdist(ra_cen, dec_cen, ra, dec)
@@ -71,7 +75,10 @@ def test_coords_randsphere(ra_range, dec_range):
     rng = np.random.RandomState(781)
     num = 10000
     ra, dec = eu.coords.randsphere(
-        num, rng=rng, ra_range=ra_range, dec_range=dec_range,
+        num,
+        rng=rng,
+        ra_range=ra_range,
+        dec_range=dec_range,
     )
 
     if ra_range is None:
@@ -86,7 +93,10 @@ def test_coords_randsphere(ra_range, dec_range):
 
     rng = np.random.RandomState(781)
     ranew, decnew = eu.coords.randsphere(
-        num, rng=rng, ra_range=ra_range, dec_range=dec_range,
+        num,
+        rng=rng,
+        ra_range=ra_range,
+        dec_range=dec_range,
     )
     assert np.all(ra == ranew)
     assert np.all(dec == decnew)
@@ -99,7 +109,11 @@ def test_coords_randcap(ra_cen, dec_cen, radius):
     rng = np.random.RandomState(91)
     num = 10000
     ra, dec = eu.coords.randcap(
-        num, ra_cen, dec_cen, radius, rng=rng,
+        num,
+        ra_cen,
+        dec_cen,
+        radius,
+        rng=rng,
     )
 
     dis = eu.coords.sphdist(ra_cen, dec_cen, ra, dec)

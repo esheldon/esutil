@@ -34,11 +34,7 @@ def test_random_generator_smoke():
 def test_cholesky(seed):
 
     rng = np.random.RandomState(seed)
-    cov = np.array(
-        [[1.0, 0.1, 0.1],
-         [0.1, 2.0, 0.1],
-         [0.1, 0.1, 3.0]]
-    )
+    cov = np.array([[1.0, 0.1, 0.1], [0.1, 2.0, 0.1], [0.1, 0.1, 3.0]])
     means = [5.0, 4.0, 8.0]
 
     n = 1000000

@@ -90,7 +90,7 @@ Setting to type "f16" which may or may not exceed 8-bytes in size,
 depending on your platform\n"""
 
 _int_digits_err = """WARNING: Digits for field "%s" of %s exceeds largest available
-(18 digits for 8-byte binary integer).  Setting to 8-byte integer\n"""
+(18 digits for 8-byte binary integer).  Setting to 8-byte integer\n"""  # noqa
 
 _string_err = 'The size of field "%s" is %s but must be greater than zero'
 

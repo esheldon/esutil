@@ -7,7 +7,10 @@ import copy
 
 def test_cosmology_smoke():
     cosmo = eu.cosmology.Cosmo(
-        H0=70, flat=True, omega_m=0.27, omega_l=0.73,
+        H0=70,
+        flat=True,
+        omega_m=0.27,
+        omega_l=0.73,
         omega_k=0.0,
     )
     zmin, zmax = 0.1, 0.2
@@ -25,7 +28,10 @@ def test_cosmology_smoke():
 
 def test_cosmology_copy():
     cosmo = eu.cosmology.Cosmo(
-        H0=70, flat=True, omega_m=0.27, omega_l=0.73,
+        H0=70,
+        flat=True,
+        omega_m=0.27,
+        omega_l=0.73,
         omega_k=0.0,
     )
 
@@ -64,7 +70,10 @@ def test_cosmology_pickle_compare1():
     Test case 1
     """
     cosmo = eu.cosmology.Cosmo(
-        H0=70, flat=True, omega_m=0.27, omega_l=0.73,
+        H0=70,
+        flat=True,
+        omega_m=0.27,
+        omega_l=0.73,
         omega_k=0.0,
     )
     _pickle_compare(cosmo=cosmo)
@@ -75,7 +84,10 @@ def test_cosmology_pickle_compare2():
     Test case 2
     """
     cosmo = eu.cosmology.Cosmo(
-        H0=67, flat=False, omega_m=0.32, omega_l=0.67,
+        H0=67,
+        flat=False,
+        omega_m=0.32,
+        omega_l=0.67,
         omega_k=0.01,
     )
     _pickle_compare(cosmo=cosmo)
@@ -86,7 +98,9 @@ def test_cosmology_pickle_compare3():
     Test case 3
     """
     cosmo = eu.cosmology.Cosmo(
-        h=1, omega_m=0.3, omega_l=0.7,
+        h=1,
+        omega_m=0.3,
+        omega_l=0.7,
         omega_k=None,
     )
     _pickle_compare(cosmo=cosmo)
