@@ -1,78 +1,78 @@
 """
-    NAME
-        coords
-    PURPOSE
-        A set of astronomical utilities for dealing with coordinates and
-        coordinate transformations.
+NAME
+    coords
+PURPOSE
+    A set of astronomical utilities for dealing with coordinates and
+    coordinate transformations.
 
-    COORDINATE TRANSFORMATIONS
-        euler:
-            A generic routine for transforming between Galactic, Celestial,
-            and ecliptic coords.  The following wrapper routines are also
-            supplied for convenience:
+COORDINATE TRANSFORMATIONS
+    euler:
+        A generic routine for transforming between Galactic, Celestial,
+        and ecliptic coords.  The following wrapper routines are also
+        supplied for convenience:
 
-        l,b = eq2gal(ra, dec, b1950=False, dtype='f8')
-            Convert equatorial to glactic coordinates.
+    l,b = eq2gal(ra, dec, b1950=False, dtype='f8')
+        Convert equatorial to glactic coordinates.
 
-        # The following use the same interface:
-        gal2eq
-            Convert galactic to equatorial coordinates.
-        eq2ec
-            Convert equatorial to ecliptic coordinates.
-        ec2eq
-            Convert ecliptic to equatorial coordinates.
-        ec2gal
-            Convert ecliptic to galactic coordinates.
-        gal2ec
-            Convert galactic to ecliptic coordinates.
+    # The following use the same interface:
+    gal2eq
+        Convert galactic to equatorial coordinates.
+    eq2ec
+        Convert equatorial to ecliptic coordinates.
+    ec2eq
+        Convert ecliptic to equatorial coordinates.
+    ec2gal
+        Convert ecliptic to galactic coordinates.
+    gal2ec
+        Convert galactic to ecliptic coordinates.
 
-        # These SDSS specific functions do not use euler
-        eq2sdss
-            Convert between equatorial and corrected SDSS survey coords.
-        sdss2eq
-            Convert between corrected SDSS survey and equatorial coords.
+    # These SDSS specific functions do not use euler
+    eq2sdss
+        Convert between equatorial and corrected SDSS survey coords.
+    sdss2eq
+        Convert between corrected SDSS survey and equatorial coords.
 
-        eq2xyz: Convert equatorial to x,y,z on the sphere according to
-            the following transform:
-                    x = sin(pi/2-dec)*cos(ra)
-                    y = sin(pi/2-dec)*sin(ra)
-                    z = cos(pi/2-dec)
+    eq2xyz: Convert equatorial to x,y,z on the sphere according to
+        the following transform:
+                x = sin(pi/2-dec)*cos(ra)
+                y = sin(pi/2-dec)*sin(ra)
+                z = cos(pi/2-dec)
 
-        xyz2eq:
-            inverse of eq2xyz
+    xyz2eq:
+        inverse of eq2xyz
 
-        sphdist:
-            Calculate the arc length between two sets of points on the sphere.
-            Currently only takes ra,dec.
+    sphdist:
+        Calculate the arc length between two sets of points on the sphere.
+        Currently only takes ra,dec.
 
-        shiftlon:
-            shift the input longitude.  By default wrap the coordinate to
-            -180,180.  If a shift is entered, return the new value
-            lon-shift such that the range is still [0,360)
+    shiftlon:
+        shift the input longitude.  By default wrap the coordinate to
+        -180,180.  If a shift is entered, return the new value
+        lon-shift such that the range is still [0,360)
 
-        shiftra:
-            shift right ascension.  This just calls shiftlon
+    shiftra:
+        shift right ascension.  This just calls shiftlon
 
-        radec2aitoff:
-            Convert ra,dec to aitoff coordinates.
+    radec2aitoff:
+        Convert ra,dec to aitoff coordinates.
 
-        dec_parse(decstring)
-            parse a colon separated string representing declination ito
-            degrees.
-        ra_parse(decstring)
-            parse a colon separated string representing right ascension ito
-            degrees.
+    dec_parse(decstring)
+        parse a colon separated string representing declination ito
+        degrees.
+    ra_parse(decstring)
+        parse a colon separated string representing right ascension ito
+        degrees.
 
-        randsphere(numrand, system='eq', ra_range=[0,360], dec_range=[-90,90]):
-            Generate random points on the sphere.  By default ra,dec are
-            returned.  If system='xyz' then x,y,z are returned.
+    randsphere(numrand, system='eq', ra_range=[0,360], dec_range=[-90,90]):
+        Generate random points on the sphere.  By default ra,dec are
+        returned.  If system='xyz' then x,y,z are returned.
 
-        randcap(nrand,ra,dec,rad,get_radius=False):
-            Create random points in a cap, or disc, centered at the
-            input ra,dec location and with radius rad.
+    randcap(nrand,ra,dec,rad,get_radius=False):
+        Create random points in a cap, or disc, centered at the
+        input ra,dec location and with radius rad.
 
-        rect_area(lon_min, lon_max, lat_min, lat_max)
-            Calculate the area of a rectangle on the sphere.
+    rect_area(lon_min, lon_max, lat_min, lat_max)
+        Calculate the area of a rectangle on the sphere.
 
 
 """
@@ -105,9 +105,7 @@ _sdsspar["node"] = (_sdsspar["center_ra"] - 90.0) * D2R
 _sdsspar["etapole"] = _sdsspar["center_dec"] * D2R
 _sdsspar["etaoffset"] = 91.25
 
-_sdsspar[
-    "doc"
-] = """
+_sdsspar["doc"] = """
     A set of transformation functions for use with SDSS coordinate systems.
 
     eq2sdss(): Convert between equatorial and corrected SDSS survey coords.
@@ -186,7 +184,6 @@ def euler(ai, bi, select, b1950=False, dtype="f8"):
     #  Eomega  = 6.3839743d           Galactic longitude of ecliptic equator
     # Parameters for all the different conversions
     if b1950:
-
         psi = np.array(
             [
                 0.57595865315,
@@ -233,7 +230,6 @@ def euler(ai, bi, select, b1950=False, dtype="f8"):
         )
 
     else:
-
         psi = np.array(
             [
                 0.57477043300,
@@ -564,12 +560,12 @@ def sphdist(ra1, dec1, ra2, dec2, units=["deg", "deg"]):
     x1, y1, z1 = eq2xyz(ra1, dec1, units=units_in)
     x2, y2, z2 = eq2xyz(ra2, dec2, units=units_in)
 
-    dsq = (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2
-    dis = 2*np.arcsin(0.5*np.sqrt(dsq))
+    dsq = (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
+    dis = 2 * np.arcsin(0.5 * np.sqrt(dsq))
     w = dsq >= 3.99
     if np.any(w):
         cross = np.cross(np.array([x1, y1, z1])[w], np.array([x2, y2, z2])[w])
-        crosssq = cross[0]**2 + cross[1]**2 + cross[2]**2
+        crosssq = cross[0] ** 2 + cross[1] ** 2 + cross[2] ** 2
         dis[w] = np.pi - np.arcsin(np.sqrt(crosssq))
 
     if units_out == "deg":
@@ -615,8 +611,9 @@ def gcirc(ra1deg, dec1deg, ra2deg, dec2deg, getangle=False):
         theta = (
             arctan2(
                 sin(radiff),
-                (sindec1 * cosradiff - cosdec1 * sindec2 / cosdec2)
-            ) - HALFPI
+                (sindec1 * cosradiff - cosdec1 * sindec2 / cosdec2),
+            )
+            - HALFPI
         )
         return dis, theta
     else:
@@ -1124,7 +1121,6 @@ def randcap(nrand, ra, dec, rad, get_radius=False, dorot=False, rng=None):
         rand_ra, rand_dec = rotate(0.0, dec - tdec, 0.0, rand_ra, rand_dec)
         rand_ra, rand_dec = rotate(ra - tra, 0.0, 0.0, rand_ra, rand_dec)
     else:
-
         rand_r = rng.random(nrand)
         rand_r = sqrt(rand_r) * rad
 
@@ -1210,9 +1206,9 @@ def randcap_brute(nrand, ra, dec, rad, get_radius=False):
         d = sphdist(ra, dec, tra, tdec)
         (w,) = where(d <= rad)
         if w.size > 0:
-            ora[ngood: ngood + w.size] = tra[w]
-            odec[ngood: ngood + w.size] = tdec[w]
-            orad[ngood: ngood + w.size] = d[w]
+            ora[ngood : ngood + w.size] = tra[w]
+            odec[ngood : ngood + w.size] = tdec[w]
+            orad[ngood : ngood + w.size] = d[w]
 
             ngood += w.size
             nleft -= w.size
@@ -1246,7 +1242,7 @@ def rotate(phi, theta, psi, ra, dec):
     dec = np.atleast_1d(dec)
     if ra.size != dec.size:
         raise ValueError(
-            "ra[%d] has different size than " "dec[%d]" % (ra.size, dec.size)
+            "ra[%d] has different size than dec[%d]" % (ra.size, dec.size)
         )
 
     twopi = 2.0 * PI
