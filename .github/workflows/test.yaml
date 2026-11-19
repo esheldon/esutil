@@ -11,9 +11,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        pyver: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        pyver: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         compiler: [gcc]
         include:
+            # no python 3.9 builds exist for the current ubuntu-latest
+            - os: ubuntu-24.04
+              pyver: "3.9"
+              compiler: gcc
             - os: macos-latest
               pyver: "3.9"
               compiler: clang
