@@ -48,29 +48,6 @@ typedef double			float64;
 #define HTMMAXKEEP		   12
 #define HTMMAXBIT		   14
 
-// emulate the standard bool type where not supported by compiler
-
-#  if !defined(__sgi) && !defined(__linux) && !defined(_WIN32)
-#    ifdef __unix
-/*
- * The following ifndef must ALWAYS be present since C++ may use
- * _BOOL_EXISTS to prevent the header from trying to redefine a
- * C++ reserved word.
- */
-#      ifndef _BOOL_EXISTS
-#         define _BOOL_EXISTS
-#         ifndef bool
-
-typedef unsigned char           bool;
-const bool                      false = 0;
-const bool                      true = 1;
-#define bool(x) ((x) ? true : false)
-
-#         endif
-#      endif  /* _BOOL_EXISTS */
-#    endif  /* __unix */
-#  endif  /* __sgi && __linux */
-
 // Global Math Constants
 
 const float64 gPi = 3.1415926535897932385E0 ;

@@ -2,6 +2,7 @@ import os
 import numpy as np
 import tempfile
 import pickle
+import pytest
 
 import esutil as eu
 
@@ -207,3 +208,31 @@ def test_htm_match_self():
     m1, m2, d12 = h.match(ra, dec, ra, dec, rad, maxmatch=1)
 
     assert np.all(d12 == 0.0)
+
+
+def test_htm_match_bad_file():
+    """
+    errors raised in the C++ code should arrive with their message
+    """
+    ra = np.array([200.0, 200.0])
+    dec = np.array([0.0, 0.1])
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        fname = os.path.join(tmpdir, "no-such-dir", "matches.dat")
+
+        matcher = eu.htm.Matcher(10, ra, dec)
+        with pytest.raises(RuntimeError, match="Cannot open file"):
+            matcher.match(ra, dec, 1.0, file=fname)
+
+        h = eu.htm.HTM(10)
+        with pytest.raises(RuntimeError, match="Cannot open file"):
+            h.match(ra, dec, ra, dec, 1.0, file=fname)
+
+
+def test_htm_bincount_bad_range():
+    ra = np.array([200.0, 200.0])
+    dec = np.array([0.0, 0.1])
+
+    h = eu.htm.HTM(10)
+    with pytest.raises(RuntimeError, match="log_binsize"):
+        h.bincount(10.0, 1.0, 5, ra, dec, ra, dec)

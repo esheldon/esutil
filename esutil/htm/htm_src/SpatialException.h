@@ -24,6 +24,7 @@
 #ifndef _SpatialException_h
 #define _SpatialException_h
 
+#include <string>
 #include "SpatialGeneral.h"
 
 /** HTM SpatialIndex Exception base class
@@ -44,7 +45,7 @@ public:
       string.  This behavior is shared by all derived classes.
   */
 
-  SpatialException( const char *what = 0, int defIndex = 1 ) throw();
+  SpatialException( const char *what = 0, int defIndex = 1 ) noexcept;
 
   /** Standard constructor.  
       The message is assembled from copies of
@@ -55,24 +56,24 @@ public:
       derived classes.
   */
    SpatialException( const char *context, const char *because, 
-		int defIndex = 1) throw();
+		int defIndex = 1) noexcept;
 
   /// Copy constructor.
-   SpatialException( const SpatialException& ) throw();
+   SpatialException( const SpatialException& ) noexcept;
 
   /// Assignment operator.
-   SpatialException& operator=( const SpatialException& ) throw();
+   SpatialException& operator=( const SpatialException& ) noexcept;
 
   /// Destructor.
-   virtual ~SpatialException() throw();
+   virtual ~SpatialException() noexcept;
 
   /// Returns the message as set during construction.
-   virtual const char *what() const throw();
+   virtual const char *what() const noexcept;
 
   /// return string length also for null strings
    int slen(const char *) const;
 
-  /// deallocate string
+  /// clear the string
    void clear();
 
   /// default error string
@@ -80,7 +81,7 @@ public:
 
 protected:
   /// error string to assemble
-   char * str_;
+   std::string str_;
 };
 
 /** SpatialException thrown by unimplemented functions.
@@ -93,13 +94,13 @@ protected:
 class SpatialUnimplemented : public SpatialException {
 public:
   /// Default and explicit constructors.
-   SpatialUnimplemented( const char *what = 0 ) throw();
+   SpatialUnimplemented( const char *what = 0 ) noexcept;
 
   /// Standard constructor.
-   SpatialUnimplemented( const char *context, const char *because ) throw();
+   SpatialUnimplemented( const char *context, const char *because ) noexcept;
 
   /// Copy constructor.
-   SpatialUnimplemented( const SpatialUnimplemented& ) throw();
+   SpatialUnimplemented( const SpatialUnimplemented& ) noexcept;
 };
 
 /** SpatialException thrown on operational failure.
@@ -114,17 +115,17 @@ public:
 class SpatialFailure : public SpatialException {
 public:
    /// Default and explicit constructors.
-   SpatialFailure( const char *what = 0 ) throw();
+   SpatialFailure( const char *what = 0 ) noexcept;
 
   /// Standard constructor.
-   SpatialFailure( const char *context, const char *because ) throw();
+   SpatialFailure( const char *context, const char *because ) noexcept;
 
   /// Special constructor.
    SpatialFailure( const char *context, const char *operation
-	      , const char *resource, const char *because = 0 ) throw();
+	      , const char *resource, const char *because = 0 ) noexcept;
 
   /// Copy constructor.
-   SpatialFailure( const SpatialFailure& ) throw();
+   SpatialFailure( const SpatialFailure& ) noexcept;
 };
 
 /** SpatialException thrown on violation of array bounds.
@@ -139,7 +140,7 @@ public:
 class SpatialBoundsError : public SpatialException {
 public:
   /// Default and explicit constructors.
-   SpatialBoundsError( const char *what = 0 ) throw();
+   SpatialBoundsError( const char *what = 0 ) noexcept;
 
   /** Standard constructor.  
       If limit and index are -1, both are
@@ -147,10 +148,10 @@ public:
       array is not the same as the number of elements.
   */
    SpatialBoundsError( const char *context
-		  , const char *array, int32 limit =-1, int32 index=-1 ) throw();
+		  , const char *array, int32 limit =-1, int32 index=-1 ) noexcept;
 
    /// Copy constructor.
-   SpatialBoundsError( const SpatialBoundsError& ) throw();
+   SpatialBoundsError( const SpatialBoundsError& ) noexcept;
 };
 
 /** SpatialException thrown on violation of interface protocols.
@@ -166,17 +167,17 @@ public:
 class SpatialInterfaceError : public SpatialException {
 public:
   /// Default and explicit constructors.
-   SpatialInterfaceError( const char *what = 0 ) throw();
+   SpatialInterfaceError( const char *what = 0 ) noexcept;
 
   /// Standard constructor.
-   SpatialInterfaceError( const char *context, const char *because ) throw();
+   SpatialInterfaceError( const char *context, const char *because ) noexcept;
 
   /// Special constructor.
    SpatialInterfaceError( const char *context
-		     , const char *argument, const char *because ) throw();
+		     , const char *argument, const char *because ) noexcept;
 
   /// Copy constructor.
-   SpatialInterfaceError( const SpatialInterfaceError& ) throw();
+   SpatialInterfaceError( const SpatialInterfaceError& ) noexcept;
 };
 
 #endif /* _SpatialException_h */

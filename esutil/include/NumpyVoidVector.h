@@ -123,7 +123,7 @@ class NumpyVoidVector {
 
 
         // Simple constructor with no data created
-        NumpyVoidVector()  throw (const char *) {
+        NumpyVoidVector() {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -137,7 +137,7 @@ class NumpyVoidVector {
         // Construct from existing python object, allowing it to be any type.
         // See init(PyObject* obj)
 
-        NumpyVoidVector(PyObject* obj)  throw (const char *) {
+        NumpyVoidVector(PyObject* obj) {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -151,7 +151,7 @@ class NumpyVoidVector {
 
         // from a python object
         NumpyVoidVector(
-                const char* dtype, PyObject* obj)  throw (const char *) {
+                const char* dtype, PyObject* obj) {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -161,7 +161,7 @@ class NumpyVoidVector {
 
         }
         NumpyVoidVector(
-                const std::string& dtype, PyObject* obj)  throw (const char *) {
+                const std::string& dtype, PyObject* obj) {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -172,7 +172,7 @@ class NumpyVoidVector {
 
         // with specified length
         NumpyVoidVector(
-                const char* dtype, npy_intp size)  throw (const char *) {
+                const char* dtype, npy_intp size) {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -182,7 +182,7 @@ class NumpyVoidVector {
 
         }
         NumpyVoidVector(
-                const std::string& dtype, npy_intp size)  throw (const char *) {
+                const std::string& dtype, npy_intp size) {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -199,7 +199,7 @@ class NumpyVoidVector {
 
         // From a python object
         NumpyVoidVector(
-                PyArray_Descr* descr, PyObject* obj)  throw (const char *) {
+                PyArray_Descr* descr, PyObject* obj) {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -210,7 +210,7 @@ class NumpyVoidVector {
         }
 		// with specified length
         NumpyVoidVector(
-                PyArray_Descr* descr, npy_intp size) throw (const char *) {
+                PyArray_Descr* descr, npy_intp size) {
             // DONT FORGET THIS!!!!
             init_numpy();
 
@@ -246,7 +246,7 @@ class NumpyVoidVector {
         // be released
         
 
-        void init(PyObject* obj)  throw (const char *) {
+        void init(PyObject* obj) {
 
             // clear any existing array
             Py_XDECREF(mArray);
@@ -279,7 +279,7 @@ class NumpyVoidVector {
         //
         
         void init(
-                const char* dtype, PyObject* obj)  throw (const char *) {
+                const char* dtype, PyObject* obj) {
 
             // clear any existing array
             Py_XDECREF(mArray);
@@ -312,7 +312,7 @@ class NumpyVoidVector {
         }
         // just an overload with string insted of char*
         void init(
-                const std::string& dtype, PyObject* obj)  throw (const char *) {
+                const std::string& dtype, PyObject* obj) {
             init(dtype.c_str(), obj);
         }
 
@@ -321,7 +321,7 @@ class NumpyVoidVector {
         // the indicated size
         //
         void init(
-                const char* dtype, npy_intp size)  throw (const char *) {
+                const char* dtype, npy_intp size) {
 
             std::stringstream err;
             // clear any existing array
@@ -355,7 +355,7 @@ class NumpyVoidVector {
         }
         // just an overload with string insted of char*
         void init(
-                const std::string& dtype, npy_intp size)  throw (const char *) {
+                const std::string& dtype, npy_intp size) {
             init(dtype.c_str(), size);
         }
 
@@ -363,7 +363,7 @@ class NumpyVoidVector {
         // Init from an existing object, forcing indicated type based
         // on a PyArray_Descr struct
         //
-        void init(PyArray_Descr* descr, PyObject* obj)  throw (const char *) {
+        void init(PyArray_Descr* descr, PyObject* obj) {
 
             // clear any existing array
             Py_XDECREF(mArray);
@@ -400,7 +400,7 @@ class NumpyVoidVector {
         //
 
         void init(
-                PyArray_Descr* descr, npy_intp size)  throw (const char *) {
+                PyArray_Descr* descr, npy_intp size) {
 
             // clear any existing array
             Py_XDECREF(mArray);
@@ -437,7 +437,7 @@ class NumpyVoidVector {
 
 
         // Get a pointer to the data.
-        void* ptr() throw (const char *) {
+        void* ptr() {
             if (mArray == NULL) {
                 throw "Error: attempt to get pointer from an "
                       "uninitialized array";
@@ -451,7 +451,7 @@ class NumpyVoidVector {
         // Strides are properly accounted for.  No bounds checking
         // are performed.
 
-        void* ptr(npy_intp index) throw (const char *) {
+        void* ptr(npy_intp index) {
             if (mArray == NULL) {
                 throw "Error: attempt to get pointer from an "
                       "uninitialized array";
@@ -466,7 +466,7 @@ class NumpyVoidVector {
         // object is destructed or goes out of scope, so reference counting
         // is correct..
 
-        PyObject* getref() throw (const char *) {
+        PyObject* getref() {
             Py_XINCREF(mArray);
             return mArray;
         }
@@ -513,7 +513,7 @@ class NumpyVoidVector {
 
         // convert dtype strings to PyArray_Descr structures
         PyArray_Descr* descr_from_string(
-                const char* dtype) throw (const char*) {
+                const char* dtype) {
 
             std::stringstream err;
 
