@@ -1,2 +1,51 @@
 [build-system]
-requires = ["setuptools","wheel","numpy"]
+requires = ["setuptools>=77", "numpy>=2.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "esutil"
+dynamic = ["version"]
+description = "Erin Sheldons Python Utilities"
+readme = "README.md"
+license = "GPL-2.0-or-later"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Erin Scott Sheldon", email = "erin.sheldon@gmail.com"},
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+Homepage = "https://github.com/esheldon/esutil"
+Source = "https://github.com/esheldon/esutil"
+
+[tool.setuptools]
+packages = [
+    "esutil",
+    "esutil.cosmology",
+    "esutil.htm",
+    "esutil.integrate",
+    "esutil.recfile",
+    "esutil.stat",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "esutil.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

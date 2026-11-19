@@ -11,12 +11,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        pyver: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        pyver: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         compiler: [gcc]
         include:
-            - os: macos-latest
-              pyver: "3.9"
-              compiler: clang
             - os: macos-latest
               pyver: "3.10"
               compiler: clang
@@ -36,10 +33,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.pyver }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.pyver }}
 
@@ -51,9 +48,9 @@ jobs:
       - name: lint
         run: |
           pip install flake8
-          flake8 esutil
+          flake8 esutil tests
 
       - name: test
         run: |
           pip install pytest
-          pytest -vv esutil
+          pytest -vv tests
