@@ -7,6 +7,7 @@ Please consult the docs for the main htm package.  For example, in IPython:
 
 
 """
+
 from __future__ import print_function
 from sys import stdout
 import numpy as np
@@ -54,7 +55,7 @@ class HTM(htmc.HTMC):
         number of triangles, 8 * 4**(depth-1)
         """
         depth = self.get_depth()
-        return 8 * 4**(depth-1)
+        return 8 * 4 ** (depth - 1)
 
     def lookup_id(self, ra, dec):
         """
@@ -242,7 +243,11 @@ class HTM(htmc.HTMC):
             depth = self.get_depth()
             matcher = Matcher(depth, ra2, dec2)
             return matcher.match(
-                ra1, dec1, radius, maxmatch=maxmatch, file=filename,
+                ra1,
+                dec1,
+                radius,
+                maxmatch=maxmatch,
+                file=filename,
             )
 
         else:
@@ -305,9 +310,8 @@ class HTM(htmc.HTMC):
         maxmatch=50,
         unique=False,
         nkeep=1,
-        **kw
+        **kw,
     ):
-
         """
         Class:
            HTM
@@ -449,13 +453,11 @@ class HTM(htmc.HTMC):
         # Now limit to matches that are within +/- dz of each object
 
         if dz.size == 1:
-
-            w, = np.where(
+            (w,) = np.where(
                 (z2[m2] > (z1[m1] - dz)) & (z2[m2] < (z1[m1] + dz))
             )
 
         else:
-
             (w,) = np.where(
                 (z2[m2] > (z1[m1] - dz[m1])) & (z2[m2] < (z1[m1] + dz[m1]))
             )
@@ -475,15 +477,11 @@ class HTM(htmc.HTMC):
         flag_matched = np.zeros(ra2.size, dtype="i4")
 
         # j1 and j2 are the start and end indices for each unique value of m1
-        j1 = np.searchsorted(
-            m1, np.arange(npts), "left"
-        )
+        j1 = np.searchsorted(m1, np.arange(npts), "left")
         j2 = np.searchsorted(m1, np.arange(npts), "right")
 
         for i in range(npts):
-
             if j1[i] == j2[i]:
-
                 # First, check to see if the ith object got a match at all...
                 # If so, check and see if the best match has already been used
                 if (j1[i] != i) or ((flag_matched[m2[j1[i]]] == 1) and unique):
@@ -498,14 +496,14 @@ class HTM(htmc.HTMC):
                     flag_matched[m2[j1[i]]] = 1
             else:
                 # compute difference in z-direction for the different matches.
-                zdiff = z1[m1[j1[i]: j2[i]]] - z2[m2[j1[i]: j2[i]]]
+                zdiff = z1[m1[j1[i] : j2[i]]] - z2[m2[j1[i] : j2[i]]]
 
-                angdists = d12[j1[i]: j2[i]]
-                matchis = m2[j1[i]: j2[i]]
+                angdists = d12[j1[i] : j2[i]]
+                matchis = m2[j1[i] : j2[i]]
 
                 # Remove objects that have already been used
                 if unique:
-                    wind = np.where(flag_matched[m2[j1[i]: j2[i]]] == 0)
+                    wind = np.where(flag_matched[m2[j1[i] : j2[i]]] == 0)
                     zdiff = zdiff[wind]
 
                 # If none remains, there's no match
@@ -713,7 +711,7 @@ class HTM(htmc.HTMC):
             htmid2 = np.atleast_1d(htmid2).astype('i8')
             if htmid2.size != ra2.size:
                 raise ValueError(
-                    "htmid2 size %d != " "ra size %d" % (htmid2.size, ra2.size)
+                    "htmid2 size %d != ra size %d" % (htmid2.size, ra2.size)
                 )
             if minid is None:
                 minid = htmid2.min()
@@ -726,8 +724,17 @@ class HTM(htmc.HTMC):
         minmax_ids = np.array([minid, maxid], dtype="i8")
 
         counts = self.cbincount(
-            rmin, rmax, nbin, ra1, dec1, ra2, dec2, htmrev2, minmax_ids, scale,
-            verb
+            rmin,
+            rmax,
+            nbin,
+            ra1,
+            dec1,
+            ra2,
+            dec2,
+            htmrev2,
+            minmax_ids,
+            scale,
+            verb,
         )
         if getbins:
             lower, upper = log_bins(rmin, rmax, nbin)
@@ -764,7 +771,7 @@ class Matcher(htmc.Matcher):
 
         if ra.size != dec.size:
             raise ValueError(
-                "ra size (%d) != " "dec size (%d)" % (ra.size, dec.size)
+                "ra size (%d) != dec size (%d)" % (ra.size, dec.size)
             )
 
         super(Matcher, self).__init__(depth, ra, dec)
@@ -821,7 +828,7 @@ class Matcher(htmc.Matcher):
 
         if ra.size != dec.size:
             raise ValueError(
-                "ra size (%d) != " "dec size (%d)" % (ra.size, dec.size)
+                "ra size (%d) != dec size (%d)" % (ra.size, dec.size)
             )
 
         if radius.size != 1 and radius.size != ra.size:
@@ -887,7 +894,7 @@ def gmean(r1, r2, dim):
     e2 = dim
 
     frac = (1.0 * e2) / e1
-    gm = frac * (r1 ** e1 - r2 ** e1) / (r1 ** e2 - r2 ** e2)
+    gm = frac * (r1**e1 - r2**e1) / (r1**e2 - r2**e2)
     return gm
 
 
@@ -899,8 +906,8 @@ def log_bins(rmin, rmax, nbin):
     log_lower_edges = log_rmin + log_binsize * np.arange(nbin)
     log_upper_edges = log_lower_edges + log_binsize
 
-    lower_edges = 10 ** log_lower_edges
-    upper_edges = 10 ** log_upper_edges
+    lower_edges = 10**log_lower_edges
+    upper_edges = 10**log_upper_edges
 
     return lower_edges, upper_edges
 

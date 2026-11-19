@@ -67,7 +67,7 @@ def _pbar_full(
     """
     See docs for pbar
     """
-    prefix = desc+': ' if desc else ''
+    prefix = desc + ': ' if desc else ''
 
     if total is None:
         try:
@@ -111,7 +111,7 @@ def _pbar_full(
                 pstat = format_meter(
                     n,
                     total,
-                    cur_t-start_t,
+                    cur_t - start_t,
                     n_bars=n_bars,
                 )
                 sp.print_status(prefix + pstat)
@@ -129,7 +129,7 @@ def _pbar_full(
             pstat = format_meter(
                 n,
                 total,
-                cur_t-start_t,
+                cur_t - start_t,
                 n_bars=n_bars,
             )
             sp.print_status(prefix + pstat)
@@ -160,7 +160,7 @@ def sbar(iterable, desc='', total=None, file=sys.stderr):
         stderr
     """
 
-    prefix = desc+': ' if desc else ''
+    prefix = desc + ': ' if desc else ''
 
     if total is None:
         try:
@@ -266,8 +266,8 @@ def format_meter(n, total, elapsed, n_bars=20):
     if total:
         frac = float(n) / total
 
-        bar_length = int(frac*n_bars)
-        bar = '#'*bar_length + '-'*(n_bars-bar_length)
+        bar_length = int(frac * n_bars)
+        bar = '#' * bar_length + '-' * (n_bars - bar_length)
 
         percentage = '%3d%%' % (frac * 100)
 
@@ -281,7 +281,7 @@ def format_meter(n, total, elapsed, n_bars=20):
         else:
             rate_str = '---'
 
-        left_str = format_interval(elapsed / n * (total-n)) if n else '?'
+        left_str = format_interval(elapsed / n * (total - n)) if n else '?'
 
         totstr = str(total)
         nfmt = '%' + str(len(totstr)) + 'd'
@@ -301,7 +301,9 @@ class StatusPrinter(object):
         self.last_printed_len = 0
 
     def print_status(self, s):
-        self.file.write('\r'+s+' '*max(self.last_printed_len-len(s), 0))
+        self.file.write(
+            '\r' + s + ' ' * max(self.last_printed_len - len(s), 0)
+        )
         self.file.flush()
         self.last_printed_len = len(s)
 

@@ -9,6 +9,7 @@ Classes:
     SqliteConnection, a numpy aware sqlite class, with other nice
     features added
 """
+
 from __future__ import print_function
 
 import numpy
@@ -16,6 +17,7 @@ import sqlite3
 import os
 import tempfile
 from tempfile import NamedTemporaryFile
+
 # import sys
 from sys import stdout
 from . import ostools
@@ -189,7 +191,7 @@ class SqliteConnection(sqlite3.Connection):
             info = self.table_info(name)
 
             stdout.write('%-15s %15s\n' % ('column', 'type'))
-            stdout.write('-'*32+'\n')
+            stdout.write('-' * 32 + '\n')
             for row in info:
                 stdout.write('%-15s %15s\n' % (row['name'], row['type']))
 
@@ -199,7 +201,7 @@ class SqliteConnection(sqlite3.Connection):
 
             head = "%-10s %25s %15s %s" % ('type', 'name', 'tbl_name', 'sql')
             stdout.write(head)
-            stdout.write("\n" + "-"*len(head)+"\n")
+            stdout.write("\n" + "-" * len(head) + "\n")
 
             for info in infolist:
                 tup = (
@@ -241,9 +243,9 @@ class SqliteConnection(sqlite3.Connection):
 
         if len(clauses) > 0:
             clauses = ' and '.join(clauses)
-            query += " where "+clauses
+            query += " where " + clauses
         if self.verbose:
-            stdout.write(query+'\n')
+            stdout.write(query + '\n')
 
         curs = self.cursor()
         res = curs.execute(query).fetchall()
@@ -292,7 +294,7 @@ class SqliteConnection(sqlite3.Connection):
             query = "select * from sqlite_master where type='table'"
 
         if self.verbose:
-            stdout.write(query+'\n')
+            stdout.write(query + '\n')
 
         res = curs.execute(query).fetchall()
         curs.close()
@@ -317,13 +319,16 @@ class SqliteConnection(sqlite3.Connection):
             if sc.table_exists('tablename'):
                 ... do something ...
         """
-        query = """
+        query = (
+            """
             select
                 name
             from
                 sqlite_master
             where
-                type='table' and name = '%s'\n""" % tablename
+                type='table' and name = '%s'\n"""
+            % tablename
+        )
 
         if self.verbose:
             stdout.write(query)
@@ -414,8 +419,10 @@ class SqliteConnection(sqlite3.Connection):
         for i, val in enumerate(row):
             name = description[i][0].lower()
             if val is None:
-                raise ValueError("Cannot work with None/Null types "
-                                 "when converting to recarray")
+                raise ValueError(
+                    "Cannot work with None/Null types "
+                    "when converting to recarray"
+                )
             if isinstance(val, int):
                 typecode = 'i8'
             elif isinstance(val, float):
@@ -471,12 +478,15 @@ class SqliteConnection(sqlite3.Connection):
         index_name = '_'.join(columns) + '_index'
         column_list = ','.join(columns)
 
-        query = ("create index if not exists "
-                 "%s on %s (%s)""" % (index_name, tablename, column_list))
+        query = "create index if not exists %s on %s (%s)" % (
+            index_name,
+            tablename,
+            column_list,
+        )
 
         if self.verbose:
             stdout.write("Adding index: \n")
-            stdout.write(query+'\n')
+            stdout.write(query + '\n')
 
         curs.execute(query)
 
@@ -508,10 +518,9 @@ class SqliteConnection(sqlite3.Connection):
 
         self._create_tabledef_from_array(arr, tablename, force=create)
 
-        with NamedTemporaryFile(dir=self.tmpdir,
-                                suffix='.csv',
-                                delete=cleanup) as tmpf:
-
+        with NamedTemporaryFile(
+            dir=self.tmpdir, suffix='.csv', delete=cleanup
+        ) as tmpf:
             self.write_import_file(tmpf.name, arr)
             self.import_file(tmpf.name, tablename)
 
@@ -541,8 +550,9 @@ class SqliteConnection(sqlite3.Connection):
             sqlite3 -separator '|' %s ".import %s %s"
         """ % (self.dbfile, filename, tablename)
 
-        status, stdo, stde = \
-            ostools.exec_process(command, verbose=self.verbose)
+        status, stdo, stde = ostools.exec_process(
+            command, verbose=self.verbose
+        )
 
         if status != 0:
             mess = """
@@ -565,9 +575,7 @@ class SqliteConnection(sqlite3.Connection):
         """
         Deprecated. Use array2table
         """
-        return self.array2table(arr, tablename,
-                                create=create,
-                                cleanup=cleanup)
+        return self.array2table(arr, tablename, create=create, cleanup=cleanup)
 
 
 def descr2tabledef(descr, tablename):
@@ -758,8 +766,9 @@ def sqlite2numpy(typename, size=None):
             try:
                 szint = int(size)
             except ValueError:
-                raise ValueError("could not convert input size "
-                                 "'%s' to int" % size)
+                raise ValueError(
+                    "could not convert input size '%s' to int" % size
+                )
             return 'S%d' % szint
 
         # no size given in name.  Treat as text.
@@ -776,13 +785,15 @@ def sqlite2numpy(typename, size=None):
         if left != -1:
             right = typename.find(')')
             if right != -1:
-                substr = typename[left+1:right]
+                substr = typename[left + 1 : right]
 
                 try:
                     szint = int(substr)
                 except ValueError:
-                    raise ValueError("could not convert size "
-                                     "indicator '%s' to int in" % typename)
+                    raise ValueError(
+                        "could not convert size "
+                        "indicator '%s' to int in" % typename
+                    )
                 return 'S%d' % szint
 
         # if we get here something went wrong
@@ -793,6 +804,7 @@ def sqlite2numpy(typename, size=None):
 # dict sqlite tools. These need to be incorporated into the
 # SqliteConnection class
 #
+
 
 def py2sqlite(data):
     """
@@ -808,8 +820,10 @@ def py2sqlite(data):
     elif isinstance(data, str):
         return 'text'
     else:
-        message = ('Error: python data must be one of the '
-                   'following types: int, float, str')
+        message = (
+            'Error: python data must be one of the '
+            'following types: int, float, str'
+        )
         raise ValueError(message)
 
 
@@ -832,7 +846,7 @@ def dict2coldefs(data, types=None, keys=None):
         else:
             typedef = py2sqlite(data[key])
 
-        coldef = key+' '+typedef
+        coldef = key + ' ' + typedef
         coldefs.append(coldef)
 
     return coldefs
@@ -888,12 +902,18 @@ def add_index(dbfile, tablename, columns, verbose=False):
     conn.close()
 
 
-def dict2table(data, dbfile, tablename,
-               keys=None, types=None,
-               indices=None,
-               tmpdir='.', clobber=True,
-               cleanup=True,
-               verbose=False):
+def dict2table(
+    data,
+    dbfile,
+    tablename,
+    keys=None,
+    types=None,
+    indices=None,
+    tmpdir='.',
+    clobber=True,
+    cleanup=True,
+    verbose=False,
+):
     """
 
     Convert a dict or list of dicts to an sqlite table, creating the table if
@@ -952,9 +972,9 @@ def dict2table(data, dbfile, tablename,
     conn.close()
 
     # write data to a temporary csv file and then import
-    csvtmp = tempfile.mktemp(dir=tmpdir,
-                             prefix=tablename+'-temp-',
-                             suffix='.csv')
+    csvtmp = tempfile.mktemp(
+        dir=tmpdir, prefix=tablename + '-temp-', suffix='.csv'
+    )
 
     if verbose:
         stdout.write("Writing to temporary file: %s\n" % csvtmp)

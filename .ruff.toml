@@ -1,0 +1,14 @@
+exclude = [
+    ".git",
+    "build",
+    "dist",
+    ".github",
+]
+line-length = 79
+
+[lint]
+select = ["E", "F", "W"]
+preview = true
+
+[format]
+quote-style = "preserve"
