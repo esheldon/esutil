@@ -106,7 +106,7 @@ template <class T> class NumpyVector {
 	public:
 
         // simple constructor
-		NumpyVector() throw (const char *);
+		NumpyVector();
 
         // destructor.  Always decref the array
 		~NumpyVector() {
@@ -114,10 +114,10 @@ template <class T> class NumpyVector {
 		};
 
 		// Construct from existing python object.  See init(PyObject* obj)
-		NumpyVector(PyObject* obj) throw (const char *);
+		NumpyVector(PyObject* obj);
 
 		// Construct a new array with the given length
-		NumpyVector(npy_intp size) throw (const char *);
+		NumpyVector(npy_intp size);
 
 
 
@@ -130,14 +130,14 @@ template <class T> class NumpyVector {
         // This can be called at *any time* and any existing data will
         // be released
         
-        void init(PyObject* obj)  throw (const char *);
+        void init(PyObject* obj);
 
 		// Initialize from scratch based on size and typenum
         //
         // This can be called at *any time* and any existing data will
         // be released
 		
-        void init(npy_intp size)  throw (const char *);
+        void init(npy_intp size);
 
 
         // Random access to the underlying data at the specified location.
@@ -156,14 +156,14 @@ template <class T> class NumpyVector {
 
 
         // Get a pointer to the data.
-		T* ptr() throw (const char *);
+		T* ptr();
 
         // Get a pointer to the data at the indicated location
         // Strides are properly accounted for.  No bounds checking
         // are performed.
-		T* ptr(npy_intp index) throw (const char *);
+		T* ptr(npy_intp index);
 
-        void* void_ptr() throw (const char*) {
+        void* void_ptr() {
             if (mArray == NULL) {
                 throw "Error: attempt to get pointer from an uninitialized array";
             }
@@ -179,7 +179,7 @@ template <class T> class NumpyVector {
         // object is destructed or goes out of scope, so reference counting
         // is correct..
 
-		PyObject* getref() throw (const char *);
+		PyObject* getref();
 
 
         // get the type name.  Equivalent to typeid(T).name()
@@ -248,7 +248,7 @@ template <class T> class NumpyVector {
         void init_type_info();
 
         // private method to initialize type number and name
-        void set_type() throw (const char* );
+        void set_type();
 
 		const char* mTypeName;
 		int mTypeNum;
@@ -278,7 +278,7 @@ static void init_numpy(void) {
 
 
 template <class T>
-NumpyVector<T>::NumpyVector()  throw (const char *) {
+NumpyVector<T>::NumpyVector() {
     init_numpy();
 
     init_type_info();
@@ -295,7 +295,7 @@ NumpyVector<T>::NumpyVector()  throw (const char *) {
 
 
 template <class T>
-NumpyVector<T>::NumpyVector(PyObject* obj)  throw (const char *) {
+NumpyVector<T>::NumpyVector(PyObject* obj) {
     init_numpy();
 
     init_type_info();
@@ -316,7 +316,7 @@ NumpyVector<T>::NumpyVector(PyObject* obj)  throw (const char *) {
 
 // Create given the length and typenum
 template <class T>
-NumpyVector<T>::NumpyVector(npy_intp size) throw (const char *) {
+NumpyVector<T>::NumpyVector(npy_intp size) {
     init_numpy();
 
     init_type_info();
@@ -335,7 +335,7 @@ NumpyVector<T>::NumpyVector(npy_intp size) throw (const char *) {
 }
 
 template <class T>
-void NumpyVector<T>::init(PyObject* obj)  throw (const char *) {
+void NumpyVector<T>::init(PyObject* obj) {
 
 	// clear any existing array
 	Py_XDECREF(mArray);
@@ -421,7 +421,7 @@ void NumpyVector<T>::init(PyObject* obj)  throw (const char *) {
 }
 
 template <class T>
-void NumpyVector<T>::init(npy_intp size)  throw (const char *) {
+void NumpyVector<T>::init(npy_intp size) {
 
 	// clear any existing array
 	Py_XDECREF(mArray);
@@ -455,14 +455,14 @@ void NumpyVector<T>::init(npy_intp size)  throw (const char *) {
 // This is useful if you want to get a PyObject* that will be returned
 // to the outside world
 template <class T>
-PyObject* NumpyVector<T>::getref() throw (const char *) {
+PyObject* NumpyVector<T>::getref() {
 	Py_XINCREF(mArray);
 	return mArray;
 }
 
 
 template <class T> 
-T* NumpyVector<T>::ptr() throw (const char *) {
+T* NumpyVector<T>::ptr() {
 	if (mArray == NULL) {
 		throw "Error: attempt to get pointer from an uninitialized array";
 	}
@@ -472,7 +472,7 @@ T* NumpyVector<T>::ptr() throw (const char *) {
 }
 
 template <class T>
-T* NumpyVector<T>::ptr(npy_intp index) throw (const char *) {
+T* NumpyVector<T>::ptr(npy_intp index) {
 	if (mArray == NULL) {
 		throw "Error: attempt to get pointer from an uninitialized array";
 	}
@@ -483,7 +483,7 @@ T* NumpyVector<T>::ptr(npy_intp index) throw (const char *) {
 
 
 template <class T>
-void NumpyVector<T>::set_type() throw (const char *) {
+void NumpyVector<T>::set_type() {
 
     const char *name = typeid(T).name();
     if (mNumpyIdMap.count(name) > 0) {

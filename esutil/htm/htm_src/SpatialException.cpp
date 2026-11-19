@@ -24,9 +24,8 @@
 //#			   Also, use some of the inheritance to avoid
 //#			   code duplication. Introduced defaultstr[].
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <SpatialException.h>
 
 /* --- SpatialException methods ------------------------------------------------- */
@@ -47,78 +46,73 @@ SpatialException::defaultstr[] = {
 #define BOUNDS 		4
 #define INTERFACE	5
 
-SpatialException::~SpatialException() throw() {
-  if(str_)free(str_);
+// The message is held in a std::string; if building it fails for lack of
+// memory there is nothing sensible to report, so the message is left empty.
+
+static std::string int2str(int32 val)
+{
+  return std::to_string((long long) val);
 }
 
-SpatialException::SpatialException( const char *cstr, int defIndex ) throw()
+SpatialException::~SpatialException() noexcept
+{
+}
+
+SpatialException::SpatialException( const char *cstr, int defIndex ) noexcept
 {
    try {
      if ( cstr ) {
-       str_ = new char[slen(cstr) + 1];
-       strcpy(str_,cstr);
+       str_ = cstr;
      } else {
-       str_ = new char[50];
-       sprintf(str_,"%s : %s",defaultstr[CONTEXT],defaultstr[defIndex]);
+       str_ = defaultstr[CONTEXT];
+       str_ += " : ";
+       str_ += defaultstr[defIndex];
      }
    }
    catch (...) {
-     delete[] str_;
+     clear();
    }
 }
 
 SpatialException::SpatialException( const char *context, const char *because,
-			  int defIndex) throw()
+			  int defIndex) noexcept
 {
    try {
-     const char * tmpc, * tmpb;
-     tmpc = context ? context : defaultstr[CONTEXT];
-     tmpb = because ? because : defaultstr[defIndex];
-     str_ = new char[slen(tmpc) + slen(tmpb) + 50]; // allow extensions
-     sprintf(str_,"%s : %s",tmpc,tmpb);
+     str_ = context ? context : defaultstr[CONTEXT];
+     str_ += " : ";
+     str_ += because ? because : defaultstr[defIndex];
    }
    catch (...) {
-     delete[] str_;
+     clear();
    }
 }
 
-SpatialException::SpatialException( const SpatialException& oldX ) throw()
+SpatialException::SpatialException( const SpatialException& oldX ) noexcept
 {
   try {
-    if(oldX.str_) {
-      str_ = new char[slen(oldX.str_) + 1];
-      strcpy(str_,oldX.str_);
-    }
+    str_ = oldX.str_;
   }
   catch (...) {
-    delete[] str_;
+    clear();
   }
 }
 
-SpatialException& SpatialException::operator=( const SpatialException& oldX ) throw()
+SpatialException& SpatialException::operator=( const SpatialException& oldX ) noexcept
 {
    try {
      if(&oldX != this) { // beware of self-assignment
-       if(oldX.str_) {
-	 str_ = new char[slen(oldX.str_) + 1];
-	 strcpy(str_,oldX.str_);
-       }
+       str_ = oldX.str_;
      }
    }
    catch (...) {
-     delete[] str_;
+     clear();
    }
    return *this;
 }
 
-const char *SpatialException::what() const throw()
+const char *SpatialException::what() const noexcept
 {
-   try {
-      return str_;
-   }
-   catch (...) {
-      return "";
-   }
+   return str_.c_str();
 }
 
 int SpatialException::slen(const char *str) const
@@ -129,158 +123,163 @@ int SpatialException::slen(const char *str) const
 
 void SpatialException::clear()
 {
-  if(str_)delete[] str_;
+  str_.clear();
 }
 /* --- SpatialUnimplemented methods --------------------------------------------- */
 
-SpatialUnimplemented::SpatialUnimplemented( const char *cstr ) throw()
+SpatialUnimplemented::SpatialUnimplemented( const char *cstr ) noexcept
 : SpatialException(cstr,UNIMPLEMENTED)
 {
 }
 
 SpatialUnimplemented::SpatialUnimplemented( const char *context, const char *because )
-   throw()
+   noexcept
   : SpatialException(context, because, UNIMPLEMENTED)
 {
 }
 
-SpatialUnimplemented::SpatialUnimplemented( const SpatialUnimplemented& oldX ) throw()
+SpatialUnimplemented::SpatialUnimplemented( const SpatialUnimplemented& oldX ) noexcept
   : SpatialException(oldX)
 {
 }
 
 /* --- SpatialFailure methods --------------------------------------------------- */
 
-SpatialFailure::SpatialFailure( const char *cstr ) throw()
+SpatialFailure::SpatialFailure( const char *cstr ) noexcept
   : SpatialException(cstr, FAILURE)
 {
 }
 
-SpatialFailure::SpatialFailure( const char *context, const char *because ) throw()
+SpatialFailure::SpatialFailure( const char *context, const char *because ) noexcept
   : SpatialException(context,because,FAILURE)
 {
 }
 
 SpatialFailure::SpatialFailure( const char *context, const char *operation
-		      , const char *resource, const char *because ) throw()
+		      , const char *resource, const char *because ) noexcept
 {
    try {
-      delete[] str_;
       if ( !operation && !resource && !because ) {
-	 if ( !context ) context = defaultstr[CONTEXT];
 	 because = "failed operation";
       }
-      str_ = new char[ slen(context) + slen(operation) + slen(resource)
-		      + slen(because) + 50];
-      *str_ = '\0';
       if ( !context )
 	context = defaultstr[CONTEXT];
-      sprintf(str_,"%s: ",context);
+
+      str_ = context;
+      str_ += ": ";
       if ( operation ) {
-	 sprintf(str_,"%s %s failed ",str_, operation);
+	 str_ += " ";
+	 str_ += operation;
+	 str_ += " failed ";
       }
       if ( resource ) {
-	 if(operation)
-	   sprintf(str_,"%s on \"%s\"",str_,resource);
-	 else
-	   sprintf(str_,"%s trouble with \"%s\"",str_,resource);
+	 str_ += operation ? " on \"" : " trouble with \"";
+	 str_ += resource;
+	 str_ += "\"";
       }
       if ( because ) {
-	 if ( operation || resource )
-	   sprintf(str_,"%s because %s",str_,because);
-	 else
-	   sprintf(str_,"%s %s",str_,because);
+	 str_ += ( operation || resource ) ? " because " : " ";
+	 str_ += because;
       }
    }
    catch (...) {
-     delete[] str_;
+     clear();
    }
 }
 
-SpatialFailure::SpatialFailure( const SpatialFailure& oldX ) throw()
+SpatialFailure::SpatialFailure( const SpatialFailure& oldX ) noexcept
   : SpatialException(oldX)
 {
 }
 
 /* --- SpatialBoundsError methods ----------------------------------------------- */
 
-SpatialBoundsError::SpatialBoundsError( const char *cstr ) throw()
+SpatialBoundsError::SpatialBoundsError( const char *cstr ) noexcept
   : SpatialException(cstr,BOUNDS)
 {
 }
 
 SpatialBoundsError::SpatialBoundsError( const char *context, const char *array
-			      , int32 limit, int32 index ) throw()
+			      , int32 limit, int32 index ) noexcept
   : SpatialException(context,array,BOUNDS)
 {
    try {
      if ( limit != -1 ) {
-       if ( array )
-	   sprintf(str_,"%s[%d]",str_,index);
-	 else
-	   sprintf(str_, "%s array index %d ",str_, index );
-
-	 if ( index > limit ) {
-	   sprintf( str_, "%s over upper bound by %d",str_, index - limit );
+	 if ( array ) {
+	   str_ += "[" + int2str(index) + "]";
 	 }
 	 else {
-	   sprintf( str_, "%s under lower bound by %d",str_, limit - index );
+	   str_ += " array index " + int2str(index) + " ";
+	 }
+
+	 if ( index > limit ) {
+	   str_ += " over upper bound by " + int2str(index - limit);
+	 }
+	 else {
+	   str_ += " under lower bound by " + int2str(limit - index);
 	 }
       }
    }
    catch (...) {
-     delete[] str_;
+     clear();
    }
 }
 
-SpatialBoundsError::SpatialBoundsError( const SpatialBoundsError& oldX ) throw()
+SpatialBoundsError::SpatialBoundsError( const SpatialBoundsError& oldX ) noexcept
   : SpatialException(oldX)
 {
 }
 
 /* --- SpatialInterfaceError methods -------------------------------------------- */
 
-SpatialInterfaceError::SpatialInterfaceError( const char *cstr ) throw()
+SpatialInterfaceError::SpatialInterfaceError( const char *cstr ) noexcept
   : SpatialException(cstr,INTERFACE)
 {
 }
 
 SpatialInterfaceError::SpatialInterfaceError( const char *context, const char *because )
-   throw()
+   noexcept
   : SpatialException(context,because,INTERFACE)
 {
 }
 
 SpatialInterfaceError::SpatialInterfaceError( const char *context, const char *argument
-				 , const char *because ) throw()
+				 , const char *because ) noexcept
 {
    try {
-      delete[] str_;
-      str_ = new char[slen(context) + slen(argument) + slen(because) + 128];
-      *str_ = '\0';
       if ( !context )
 	context = defaultstr[CONTEXT];
-      sprintf(str_,"%s: ",context);
-      if ( argument && because ) {
-	 sprintf(str_,"%s argument \"%s\" is invalid because %s ",str_,
-		 argument, because);
+
+      str_ = context;
+      str_ += ": ";
+      if ( argument ) {
+	 if ( because ) {
+	   str_ += " argument \"";
+	   str_ += argument;
+	   str_ += "\" is invalid because ";
+	   str_ += because;
+	   str_ += " ";
+	 }
+	 else {
+	   str_ += " invalid argument \"";
+	   str_ += argument;
+	   str_ += "\" ";
+	 }
       }
-      else if ( argument && !because ) {
-	 sprintf(str_,"%s invalid argument \"%s\" ",str_,
-		 argument);
+      else if ( because ) {
+	 str_ += " ";
+	 str_ += because;
       }
-      else if ( !argument )
-	if(because)
-	  sprintf(str_,"%s %s",str_,because);
-	else
-	  sprintf(str_,"%s interface violation",str_);
+      else {
+	 str_ += " interface violation";
+      }
    }
    catch (...) {
-     delete[] str_;
+     clear();
    }
 }
 
-SpatialInterfaceError::SpatialInterfaceError( const SpatialInterfaceError& oldX ) throw()
+SpatialInterfaceError::SpatialInterfaceError( const SpatialInterfaceError& oldX ) noexcept
   : SpatialException(oldX)
 {
 }

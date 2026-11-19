@@ -26,8 +26,8 @@ struct PAIR_INFO_ORDERING {
 class HTMC {
 	public:
 
-		HTMC(int depth=10) throw (const char *);
-        void init(int depth=10) throw (const char *);
+		HTMC(int depth=10);
+        void init(int depth=10);
 		~HTMC() {};
 
 
@@ -36,14 +36,14 @@ class HTMC {
                 PyObject* ra_array, 
                 PyObject* dec_array,
                 PyObject* htm_ids_array
-        ) throw (const char *);
+        );
 
         PyObject* intersect(
                             double ra, // all in degrees
                             double dec,
                             double radius, // degrees
                             int inclusive
-                           ) throw (const char *);
+                           );
 
 
         // this requires the reverse indices must already be created,
@@ -60,7 +60,7 @@ class HTMC {
                 PyObject* minid_obj,
                 PyObject* maxid_obj,
 				PyObject* maxmatch_obj,
-				const char *filename) throw (const char *);
+				const char *filename);
         */
         PyObject* cbincount(
                 double rmin, // units of scale*angle in radians
@@ -75,7 +75,7 @@ class HTMC {
 				PyObject* scale_object=NULL,
                 int verbose=0) // will bin in radians*scale.  
                                             // Same length as ra1.
-                              throw (const char *);
+                ;
 
 
 
@@ -97,7 +97,7 @@ class Matcher {
 
         Matcher(int depth,
                 PyObject* ra,
-                PyObject* dec) throw (const char *);
+                PyObject* dec);
         ~Matcher() {};
 
         int get_depth() {
@@ -108,7 +108,7 @@ class Matcher {
                         PyObject* ra_array, // degrees
                         PyObject* dec_array,
                         long maxmatch,
-                        const char* filename) throw (const char *);
+                        const char* filename);
 
 
     private:

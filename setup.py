@@ -11,12 +11,8 @@ include_dirs = [numpy.get_include(), "esutil/include"]
 
 if sys.platform.startswith("win"):
     c_args = []
-    cpp_args = []
 else:
     c_args = ["-Wno-incompatible-pointer-types"]
-    # The C++ code uses dynamic exception specifications, which were removed
-    # in c++17, so we need to pin the standard
-    cpp_args = c_args + ["-std=c++11"]
 
 ext_modules = [
     Extension(
@@ -26,7 +22,7 @@ ext_modules = [
             "esutil/recfile/records_wrap.cpp",
         ],
         include_dirs=include_dirs + ["esutil/recfile"],
-        extra_compile_args=cpp_args,
+        extra_compile_args=c_args,
     ),
     Extension(
         "esutil.cosmology._cosmolib",
@@ -41,7 +37,7 @@ ext_modules = [
             + ["esutil/htm/htmc.cc", "esutil/htm/htmc_wrap.cc"]
         ),
         include_dirs=include_dirs + ["esutil/htm", "esutil/htm/htm_src"],
-        extra_compile_args=cpp_args,
+        extra_compile_args=c_args,
     ),
     Extension(
         "esutil.stat._chist",

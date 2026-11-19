@@ -1,6 +1,9 @@
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <cstdio>
+#include <cstring>
+#include <cerrno>
 #include <vector>
 #include <math.h>
 #include "htmc.h"
@@ -112,11 +115,11 @@ double gcirc(double ra1, double dec1,
 }
 
 
-HTMC::HTMC(int depth) throw (const char *) {
+HTMC::HTMC(int depth) {
     init(depth);
 }
 
-void HTMC::init(int depth) throw (const char *) {
+void HTMC::init(int depth) {
     mDepth = depth;
     mHtmInterface.init(depth);
 
@@ -125,7 +128,7 @@ void HTMC::init(int depth) throw (const char *) {
 
 void HTMC::lookup_id(PyObject* ra_array, 
                      PyObject* dec_array,
-                     PyObject* htm_ids_array) throw (const char* ) {
+                     PyObject* htm_ids_array) {
 
     npy_intp num = PyArray_SIZE((PyArrayObject *) ra_array);
 
@@ -144,7 +147,7 @@ void HTMC::lookup_id(PyObject* ra_array,
 PyObject* HTMC::intersect(double ra, // all in degrees
                           double dec,
                           double radius, // degrees
-                          int inclusive) throw (const char *) {
+                          int inclusive) {
 
     // static const double D2R=0.0174532925199433;
     npy_intp nfound=0;
@@ -213,7 +216,7 @@ PyObject* HTMC::cbincount(double rmin, // units of scale*angle in radians
                           PyObject* htmrev2_array,
                           PyObject* minmax_ids_array,
                           PyObject* scale_array,
-                          int verbose) throw (const char *) {
+                          int verbose) {
 
     double scale=1, logscale=0;
 
@@ -388,7 +391,7 @@ PyObject* HTMC::cbincount(double rmin, // units of scale*angle in radians
 
 Matcher::Matcher(int depth,
                  PyObject* ra_input,
-                 PyObject* dec_input) throw (const char *)
+                 PyObject* dec_input)
 {
     init_numpy();
 
@@ -432,7 +435,7 @@ PyObject* Matcher::match(PyObject* ra_array, // all in degrees
                          PyObject* dec_array,
                          PyObject* radius_array, // degrees
                          long maxmatch,
-                         const char* filename) throw (const char *) {
+                         const char* filename) {
 
     std::map<int64_t,std::vector<int64_t> >::iterator iter;
 
@@ -458,7 +461,7 @@ PyObject* Matcher::match(PyObject* ra_array, // all in degrees
         {
             std::stringstream err;
             err<<"Cannot open file: "<<fname<<" : "<<strerror(errno);
-            throw err.str().c_str();
+            throw std::runtime_error(err.str());
         }
     }
 

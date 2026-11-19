@@ -222,12 +222,12 @@ static void init_numpy(void) {
 
 class NumpyRecords {
     public:
-        NumpyRecords() throw (const char*) {
+        NumpyRecords() {
             init_numpy();
             set_defaults();
         }
 
-        NumpyRecords(PyObject* obj) throw (const char*) {
+        NumpyRecords(PyObject* obj) {
             init_numpy();
             set_defaults();
             init(obj);
@@ -260,7 +260,7 @@ class NumpyRecords {
         }
 
 
-        void init(PyObject* obj) throw (const char*) {
+        void init(PyObject* obj) {
             // clear any existing array and info
             clear();
 
@@ -288,7 +288,7 @@ class NumpyRecords {
 
         // return a pointer to the field in the first row.  Make sure you use
         // the offsets and stride to properly access other rows!
-        char* ptr(const char* cname) throw (const char*) {
+        char* ptr(const char* cname) {
             std::string name=cname;
             return ptr(name);
         }
@@ -302,11 +302,11 @@ class NumpyRecords {
 
 
         // return a pointer to the field and row
-        char* ptr(const char* cname, npy_intp row) throw (const char*) {
+        char* ptr(const char* cname, npy_intp row) {
             std::string name=cname;
             return ptr(name,row);
         }
-        char* ptr(std::string& name, npy_intp row) throw (const char*) {
+        char* ptr(std::string& name, npy_intp row) {
             check_name(name);
             check_row(row);
             npy_intp fi = this->nmap_[name];
@@ -397,12 +397,12 @@ class NumpyRecords {
         }
 
         // number of bytes in requested field
-        npy_intp elsize(std::string name) throw (const char*) {
+        npy_intp elsize(std::string name) {
             check_name(name);
             npy_intp fi=this->nmap_[name];
             return elsize(fi);
         }
-        npy_intp elsize(npy_intp i) throw (const char*) {
+        npy_intp elsize(npy_intp i) {
             check_field_index_bound(i);
             return this->elsizes_[i];
         }
@@ -430,12 +430,12 @@ class NumpyRecords {
         }
 
         // the offset for a particular field
-        npy_intp offset(std::string name) throw (const char*) {
+        npy_intp offset(std::string name) {
             check_name(name);
             npy_intp fi=this->nmap_[name];
             return offset(fi);
         }
-        npy_intp offset(npy_intp i) throw (const char*) {
+        npy_intp offset(npy_intp i) {
             check_field_index_bound(i);
             return this->offsets_[i];
         }
@@ -446,7 +446,7 @@ class NumpyRecords {
         }
 
         // access to the name of a particular field
-        std::string name(npy_intp i) throw (const char*) {
+        std::string name(npy_intp i) {
             check_field_index_bound(i);
             return this->names_[i];
         }
@@ -456,7 +456,7 @@ class NumpyRecords {
             return this->names_;
         }
 
-        int typecode(npy_intp i) throw (const char*) {
+        int typecode(npy_intp i) {
             check_field_index_bound(i);
             return this->typecodes_[i];
         }
@@ -870,7 +870,7 @@ class NumpyRecords {
         }
 
         // get information about all fields
-        void set_field_info() throw (const char*) {
+        void set_field_info() {
 
             std::stringstream err;
             PyArray_Descr* descr = PyArray_DESCR(this->array_);
@@ -926,7 +926,7 @@ class NumpyRecords {
         }
 
 
-        void check_field_index_bound(npy_intp i) throw (const char*) {
+        void check_field_index_bound(npy_intp i) {
             if (i < 0 || i >= (npy_intp)this->names_.size()) {
                 std::stringstream err;
                 err<<"requested field "<<i
@@ -935,12 +935,12 @@ class NumpyRecords {
             }
         }
 
-        //void check_name(const char* name) throw (const char*) {
-        void check_name(const char* cname)  throw (const char*) {
+        //void check_name(const char* name) {
+        void check_name(const char* cname) {
             std::string name=cname;
             check_name(name);
         }
-        void check_name(std::string& name) throw (const char*) {
+        void check_name(std::string& name) {
             if (this->nmap_.count(name) == 0) {
                 std::stringstream err;
                 err<<"field name '"<<name<<"' not found";
@@ -948,7 +948,7 @@ class NumpyRecords {
             }
         }
 
-        void check_row(npy_intp row) throw (const char*) {
+        void check_row(npy_intp row) {
             if (row < 0 || row >= this->size_) {
                 std::stringstream err;
                 err<<"row "<<row<<" is out of bounds: [0, "<<(this->size_-1)<<"]";
