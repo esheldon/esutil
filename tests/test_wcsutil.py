@@ -121,7 +121,7 @@ def test_wcsutil_invert_2dpoly(inverse, constant):
         newx = Apply2DPolynomial(ucoeffsp, u, v)
         newy = Apply2DPolynomial(vcoeffsp, u, v)
 
-        w, = np.where((np.abs(x) > 5) & (np.abs(y) > 5))
+        (w,) = np.where((np.abs(x) > 5) & (np.abs(y) > 5))
 
         assert np.allclose(x[w], newx[w])
         assert np.allclose(y[w], newy[w])
@@ -141,7 +141,7 @@ def test_wcsutil_invert_2dpoly(inverse, constant):
         print("%s" % u[0:25])
         print("%s" % newu[0:25])
 
-        w, = np.where((np.abs(u) > 5) & (np.abs(v) > 5))
+        (w,) = np.where((np.abs(u) > 5) & (np.abs(v) > 5))
         ufrac = (u[w] - newu[w]) / u[w]
         vfrac = (v[w] - newv[w]) / v[w]
 

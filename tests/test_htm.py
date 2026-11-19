@@ -21,7 +21,7 @@ def test_htm_smoke():
 
     assert np.all(htmid == expected)
 
-    assert h.get_ntriangles() == 8 * 4**(depth-1)
+    assert h.get_ntriangles() == 8 * 4 ** (depth - 1)
 
 
 def test_htm_intersect():
@@ -29,9 +29,22 @@ def test_htm_intersect():
     h = eu.htm.HTM(depth)
 
     expected = np.array(
-        [10518792, 10518793, 10518795, 10518820, 10518823, 10518836,
-         10518839, 14172676, 14172678, 14172679, 14172696, 14172699,
-         14172728, 14172731],
+        [
+            10518792,
+            10518793,
+            10518795,
+            10518820,
+            10518823,
+            10518836,
+            10518839,
+            14172676,
+            14172678,
+            14172679,
+            14172696,
+            14172699,
+            14172728,
+            14172731,
+        ],
     )
     idlist = h.intersect(200.0, 0.0, 0.1)
     assert np.all(idlist == expected)
@@ -41,7 +54,7 @@ def test_htm_match():
     depth = 10
     h = eu.htm.HTM(depth)
 
-    two = 2.0/3600.
+    two = 2.0 / 3600.0
 
     # offset second list by fraction of 2 arcsec in dec
     # not last ones don'e match at all
@@ -52,11 +65,24 @@ def test_htm_match():
     # make one of them big endian to check byte swapping
 
     ra2 = np.array([200.0, 200.0, 200.0, 175.23, 55.25], dtype='>f8')
-    dec2 = np.array([24.3+0.75*two, 24.3 + 0.25*two, 24.3 - 0.33*two, -28.25 + 0.58*two, 75.22])  # noqa
+    dec2 = np.array(
+        [
+            24.3 + 0.75 * two,
+            24.3 + 0.25 * two,
+            24.3 - 0.33 * two,
+            -28.25 + 0.58 * two,
+            75.22,
+        ]
+    )  # noqa
 
     for maxmatch, expected in [(0, 10), (1, 4), (2, 7)]:
         m1, m2, d12 = h.match(
-            ra1, dec1, ra2, dec2, two, maxmatch=maxmatch,
+            ra1,
+            dec1,
+            ra2,
+            dec2,
+            two,
+            maxmatch=maxmatch,
         )
 
         assert m1.size == expected
@@ -69,7 +95,13 @@ def test_htm_match():
         fname = os.path.join(tdir, 'test.rec')
 
         nmatch = h.match(
-            ra1, dec1, ra2, dec2, two, file=fname, maxmatch=maxmatch,
+            ra1,
+            dec1,
+            ra2,
+            dec2,
+            two,
+            file=fname,
+            maxmatch=maxmatch,
         )
 
         assert nmatch == expected
@@ -83,24 +115,31 @@ def test_htm_bincount():
     depth = 10
     h = eu.htm.HTM(depth)
 
-    two = 2.0/3600.
-    ten = 10.0/3600.
-    eighty = 30.0/3600.0
-    hundred = 100.0/3600.0
+    two = 2.0 / 3600.0
+    ten = 10.0 / 3600.0
+    eighty = 30.0 / 3600.0
+    hundred = 100.0 / 3600.0
     ra1 = np.array([200.0, 200.0, 200.0, 175.23, 21.36])
     dec1 = np.array([24.3, 24.3, 24.3, -28.25, -15.32])
     ra2 = np.array([200.0, 200.0, 200.0, 175.23, 55.25])
-    dec2 = np.array([24.3+two, 24.3 + ten, 24.3 - eighty, -28.25 + hundred,  75.22])  # noqa
+    dec2 = np.array(
+        [24.3 + two, 24.3 + ten, 24.3 - eighty, -28.25 + hundred, 75.22]
+    )  # noqa
 
     # these must be in degrees unless scale is sent, in which case it is in
     # units of radians*scale
-    rmin = 5/3600.
-    rmax = 150/3600.
+    rmin = 5 / 3600.0
+    rmax = 150 / 3600.0
     nbin = 10
 
     lower, upper, counts = h.bincount(
-        rmin, rmax, nbin,
-        ra1, dec1, ra2, dec2,
+        rmin,
+        rmax,
+        nbin,
+        ra1,
+        dec1,
+        ra2,
+        dec2,
         getbins=True,
     )
     counts_truth = np.array([0, 0, 3, 0, 0, 3, 0, 0, 1, 0], dtype='i8')
@@ -115,18 +154,28 @@ def test_htm_bincount():
     nbin = 10
 
     lower, upper, counts = h.bincount(
-        rmin, rmax, nbin,
-        ra1, dec1, ra2, dec2,
+        rmin,
+        rmax,
+        nbin,
+        ra1,
+        dec1,
+        ra2,
+        dec2,
         getbins=True,
         scale=dmpc,
     )
 
     assert np.all(counts == counts_truth)
 
-    dmpc = np.array([dmpc]*ra1.size)
+    dmpc = np.array([dmpc] * ra1.size)
     lower, upper, counts = h.bincount(
-        rmin, rmax, nbin,
-        ra1, dec1, ra2, dec2,
+        rmin,
+        rmax,
+        nbin,
+        ra1,
+        dec1,
+        ra2,
+        dec2,
         getbins=True,
         scale=dmpc,
     )
@@ -148,10 +197,13 @@ def test_htm_match_self():
 
     nrand = 1000
     ra, dec = eu.coords.randsphere(
-        nrand, rng=rng, ra_range=[200, 210], dec_range=[-10, 10],
+        nrand,
+        rng=rng,
+        ra_range=[200, 210],
+        dec_range=[-10, 10],
     )
 
-    rad = 1.0/3600.0
+    rad = 1.0 / 3600.0
     m1, m2, d12 = h.match(ra, dec, ra, dec, rad, maxmatch=1)
 
     assert np.all(d12 == 0.0)
