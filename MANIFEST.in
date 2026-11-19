@@ -1,6 +1,5 @@
 include LICENSE
 include RELEASE_NOTES
-graft esutil/include
 graft esutil/recfile
 graft esutil/cosmology
 graft esutil/htm
