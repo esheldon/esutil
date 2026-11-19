@@ -7,7 +7,7 @@ from glob import glob
 import numpy
 from setuptools import setup, Extension
 
-include_dirs = [numpy.get_include(), "esutil/include"]
+include_dirs = [numpy.get_include()]
 
 if sys.platform.startswith("win"):
     c_args = []
