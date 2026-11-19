@@ -1,5 +1,11 @@
 include LICENSE
+include RELEASE_NOTES
+graft esutil/include
 graft esutil/recfile
 graft esutil/cosmology
 graft esutil/htm
-graft esutil/htm/htm_src
+graft esutil/stat
+graft esutil/integrate
+graft tests
+global-exclude *~ *.py[cod] *.so
+prune **/__pycache__

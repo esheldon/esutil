@@ -16,10 +16,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.pyver }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.pyver }}
 
@@ -29,9 +29,9 @@ jobs:
       - name: lint
         run: |
           pip install flake8
-          flake8 esutil
+          flake8 esutil tests
 
       - name: test
         run: |
           pip install pytest
-          pytest -vv esutil
+          pytest -vv tests
